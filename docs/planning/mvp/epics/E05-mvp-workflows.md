@@ -240,6 +240,11 @@ charts and source history links. Enable the second real tab with restored stacks
 - Figures reconcile to same-revision expense/income history; net cash flow and
   undestined planning capacity are distinct. No goals/investment contributions are
   fabricated; actual verdict is labeled separately from Recibo's projected verdict.
+- Approved presentation: emphasize Ingresos menos gastos in Resumen; keep Restante
+  del presupuesto/daily allowance prominent in Recibo and Por asignar al presupuesto
+  as secondary planning (replaces Sin destinar). Explain income-minus-expenses versus
+  income-minus-limits without generic Disponible/account-balance claims. Preserve
+  negative allocation; expense-only corrections leave allocation unchanged.
 - Shared month and tab stacks survive switches/restoration. Empty history produces
   truthful empty states, not invented comparison trends or zero on read failure.
 - Chart selection/text values match exact source totals even at large amounts.
@@ -274,6 +279,9 @@ scope/examples I01/G01, and architecture §4. Detailed comparisons/records/expor
 ### Concrete cases and pitfalls
 - I01 shows net cash flow 120,000 and undestined 50,000, not two copies of the same
   number. No goal/investment amount exists in MVP to fill allocation fields.
+- G02's corrected expense changes graph total 30,000→27,000, remaining 70,000→73,000
+  and net flow 170,000→173,000; Por asignar al presupuesto stays 100,000. Test numeric
+  independence, accessible labels and screen hierarchy; updated labels do not change formulas.
 - G01 cumulative chart is 10,000/25,000/30,000; selected values/text equal source
   rows even when geometry uses approximate coordinates.
 - Month switches cannot combine October income with September budgets; no-history

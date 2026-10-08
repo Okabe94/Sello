@@ -115,8 +115,11 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
   Reject ambiguous pasted input; `1e3` must not become `13`.
 - **MUST** apply [approved D05](docs/decisions/0001-mvp-contract.md#d05--fields-input-grammar-and-income-labels)
   field/name/source rules and plain-digit or correctly grouped-dot COP input grammar.
-  The manual keypad's 12-digit limit must not truncate larger valid backup values
-  or change them during other-field edits; it is not the domain/storage money range.
+  Individual MVP expense/income amounts must be 1–999,999,999,999 COP across entry,
+  domain commands, storage decoding and backup validation. Reject out-of-range
+  records/files, never truncate or repair them. This transaction cap is not an
+  aggregate-total cap; checked Long financial totals remain distinct. See
+  [transaction-range decision](docs/decisions/0003-mvp-transaction-amount-range.md).
 - **MUST** use `LocalDate`/`YearMonth` for effective periods and `Instant` for audit
   time. Persist the financial zone in Room, defaulting to the device zone at setup;
   travel must not rewrite history. Inject time, observe rollover, and exclude
@@ -130,6 +133,7 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 | Allowance/projection | Days available include today; allowance is `max(remaining − recurringDue, 0) / availableDays`. Projection is `spent + recurringDue + variableDailyPace × remainingDays`; recurring charges are excluded from variable pace and never counted twice. MVP recurringDue is genuinely zero. |
 | Verdict | Current: Al día at projected ≤95%; Justo above 95% through 100%; Pasado if actual or projected exceeds limit. Past: actuals only, no allowance. Recibo's forecast and Resumen's actual-spend verdict must be labeled distinctly. |
 | Income allocation | `destined = limits + goal contributions + investment contributions`; income minus destined is planning capacity, **not account balance**. Expenses are not added a second time. |
+| Recorded net flow | Monthly recorded income minus recorded expenses; not an account balance including opening funds or unrecorded activity. |
 | Goals | Contributions are historical records, not bank transfers. Derive milestone dates from actual crossings; projected dates require explicit assumptions. |
 | Investments | Stable `(effectiveDate, logicalSequence)` replay. `totalGain = currentValue + withdrawals + dividends − contributions`; percentage is simple gain, not IRR. Zero contributions yields undefined percentage. Recorded value, accrual, and benchmarks have distinct provenance. |
 
@@ -140,6 +144,15 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
   budget. Forecast display rounds HALF_UP to one peso; verdicts compare exact
   pre-rounding projections. See [approved D03](docs/decisions/0001-mvp-contract.md#d03--forecast-allowance-and-verdict)
   for widened arithmetic and positive-sub-50 allowance behavior.
+- **MUST** compute overall allowance from overall finite limits minus all applicable
+  spending, not an individual category's deficit. Preserve category overruns without
+  zeroing a still-positive overall allowance or silently reallocating category limits;
+  see approved B08 in the financial example corpus.
+- **MUST** distinguish Ingresos menos gastos, Restante del presupuesto and Por
+  asignar al presupuesto (MVP income minus configured limits), replacing ambiguous
+  Sin destinar wording. Do not subtract expenses again from allocation or call any
+  figure a verified account balance/generic Disponible. **SHOULD** emphasize recorded
+  net flow in Resumen, remaining/allowance in Recibo and allocation as secondary planning.
 - **MUST** approve worked day-cutoff/short-month/projection examples before MVP
   forecasts. Freeze 95%/100% boundary tests. Before investments, separately approve
   annual-rate convention and dated-cash-flow examples; nominal and effective rates

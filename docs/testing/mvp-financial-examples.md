@@ -1,8 +1,9 @@
 # MVP financial example corpus
 
-**Version:** 14 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
+**Version:** 23 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
 **Status:** D01–D10 product policies/process approved; independent example review
-and named technical/device/signing owners remain pending. These are not passing app tests.
+and named independent technical reviewer remain pending. User owns physical-device
+testing and release build/signing; actual evidence is still required. These are not passing app tests.
 Numbers use comma grouping here for readability; amounts are integer COP unless
 an exact intermediate is shown. UI grouping is es-CO (`1.234`).
 Policies/assumptions: [decision record](../decisions/0001-mvp-contract.md).
@@ -17,18 +18,19 @@ All reads below succeed unless explicitly stated. MVP recurringDue = 0.
 | Iden02 | Verify supported release candidate | SDK 30 floor is compatibility-verified in SELLO-002; customer deliverable is a production-signed private APK, not an AAB/store upload or debug-key substitute; actual distribution needs separate authorization |
 
 These are SELLO-002/003/035/036 acceptance expectations, not executed installation,
-toolchain, signing or distribution evidence. D10's process is approved; named owners
-and actual verification remain pending.
+toolchain, signing or distribution evidence. D10's process is approved; independent
+technical review and actual verification remain pending.
 
 ## Input and exact-money boundaries — D05
 
-| ID | Input | Expected result under proposal |
+| ID | Input | Expected result under approved D05 policy |
 | --- | --- | --- |
 | M01 | `1.234` | 1,234 COP; valid grouped original text |
 | M02 | `1e3`, `-100`, `9.223.372.036.854.775.808` | Reject syntax/sign/Long overflow respectively; never repair into a different number |
 | M03 | `12.34`, `1,5`, `$1234`, empty, expense `0` | Reject; zero finite budget is separately valid |
 | M04 | keypad `999999999999`; one more digit | First accepted; further digit does not change value and exposes accessible limit feedback |
-| M05 | portable expense 1,000,000,000,000 | Preserve/display full value; note edit retains it; do not truncate to keypad maximum |
+| M05 | portable expense or income 1,000,000,000,000; separate valid record 999,999,999,999 | First invalidates complete restore before any mutation; no clipping/skipping. Second accepted and preserved on note edit; same bound as manual entry |
+| M06 | two valid expenses of 600,000,000,000 each | Exact aggregate 1,200,000,000,000; transaction cap does not cap totals; true checked Long overflow remains an explicit failure |
 
 ## Field/name/source boundaries — approved D05
 
@@ -53,10 +55,11 @@ expectations, not evidence that the scaffold implements validation.
 | B01 | finite limit 100,000/spend 30,000; unlimited spend 20,000 | Total spent 50,000; remaining 50,000 |
 | B02 | all limits absent; spent 50,000 | Has gastado / Sin límite; no invented capacity/allowance/verdict |
 | B03 | 2026-10-31; limit 100,000; spent 90,000 | Remaining 10,000; 1 available day; allowance 10,000; Para hoy |
-| B04 | limit 100,000; spent 110,000 | Remaining −10,000; allowance 0 in loss ink; Pasado |
+| B04 | overall finite limits total 100,000; overall spent 110,000 | Overall remaining −10,000; overall allowance 0 in loss ink; Pasado; this is not a single-category overspend with other finite capacity remaining |
 | B05 | explicit limit 0; spent 0, then spent 1 | Al día then Pasado; no percentage division by zero |
 | B06 | configured limit 100,000; successfully loaded empty expense list | Actual 0; forecast 0; Al día; zero is not unavailable data |
 | B07 | same configuration; storage read fails | Failed, not B06; optional visibly stale last-good value |
+| B08 | 2026-10-22; Food/Transport/Other each has finite limit 100,000; Food spent 110,000, others spent 0 | Owner-confirmed: Food remaining −10,000 and category Pasado; overall limit 300,000/spent 110,000/remaining 190,000; 10 available days → overall allowance 19,000. A category overrun alone must not zero the overall allowance |
 | V01 | limit 100,000; actual 80,000; exact forecast 95,000 | Al día |
 | V02 | same actual/limit; exact forecast 95,001 or 100,000 | Justo |
 | V03 | same actual/limit; exact forecast 100,001 | Pasado |
@@ -120,10 +123,10 @@ is downward, not nearest-increment or down-to-hundreds rounding.
 | H04 | add backdated November expense 10,000 to H03 | November actual 10,000; limit 100,000; remaining 90,000; no past daily allowance/forecast |
 | H05 | September spent 20,000/limit 100,000; unchanged default through October | Approved MVP: October limit 100,000, not 180,000; September remaining 80,000 retained in history; no claim that actual funds reset |
 | H06 | user discovers past-month editing, then corrects September limit | Contextual announcement and persistent help explain capability; editor names September and configured-limit scope; committed receipt precedes completion message and refreshed totals |
-| I01 | income 150,000; limits 100,000; expenses 30,000 | Net recorded cash flow 120,000; Sin destinar 50,000; neither is an account balance |
-| I02 | income 50,000; limits 100,000; expenses 30,000 | Net recorded cash flow 20,000; Sin destinar −50,000; planning capacity not clamped to 0 |
-| G01 | Oct 1 expense 10,000; Oct 2 +15,000; Oct 3 +5,000; limit 100,000; income 200,000 | Cumulative 10,000/25,000/30,000; remaining 70,000; net cash flow 170,000; Sin destinar 100,000 |
-| G02 | edit Oct 2 expense in G01 to 12,000 | Cumulative 10,000/22,000/27,000; remaining 73,000; net cash flow 173,000 |
+| I01 | income 150,000; limits 100,000; expenses 30,000 | Ingresos menos gastos 120,000; Restante del presupuesto 70,000; Por asignar al presupuesto 50,000; none is a verified account balance |
+| I02 | income 50,000; limits 100,000; expenses 30,000 | Ingresos menos gastos 20,000; Restante del presupuesto 70,000; Por asignar al presupuesto −50,000, not clamped to 0 |
+| G01 | Oct 1 expense 10,000; Oct 2 +15,000; Oct 3 +5,000; limit 100,000; income 200,000 | Cumulative 10,000/25,000/30,000; remaining 70,000; Ingresos menos gastos 170,000; Por asignar al presupuesto 100,000 |
+| G02 | edit Oct 2 expense in G01 to 12,000 | Cumulative 10,000/22,000/27,000; remaining 73,000; Ingresos menos gastos 173,000; Por asignar al presupuesto remains 100,000 |
 
 H02/H06 reflect approved historical correction and guidance; B05 reflects the
 approved zero/unlimited distinction. H03/H04 reflect approved skipped-month effective
@@ -231,6 +234,76 @@ Real-Room rollback/reopen and device journeys must prove the eventual implementa
   resume/restart; replay and chart/receipt/Room totals agree.
 
 ## Review and verification record
+
+### Guided owner walkthrough
+
+Requested on 2026-10-08; review in small illustrative batches, recording the user's
+response against explicit example IDs. Requesting the review is not approving its
+results. Executor explanation/checks are not independent technical review or app tests.
+
+| Batch | Examples | Review focus | Status |
+| --- | --- | --- | --- |
+| 1 | B01/B02/B04/B05/B06/B07/B08 | Remaining budget; unlimited expenses still count; no-limit versus zero; category versus overall overspending; failed reads are not empty histories | Owner-confirmed, including B04/B08 scope clarification; independent technical review remains separate |
+| 2 | F01–F08/A01–A08/V01–V05 | Day inclusion, estimate sensitivity, COP 50 planning rounding and exact verdict boundaries | Owner-confirmed across both walkthroughs; implementation and independent technical review remain separate |
+| 3 | H01–H06/I01–I02/G01–G02 | Historical stability/renewal, cash-flow versus budget allocation and graph reconciliation | Owner-confirmed, including G01/G02 after allocation-label clarification; independent technical review remains separate |
+| 4 | M01–M06/T01–T06/O01–O08/AR01–AR06/U01–U05/P01–P04/R01–R06/Iden01–Iden02 | Input/order/archive/undo/file/recovery/installation edge cases | Owner confirmed M01–M04 and rejected wider-import support; M05 revised to rejection, M06 clarifies aggregate scope; other cases not yet reviewed |
+
+2026-10-08 batch 1 feedback: owner sees the plan as a useful reflection of personal
+funds and money movement, with future signed carryover important. Accepted focusing
+on the MVP plan first, not claiming verified bank reconciliation. Confirmed unlimited
+spending counts, zero versus no-limit and failed-read versus empty-history behavior.
+Questioned zero allowance for one over-budget category when others have unspent
+capacity. B04 originally described exhausted overall capacity; B08 makes the scope
+distinction explicit. No blanket acceptance of B04/B08 or independent review is claimed.
+Follow-up on 2026-10-08: owner confirmed the explicit distinction and B08's 19,000
+overall allowance. B04's zero applies only to exhausted overall finite capacity;
+it is not a bank balance or an entry prohibition. Batch 1 is owner-reviewed.
+
+Batch 2 first walkthrough uses October's 31-day calendar: F02 has 40,000 spent by
+Oct 15, 60,000 remaining and 17 available days → 3,500 displayed daily allowance;
+exact forecast 40,000 × 31 / 15 → 82,667 displayed COP. F01's first-day 10,000
+expense forecasts 310,000 but is not actual overspending. F03's last-day 90,000
+spend leaves 10,000 for today and forecast equals actual. A01/A02 reinforce
+downward COP 50 planning rounding; these walkthrough outcomes await owner response.
+2026-10-08 follow-up: owner confirmed the three presented calendar examples and
+rounding. This covers F01's forecast, F02/F03/B03 and A01/A02, not F01's unpresented
+allowance or every F/A/V boundary. The next walkthrough covers first-day allowances
+2,900/3,200 (F01/F06), 28/29-day February (F04/F05), no-budget/overspend (F08/F07),
+sub-50/50/100/negative rounding boundaries (A03–A08) and exact verdicts (V01–V05).
+Responses to these remaining cases are pending; full independent review is not claimed.
+2026-10-08 follow-up: owner confirmed all remaining batch 2 examples, including
+positive remaining money with rounded-zero allowance and exact-value verdicts.
+No executed feature/device tests or independent technical review are implied.
+
+Batch 3 walkthrough distinguishes income minus recorded expenses (net cash flow)
+from income minus configured limits (Sin destinar), and both from remaining budget.
+It presents stable prior limits, explicit historical correction/guidance, unopened
+months/backdated expenses, MVP no-carry renewal and cumulative graph correction.
+H01–H06/I01–I02/G01–G02 response is pending; future carryover examples remain
+conditional directions, not a newly approved implementation formula.
+2026-10-08 response: owner confirmed items 1–4, covering I01/I02 and H01–H06.
+Item 5's graph recalculation/reconciled totals (G01/G02) was not answered; do not
+record it as reviewed by implication. Re-present that example before closing batch 3.
+2026-10-08 label/meaning clarification: owner accepted keeping both planning and
+recorded movement, with Ingresos menos gastos prominent in Resumen, remaining/
+allowance in Recibo and Por asignar al presupuesto secondary. Current I/G labels
+reflect that approval; old Sin destinar references in this chronological log are
+historical wording. Allocation meaning is confirmed, but the full G01/G02 numeric
+graph review is not claimed complete from acceptance of the presentation suggestion.
+2026-10-08 graph follow-up: owner explicitly confirmed the G01/G02 expense-only
+correction effects and unchanged allocation. Batch 3 is owner-reviewed; this is
+not execution evidence or full independent technical review.
+
+Batch 4 money walkthrough presents plain/grouped whole-peso input, rejection rather
+than repair, positive exact expenses/income versus zero budgets, 12-digit keypad
+feedback, bounded overflow rejection and valid wider backup values preserved when
+editing notes. M01–M05 response pending; COP 50 rounding applies only to derived
+daily planning amounts, not recorded transactions. No new input policy is inferred.
+2026-10-08 response: owner confirmed input items 1–3 and rejected oversized
+backup-only transaction support in item 4. M05's old preservation expectation is
+superseded: UI/domain/storage/backup share the 12-digit transaction cap. ADR 0003
+and M06 distinguish that cap from aggregate totals; no storage/restore tests or
+review of other batch 4 examples is claimed.
 
 Executor arithmetic verification is distinct from independent product review.
 Product approved D01–D10 on 2026-10-08, including the two explicit allowance examples;

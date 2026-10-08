@@ -29,7 +29,9 @@ exposing unsupported MVP entry currencies or adding rate infrastructure.
 - Effective dates cannot exceed the financial current date for manual MVP entries;
   audit Instants and translated labels are not embedded in financial identity.
 - Enforce approved D05 name/note/Other-source boundaries and M01–M05/T01–T06;
-  distinguish the 12-digit keypad limit from the wider valid domain/backup range.
+  enforce 1–999,999,999,999 COP per expense/income across UI/domain/storage/backup.
+  Follow ADR 0003: reject oversized transactions, never clip them; aggregate values
+  are independently checked Long amounts, not subject to the transaction maximum.
   Category uniqueness normalization is shared, deterministic and enforced by real
   command/storage boundaries when they ship, not a UI-only duplicate warning.
 
@@ -37,7 +39,8 @@ exposing unsupported MVP entry currencies or adding rate infrastructure.
 Table/property-style tests around Long bounds, grouping/separators, empty drafts,
 checked addition/subtraction, reordered sums, leap days, and future-date rejection.
 Include field-length Unicode boundaries, original invalid-input rejection and the
-large imported amount preserved by an unrelated-field edit at its owning workflow.
+maximum valid amount preserved by an unrelated-field edit at its owning workflow;
+M05 oversized backup rejection and M06 totals above the individual record cap.
 Capture red→green evidence and run G1.
 
 ### Working checkpoint
@@ -305,6 +308,10 @@ recurrence is absent, not because a failed schedule read is discarded.
 ### Acceptance criteria
 - Unlimited spending still affects totals; no limits yields Sin límite. Past months
   use historical limits/actuals and omit allowance. Today counts as an available day.
+- Approved B08: a category deficit does not zero still-positive overall allowance.
+  On Oct 22, three limits of 100,000 with one category spending 110,000 yield
+  overall remaining 190,000 and daily allowance 19,000; preserve category deficit
+  −10,000/Pasado without silently reallocating limits. Test category/global scope separately.
 - Actual over-limit always wins; projected ≤95%, >95–100%, and >100% boundaries
   match examples. Exact source amounts remain available to chart render models.
 - Read failures retain explicit failed/last-good states, not financial zero.

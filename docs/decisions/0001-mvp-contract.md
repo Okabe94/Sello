@@ -1,8 +1,8 @@
 # 0001 — MVP product and financial contract
 
-**Ticket:** SELLO-001 · **Version:** 14 · **Updated:** 2026-10-08
+**Ticket:** SELLO-001 · **Version:** 23 · **Updated:** 2026-10-08
 **Status:** D01–D10 product policies/process approved; implementation, independent
-example review and named technical/device/signing owners remain outstanding.
+example review and named independent technical reviewer remain outstanding.
 Signed carryover is deferred beyond MVP; detailed policy belongs to SELLO-037.
 **Decision owner/approver:** project owner (user). **Executor:** coding agent.
 **Approval/date:** project owner (user), 2026-10-08, for the logged D01–D10 choices;
@@ -76,6 +76,12 @@ the selected current month. Let `S` be spent, `L` the sum of finite monthly limi
   expenses, income, remaining budget, exact pace/forecast and verdict comparisons
   retain their original precision. Positive allowance below 50 displays 0 without
   implying overspending; only negative remaining budget uses loss semantics.
+  These `L`/`S` values are overall limits/spending: a single category's overrun
+  must not be substituted for overall remaining capacity. B08 is the approved
+  owner walkthrough of that distinction; its category result is separate from
+  the overall daily planning amount. Owner confirmation on 2026-10-08: category
+  deficit −10,000 alongside overall remaining 190,000 yields overall allowance
+  19,000 for ten available days, not zero.
 - Show forecast rounded HALF_UP to integer COP, but classify its **exact** value:
   Al día when `100 × forecast ≤ 95 × L`; Justo above that through `forecast ≤ L`;
   Pasado if actual or forecast exceeds L. Use widened exact comparisons.
@@ -93,7 +99,7 @@ both differ from the approved increments. An elapsed-complete-days model would a
 requires distinct day-1/no-history behavior; it is an alternative, not implemented.
 **Consequences/tests:** F01–F08, A01–A08, V01–V05 and B03/B04 below; graph calculations
 reuse the same snapshot. **Open:** none for model, early-month behavior and rounding;
-related zero-budget/history choices in D04 remain proposed. Independent example
+related zero-budget/history choices are approved in D04. Independent example
 review and implementation verification remain outstanding.
 
 ## D04 — Budget lifecycle and historical corrections
@@ -185,6 +191,24 @@ budget verdicts compare base or effective capacity. Separate monthly planned all
 from carried capacity so income is not allocated a second time. Extend the domain,
 backup, sandbox and example contracts only after approval, not with dormant tables.
 
+### Approved figure meanings and presentation — 2026-10-08
+
+Owner accepted keeping the distinct figures, not replacing allocation with cash flow:
+- **Ingresos menos gastos:** recorded monthly income minus recorded expenses;
+  prominent in Resumen, not an opening-balance-inclusive account balance.
+- **Restante del presupuesto:** monthly finite limits minus applicable recorded
+  expenses; prominent with daily allowance in Recibo.
+- **Por asignar al presupuesto:** recorded monthly income minus configured monthly
+  limits in MVP; a secondary planning figure, replacing the ambiguous Sin destinar
+  label. Do not subtract expenses again or clamp negative over-allocation to zero.
+
+Do not label any of these generically Disponible or claim verified account funds.
+Future opening-funds/carryover semantics require their own approval. Exact layout
+and explanatory copy remain SELLO-018/022 deliverables using Sello visual components;
+these approved meanings/labels override the reference's older Sin destinar wording.
+An expense correction updates spending, net flow and budget remaining, not the
+allocation figure unless income or configured limits also change.
+
 ## D05 — Fields, input grammar and income labels
 
 **Approved choice (project owner, 2026-10-08):** category names 1–24 Unicode code points,
@@ -197,18 +221,25 @@ as Salario, Freelance, Ingresos pasivos, Transferencia, Otro. Otro requires a tr
 1–24-code-point source name. All income records are manually declared inflows, not
 bank-reconciled revenue; Transferencia does not infer a transfer between tracked accounts.
 
-Expense/income keypad maximum is 12 digits (999,999,999,999 COP), following design.
-Domain/storage/backup can preserve any positive checked Long COP value; imports
-with larger values remain displayable/editable without truncation, and editing
-other fields preserves that amount. Pasted input accepts ASCII digits or correctly
+**Revised approved range (project owner, 2026-10-08):** each MVP expense/income
+amount is 1–999,999,999,999 COP, consistently enforced by keypad, pasted input,
+domain commands, storage decoding and backup validation. The owner rejected wider
+backup-only transaction support; this supersedes the earlier preservation choice.
+A backup containing an out-of-range transaction is invalid: reject the complete
+restore before mutation, never truncate, skip or silently repair the record. Valid
+amounts still survive other-field edits exactly. Aggregate totals can exceed this
+per-record maximum within checked Long representation; the cap is not a generic
+Money-type bound or a new policy for category limits. See [ADR 0003](0003-mvp-transaction-amount-range.md).
+Pasted input accepts ASCII digits or correctly
 grouped es-CO dots (`1.234`); reject decimal commas, exponent notation, negatives,
 currency symbols, malformed grouping or overflow. Leading/trailing whitespace may
 be trimmed explicitly; no other character removal. Keypad emits ungrouped digits.
 
-**Reason/alternative:** preserve design limits without constraining portable financial
-truth to the keypad. Reject sanitizing invalid input into a different amount.
+**Reason/alternative:** use one supported transaction range regardless of entry path;
+reject a backup-only exception and sanitizing invalid input into a different amount.
 **Consequences/tests:** M01–M05, accents/emoji boundaries, archived duplicate names,
-large imported amounts, mandatory Otro name. **Open:** none for these product rules;
+out-of-range backup rejection before mutation, valid maximum preservation and
+uncapped checked aggregates, mandatory Otro name. **Open:** none for these product rules;
 normalization/parser implementation and independent boundary review remain required.
 
 ## D06 — Ordering
@@ -325,8 +356,9 @@ no arbitrary latency guarantee in this contract. Missing reviewer/device/key/hos
 is an explicit prerequisite, never an optional skipped pass.
 **Reason/alternative:** verify meaningful release boundaries without promising unmeasured
 performance. **Consequences/tests:** SELLO-033–036 matrices/artifacts/approvals.
-**Open:** name technical reviewer, physical-device testing owner and signing
-custodian; approve concrete performance targets in SELLO-035 after baseline measurement.
+**Open:** name technical reviewer; approve concrete performance targets in SELLO-035
+after baseline measurement. Physical-device testing and release build/signing are
+owned by the project owner; actual gate evidence remains required when due.
 Approval of this process assigns no unnamed owners or technical review result.
 Private APK channel is approved in D02, not an unresolved choice.
 
@@ -334,8 +366,8 @@ Private APK channel is approved in D02, not an unresolved choice.
 | --- | --- | --- |
 | Product/privacy and release go/no-go | Project owner (user) | Logged policy approval; final candidate walkthrough and explicit release acceptance still required |
 | Independent financial/recovery technical review | Unassigned | Named reviewer, independently checked example corpus and later implementation/quality review |
-| Physical-device release testing | Unassigned | Identified device/API, production-signed candidate and recorded installation/recovery journeys |
-| Customer-distribution signing custody | Unassigned | Secure external key custody/access and certificate identity; no keys/passwords in source or reports |
+| Physical-device release testing | Project owner (user); periodic manual testing planned | Identified device/API, production-signed candidate and recorded installation/recovery journeys; periodic tests do not automatically complete the final release matrix |
+| Customer-distribution release build/signing custody | Project owner (user) | Secure external key custody/access and certificate identity; no keys/passwords in source or reports; agent does not generate/manage the release key without separate authorization |
 
 Unassigned responsibilities remain explicit acceptance prerequisites, not waived
 gates. Work with satisfied dependencies may proceed; required review/device/signing
@@ -373,6 +405,7 @@ evidence must exist before the corresponding ticket or release is declared compl
 | 2026-10-08 | Project owner (user) | D10 verification | Approved minimum/target SDK emulators, adaptive/font/theme/accessibility matrix and production-signed physical-device installation/recovery evidence; configuration and execution remain deliverables. |
 | 2026-10-08 | Project owner (user) | D10 performance | Approved measuring representative histories and approving concrete targets before release acceptance; no numerical guarantee approved. SELLO-035 owns this work. |
 | 2026-10-08 | Project owner (user) | D10 ownership/process | Approved product-owner go/no-go and independent technical review, with device/signing owners required. No names supplied for those roles; they remain unassigned prerequisites, not permission to self-approve or skip gates. |
+| 2026-10-08 | Project owner (user) | D10 device/build/signing ownership | User will manually test on a physical device periodically and handle release build/signing. Ownership is assigned, not evidence of completed tests or a signed release. Independent technical review remains separate. |
 
 Approval source: user's numbered answers to the scope, forecast and rounding
 discussion, followed by an explicit instruction to make the changes and record approval;
@@ -393,13 +426,56 @@ The following “approved. Just private apk distribution at this point” approv
 the two D02 identity/support recommendations and selects private APK distribution.
 The next “yes, approved” approves the presented D10 verification, performance and
 ownership process; it does not answer the request for named review/device/key owners.
+The subsequent ownership statement assigns physical-device testing and release
+build/signing to the user and requests a guided calculation/edge-case walkthrough.
+No example batch is approved merely by requesting that walkthrough.
 This approves those choices, not every other proposal or a completed independent
 review of every numerical case.
 
 Remaining execution inputs:
 1. Assign the independent technical reviewer and obtain full-corpus example review.
-2. Assign physical-device testing and signing custody before affected release gates.
+2. Obtain device and signed-release evidence from the project owner at affected gates.
 3. Verify toolchain/support in SELLO-002 and establish measured targets in SELLO-035.
+
+2026-10-08 guided-review feedback: owner affirmed the plan should help reflect
+personal funds/money movement, with signed carryover important to that future.
+MVP remains a budget plan, not a verified bank balance; this feedback does not
+approve an account ledger/reconciliation feature or change carryover's deferral.
+Owner confirmed B01/B02/B05/B06/B07 and questioned B04's zero allowance when only
+one category overspends. Clarified B04's overall scope; B08's multi-category example
+was subsequently confirmed by the owner (“yes, that is correct”). Batch 1's
+B01/B02/B04/B05/B06/B07/B08 outcomes are owner-reviewed; this is not full-corpus
+independent technical review or executed implementation evidence.
+2026-10-08 batch 2 first-part response: owner confirmed all three calendar examples
+and planning rounding (“all good, continue”): F01's first-day forecast sensitivity,
+F02's 3,500 allowance/82,667 displayed forecast, F03/B03's last-day behavior and
+A01/A02 downward rounding. F01's numeric first-day allowance was not presented in
+that walkthrough; remaining short-month/empty/sub-50/exact-verdict cases are now
+presented for review, not approved by this response.
+2026-10-08 batch 2 completion: owner confirmed the remaining calendar, zero/no-budget,
+small/negative allowance and exact-verdict examples (“yes, all good”), including
+V05's rounded 95,000 display with Justo classification. F/A/V walkthrough is now
+owner-reviewed; execution and independent technical review remain separate.
+Next: H01–H06/I01–I02/G01–G02 history/income/graph walkthrough, response pending.
+2026-10-08 batch 3 partial response: owner confirmed numbered items 1–4: I01/I02
+income/net flow/Sin destinar, H01/H02 historical stability/correction, H03/H04/H06
+unopened months/backdating/guidance, and H05 MVP renewal with future signed carryover.
+Numbered item 5 (G01/G02 graph correction and reconciled totals) was not answered;
+it remains pending. Approval does not extend to unmentioned examples or technical review.
+2026-10-08 presentation decision: after discussing both interpretations, owner
+accepted the recommendation (“i like your suggestion”): retain net flow, budget
+remaining and allocation with explicit labels and the screen hierarchy above.
+This approves allocation-versus-spending meaning and presentation direction;
+G01/G02's full numeric graph walkthrough remains pending, not inferred reviewed.
+2026-10-08 graph confirmation: owner explicitly answered yes to corrected spending
+30,000→27,000 increasing remaining/net flow by 3,000 while Por asignar remains
+unchanged. G01/G02 and batch 3 are owner-confirmed; independent technical review
+and executed feature evidence remain separate. Next: M01–M05 money input boundaries.
+2026-10-08 money input response: owner confirmed items 1–3 (M01–M04) and rejected
+item 4's wider backup transaction support. D05 now applies the same transaction
+maximum everywhere; M05 is revised to rejection, not preservation. ADR 0003 records
+the change; the complete invalid-file restore must remain nonmutating. Aggregate
+values remain checked separately, not clamped to the individual transaction maximum.
 
 Each approval entry must name decision/subchoice, chosen answer, approver, date and
 example implications. Partial approval does not ratify unrelated proposals. SELLO-001

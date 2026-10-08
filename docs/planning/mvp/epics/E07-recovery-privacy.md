@@ -27,6 +27,9 @@ exclude jobs, permissions, secrets, simulation state and internal execution rece
 - Default limits are 10 MiB, 100,000 records, 10,000 characters/field and bounded
   nesting, with stricter domain field limits still enforced. Validate dates, amounts,
   references, duplicate IDs and category/budget/history consistency before mutation.
+- ADR 0003/M05: apply the same 1–999,999,999,999 COP expense/income bound as manual
+  entry; maximum+1 rejects the file, not just that row. Valid maximum round-trips
+  exactly, while aggregate totals may exceed the per-record cap (M06).
 - Financial snapshot has one revision; separate preference capture does not pretend
   Room/DataStore are one transaction. Plaintext is documented per approved policy.
 
@@ -159,6 +162,9 @@ on completion/cancel/expiry; route back to first/current Recibo only on truthful
 ### Acceptance criteria
 - Invalid/canceled restore does not mutate anything. Confirmed restore applies all
   financial rows atomically and fences old drafts/commands; failure before commit rolls back.
+- ADR 0003/M05: any expense/income outside 1–999,999,999,999 COP invalidates the
+  entire backup before replacement. No truncation, skipped rows or partial settings
+  updates; verify unchanged financial rows, generation and preferences on rejection.
 - Approved D09/R01–R04: whole-file validation precedes current/replacement-count
   preview and explicit replacement warning. Never merge; restore backed-up financial
   zone and portable appearance/order, without system permission or URI-grant changes.

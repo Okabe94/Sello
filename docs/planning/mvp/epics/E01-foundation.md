@@ -130,6 +130,111 @@ process and independent review/ownership requirements. D01–D10 policy choices 
 now approved. Named technical/device/signing owners were not supplied; full-corpus
 independent review remains outstanding, so SELLO-001 stays In Progress. Aligned
 the performance owner reference to SELLO-035, whose ticket owns measurements/targets.
+2026-10-08 ownership/walkthrough: user will handle periodic physical-device testing
+and release build/signing. Recorded ownership without claiming completed evidence;
+independent technical reviewer remains unassigned. Started illustrative owner review
+in four batches; B01/B02/B04/B05/B06/B07 response pending. No batch or full corpus
+is marked reviewed merely because the user requested a walkthrough.
+2026-10-08 batch 1 feedback: owner confirmed B01/B02/B05/B06/B07 and reiterated
+the future funds-reflection/carryover intent. B04 allowance scope needs clarification:
+one category's deficit is not necessarily an overall deficit. Explicitly scoped
+B04 and added B08's 300,000 limit/110,000 spend/190,000 remaining/19,000 daily
+allowance illustration (Oct 22; ten days including today). Owner response pending;
+no new financial policy or independent technical review is inferred.
+2026-10-08 batch 1 confirmation: owner explicitly confirmed category/global allowance
+distinction and B08. Marked the first batch owner-reviewed, aligned architecture and
+SELLO-014 acceptance; full-corpus independent technical review remains outstanding.
+Presented F01/F02/F03/A01/A02 as the next small calendar/rounding walkthrough;
+response pending, with February/zero-history/verdict-boundary examples still to follow.
+2026-10-08 batch 2 partial confirmation: owner confirmed the first-day estimate,
+mid-month allowance/forecast, last-day behavior and rounding examples. Recorded
+F01 forecast, F02/F03/B03/A01/A02 review without extending it to unseen boundaries.
+Now presenting remaining F/A/V cases: short/leap months, successful zero versus
+no-budget, first-day allowance, sub-50/50/100/negative allowance and exact verdict
+boundaries. Owner response pending; SELLO-001 remains In Progress.
+2026-10-08 batch 2 completion: owner confirmed remaining F/A/V edge cases, including
+short/leap calendars, zero/no-budget, small/negative allowance and V05's exact-value
+verdict despite display rounding. Marked this batch owner-reviewed, not executed or
+independently technically reviewed. Presenting H01–H06/I01–I02/G01–G02 next;
+responses pending and SELLO-001 remains In Progress.
+2026-10-08 batch 3 partial confirmation: owner answered items 1–4, confirming
+I01/I02 and H01–H06 income/history/renewal examples. Item 5 (G01/G02 cumulative
+graph correction and total reconciliation) was omitted; re-presented for explicit
+response, not marked reviewed. No implementation or independent review is claimed.
+2026-10-08 figure presentation approval: owner accepted keeping net recorded flow,
+budget remaining and allocation with explicit labels and Resumen/Recibo hierarchy.
+Recorded Ingresos menos gastos / Restante del presupuesto / Por asignar al presupuesto,
+replacing ambiguous Sin destinar; aligned architecture, I/G cases and SELLO-022
+acceptance. Allocation is not income minus spending; formulas unchanged. Full graph
+example review and independent technical review remain pending; no UI implementation exists.
+2026-10-08 graph confirmation: owner explicitly confirmed G01/G02 correction
+effects after the allocation-label clarification. Batch 3 is owner-reviewed;
+independent technical review remains separate. Presenting M01–M05 money input
+cases next, with response pending. No validation/UI implementation exists yet.
+2026-10-08 money input response: owner confirmed M01–M04 and rejected wider backup
+transactions. Revised D05/M05 to the same 12-digit per-transaction range everywhere,
+recorded ADR 0003, added M06 aggregate-scope case and aligned SELLO-010/030. Original
+approval history is retained but superseded; no persisted data or financial code
+exists to migrate. Other batch 4 cases and independent review remain outstanding.
+Transaction-range revision verification: base `cae26a3` plus accumulated architecture,
+decision/input/example, ADR 0003, foundation/core/workflow/recovery acceptance and
+generated MVP CSV edits. 32 board tests, generated-board checks, diff checks and
+G0 passed (97 tasks: 2 executed, 95 up-to-date; cached sample JVM test and existing
+lint warnings), log `/tmp/sello-transaction-range-g0.log`. Docs-only policy revision;
+no behavioral red/device test or actual boundary implementation is claimed.
+Graph-confirmation verification: base `cae26a3` plus accumulated architecture,
+decision/input/example, foundation/core/workflow and generated MVP CSV edits.
+32 board tests, generated-board checks, diff checks and G0 passed (97 tasks: 2
+executed, 95 up-to-date; cached sample JVM test and existing lint warnings), log
+`/tmp/sello-graph-confirmation-g0.log`. Docs-only; no behavioral red/device test
+applicable. Input walkthrough response and independent technical review remain pending.
+Figure-label verification: base `cae26a3` plus accumulated architecture/decision/input,
+example review, foundation/core/workflow acceptance and generated MVP CSV edits.
+32 board tests, generated-board and diff checks passed; G0 passed (97 tasks: 2
+executed, 95 up-to-date; cached sample JVM test and existing lint warnings), log
+`/tmp/sello-figure-labels-g0.log`. Docs-only label/direction approval, unchanged
+arithmetic; no behavioral red/device test applicable or independent review claimed.
+Batch 3 partial-approval verification: base `cae26a3` plus accumulated architecture,
+decision/input/example, foundation/core and generated MVP CSV changes. 32 board
+tests, generated-board checks, diff checks and G0 passed (97 tasks: 2 executed,
+95 up-to-date; cached sample JVM test and existing lint warnings), log
+`/tmp/sello-history-partial-approval-g0.log`. Docs-only; no behavioral red/device
+test applicable. G01/G02 response and independent technical review remain pending.
+History/income continuation verification: base `cae26a3` plus accumulated ownership,
+architecture/decision/input/example review, foundation/core acceptance and generated
+MVP CSV changes. Independent integer checks passed for H01/H02/H04, I01/I02 and
+G01/G02; these are executor arithmetic checks, not app tests or independent review.
+32 board tests, generated-board and diff checks passed. G0 passed (97 tasks: 2
+executed, 95 up-to-date; cached sample JVM test and existing lint warnings), log
+`/tmp/sello-history-income-g0.log`. Docs-only; no behavioral red/device test applicable.
+Batch 2 continuation verification: base `cae26a3` plus accumulated architecture,
+decision/input/example review, foundation/core acceptance and generated CSV edits.
+Independent Fraction/integer scratch checks passed for F01/F04/F05/F06, A03–A08
+and V05; these are arithmetic checks, not feature tests or independent review.
+32 board tests, generated-board and diff checks passed. G0 passed (97 tasks: 2
+executed, 95 up-to-date; cached sample JVM test and existing lint warnings), log
+`/tmp/sello-forecast-edges-g0.log`. Docs-only; no behavioral red/device test applicable.
+Batch 1 confirmation verification: base `cae26a3` plus accumulated ownership/review
+decision/input/example, architecture, foundation/core acceptance and generated MVP
+CSV edits. Independently checked F02: 60,000/17 → 3,500 downward COP 50 allowance;
+40,000 × 31/15 → 82,667 displayed forecast. F01/F03 and A01/A02 match the corpus.
+32 board tests, generated-board checks, diff checks and G0 passed (97 tasks: 2
+executed, 95 up-to-date; cached sample JVM test and existing lint warnings), log
+`/tmp/sello-batch1-confirmation-g0.log`. Docs-only; no behavioral red or device test
+applicable. New example approval and independent technical review are not claimed.
+Batch 1 clarification verification: base `cae26a3` plus accumulated uncommitted
+ownership/review decision/input/example, foundation and generated MVP CSV changes.
+B08 independently checked: 3 × 100,000 − 110,000 = 190,000; Oct 22–31 = 10
+available days; 190,000 / 10 = 19,000 (already a COP 50 multiple). 32 board tests,
+generated-board checks, diff checks and G0 passed (97 tasks: 2 executed, 95 cached;
+existing lint warnings); log `/tmp/sello-budget-scope-g0.log`. No device/behavioral
+tests applicable to documentation-only clarification; no independent review claimed.
+Ownership/walkthrough verification: base `cae26a3` plus uncommitted decision/input,
+example review log, foundation progress and generated MVP CSV changes. 32 board
+tests, generated-board checks and diff whitespace checks passed; G0 passed (97
+tasks: 4 executed, 93 up-to-date; cached sample JVM test and 17 existing lint
+warnings), log `/tmp/sello-owner-walkthrough-g0.log`. Docs-only; no behavioral red
+or device run applicable. Owner response and independent review remain pending.
 D10 verification: base `2c8e9ef` plus accumulated uncommitted D09/D02/D10 decision,
 architecture/input/example, epic/shared release guidance and generated CSV changes.
 32 board tests, generated MVP/roadmap consistency checks and `git diff --check`

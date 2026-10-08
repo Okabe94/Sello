@@ -159,6 +159,9 @@ on completion/cancel/expiry; route back to first/current Recibo only on truthful
 ### Acceptance criteria
 - Invalid/canceled restore does not mutate anything. Confirmed restore applies all
   financial rows atomically and fences old drafts/commands; failure before commit rolls back.
+- Approved D09/R01–R04: whole-file validation precedes current/replacement-count
+  preview and explicit replacement warning. Never merge; restore backed-up financial
+  zone and portable appearance/order, without system permission or URI-grant changes.
 - Financial commit plus preference failure is “data restored, settings pending”,
   not generic failure or complete Restaurado. Restart resumes without replacing twice.
 - Unknown commit outcome recovers by original operation ID. Staging survives eligible
@@ -224,6 +227,10 @@ staging/sandbox sessions and return to truthful first-run state.
 ### Acceptance criteria
 - Cancel/wrong confirmation leaves all data unchanged. Confirmed reset removes
   categories, budgets, expenses/income and user payloads according to the approved policy.
+- Approved D09/R05–R06: counted preview then exact BORRAR confirmation; clear
+  portable preferences to first-run Sistema/Cobalto/Más usadas. Next setup establishes
+  device financial zone; system permissions remain unchanged. Explicitly warn that
+  external backups survive; surviving control metadata contains no old amounts/names/notes.
 - Old submits/undo/restore continuation cannot cross the new generation. Retained
   recovery metadata is minimal and does not preserve erased financial payloads.
 - Restart/cancellation around reset resolves its original outcome; partial preference

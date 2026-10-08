@@ -161,7 +161,8 @@ export PATH="$JAVA_HOME/bin:$PATH"
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.

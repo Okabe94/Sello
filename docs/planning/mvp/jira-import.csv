@@ -121,6 +121,40 @@ U01–U05 and aligned SELLO-013/019/020/021. Next: D08 privacy/portable backup p
 contents/retention choices and requested committing accumulated work. Recorded D08,
 added P01–P04 and aligned SELLO-029/032; implementation is still outstanding.
 Next: D09 restore/reset, then D02 identities/support and D10 release/review ownership.
+2026-10-08 D09 approval: owner approved all three replacement, settings-only recovery
+and counted/BORRAR reset recommendations. Recorded approval and R01–R06 expectations;
+aligned SELLO-030/031 acceptance. Implementation and independent review remain pending.
+Next: D02 identities/support, then D10 release/review ownership.
+2026-10-08 D02 approval: owner approved isolated customer/debug/catalog identities
+and SDK 30 floor subject to SELLO-002 verification, selecting private APK distribution
+only. Added Iden01/Iden02 and aligned toolchain/release guidance; no signing custody,
+device owner, D10 process or independent review is implied. Next: D10.
+2026-10-08 D10 approval: owner approved release matrix, measured performance target
+process and independent review/ownership requirements. D01–D10 policy choices are
+now approved. Named technical/device/signing owners were not supplied; full-corpus
+independent review remains outstanding, so SELLO-001 stays In Progress. Aligned
+the performance owner reference to SELLO-035, whose ticket owns measurements/targets.
+D10 verification: base `2c8e9ef` plus accumulated uncommitted D09/D02/D10 decision,
+architecture/input/example, epic/shared release guidance and generated CSV changes.
+32 board tests, generated MVP/roadmap consistency checks and `git diff --check`
+passed; G0 passed (97 tasks: 2 executed, 95 up-to-date; cached sample JVM test and
+17 existing lint warnings), log `/tmp/sello-d10-g0.log`. Documentation-only approval
+does not require invented red testing or device execution. No independent review,
+toolchain support verification or production-signing/device evidence is claimed.
+D02 verification: base `2c8e9ef` plus accumulated uncommitted D09/D02 architecture,
+decision/input/example, foundation/recovery/release, board README and generated CSV
+changes. 32 board tests, both generated-board consistency checks and diff whitespace
+checks passed. G0 passed (97 tasks: 2 executed, 95 up-to-date; cached sample JVM
+test and 17 existing lint warnings); log `/tmp/sello-d02-g0.log`. No behavioral code
+changed, so red testing/device execution is inapplicable to this approval update.
+SDK compatibility, side-by-side installation and production signing remain unverified.
+D09 verification: base `2c8e9ef` plus uncommitted architecture, decision/input,
+foundation/recovery acceptance, example corpus and regenerated MVP CSV changes.
+32 board tests, both generated-board consistency checks and `git diff --check`
+passed. G0 passed (97 tasks: 4 executed, 93 up-to-date; one cached sample JVM test,
+17 existing lint warnings); log `/tmp/sello-d09-g0.log`. Documentation-only approval
+needs no behavioral red test or device run. Owner policy approval is not independent
+technical review; SELLO-001 remains In Progress. No financial implementation shipped.
 Executor checks: 32 board unit tests passed, including meaningful red→green scope
 checks (five intended assertion failures before enforcement). Both board/export
 sets passed consistency checks; 325 local
@@ -136,7 +170,7 @@ new post-MVP epic, board generator/tests and generated MVP/roadmap export views.
 Carryover/archive arithmetic, field/money-range/deadline boundaries and O01–O08 ordering
 illustrations were executor-checked, not executed feature tests or independent review. No device run
 required for this documentation task;
-D01/D03–D08 product approvals and future signed-carryover direction are recorded
+D01–D10 product approvals and future signed-carryover direction are recorded
 above; no independent review is claimed.
 
 Shared definition of done and gates:
@@ -198,7 +232,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -232,7 +267,9 @@ JAVA_HOME alone controls the daemon. Establish debug versus production signing p
   wrapper checksum and AGP built-in Kotlin integration are valid.
 - Dependency versions are pinned, source/build artifacts contain no credentials,
   and ignored machine-local configuration stays untracked.
-- Release compilation succeeds without upload secrets. Production signing remains
+- Approved D02: verify SDK 30 floor and customer/debug/catalog identities against
+  the selected toolchain; record actual compatibility rather than inferring it from approval.
+- Release compilation succeeds without distribution-signing secrets. Production signing remains
   an explicit later release gate; no keys/passwords enter source control.
 
 ### Tests
@@ -266,8 +303,8 @@ wrapper, `gradle.properties`, daemon criteria and `app/build.gradle.kts`.
 - `JAVA_HOME` pointing at Android Studio does not override daemon criteria by itself.
 - A supported matrix must include the Compose plugin/BOM and selected KSP processor
   compatibility, not just successful dependency resolution with an old cache.
-- A missing device is an unmet launch check. Unsigned release assembly is not an
-  upload-signed application; do not create an upload key just to silence a build failure.
+- A missing device is an unmet launch check. Unsigned release assembly is not a
+  production-signed private APK; do not create a distribution key just to silence a build failure.
 
 ### Verification recipe
 Run `./gradlew --version`, `./gradlew clean`, G0 and
@@ -334,7 +371,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -467,7 +505,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -643,7 +682,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -776,7 +816,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -911,7 +952,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -1044,7 +1086,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -1175,7 +1218,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -1307,7 +1351,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -1452,7 +1497,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -1590,7 +1636,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -1725,7 +1772,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -1872,7 +1920,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2013,7 +2062,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2149,7 +2199,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2279,7 +2330,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2412,7 +2464,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2544,7 +2597,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2691,7 +2745,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2837,7 +2892,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -2974,7 +3030,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -3108,7 +3165,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -3245,7 +3303,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -3384,7 +3443,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -3519,7 +3579,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -3652,7 +3713,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -3787,7 +3849,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -3927,7 +3990,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4066,7 +4130,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4097,6 +4162,9 @@ on completion/cancel/expiry; route back to first/current Recibo only on truthful
 ### Acceptance criteria
 - Invalid/canceled restore does not mutate anything. Confirmed restore applies all
   financial rows atomically and fences old drafts/commands; failure before commit rolls back.
+- Approved D09/R01–R04: whole-file validation precedes current/replacement-count
+  preview and explicit replacement warning. Never merge; restore backed-up financial
+  zone and portable appearance/order, without system permission or URI-grant changes.
 - Financial commit plus preference failure is “data restored, settings pending”,
   not generic failure or complete Restaurado. Restart resumes without replacing twice.
 - Unknown commit outcome recovers by original operation ID. Staging survives eligible
@@ -4201,7 +4269,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4232,6 +4301,10 @@ staging/sandbox sessions and return to truthful first-run state.
 ### Acceptance criteria
 - Cancel/wrong confirmation leaves all data unchanged. Confirmed reset removes
   categories, budgets, expenses/income and user payloads according to the approved policy.
+- Approved D09/R05–R06: counted preview then exact BORRAR confirmation; clear
+  portable preferences to first-run Sistema/Cobalto/Más usadas. Next setup establishes
+  device financial zone; system permissions remain unchanged. Explicitly warn that
+  external backups survive; surviving control metadata contains no old amounts/names/notes.
 - Old submits/undo/restore continuation cannot cross the new generation. Retained
   recovery metadata is minimal and does not preserve erased financial payloads.
 - Restart/cancellation around reset resolves its original outcome; partial preference
@@ -4337,7 +4410,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4476,7 +4550,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4613,7 +4688,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4746,7 +4822,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4772,11 +4849,14 @@ Measure a realistically populated app and make customer release packaging delibe
 Representative synthetic dataset/device profile and approved performance thresholds,
 startup/scroll/graph/backup measurements; correct off-main/bounded work; optimized
 release configuration/keep rules, dependency/license review and artifact inspection.
-Set signing through secure local/CI inputs with no committed upload secrets.
+Set private-APK production signing through secure local/CI inputs with no committed secrets.
 
 ### Acceptance criteria
 - Large history remains responsive without full unbounded reads or main-thread file/
   replay work. Chart exactness stays intact; optimization never substitutes rounded money.
+- Approved D10: measure representative histories and obtain explicit numerical target
+  approval before acceptance. Record named device-testing owner and signing custodian;
+  unassigned owners/credentials cannot be substituted with agent self-approval.
 - Release DI graphs and shrunk code execute real commands/serialization/recovery;
   no debug clocks, fixtures, catalog code, no-op financial services or tools survive.
 - Measurements state device/build/dataset and meet reviewed thresholds; no arbitrary
@@ -4785,7 +4865,7 @@ Set signing through secure local/CI inputs with no committed upload secrets.
 ### Tests
 G3 including actual optimized-release manual/automated smoke, dependency/security
 reports, artifact inspection and repeatable performance runs. CI ephemeral signing
-and upload signing are validated separately; lack of credentials is recorded as a blocker.
+and customer-distribution signing are validated separately; lack of credentials is a blocker.
 
 ### Working checkpoint
 A candidate customer artifact—not the catalog or debug variant—works with persisted
@@ -4816,12 +4896,13 @@ signing access. Read architecture §10, source-library shrinking/signing docs an
   to improve graph throughput. State warm/cold/cache/dataset conditions for each result.
 - Obfuscated class-name absence alone is not proof debug tools were excluded; source
   set/dependency inspection and unshrunk customer-variant checks corroborate the artifact.
-- No signing access means G3 is blocked, not “signed by debug key”. Build the chosen
-  channel's APK/AAB without uploading, tagging or publishing it.
+- No signing access means G3 is blocked, not “signed by debug key”. Build the
+  approved private APK without uploading, tagging or publishing it. No AAB/Play
+  deliverable is required for MVP; any channel change needs explicit approval.
 
 ### Verification recipe
-Run host/device gates and actual `:app:assembleRelease` (plus `:app:bundleRelease`
-if accepted distribution requires AAB); execute G3 on signed optimized candidate.
+Run host/device gates and actual `:app:assembleRelease`; execute G3 on the
+production-signed optimized private APK candidate, not a debug/ephemeral CI substitute.
 Record hash/version/signing certificate, independent release money/recovery smoke,
 measurements/thresholds and artifact exclusions. Never write secrets in commands/reports.
 
@@ -4884,7 +4965,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
@@ -4929,6 +5011,12 @@ validation. Record exact release revision and distinguish manual/device tests fr
 ### Working checkpoint
 MVP is demonstrably installable, useful, recoverable and ready for the agreed
 distribution channel; do not publish/commit/tag automatically without explicit approval.
+The approved channel is private APK only. Handoff must identify the exact APK hash,
+version/signing identity and installation/recovery instructions; no store listing or
+AAB upload is a prerequisite. Signing custody and device/reviewer owners must be resolved.
+Approved D10 assigns product/release go/no-go to the project owner; independent
+technical review and actual physical-device/signing evidence must be recorded before
+acceptance. Approval of the process is not approval of a future candidate artifact.
 
 ### Context and starting points
 This is the final go/no-go, not a last-minute implementation bundle. Inputs are
@@ -5021,7 +5109,8 @@ export PATH=""$JAVA_HOME/bin:$PATH""
   device is available, but do **not** mark device acceptance complete.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. Separate ephemeral CI signing from upload keys.
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.

@@ -145,11 +145,14 @@ Measure a realistically populated app and make customer release packaging delibe
 Representative synthetic dataset/device profile and approved performance thresholds,
 startup/scroll/graph/backup measurements; correct off-main/bounded work; optimized
 release configuration/keep rules, dependency/license review and artifact inspection.
-Set signing through secure local/CI inputs with no committed upload secrets.
+Set private-APK production signing through secure local/CI inputs with no committed secrets.
 
 ### Acceptance criteria
 - Large history remains responsive without full unbounded reads or main-thread file/
   replay work. Chart exactness stays intact; optimization never substitutes rounded money.
+- Approved D10: measure representative histories and obtain explicit numerical target
+  approval before acceptance. Record named device-testing owner and signing custodian;
+  unassigned owners/credentials cannot be substituted with agent self-approval.
 - Release DI graphs and shrunk code execute real commands/serialization/recovery;
   no debug clocks, fixtures, catalog code, no-op financial services or tools survive.
 - Measurements state device/build/dataset and meet reviewed thresholds; no arbitrary
@@ -158,7 +161,7 @@ Set signing through secure local/CI inputs with no committed upload secrets.
 ### Tests
 G3 including actual optimized-release manual/automated smoke, dependency/security
 reports, artifact inspection and repeatable performance runs. CI ephemeral signing
-and upload signing are validated separately; lack of credentials is recorded as a blocker.
+and customer-distribution signing are validated separately; lack of credentials is a blocker.
 
 ### Working checkpoint
 A candidate customer artifact—not the catalog or debug variant—works with persisted
@@ -189,12 +192,13 @@ signing access. Read architecture §10, source-library shrinking/signing docs an
   to improve graph throughput. State warm/cold/cache/dataset conditions for each result.
 - Obfuscated class-name absence alone is not proof debug tools were excluded; source
   set/dependency inspection and unshrunk customer-variant checks corroborate the artifact.
-- No signing access means G3 is blocked, not “signed by debug key”. Build the chosen
-  channel's APK/AAB without uploading, tagging or publishing it.
+- No signing access means G3 is blocked, not “signed by debug key”. Build the
+  approved private APK without uploading, tagging or publishing it. No AAB/Play
+  deliverable is required for MVP; any channel change needs explicit approval.
 
 ### Verification recipe
-Run host/device gates and actual `:app:assembleRelease` (plus `:app:bundleRelease`
-if accepted distribution requires AAB); execute G3 on signed optimized candidate.
+Run host/device gates and actual `:app:assembleRelease`; execute G3 on the
+production-signed optimized private APK candidate, not a debug/ephemeral CI substitute.
 Record hash/version/signing certificate, independent release money/recovery smoke,
 measurements/thresholds and artifact exclusions. Never write secrets in commands/reports.
 
@@ -232,6 +236,12 @@ validation. Record exact release revision and distinguish manual/device tests fr
 ### Working checkpoint
 MVP is demonstrably installable, useful, recoverable and ready for the agreed
 distribution channel; do not publish/commit/tag automatically without explicit approval.
+The approved channel is private APK only. Handoff must identify the exact APK hash,
+version/signing identity and installation/recovery instructions; no store listing or
+AAB upload is a prerequisite. Signing custody and device/reviewer owners must be resolved.
+Approved D10 assigns product/release go/no-go to the project owner; independent
+technical review and actual physical-device/signing evidence must be recorded before
+acceptance. Approval of the process is not approval of a future candidate artifact.
 
 ### Context and starting points
 This is the final go/no-go, not a last-minute implementation bundle. Inputs are

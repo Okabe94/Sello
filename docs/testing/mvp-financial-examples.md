@@ -1,13 +1,24 @@
 # MVP financial example corpus
 
-**Version:** 11 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
-**Status:** D01/D03–D08 product rules approved; other policies and independent example review
-remain pending. These are not passing app tests.
+**Version:** 14 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
+**Status:** D01–D10 product policies/process approved; independent example review
+and named technical/device/signing owners remain pending. These are not passing app tests.
 Numbers use comma grouping here for readability; amounts are integer COP unless
 an exact intermediate is shown. UI grouping is es-CO (`1.234`).
 Policies/assumptions: [decision record](../decisions/0001-mvp-contract.md).
 M/B/V/H/I/G baseline cases originate in [decision inputs](../planning/mvp/DECISION_INPUTS.md).
 All reads below succeed unless explicitly stated. MVP recurringDue = 0.
+
+## Installation and distribution — approved D02
+
+| ID | Action/boundary | Expected policy outcome |
+| --- | --- | --- |
+| Iden01 | Install customer, debug and catalog builds together | IDs `com.software.sello`, `.debug`, `.catalog`; labels Sello / Sello Debug / Sello Catalog; each has isolated private data; catalog/debug are separate developer artifacts |
+| Iden02 | Verify supported release candidate | SDK 30 floor is compatibility-verified in SELLO-002; customer deliverable is a production-signed private APK, not an AAB/store upload or debug-key substitute; actual distribution needs separate authorization |
+
+These are SELLO-002/003/035/036 acceptance expectations, not executed installation,
+toolchain, signing or distribution evidence. D10's process is approved; named owners
+and actual verification remain pending.
 
 ## Input and exact-money boundaries — D05
 
@@ -184,7 +195,19 @@ These are acceptance expectations for SELLO-028/029/032, not executed backup/dev
 tests. The generated manifest's baseline backup setting still needs remediation
 before financial data is stored, as required by SELLO-011.
 
-### Recovery contracts to instantiate in downstream tests — D07–D09
+## Restore and reset — approved D09
+
+| ID | Action/boundary | Expected policy outcome |
+| --- | --- | --- |
+| R01 | Invalid/truncated/unsupported backup, or cancel validated replacement preview | Financial data, generation and preferences unchanged; no success feedback |
+| R02 | Current history contains 2 expenses; confirm valid G01 backup containing 3 expenses/1 income | Preview both counts and replacement warning; final history is exactly the backed-up 3 expenses/1 income, not merged; restore backed-up zone/appearance/order, not permissions/debug/URI grants |
+| R03 | R02 commits financially; preference write fails, then reopen/retry | Exact restored financial history remains committed; show settings pending, not complete Restaurado; resume settings only without a second replacement or generation advance |
+| R04 | Submit old draft or undo after restore/reset, even with matching restored record IDs | Reject stale generation; no mutation or resurrection; uncertain original replacement outcome is recovered by its original operation ID |
+| R05 | Cancel reset at either confirmation or enter text other than exact BORRAR | All financial data and preferences unchanged; no reset completion |
+| R06 | Confirm counted reset with BORRAR, then restart | No prior finances/categories/month limits/names/notes/portable preferences; first-run defaults Sistema/Cobalto/Más usadas; next setup uses device financial zone; retain only minimal nonfinancial fencing/completion identity; permissions unchanged; external backups survive with explicit warning |
+
+These are acceptance expectations for SELLO-030/031, not executed recovery tests.
+Real-Room rollback/reopen and device journeys must prove the eventual implementation.
 
 ## Recovery contracts to instantiate in downstream tests — D07–D09
 
@@ -210,11 +233,11 @@ before financial data is stored, as required by SELLO-011.
 ## Review and verification record
 
 Executor arithmetic verification is distinct from independent product review.
-Product approved D01/D03–D08 on 2026-10-08, including the two explicit allowance examples;
+Product approved D01–D10 on 2026-10-08, including the two explicit allowance examples;
 the approval log is in the decision record. Future signed carryover direction is
 confirmed and deferred beyond MVP; this does not approve its full algorithm,
-D02/D09/D10, or
-claim independent arithmetic review of the full table; that review remains pending.
+or claim independent arithmetic review of the full table; that review remains pending.
+The approved D10 process requires an independent technical reviewer, still unassigned.
 Future tests must hardcode independently checked expectations, not compute them
 with the financial implementation being tested. SELLO-001 cannot be Done until
 required decisions, arithmetic review and its documentation/G0 checks are complete.

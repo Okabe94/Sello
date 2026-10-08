@@ -36,6 +36,11 @@ Sello is an offline-first, local-only Android financial app, Spanish first
   first slice, extending their scenarios/examples as each capability ships (§9).
 - **MUST** harvest legacy requirements, counterexamples, and reviewed algorithms,
   never copy entire legacy layers or assume its formulas are authoritative.
+- **MUST** target private APK distribution for MVP, with the approved SDK 30 floor
+  subject to SELLO-002 compatibility verification. Use distinct customer/debug/catalog
+  identities from D02; no Google Play/AAB publication work is in current scope.
+  Private distribution does not waive production signing, artifact inspection or
+  release/device acceptance; distribution requires separate authorization.
 
 ## 2. Modules and ownership
 
@@ -225,6 +230,12 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
   check references, duplicates, amounts, dates, currencies, and ledger validity.
   A bad file makes no changes. Resume preference completion separately and never
   report complete restore while settings remain unfinished.
+- **MUST** apply approved D09: restore replaces, never merges, after a validated
+  current/replacement-count preview and explicit warning. Restore the financial zone
+  and portable preferences, not system permissions. Reset clears finances and portable
+  preferences to first-run defaults; retain only minimal nonfinancial fencing/recovery
+  metadata and explicitly explain that external backups survive. See
+  [D09](docs/decisions/0001-mvp-contract.md#d09--restore-and-reset).
 - **MUST** use the document picker; “Guardado” requires successful write/close.
   Analytical CSV/JSON exports are not backups; use canonical range/revision values
   and neutralize spreadsheet formula injection.
@@ -329,7 +340,7 @@ Integration references: [build variants/source sets][build-variants] and
   debug/release assembly; affected device flows and migration tests run in CI.
   Release additionally requires release-composition checks, dependency review,
   accessibility/adaptive smoke tests, shrinking, and production signing validation.
-  Assembly is not device execution; CI signing is not the upload key.
+  Assembly is not device execution; ephemeral CI signing is not customer-distribution signing.
 - **MUST** also assemble the catalog, exercise sandbox restart/rollover scenarios,
   and verify release artifacts contain no debug tooling, fixtures, or test clocks.
 - **SHOULD** keep previews for four themes and loading/empty/error/busy/large-money

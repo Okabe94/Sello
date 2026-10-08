@@ -1,10 +1,11 @@
 # 0001 — MVP product and financial contract
 
-**Ticket:** SELLO-001 · **Version:** 11 · **Updated:** 2026-10-08
-**Status:** Partially approved: D01/D03–D08 product behavior approved;
-signed carryover deferred beyond MVP; detailed carryover and other decisions remain open.
+**Ticket:** SELLO-001 · **Version:** 14 · **Updated:** 2026-10-08
+**Status:** D01–D10 product policies/process approved; implementation, independent
+example review and named technical/device/signing owners remain outstanding.
+Signed carryover is deferred beyond MVP; detailed policy belongs to SELLO-037.
 **Decision owner/approver:** project owner (user). **Executor:** coding agent.
-**Approval/date:** project owner (user), 2026-10-08, for the logged D01/D03–D08 choices;
+**Approval/date:** project owner (user), 2026-10-08, for the logged D01–D10 choices;
 reviewing this draft or authorizing ticket execution is not approval of its policies.
 
 ## Authority and execution boundary
@@ -39,19 +40,22 @@ ratify the separate historical-budget, privacy or destructive-action proposals.
 
 ## D02 — Identities and supported installation
 
-**Proposed choice:** customer `com.software.sello`; debug `com.software.sello.debug`;
+**Approved choice (project owner, 2026-10-08):** customer `com.software.sello`; debug `com.software.sello.debug`;
 catalog `com.software.sello.catalog`. Distinct launcher labels: Sello, Sello Debug,
 Sello Catalog. Install all three side by side with isolated private data.
-Keep the inspected minimum SDK 30 as the proposed product floor; SELLO-002 must
-validate compatibility before any toolchain/support decision is accepted.
+Retain minimum SDK 30 as the approved product floor, subject to SELLO-002's
+compatibility verification. This approval does not establish toolchain compatibility.
+MVP distribution is private APK only; Google Play/AAB publication is outside the
+current release scope. Production signing and release verification remain mandatory;
+distribution itself requires separate explicit authorization.
 
 **Reason/alternative:** retain customer identity and prevent debug/customer storage
 collisions. Reject shared IDs or developer controls in customer releases.
 **Consequences/tests:** install coexistence and release dependency/artifact inspection
 in SELLO-003/004/032/035. SDK 37 is an inspected compile/target setting, not a
 ratified support guarantee or a claim about store compliance.
-**Open:** minimum SDK approval; release channel (private distribution or store);
-SELLO-002 compatibility evidence. Exact library versions remain outside this record.
+**Open:** SELLO-002 compatibility evidence; signing custody and actual device/release
+owners remain D10/SELLO-035 prerequisites. Exact library versions remain outside this record.
 
 ## D03 — Forecast, allowance and verdict
 
@@ -285,8 +289,9 @@ actual implementation/manifest checks remain required, not claimed by this appro
 
 ## D09 — Restore and reset
 
-**Proposed choice:** restore replaces, never merges. Preview source counts and validate
-the whole file before confirmation. Restore backed-up financial zone and portable
+**Approved choice (project owner, 2026-10-08):** restore replaces, never merges.
+Validate the whole file, preview source/current counts and explicitly warn that
+current data will be replaced before confirmation. Restore backed-up financial zone and portable
 appearance/order preferences; never restore permissions, debug controls or URI grants.
 Advance generation and invalidate old drafts/undo/commands. Commit financial data
 atomically; settings failure stays visibly incomplete and retry resumes settings only.
@@ -296,28 +301,45 @@ monthly limits and portable preferences, return to first-run Recibo. Defaults ar
 Sistema/Cobalto/Más usadas. The next setup establishes the device financial zone.
 Retain only the minimal fresh generation and nonfinancial reset-completion identity
 needed to reject stale operations/recover completion; no former amounts/names/notes.
-Externally exported backups survive. Neither action changes system permissions.
+Externally exported backups survive; explicitly warn that reset does not erase them.
+Neither action changes system permissions.
 **Reason/alternative:** reject accidental merge, incomplete-success stamps and stale
 commands resurrecting deleted data. **Consequences/tests:** backup/reset recovery
-cases in the example corpus and SELLO-028–032. **Open:** explicit destructive-policy approval.
+cases R01–R06 in the example corpus and SELLO-028–032. **Open:** none for these
+approved product choices; implementation, failure recovery and independent review
+remain required, not established by approval.
 
 ## D10 — Release acceptance and review
 
-**Proposed choice:** minimum-SDK and target-SDK emulator coverage once D02/SELLO-002
-are accepted; compact, short landscape, medium and expanded windows; font scales
+**Approved choice (project owner, 2026-10-08):** minimum-SDK and target-SDK emulator
+coverage using SELLO-002's verified matrix; compact, short landscape, medium and expanded windows; font scales
 1.0/1.3/2.0; four themes; TalkBack, keyboard, Switch Access and reduced motion.
 Validate production-signed release installation/recovery on at least one physical
 device. Emulator assembly or debug signing is not that evidence.
 
 Product owner approves product/privacy examples and release acceptance; a designated
 independent technical reviewer approves financial/recovery correctness and quality
-evidence. Agent self-review cannot supply that approval. SELLO-034 establishes measured
+evidence. Agent self-review cannot supply that approval. SELLO-035 establishes measured
 startup/large-history baselines and numerical performance targets before its acceptance;
 no arbitrary latency guarantee in this contract. Missing reviewer/device/key/host
 is an explicit prerequisite, never an optional skipped pass.
 **Reason/alternative:** verify meaningful release boundaries without promising unmeasured
 performance. **Consequences/tests:** SELLO-033–036 matrices/artifacts/approvals.
-**Open:** approve matrix/process; name technical reviewer and release channel/device owner.
+**Open:** name technical reviewer, physical-device testing owner and signing
+custodian; approve concrete performance targets in SELLO-035 after baseline measurement.
+Approval of this process assigns no unnamed owners or technical review result.
+Private APK channel is approved in D02, not an unresolved choice.
+
+| Responsibility | Owner/status | Required evidence |
+| --- | --- | --- |
+| Product/privacy and release go/no-go | Project owner (user) | Logged policy approval; final candidate walkthrough and explicit release acceptance still required |
+| Independent financial/recovery technical review | Unassigned | Named reviewer, independently checked example corpus and later implementation/quality review |
+| Physical-device release testing | Unassigned | Identified device/API, production-signed candidate and recorded installation/recovery journeys |
+| Customer-distribution signing custody | Unassigned | Secure external key custody/access and certificate identity; no keys/passwords in source or reports |
+
+Unassigned responsibilities remain explicit acceptance prerequisites, not waived
+gates. Work with satisfied dependencies may proceed; required review/device/signing
+evidence must exist before the corresponding ticket or release is declared complete.
 
 ## Approval log and next discussion
 
@@ -343,6 +365,14 @@ performance. **Consequences/tests:** SELLO-033–036 matrices/artifacts/approval
 | 2026-10-08 | Project owner (user) | D08 manual plaintext backup | Approved versioned, unencrypted JSON with explicit readable-content disclosure before saving; no password/encryption promise in MVP. |
 | 2026-10-08 | Project owner (user) | D08 platform/provider privacy | Approved no OS-managed cloud backup/device transfer, manual-recovery responsibility and disclosure that a selected cloud-backed provider may sync the file independently of Sello. |
 | 2026-10-08 | Project owner (user) | D08 contents/retention | Approved financial history/zone/appearance/order recovery without permissions/secrets/debug/pending-undo state, temporary-file cleanup and external copies surviving app reset. |
+| 2026-10-08 | Project owner (user) | D09 replacement | Approved whole-file validation, counted preview and explicit replacement warning; restore never merges and includes financial zone/portable preferences, not permissions/debug state. R01/R02. |
+| 2026-10-08 | Project owner (user) | D09 recovery/fencing | Approved invalidating old drafts/undo, atomic financial replacement and visible settings-pending recovery that retries settings only, never a second financial replacement. R03/R04. |
+| 2026-10-08 | Project owner (user) | D09 reset | Approved counted two-confirmation reset with typed BORRAR, first-run defaults, minimal nonfinancial recovery metadata and explicit warning that external backups survive. R05/R06. |
+| 2026-10-08 | Project owner (user) | D02 identities/support | Approved customer/debug/catalog IDs and labels, side-by-side isolated installation, and SDK 30 product floor subject to SELLO-002 compatibility verification. Iden01/Iden02 are downstream acceptance expectations, not executed installation tests. |
+| 2026-10-08 | Project owner (user) | D02 distribution | Approved private APK distribution only for now; no Google Play/AAB release work in MVP. Production signing/device verification still required; actual publishing is not authorized. |
+| 2026-10-08 | Project owner (user) | D10 verification | Approved minimum/target SDK emulators, adaptive/font/theme/accessibility matrix and production-signed physical-device installation/recovery evidence; configuration and execution remain deliverables. |
+| 2026-10-08 | Project owner (user) | D10 performance | Approved measuring representative histories and approving concrete targets before release acceptance; no numerical guarantee approved. SELLO-035 owns this work. |
+| 2026-10-08 | Project owner (user) | D10 ownership/process | Approved product-owner go/no-go and independent technical review, with device/signing owners required. No names supplied for those roles; they remain unassigned prerequisites, not permission to self-approve or skip gates. |
 
 Approval source: user's numbered answers to the scope, forecast and rounding
 discussion, followed by an explicit instruction to make the changes and record approval;
@@ -357,12 +387,19 @@ The following “yes, sounds good” approved the three presented D06 ordering r
 The next “yes, approved” approved all three presented D07 lifecycle/budget/undo recommendations.
 The following “yes, continue” approved the three presented D08 privacy/file choices;
 the accompanying commit request authorizes committing this accumulated work.
+The subsequent “yes, approved” approves all three presented D09 replacement,
+recovery/fencing and reset recommendations.
+The following “approved. Just private apk distribution at this point” approves
+the two D02 identity/support recommendations and selects private APK distribution.
+The next “yes, approved” approves the presented D10 verification, performance and
+ownership process; it does not answer the request for named review/device/key owners.
 This approves those choices, not every other proposal or a completed independent
 review of every numerical case.
 
-Next discussion batches:
-1. D09 restore/reset destructive actions.
-2. D02 identities/support; D10 release owners.
+Remaining execution inputs:
+1. Assign the independent technical reviewer and obtain full-corpus example review.
+2. Assign physical-device testing and signing custody before affected release gates.
+3. Verify toolchain/support in SELLO-002 and establish measured targets in SELLO-035.
 
 Each approval entry must name decision/subchoice, chosen answer, approver, date and
 example implications. Partial approval does not ratify unrelated proposals. SELLO-001

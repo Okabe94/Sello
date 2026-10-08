@@ -466,7 +466,7 @@ than copying outdated baseline devices/tasks. No host/device/key availability is
 ### Concrete cases and pitfalls
 - Correct arithmetic in a unit test does not prove migration, portable restore or UI
   consistency after process death. A release with debug controls hidden still fails isolation.
-- Local runner success is not a hosted required check; debug signing is not upload signing.
+- Local runner success is not a hosted required check; debug signing is not customer-distribution signing.
 - A missing reviewer/device/signing key is an incomplete gate, not a reason to call Done.
 
 ### Verification recipe

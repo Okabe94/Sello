@@ -117,6 +117,40 @@ U01–U05 and aligned SELLO-013/019/020/021. Next: D08 privacy/portable backup p
 contents/retention choices and requested committing accumulated work. Recorded D08,
 added P01–P04 and aligned SELLO-029/032; implementation is still outstanding.
 Next: D09 restore/reset, then D02 identities/support and D10 release/review ownership.
+2026-10-08 D09 approval: owner approved all three replacement, settings-only recovery
+and counted/BORRAR reset recommendations. Recorded approval and R01–R06 expectations;
+aligned SELLO-030/031 acceptance. Implementation and independent review remain pending.
+Next: D02 identities/support, then D10 release/review ownership.
+2026-10-08 D02 approval: owner approved isolated customer/debug/catalog identities
+and SDK 30 floor subject to SELLO-002 verification, selecting private APK distribution
+only. Added Iden01/Iden02 and aligned toolchain/release guidance; no signing custody,
+device owner, D10 process or independent review is implied. Next: D10.
+2026-10-08 D10 approval: owner approved release matrix, measured performance target
+process and independent review/ownership requirements. D01–D10 policy choices are
+now approved. Named technical/device/signing owners were not supplied; full-corpus
+independent review remains outstanding, so SELLO-001 stays In Progress. Aligned
+the performance owner reference to SELLO-035, whose ticket owns measurements/targets.
+D10 verification: base `2c8e9ef` plus accumulated uncommitted D09/D02/D10 decision,
+architecture/input/example, epic/shared release guidance and generated CSV changes.
+32 board tests, generated MVP/roadmap consistency checks and `git diff --check`
+passed; G0 passed (97 tasks: 2 executed, 95 up-to-date; cached sample JVM test and
+17 existing lint warnings), log `/tmp/sello-d10-g0.log`. Documentation-only approval
+does not require invented red testing or device execution. No independent review,
+toolchain support verification or production-signing/device evidence is claimed.
+D02 verification: base `2c8e9ef` plus accumulated uncommitted D09/D02 architecture,
+decision/input/example, foundation/recovery/release, board README and generated CSV
+changes. 32 board tests, both generated-board consistency checks and diff whitespace
+checks passed. G0 passed (97 tasks: 2 executed, 95 up-to-date; cached sample JVM
+test and 17 existing lint warnings); log `/tmp/sello-d02-g0.log`. No behavioral code
+changed, so red testing/device execution is inapplicable to this approval update.
+SDK compatibility, side-by-side installation and production signing remain unverified.
+D09 verification: base `2c8e9ef` plus uncommitted architecture, decision/input,
+foundation/recovery acceptance, example corpus and regenerated MVP CSV changes.
+32 board tests, both generated-board consistency checks and `git diff --check`
+passed. G0 passed (97 tasks: 4 executed, 93 up-to-date; one cached sample JVM test,
+17 existing lint warnings); log `/tmp/sello-d09-g0.log`. Documentation-only approval
+needs no behavioral red test or device run. Owner policy approval is not independent
+technical review; SELLO-001 remains In Progress. No financial implementation shipped.
 Executor checks: 32 board unit tests passed, including meaningful red→green scope
 checks (five intended assertion failures before enforcement). Both board/export
 sets passed consistency checks; 325 local
@@ -132,7 +166,7 @@ new post-MVP epic, board generator/tests and generated MVP/roadmap export views.
 Carryover/archive arithmetic, field/money-range/deadline boundaries and O01–O08 ordering
 illustrations were executor-checked, not executed feature tests or independent review. No device run
 required for this documentation task;
-D01/D03–D08 product approvals and future signed-carryover direction are recorded
+D01–D10 product approvals and future signed-carryover direction are recorded
 above; no independent review is claimed.
 
 ## SELLO-002 — Establish and verify the supported Android toolchain
@@ -158,7 +192,9 @@ JAVA_HOME alone controls the daemon. Establish debug versus production signing p
   wrapper checksum and AGP built-in Kotlin integration are valid.
 - Dependency versions are pinned, source/build artifacts contain no credentials,
   and ignored machine-local configuration stays untracked.
-- Release compilation succeeds without upload secrets. Production signing remains
+- Approved D02: verify SDK 30 floor and customer/debug/catalog identities against
+  the selected toolchain; record actual compatibility rather than inferring it from approval.
+- Release compilation succeeds without distribution-signing secrets. Production signing remains
   an explicit later release gate; no keys/passwords enter source control.
 
 ### Tests
@@ -192,8 +228,8 @@ wrapper, `gradle.properties`, daemon criteria and `app/build.gradle.kts`.
 - `JAVA_HOME` pointing at Android Studio does not override daemon criteria by itself.
 - A supported matrix must include the Compose plugin/BOM and selected KSP processor
   compatibility, not just successful dependency resolution with an old cache.
-- A missing device is an unmet launch check. Unsigned release assembly is not an
-  upload-signed application; do not create an upload key just to silence a build failure.
+- A missing device is an unmet launch check. Unsigned release assembly is not a
+  production-signed private APK; do not create a distribution key just to silence a build failure.
 
 ### Verification recipe
 Run `./gradlew --version`, `./gradlew clean`, G0 and

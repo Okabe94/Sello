@@ -1,8 +1,9 @@
 # 0001 — MVP product and financial contract
 
-**Ticket:** SELLO-001 · **Version:** 23 · **Updated:** 2026-10-08
-**Status:** D01–D10 product policies/process approved; implementation, independent
+**Ticket:** SELLO-001 · **Version:** 32 · **Updated:** 2026-10-08
+**Status:** D01–D10 product policies/process and owner walkthrough approved; implementation, independent
 example review and named independent technical reviewer remain outstanding.
+D06 latest-expense addition and its scope/boundaries are owner-approved.
 Signed carryover is deferred beyond MVP; detailed policy belongs to SELLO-037.
 **Decision owner/approver:** project owner (user). **Executor:** coding agent.
 **Approval/date:** project owner (user), 2026-10-08, for the logged D01–D10 choices;
@@ -247,8 +248,10 @@ normalization/parser implementation and independent boundary review remain requi
 **Approved ordering (project owner, 2026-10-08):** default Más usadas = count of nondeleted expenses in the selected
 month, descending. Other design choices: Alfabético = normalized name ascending;
 Monto gastado = selected-month spent descending; Límite = that month's finite limit
-descending; Última actualización = real category/configuration audit Instant descending
-(not latest expense date). Expose direction for each metric. Unlimited categories
+descending. **Revised direction (owner, 2026-10-08):** the latest-activity option
+means most recently added expense, not category/budget modification or expense edit.
+This supersedes the earlier configuration-audit comparator. Expose direction for
+each metric. Unlimited categories
 always last regardless of direction; equal metrics tie by normalized name ascending,
 then stable category ID. Unlimited-last applies even to alphabetical/reversed orders.
 Approved D07 archive visibility/eligibility also applies: archived categories remain
@@ -256,10 +259,22 @@ visible in periods with a saved limit or expenses, but cannot accept new entries
 until unarchived. Keep those historical rows under the same ordering contract.
 
 **Reason/alternative:** selected-month ordering explains what the user is viewing;
-reject undocumented lifetime counts and financial-time changes affecting audit order.
-**Consequences/tests:** O01–O08 and cross-month/direction/tie/unlimited cases in
+reject undocumented lifetime counts or treating configuration edits as expense additions.
+**Consequences/tests:** O01–O14 and cross-month/direction/tie/unlimited cases in
 SELLO-023; archive interactions use approved D07.
-**Open:** none for ordering/visibility rules; UI/test execution remains outstanding.
+**Approved clarification (owner, 2026-10-08):** label Último gasto agregado;
+selected-month nondeleted expenses, sorted by each category's newest original
+real creation Instant. A backdated expense belongs to its effective month but
+counts as recently added there; edits do not change its original addition time.
+No-expense finite categories remain last within their partition in either
+direction. Deleting the newest expense falls back to the next eligible addition;
+restoring a backup preserves original creation times, not file-import time.
+Compare each category's newest addition even when direction is reversed; do not
+switch the metric to its oldest expense. Unlimited-last and alphabetical/ID ties
+still apply. **Open:** none for these product rules; implementation/verification
+and independent technical review remain outstanding.
+See [ADR 0004](0004-category-latest-expense-order.md) for the superseded comparator
+and required follow-up verification; this direction is not implemented yet.
 
 ## D07 — Archive and undo
 
@@ -326,6 +341,23 @@ current data will be replaced before confirmation. Restore backed-up financial z
 appearance/order preferences; never restore permissions, debug controls or URI grants.
 Advance generation and invalidate old drafts/undo/commands. Commit financial data
 atomically; settings failure stays visibly incomplete and retry resumes settings only.
+**Required partial-completion wording:** identify committed financial history and
+the specific backed-up preferences that failed to apply; a standalone “ajustes
+pendientes” is insufficient. Do not imply financial data failed, claim complete
+restore, or list a preference that already applied. Retry action/copy must make
+clear that only the named preferences are retried and history is not replaced again.
+Owner-approved Spanish baseline (2026-10-08; values below are illustrative,
+implementation still requires actual-state/accessible UI review):
+- Title: “Historial financiero restaurado”.
+- Body: “Tus gastos, ingresos, categorías y presupuestos ya se restauraron.
+  No pudimos aplicar estas preferencias del respaldo:”.
+- List: affected preferences only, e.g. “Apariencia: Oscuro · Violeta” and
+  “Orden de categorías: Más usadas · de mayor a menor”. Show failed mode/color/
+  order/direction specifically if completion tracking knows finer-grained results.
+- Action for this example: “Aplicar apariencia y orden”; adapt to the affected
+  preferences (e.g. “Aplicar apariencia” when that alone failed).
+- Reassurance: “Solo se aplicarán las preferencias indicadas. Tu historial no
+  se reemplazará otra vez.”
 
 Reset requires counts, two confirmations and typed BORRAR; delete finances, categories,
 monthly limits and portable preferences, return to first-run Recibo. Defaults are
@@ -476,6 +508,55 @@ item 4's wider backup transaction support. D05 now applies the same transaction
 maximum everywhere; M05 is revised to rejection, not preservation. ADR 0003 records
 the change; the complete invalid-file restore must remain nonmutating. Aggregate
 values remain checked separately, not clamped to the individual transaction maximum.
+2026-10-08 naming/source response: owner confirmed all five presented behaviors,
+covering T01–T06 trimming/case/accent duplicates, archived-name retention, name/note
+limits, required Otro name and manual income-source meanings. Unicode implementation
+details and independent technical review are not implied. Next: AR01–AR06 archive/
+restore/history examples; ordering examples follow separately.
+2026-10-08 archive response: owner confirmed all five presented behaviors,
+covering AR01–AR06 retained current limits/history, no automatic archived-month
+budgets, same/later-month restoration, override precedence and historical rename
+labels. Next: O01–O08 selected-month sorting, audit-time/direction/tie/unlimited
+examples; response pending, with no implementation or independent review implied.
+2026-10-08 ordering response: owner confirmed items 1/2/4/5 (O01–O05/O07 and
+direction/tie/unlimited behavior) but changed item 3 to the category that last
+received an expense through addition, not modification. Retired O06's old
+configuration comparator; scope/time/deletion/empty proposals remain unresolved.
+This does not approve the old O06/O08 values or complete the full example review.
+2026-10-08 recency clarification: owner confirmed all three recommendations,
+including selected-month scope, original real addition time (not effective date
+or edit/restore time), surviving-expense fallback and empty-last behavior, plus
+the clearer label Último gasto agregado. Updated ADR 0004 and O06/O08; O09–O14
+instantiate these approved boundaries as executor-checked expectations, not
+independently reviewed numeric fixtures or executed sorting tests.
+2026-10-08 undo response: owner confirmed all five U01–U05 real-time deadline,
+rotation/background, process-death offer expiry, committed-undo recovery and
+conflict/reset fencing behaviors (“yes to all”). Next: P01–P04 plaintext backup,
+provider sync, portable contents and recovery/retention responsibilities; response
+pending. No actual undo/storage/device execution or independent review is claimed.
+2026-10-08 backup response: owner confirmed all four P01–P04 plaintext/disclosure,
+portable-content, manual-recovery/provider-sync and truthful-save/retention cases.
+Next: R01–R06 counted replacement, nonmutating invalid/canceled restore, pending
+settings-only recovery, counted/BORRAR reset, interrupted-operation/stale-draft
+fencing and duplicate-submit/unknown-commit examples. Response pending; no actual
+backup/restore/reset implementation or independent technical review is claimed.
+2026-10-08 recovery response: owner confirmed all six R01–R06/duplicate-submit/
+unknown-commit scenarios, requesting clearer partial-restore wording than “ajustes
+pendientes”. Added named-preference requirements and concrete Spanish proposal;
+literal replacement copy is proposed, not approved by the preceding response.
+Installation examples and independent technical review remain outstanding.
+2026-10-08 restore-copy response: owner accepted the more precise wording (“yes,
+better, lets continue”), including financial-history confirmation, explicit failed
+preferences, scoped retry action and no-second-replacement reassurance. Literal
+baseline is owner-approved; actual pending values/UI accessibility remain SELLO-030
+deliverables. Next: Iden01/Iden02 installation/coexistence/isolation/private-APK
+examples; response pending, with no actual artifact/device evidence claimed.
+2026-10-08 installation response: owner confirmed all four Iden01/Iden02 coexistence,
+data/time isolation, shared-component catalog/customer-artifact exclusion and
+verified private production-signed APK/support expectations (“yes to all”). Owner
+walkthrough is complete, including requested policy/copy revisions. No unresolved
+owner choice remains in this walkthrough; independent technical/fixture review,
+toolchain verification and actual feature/artifact/device evidence remain separate.
 
 Each approval entry must name decision/subchoice, chosen answer, approver, date and
 example implications. Partial approval does not ratify unrelated proposals. SELLO-001

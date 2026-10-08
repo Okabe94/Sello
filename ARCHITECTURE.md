@@ -223,9 +223,15 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
   only chart axes. Respect reduced motion, ≥12sp text, ≥48dp hit targets, contrast,
   keyboard/Switch Access/TalkBack, and font scales 1.0/1.3/2.0 from the first slice.
 - **MUST** apply [approved D06 ordering](docs/decisions/0001-mvp-contract.md#d06--ordering):
-  selected-month expense count/spending/limit metrics, real category/configuration
-  audit time for last update, reversible direction and deterministic alphabetical/ID
+  selected-month expense count/spending/limit metrics, latest added expense rather
+  than configuration/expense modification for the latest-activity option, reversible
+  direction and deterministic alphabetical/ID
   ties. Unlimited categories remain last even in alphabetical/reversed orders.
+  Último gasto agregado uses the newest original real creation Instant among
+  selected-month nondeleted expenses. Edits/restore do not refresh it; deletion
+  falls back to surviving additions. No-expense categories stay last within their
+  finite/unlimited partition in either direction; original configuration-audit
+  ordering is superseded. Reverse direction, not the newest-per-category metric.
 - **MUST** implement saved tab stacks, shared month for Recibo/Resumen/detail,
   no future month selection, and reset month after >30 background minutes without
   clearing drafts. Dock always opens an expense; goals/investment movements start

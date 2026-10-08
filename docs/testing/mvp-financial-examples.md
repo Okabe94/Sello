@@ -1,7 +1,7 @@
 # MVP financial example corpus
 
-**Version:** 23 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
-**Status:** D01–D10 product policies/process approved; independent example review
+**Version:** 32 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
+**Status:** D01–D10 product policies/process and owner walkthrough approved; independent example review
 and named independent technical reviewer remain pending. User owns physical-device
 testing and release build/signing; actual evidence is still required. These are not passing app tests.
 Numbers use comma grouping here for readability; amounts are integer COP unless
@@ -140,13 +140,14 @@ default without changing October/December or the default version history.
 
 ## Category ordering — approved D06
 
-Synthetic fixture; all categories active. Real category/configuration audit times
-are independent of selected month and simulated financial time.
+Synthetic fixture; all categories active. Times below are original real expense
+creation Instants, not configuration edits or simulated financial dates. The
+selected effective month filters eligible nondeleted expenses before ranking.
 
-| ID/name | Monthly limit COP | October count/spent | September count/spent | Last configuration edit (UTC) |
+| ID/name | Monthly limit COP | October count/spent | September count/spent | Newest October addition (UTC) |
 | --- | --- | --- | --- | --- |
-| cat-a / Alimentación | 100,000 | 2 / 30,000 | 1 / 10,000 | 2026-10-05T12:00:00Z |
-| cat-c / Café | 50,000 | 3 / 15,000 | 0 / 0 | 2026-10-02T12:00:00Z |
+| cat-a / Alimentación | 100,000 | 2 / 30,000 | 1 / 10,000 | 2026-10-03T12:00:00Z |
+| cat-c / Café | 50,000 | 3 / 15,000 | 0 / 0 | 2026-10-05T12:00:00Z |
 | cat-t / Transporte | 200,000 | 1 / 40,000 | 4 / 20,000 | 2026-10-04T12:00:00Z |
 | cat-u / Arte | unlimited | 8 / 80,000 | 6 / 60,000 | 2026-10-06T12:00:00Z |
 
@@ -157,11 +158,24 @@ are independent of selected month and simulated financial time.
 | O03 | Alfabético ascending; reverse | cat-a, cat-c, cat-t, cat-u; cat-t, cat-c, cat-a, cat-u |
 | O04 | October Monto gastado descending | cat-t, cat-a, cat-c, cat-u |
 | O05 | Límite descending | cat-t, cat-a, cat-c, cat-u |
-| O06 | Última actualización descending | cat-a, cat-t, cat-c, cat-u |
+| O06 | October Último gasto agregado descending; reverse | cat-c, cat-t, cat-a, cat-u; cat-a, cat-t, cat-c, cat-u |
 | O07 | October fixture but Café count becomes 2; count descending, then ascending | cat-a, cat-c, cat-t, cat-u; cat-t, cat-a, cat-c, cat-u |
-| O08 | Step financial date without any audit edit, keep selection/fixture fixed | Last-update order remains O06; simulated time is not a configuration edit |
+| O08 | Step financial date without expense addition, keeping selected scope/fixture fixed | O06 orders unchanged; financial clock stepping is not an expense addition |
+| O09 | Add Alimentación expense with September 20 effective date and October 7 creation Instant | October O06 unchanged; in September Alimentación becomes newer than Transporte's September 27 addition; cat-a, cat-t, cat-c, cat-u |
+| O10 | Edit Café's newest expense amount/note, or rename/edit its category limit; effective month unchanged | October O06 recency unchanged; original creation time preserved |
+| O11 | Delete Café's October 5 newest expense; next surviving Café addition October 2 | Descending: cat-t, cat-a, cat-c, cat-u |
+| O12 | No surviving October Café expenses; other base fixture rows unchanged | Descending: cat-t, cat-a, cat-c, cat-u; reverse: cat-a, cat-t, cat-c, cat-u; no-expense Café stays after eligible finite rows |
+| O13 | Restore original fixture backup on a later day | Original creation times and O06 ordering preserved; import time is not a fresh addition |
+| O14 | Separate fixture: Alimentación newest addition equals Café October 5 at 12:00Z | Descending: cat-a, cat-c, cat-t, cat-u; reverse: cat-t, cat-a, cat-c, cat-u; alphabetical tie remains ascending |
 
-Arte remains last despite highest count/spending, newest edit and alphabetic placement;
+For O09, base September newest additions are Alimentación September 25 and
+Transporte September 27 at 12:00Z; Café has no September expense. O11 uses base
+Café additions October 1/2/5 at 12:00Z, each 5,000 COP; other cases use independent
+copies of the base fixture. October selection remains fixed for O08. These new
+creation-time fixtures instantiate owner-approved policy, but independent fixture
+review and actual sorting tests are still required.
+
+Arte remains last despite highest count/spending and alphabetic placement;
 reversing the metric never reverses the unlimited partition or alphabetical tie-break.
 Amounts/counts/limits come from the same selected-month snapshot. Archive visibility
 and budget lifecycle cases follow approved D07 below.
@@ -204,7 +218,7 @@ before financial data is stored, as required by SELLO-011.
 | --- | --- | --- |
 | R01 | Invalid/truncated/unsupported backup, or cancel validated replacement preview | Financial data, generation and preferences unchanged; no success feedback |
 | R02 | Current history contains 2 expenses; confirm valid G01 backup containing 3 expenses/1 income | Preview both counts and replacement warning; final history is exactly the backed-up 3 expenses/1 income, not merged; restore backed-up zone/appearance/order, not permissions/debug/URI grants |
-| R03 | R02 commits financially; preference write fails, then reopen/retry | Exact restored financial history remains committed; show settings pending, not complete Restaurado; resume settings only without a second replacement or generation advance |
+| R03 | R02 commits financially; preference write fails, then reopen/retry | Identify financial history as restored and name only the failed backup preferences (appearance/mode/color/category order/direction as applicable), not vague ajustes pendientes or complete Restaurado. Resume those preferences only without a second replacement or generation advance; say history will not be replaced again |
 | R04 | Submit old draft or undo after restore/reset, even with matching restored record IDs | Reject stale generation; no mutation or resurrection; uncertain original replacement outcome is recovered by its original operation ID |
 | R05 | Cancel reset at either confirmation or enter text other than exact BORRAR | All financial data and preferences unchanged; no reset completion |
 | R06 | Confirm counted reset with BORRAR, then restart | No prior finances/categories/month limits/names/notes/portable preferences; first-run defaults Sistema/Cobalto/Más usadas; next setup uses device financial zone; retain only minimal nonfinancial fencing/completion identity; permissions unchanged; external backups survive with explicit warning |
@@ -246,7 +260,7 @@ results. Executor explanation/checks are not independent technical review or app
 | 1 | B01/B02/B04/B05/B06/B07/B08 | Remaining budget; unlimited expenses still count; no-limit versus zero; category versus overall overspending; failed reads are not empty histories | Owner-confirmed, including B04/B08 scope clarification; independent technical review remains separate |
 | 2 | F01–F08/A01–A08/V01–V05 | Day inclusion, estimate sensitivity, COP 50 planning rounding and exact verdict boundaries | Owner-confirmed across both walkthroughs; implementation and independent technical review remain separate |
 | 3 | H01–H06/I01–I02/G01–G02 | Historical stability/renewal, cash-flow versus budget allocation and graph reconciliation | Owner-confirmed, including G01/G02 after allocation-label clarification; independent technical review remains separate |
-| 4 | M01–M06/T01–T06/O01–O08/AR01–AR06/U01–U05/P01–P04/R01–R06/Iden01–Iden02 | Input/order/archive/undo/file/recovery/installation edge cases | Owner confirmed M01–M04 and rejected wider-import support; M05 revised to rejection, M06 clarifies aggregate scope; other cases not yet reviewed |
+| 4 | M01–M06/T01–T06/O01–O14/AR01–AR06/U01–U05/P01–P04/R01–R06/Iden01–Iden02 | Input/order/archive/undo/file/recovery/installation edge cases | Owner walkthrough complete, including revisions to money range/recency/restore wording and Iden01/Iden02. Independent fixture/technical review and execution remain separate; O09–O14 were instantiated from approved policy, not individually independently reviewed |
 
 2026-10-08 batch 1 feedback: owner sees the plan as a useful reflection of personal
 funds and money movement, with future signed carryover important. Accepted focusing
@@ -304,6 +318,71 @@ backup-only transaction support in item 4. M05's old preservation expectation is
 superseded: UI/domain/storage/backup share the 12-digit transaction cap. ADR 0003
 and M06 distinguish that cap from aggregate totals; no storage/restore tests or
 review of other batch 4 examples is claimed.
+2026-10-08 continued walkthrough: presented T01–T06 as category trimming/duplicate
+examples, archived-name retention, 24-code-point required names and optional
+60-code-point notes, Otro source naming and manually recorded income labels.
+Boundary violations reject rather than silently truncate; category duplicate
+examples mean creating a different category, not renaming the same identity.
+Owner response pending. This presentation does not ratify normalization details,
+implement validation or complete independent technical review.
+2026-10-08 response: owner confirmed all five naming/source items, covering T01–T06.
+Next walkthrough presents AR01–AR06: retained current-month budget/history and
+archived row, no new entries or automatic future-month budget while archived,
+same-month restoration, later restoration with explicit override precedence and
+renaming historical labels without changing amounts/identity. Explain consequences
+before confirmation. Owner response pending; O01–O08 ordering is a separate next
+walkthrough, not reviewed by confirming names or archive policy.
+2026-10-08 response: owner explicitly confirmed all five archive/restore items,
+covering AR01–AR06. Next walkthrough uses the O01–O08 synthetic fixture to show
+monthly expense counts, alphabetical/spent/limit orders, actual configuration-edit
+ordering (not latest expense or simulated time), reversible primary direction,
+fixed alphabetical/stable-ID ties and unlimited-last partition. Owner response
+pending; previously approved policy is not evidence of executed sorting tests.
+2026-10-08 sorting response: owner confirmed items 1/2/4/5 but replaced configuration
+update ordering with last expense addition. Editing an expense/category/budget is
+not a new addition. O06's old expectation is retired; O06/O08 need clarified
+scope/timestamp/deletion/empty fixtures. Proposed selected-month, original real
+creation-time and nondeleted/empty rules are presented next, not silently approved.
+2026-10-08 recency response: owner confirmed all three scope/time/surviving/empty
+recommendations and clearer label. Updated O06/O08 and instantiated O09–O14 as
+executor-checked fixtures; policy approval does not imply independent fixture review.
+Next walkthrough presents U01–U05 six-real-second undo, same-process recreation,
+process-death offer expiry, committed-undo recovery and conflict/reset fencing;
+owner response pending.
+2026-10-08 undo response: owner confirmed all five U01–U05 cases. Next walkthrough
+uses P01–P04: readable unencrypted manual JSON, success only after write/close,
+financial history/zone/preferences without runtime/debug/device state, manual
+recovery responsibility with OS backup/transfer disabled, provider-owned cloud
+sync and external-copy retention/private-temporary cleanup. Owner response pending;
+actual platform/file requirements remain implementation deliverables.
+2026-10-08 backup response: owner explicitly confirmed all P01–P04 items. Next
+walkthrough presents R01–R06 and the general recovery contracts: 2 current expenses
+replaced by 3 backup expenses/1 income, invalid/canceled replacement changes nothing,
+financially committed restore with pending settings retries settings only, counted
+BORRAR reset/first-run state, interrupted commit recovery and stale-draft rejection.
+Duplicate submission of one 20,000 expense operation produces one expense, not
+40,000 spent; two deliberately distinct 20,000 commands remain two expenses.
+Unknown commit recovers the original operation, never blind resubmission with a new
+identity. Owner response pending; storage/device tests and independent review remain
+required, not proven by this walkthrough.
+2026-10-08 recovery response: owner confirmed all six presented behaviors and
+requested precise R03 wording. Added named failed-preference/committed-history/
+preferences-only retry requirements; proposed literal copy lives in D09 and awaits
+response/UI review. Do not treat the wording request as rejected recovery semantics
+or as approval of text proposed afterward. Installation review remains outstanding.
+2026-10-08 copy follow-up: owner accepted the concrete D09 partial-restore wording;
+use actual failed preferences/backup values, not hardcoded sample text. Rendering
+and retry behavior still need implementation tests and accessibility review.
+Next walkthrough presents Iden01/Iden02: customer/debug/catalog coexistence with
+isolated data, sandbox-only time/fixtures and reset effects, actual-component
+catalog without financial repositories, customer-artifact tooling exclusion and
+verified SDK 30/private production-signed APK delivery. Owner response pending;
+coexistence/artifact/device/signing evidence is not established by this walkthrough.
+2026-10-08 installation response: owner explicitly confirmed all four Iden01/Iden02
+examples. Owner-facing walkthrough is complete with no further policy questions
+pending in these batches. Revised fixtures are reviewed product direction, not
+independent technical review or implementation/device/signing evidence. Future
+executor test expectations must still be independently checked before acceptance.
 
 Executor arithmetic verification is distinct from independent product review.
 Product approved D01–D10 on 2026-10-08, including the two explicit allowance examples;

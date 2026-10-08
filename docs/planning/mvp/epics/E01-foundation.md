@@ -176,6 +176,114 @@ transactions. Revised D05/M05 to the same 12-digit per-transaction range everywh
 recorded ADR 0003, added M06 aggregate-scope case and aligned SELLO-010/030. Original
 approval history is retained but superseded; no persisted data or financial code
 exists to migrate. Other batch 4 cases and independent review remain outstanding.
+2026-10-08 naming/source walkthrough: presented T01–T06 category trim/case/accent
+duplicates including archived identities, name/note limits, required Otro name and
+manual income-source meanings. Owner response pending; policies are previously
+approved D05, not newly implemented validation or independent technical review.
+2026-10-08 naming/source confirmation: owner explicitly confirmed all five items,
+covering T01–T06. Recorded review without claiming implementation/technical review.
+Presented AR01–AR06 archive/restore/history scenarios next; response pending.
+O01–O08 ordering follows separately; SELLO-001 remains In Progress.
+2026-10-08 archive confirmation: owner confirmed all five AR01–AR06 behaviors.
+Marked those examples owner-reviewed, not executed or independently technically
+reviewed. Presented O01–O08 selected-month metric/direction/tie/unlimited and
+configuration-audit-time ordering next; owner response pending.
+2026-10-08 sorting response: owner confirmed count/amount/limit/alphabetical and
+direction/tie/unlimited cases but changed latest activity to last expense addition,
+not modification. Updated D06/architecture/SELLO-023 and retired O06's configuration
+expectation. Latest-addition selected-month/global scope, creation/effective time,
+deletion/empty and restored-time proposals need clarification; no implementation
+or blanket example approval is claimed.
+2026-10-08 recency confirmation: owner approved all three selected-month/original
+addition/surviving-and-empty recommendations and clearer label. Finalized D06,
+ADR 0004, architecture/SELLO-023; replaced O06/O08 and added O09–O14 boundary
+fixtures from approved policy, with independent fixture review still pending.
+Presenting U01–U05 undo/restart/conflict examples next; response pending.
+2026-10-08 undo confirmation: owner explicitly approved all U01–U05 scenarios.
+Marked those owner-reviewed without claiming storage/device/technical verification.
+Presenting P01–P04 backup privacy/contents/provider/recovery/retention scenarios
+next; response pending. Restore/reset and installation review remains outstanding.
+2026-10-08 backup confirmation: owner approved all four P01–P04 cases. Marked
+those owner-reviewed, not platform/file tested. Presented R01–R06 restore/reset
+and duplicate-submit/unknown-commit contracts next; response pending. Installation
+examples and independent technical review remain outstanding.
+2026-10-08 recovery confirmation: owner approved all six R01–R06 and duplicate/
+unknown-commit scenarios, asking to replace vague ajustes pendientes. Recorded
+named failed-preference/committed-history/targeted-retry copy requirements in D09,
+R03 and SELLO-030; literal Spanish proposal awaits response/UI review. Installation
+review and independent technical review remain outstanding; no recovery code exists.
+2026-10-08 restore-copy approval: owner accepted concrete Spanish wording with
+named failed preferences and targeted retry/no-second-replacement reassurance.
+Recorded D09 baseline approval and aligned SELLO-030; actual rendering/retry tests
+remain future implementation. Presenting Iden01/Iden02 installation/isolation/
+customer-artifact/private-APK scenarios next; response pending, not device evidence.
+2026-10-08 installation confirmation: owner approved all four Iden01/Iden02 items.
+Owner walkthrough is complete, with all D01–D10 choices and requested revisions
+recorded. No further owner question remains in the presented batches. Independent
+technical/fixture review is still outstanding; SELLO-001 stays In Progress rather
+than claiming that owner approval executed feature/device gates. SELLO-002 remains
+independently Ready and can verify the actual toolchain while review is arranged.
+Walkthrough-completion verification: base `d8d58a9` plus accumulated uncommitted
+architecture/decision/input/example, ADR 0004, foundation/workflow/recovery and
+generated MVP CSV edits. 32 board tests, generated-board and diff checks passed;
+G0 passed (97 tasks: 2 executed, 95 up-to-date; cached sample JVM test and existing
+lint warnings), log `/tmp/sello-owner-walkthrough-complete-g0.log`. Docs-only; no
+behavioral red/device test applicable. Independent technical/fixture review remains
+required; no feature, device, hosted CI or completed-ticket evidence is claimed.
+Restore-copy verification: base `d8d58a9` plus accumulated uncommitted architecture,
+decision/input/example, ADR 0004, foundation/workflow/recovery and generated MVP
+CSV edits. 32 board tests, generated-board and diff checks passed; G0 passed (97
+tasks: 2 executed, 95 up-to-date; cached sample JVM test and existing lint warnings),
+log `/tmp/sello-installation-walkthrough-g0.log`. Docs-only; no behavioral red/device
+test applicable. Installation response and independent review remain pending.
+Recovery-wording verification: base `d8d58a9` plus accumulated uncommitted
+architecture/decision/input/example, ADR 0004, foundation/workflow/recovery and
+generated MVP CSV edits. 32 board tests, generated-board and diff checks passed;
+G0 passed (97 tasks: 2 executed, 95 up-to-date; cached sample JVM test and existing
+lint warnings), log `/tmp/sello-restore-wording-g0.log`. Docs-only; no behavioral
+red/device test applicable. Literal copy response/installation/technical review pending.
+Backup-confirmation verification: base `d8d58a9` plus accumulated uncommitted
+architecture/decision/input/example, ADR 0004, foundation/workflow and generated
+MVP CSV edits. 32 board tests, generated-board and diff checks passed; G0 passed
+(97 tasks: 2 executed, 95 up-to-date; cached sample JVM test and existing lint
+warnings), log `/tmp/sello-backup-confirmation-g0.log`. Docs-only; no behavioral
+red/device test applicable. Recovery response and independent review remain pending.
+Undo-confirmation verification: base `d8d58a9` plus accumulated uncommitted
+architecture/decision/input/example, ADR 0004, foundation/workflow and generated
+MVP CSV edits. 32 board tests, generated-board and diff checks passed; G0 passed
+(97 tasks: 2 executed, 95 up-to-date; cached sample JVM test and existing lint
+warnings), log `/tmp/sello-undo-confirmation-g0.log`. Docs-only; no behavioral
+red/device test applicable. Backup response and independent review remain pending.
+Recency-confirmation verification: base `d8d58a9` plus uncommitted architecture,
+decision/input/example, ADR 0004, foundation/workflow and generated MVP CSV edits.
+Executor fixture checks passed for recency/reverse, delete fallback and time ties;
+not production sorting tests or independent review. 32 board tests, generated-board
+and diff checks passed; G0 passed (97 tasks: 2 executed, 95 up-to-date; cached
+sample JVM test and existing lint warnings), log `/tmp/sello-recency-confirmation-g0.log`.
+Docs-only; no behavioral red/device test applicable. Undo response/review pending.
+Latest-addition direction verification: base `d8d58a9` plus uncommitted architecture,
+decision/input/example, ADR 0004, foundation/workflow and generated MVP CSV edits.
+32 board tests, generated-board and diff checks passed; G0 passed (97 tasks: 2
+executed, 95 up-to-date; cached sample JVM test and existing lint warnings), log
+`/tmp/sello-latest-addition-direction-g0.log`. Docs-only; no behavioral red/device
+test applicable. Comparator details and independent review remain pending.
+Archive-confirmation verification: base `d8d58a9` plus uncommitted decision/example,
+foundation progress and generated MVP CSV edits. 32 board tests, generated-board
+and diff checks passed; G0 passed (97 tasks: 2 executed, 95 up-to-date; cached
+sample JVM test and existing lint warnings), log `/tmp/sello-ordering-walkthrough-g0.log`.
+Docs-only; no behavioral red/device test applicable. Sorting response and independent
+technical review remain pending; no implementation or completed ticket is claimed.
+Naming-confirmation verification: base `d8d58a9` plus uncommitted decision/example,
+foundation progress and generated MVP CSV edits. 32 board tests, generated-board
+and diff checks passed; G0 passed (97 tasks: 2 executed, 95 up-to-date; cached
+sample JVM test and existing lint warnings), log `/tmp/sello-archive-walkthrough-g0.log`.
+Docs-only; no behavioral red/device test applicable. Archive response and independent
+technical review remain pending; no implementation or completed ticket is claimed.
+Naming walkthrough verification: base `d8d58a9` plus uncommitted example/progress
+and generated MVP CSV changes. 32 board tests, generated-board and diff checks
+passed; G0 passed (97 tasks: 4 executed, 93 up-to-date; cached sample JVM test and
+existing lint warnings), log `/tmp/sello-naming-walkthrough-g0.log`. Docs-only;
+no behavioral red/device test applicable; owner response and technical review pending.
 Transaction-range revision verification: base `cae26a3` plus accumulated architecture,
 decision/input/example, ADR 0003, foundation/core/workflow/recovery acceptance and
 generated MVP CSV edits. 32 board tests, generated-board checks, diff checks and

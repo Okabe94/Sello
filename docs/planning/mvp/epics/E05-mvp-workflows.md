@@ -313,9 +313,13 @@ and settings behind Recibo's gear. Data actions become visible only as their tic
   without invalidating committed money. Financial zone/limits remain in Room.
 - Every supported category order uses actual data; unlimited categories remain last.
   No investment currency, recurrence, notification or debug controls appear in release.
-- Approved D06 defaults/metrics/directions/ties match O01–O08 in the versioned
+- Approved D06 defaults/metrics/directions/ties match O01–O14 in the versioned
   corpus. Más usadas counts selected-month expenses, not lifetime count or amount;
-  last update uses real category/configuration audit time. Unlimited-last and
+  latest activity means last added expense, not configuration or expense modification.
+  Último gasto agregado uses newest original real creation Instant among selected-month
+  nondeleted expenses; edits/restore preserve it, deletion falls back, and no-expense
+  rows stay last within each partition even when reversed. Old configuration ordering
+  is superseded. Unlimited-last and
   alphabetical/ID ties are not reversed with the selected metric direction.
 - Settings uses narrow collaborators, not a universal manager/ViewModel; drafts
   and selected month are not cleared by appearance changes.
@@ -323,8 +327,10 @@ and settings behind Recibo's gear. Data actions become visible only as their tic
 ### Tests
 DataStore codec/default/failure/restart tests, sorting ties and archive interactions,
 device theme/order/settings back-stack tests; G2. Extend catalog preference UI states.
-Execute all O01–O08 orders, cross-month selection and reversed-direction/tie cases;
-financial-time travel without configuration edits cannot change last-update ordering.
+Execute all O01–O14 orders, cross-month selection and reversed-direction/tie cases;
+financial-time travel without expense additions and with fixed selection cannot
+count as a new addition. Include O09–O14 backdated/edit/delete/restore/empty/time-tie
+fixtures, preserving original creation time and reversing only metric comparison.
 
 ### Working checkpoint
 Daily-use workflows remain functional in all four themes; restart preserves selected

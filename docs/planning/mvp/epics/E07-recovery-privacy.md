@@ -170,6 +170,13 @@ on completion/cancel/expiry; route back to first/current Recibo only on truthful
   zone and portable appearance/order, without system permission or URI-grant changes.
 - Financial commit plus preference failure is “data restored, settings pending”,
   not generic failure or complete Restaurado. Restart resumes without replacing twice.
+- R03 copy must explicitly confirm restored financial history and list only the
+  preferences that failed to apply, with backed-up mode/color/order/direction where
+  applicable. Do not show standalone ajustes pendientes or claim applied fields
+  failed. Match retry action to the affected preferences and explain no second
+  financial replacement. Use D09's owner-approved copy baseline with actual failed
+  preference values; retain implementation-time accessible/adaptive UI review;
+  test full/appearance-only/order-only failure messages and preferences-only retry.
 - Unknown commit outcome recovers by original operation ID. Staging survives eligible
   restart but cannot be reinterpreted as a new operation after a generation change.
 - Backup does not resurrect debug jobs, permissions or internal execution receipts.

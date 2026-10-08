@@ -119,6 +119,13 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 | Goals | Contributions are historical records, not bank transfers. Derive milestone dates from actual crossings; projected dates require explicit assumptions. |
 | Investments | Stable `(effectiveDate, logicalSequence)` replay. `totalGain = currentValue + withdrawals + dividends − contributions`; percentage is simple gain, not IRR. Zero contributions yields undefined percentage. Recorded value, accrual, and benchmarks have distinct provenance. |
 
+- **MUST**, for the approved COP MVP, derive variable pace from recorded spending
+  divided by elapsed day-of-month including today; projection uses future days
+  excluding today and is an estimate even on day 1. Round the displayed daily
+  planning allowance **down to multiples of COP 50**, not recorded money or remaining
+  budget. Forecast display rounds HALF_UP to one peso; verdicts compare exact
+  pre-rounding projections. See [approved D03](docs/decisions/0001-mvp-contract.md#d03--forecast-allowance-and-verdict)
+  for widened arithmetic and positive-sub-50 allowance behavior.
 - **MUST** approve worked day-cutoff/short-month/projection examples before MVP
   forecasts. Freeze 95%/100% boundary tests. Before investments, separately approve
   annual-rate convention and dated-cash-flow examples; nominal and effective rates

@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 0/36 · **Epics Done:** 0/8
 
-Backlog: 34 · Ready: 2 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 0
+Backlog: 34 · Ready: 1 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 0
 
 [Workflow, gates and definition of done](README.md)
 
@@ -25,12 +25,13 @@ Backlog: 34 · Ready: 2 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 0
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-001](epics/E01-foundation.md#sello-001--approve-the-mvp-contract-and-financial-examples) | Approve the MVP contract and financial examples | SELLO-E01 | P0 | G0 | None |
 | [SELLO-002](epics/E01-foundation.md#sello-002--establish-and-verify-the-supported-android-toolchain) | Establish and verify the supported Android toolchain | SELLO-E01 | P0 | G0 | None |
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-001](epics/E01-foundation.md#sello-001--approve-the-mvp-contract-and-financial-examples) | Approve the MVP contract and financial examples | SELLO-E01 | P0 | G0 | None |
 
 ## Review
 

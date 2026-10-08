@@ -8,7 +8,7 @@
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Ready
+- **Status:** In Progress
 - **Depends on:** None
 - **Gate:** G0
 
@@ -71,6 +71,25 @@ Run `python3 docs/planning/mvp/board.py --check` and G0 from
 [gate profiles](../README.md#gate-profiles); check decision/example links and snapshot
 hash. Evidence must include approver/date and independently checked inputs/outputs.
 No behavior red test or device run is required for this documentation-only task.
+
+### Execution progress
+2026-10-08: drafted [D01–D10 proposals](../../../decisions/0001-mvp-contract.md)
+and [versioned worked examples](../../../testing/mvp-financial-examples.md).
+2026-10-08: project owner approved D01 scope and D03 forecast/day-inclusion/verdict
+rules, with daily allowance rounded down to COP 50 multiples. Recorded per-decision
+approval and updated example/architecture contracts; no other choices were approved.
+Next: owner reviews D04–D07, followed by D08/D09/D02/D10. Independent full-corpus
+review remains outstanding. Ticket stays In Progress; downstream prerequisites
+are not satisfied by this partial approval.
+Executor checks: 25 board unit tests passed; generated board consistency, 268 local
+documentation file/anchor links, design snapshot SHA-256 and exact arithmetic checks
+passed, including 15 COP 50 allowance cases and pre-rounding verdict precision.
+G0 (`./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`)
+passed with cached JVM test/lint results (one sample JVM test, 17 existing lint
+warnings). Tested base: `13803a7` plus uncommitted decision/example documents,
+architecture/decision-input updates, affected foundation/snapshot ticket edits and
+generated board/CSV views. No device run required for this documentation task;
+D01/D03 approval is recorded above, but no independent review is claimed.
 
 ## SELLO-002 — Establish and verify the supported Android toolchain
 

@@ -1,6 +1,8 @@
 # MVP decisions and independent examples
 
-**Status:** inputs for SELLO-001, not a completed product approval.
+**Status:** inputs for SELLO-001, not a completed product approval. D01/D03 were
+approved by the project owner on 2026-10-08; see the
+[decision record](../../decisions/0001-mvp-contract.md). Other decisions remain proposed.
 Architecture rules are binding baseline proposals; the choices below must be
 ratified/clarified in `docs/decisions/0001-mvp-contract.md`. The executor must name
 approver/date and transfer approved inputs into tests. Never set status Accepted
@@ -12,7 +14,7 @@ merely because a default seems reasonable.
 | --- | --- |
 | D01 scope | Ratify the exact MVP in architecture §1, two completed product tabs, developer catalog/sandbox, post-MVP recurrence. Consumers: navigation, sandbox, release. |
 | D02 identities/support | Confirm existing `com.software.sello` product ID, proposed `.debug`/`.catalog` IDs, minSdk/support matrix and release channel. SELLO-002 validates—not guesses—the compatible toolchain. |
-| D03 projection | Define elapsed variable-pace days, whether today counts, forecast remaining days, day-1/no-history handling, precision and status comparison before/after rounding. Proposed MVP: elapsed day-of-month includes today; future days exclude today; allowance includes today. Approve worked February/month-end examples. |
+| D03 projection | Approved: elapsed day-of-month includes today; future days exclude today; forecast from day 1. Allowance includes today and rounds down to COP 50 multiples only for the derived daily planning amount. Forecast display rounds HALF_UP to integer COP; verdict compares exact pre-rounding projection. Detailed examples/independent review remain SELLO-001 deliverables. |
 | D04 budget lifecycle | Define zero versus unlimited, period creation/carry-forward, missing/skipped months, archived categories and scope of limit edits. Never fill historical gaps using today's configuration without an explicit historical policy. Decide if old-month editing is allowed and how affected months are displayed. |
 | D05 fields | Ratify name/note limits, keypad digit limit versus wider import/display range, duplicate category names and stable supported income-source keys. Domain/storage/UI/backup must agree. |
 | D06 ordering | Define each order's metric/time range, ascending/descending and ties; unlimited last. “Most used” requires an explicit count window, not guessing between lifetime and selected month. |
@@ -47,8 +49,9 @@ All numbers below are integer COP amounts, with zero recurringDue in MVP.
 | I01 | Income 150,000; limits 100,000; actual expenses 30,000 | Net cash flow 120,000; undestined planning capacity 50,000; these are distinct figures |
 | G01 | Oct 1 expense 10,000; Oct 2 +15,000; Oct 3 +5,000; limit 100,000; income 200,000 | Cumulative spending 10,000/25,000/30,000; final remaining 70,000; net cash flow 170,000; undestined 100,000 |
 
-Additional D03 projection examples must specify the approved day-cutoff/precision;
-do not hardcode a guessed forecast here. Unknown/read failure has no valid monetary
+Additional D03 projection/allowance examples follow the approved day-cutoff/precision
+in the [versioned corpus](../../testing/mvp-financial-examples.md), including COP 50
+boundaries. Unknown/read failure has no valid monetary
 expected value; it is Failed, optionally with clearly marked last-good data.
 
 ## Recovery cases to turn into tests

@@ -10,7 +10,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Ready
+- **Status:** In Progress
 - **Depends on:** None
 - **Gate:** G0
 
@@ -73,6 +73,25 @@ Run `python3 docs/planning/mvp/board.py --check` and G0 from
 [gate profiles](../README.md#gate-profiles); check decision/example links and snapshot
 hash. Evidence must include approver/date and independently checked inputs/outputs.
 No behavior red test or device run is required for this documentation-only task.
+
+### Execution progress
+2026-10-08: drafted [D01–D10 proposals](../../../decisions/0001-mvp-contract.md)
+and [versioned worked examples](../../../testing/mvp-financial-examples.md).
+2026-10-08: project owner approved D01 scope and D03 forecast/day-inclusion/verdict
+rules, with daily allowance rounded down to COP 50 multiples. Recorded per-decision
+approval and updated example/architecture contracts; no other choices were approved.
+Next: owner reviews D04–D07, followed by D08/D09/D02/D10. Independent full-corpus
+review remains outstanding. Ticket stays In Progress; downstream prerequisites
+are not satisfied by this partial approval.
+Executor checks: 25 board unit tests passed; generated board consistency, 268 local
+documentation file/anchor links, design snapshot SHA-256 and exact arithmetic checks
+passed, including 15 COP 50 allowance cases and pre-rounding verdict precision.
+G0 (`./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`)
+passed with cached JVM test/lint results (one sample JVM test, 17 existing lint
+warnings). Tested base: `13803a7` plus uncommitted decision/example documents,
+architecture/decision-input updates, affected foundation/snapshot ticket edits and
+generated board/CSV views. No device run required for this documentation task;
+D01/D03 approval is recorded above, but no independent review is claimed.
 
 Shared definition of done and gates:
 
@@ -138,7 +157,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1001,Highest,Ready,sello-001
+",1001,Highest,In Progress,sello-001
 2,Task,SELLO-002 — Establish and verify the supported Android toolchain,"Local ID: SELLO-002
 Epic: SELLO-E01
 Repository source: docs/planning/mvp/epics/E01-foundation.md
@@ -1836,6 +1855,10 @@ and architecture §4; forecasts cannot be copied from reference drawings.
 ### Concrete cases and pitfalls
 - B01–B04/V01–V04/H01 must pass. A negative remaining allowance is zero with loss
   semantics; no-budget is not a numeric-zero budget. On Oct 31 allowance includes today.
+- Approved D03 rounds only the displayed daily planning allowance down to COP 50
+  multiples: 3,529 → 3,500; 3,564 → 3,550. Cover A01–A08 from the versioned corpus,
+  including exact 50/100 boundaries and positive sub-50 allowance without loss ink.
+  Preserve transaction/remaining-budget precision and exact forecast verdict comparisons.
 - Concurrent expense and limit edit cannot show old budget with new spend in one
   snapshot. Last-good data from another month/date must be labeled with its source.
 - Unrepresentable report totals fail explicitly; SQL SUM promotion or Float conversion

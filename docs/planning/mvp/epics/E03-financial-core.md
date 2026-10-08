@@ -318,6 +318,10 @@ and architecture §4; forecasts cannot be copied from reference drawings.
 ### Concrete cases and pitfalls
 - B01–B04/V01–V04/H01 must pass. A negative remaining allowance is zero with loss
   semantics; no-budget is not a numeric-zero budget. On Oct 31 allowance includes today.
+- Approved D03 rounds only the displayed daily planning allowance down to COP 50
+  multiples: 3,529 → 3,500; 3,564 → 3,550. Cover A01–A08 from the versioned corpus,
+  including exact 50/100 boundaries and positive sub-50 allowance without loss ink.
+  Preserve transaction/remaining-budget precision and exact forecast verdict comparisons.
 - Concurrent expense and limit edit cannot show old budget with new spend in one
   snapshot. Last-good data from another month/date must be labeled with its source.
 - Unrepresentable report totals fail explicitly; SQL SUM promotion or Float conversion

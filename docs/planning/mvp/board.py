@@ -40,6 +40,7 @@ class Epic:
     goal: str
     exit_criteria: str
     tickets: list[Ticket]
+    increment: str = "MVP"
 
 
 def metadata(text):
@@ -70,6 +71,8 @@ def parse_epic(source, text):
         raise ValueError(f"{epic_id}: no tickets")
     epic_fields = metadata(text[: matches[0].start()])
     require_fields(epic_fields, ("Status", "Goal", "Exit"), epic_id)
+    if int(epic_id.removeprefix("SELLO-E")) >= 9:
+        require_fields(epic_fields, ("Increment",), epic_id)
     tickets = []
     for index, match in enumerate(matches):
         identifier, ticket_title = match.groups()
@@ -91,7 +94,8 @@ def parse_epic(source, text):
             identifier, ticket_title, epic_id, source, fields["Type"], fields["Priority"],
             fields["Status"], dependencies, fields["Gate"], body,
         ))
-    return Epic(epic_id, title, source, epic_fields["Status"], epic_fields["Goal"], epic_fields["Exit"], tickets)
+    return Epic(epic_id, title, source, epic_fields["Status"], epic_fields["Goal"], epic_fields["Exit"], tickets,
+                epic_fields.get("Increment", "MVP"))
 
 
 def validate(epics):
@@ -101,7 +105,10 @@ def validate(epics):
     if len(set(epic_ids)) != len(epic_ids):
         raise ValueError("Duplicate epic ID")
     tickets = {}
+    increments = {}
     for epic in epics:
+        if epic.increment not in ("MVP", "Post-MVP"):
+            raise ValueError(f"{epic.identifier}: invalid increment")
         if epic.status not in STATUSES:
             raise ValueError(f"{epic.identifier}: unknown status")
         if epic.status == "Done" and any(ticket.status != "Done" for ticket in epic.tickets):
@@ -110,6 +117,7 @@ def validate(epics):
             if ticket.identifier in tickets:
                 raise ValueError(f"Duplicate ticket ID: {ticket.identifier}")
             tickets[ticket.identifier] = ticket
+            increments[ticket.identifier] = epic.increment
             if ticket.status not in STATUSES or ticket.priority not in PRIORITIES:
                 raise ValueError(f"{ticket.identifier}: invalid status/priority")
             if ticket.issue_type not in ("Task", "Story") or ticket.gate not in ("G0", "G1", "G2", "G3"):
@@ -121,6 +129,8 @@ def validate(epics):
         for dependency in ticket.dependencies:
             if dependency not in tickets:
                 raise ValueError(f"{ticket.identifier}: Unknown dependency {dependency}")
+            if increments[ticket.identifier] == "MVP" and increments[dependency] == "Post-MVP":
+                raise ValueError(f"{ticket.identifier}: MVP depends on Post-MVP {dependency}")
         if ticket.status in ("Ready", "In Progress", "Review", "Done") and any(
             tickets[dependency].status != "Done" for dependency in ticket.dependencies
         ):
@@ -165,14 +175,15 @@ def ticket_link(ticket):
     return f"[{ticket.identifier}](epics/{ticket.source.name}#{anchor})"
 
 
-def render_board(epics):
+def render_board(epics, context_epics=None, title="Sello MVP"):
     tickets = sorted((ticket for epic in epics for ticket in epic.tickets), key=lambda ticket: ticket.identifier)
-    lookup = {ticket.identifier: ticket for ticket in tickets}
+    lookup = {ticket.identifier: ticket for epic in (context_epics if context_epics is not None else epics)
+              for ticket in epic.tickets}
     done_count = sum(ticket.status == "Done" for ticket in tickets)
     epic_done = sum(epic.status == "Done" for epic in epics)
     counts = " · ".join(f"{status}: {sum(ticket.status == status for ticket in tickets)}" for status in STATUSES)
     lines = [
-        "# Sello MVP — Kanban board", "", "Generated from `epics/*.md`; do not edit independently.", "",
+        f"# {title} — Kanban board", "", "Generated from `epics/*.md`; do not edit independently.", "",
         f"**Tickets Done:** {done_count}/{len(tickets)} · **Epics Done:** {epic_done}/{len(epics)}", "",
         counts, "", "[Workflow, gates and definition of done](README.md)", "", "## Epic outcomes", "",
         "| Epic | Outcome | Status | Done |", "| --- | --- | --- | --- |",
@@ -208,12 +219,12 @@ def render_issue_csv(epics, shared_contract):
     for epic in epics:
         parent = str(1000 + int(epic.identifier.split("E")[-1]))
         rows.append([parent, "Epic", f"{epic.identifier} — {epic.title}",
-                     f"Local ID: {epic.identifier}\nGoal: {epic.goal}\nExit: {epic.exit_criteria}",
+                     f"Local ID: {epic.identifier}\nIncrement: {epic.increment}\nGoal: {epic.goal}\nExit: {epic.exit_criteria}",
                      "", "Highest", epic.status, epic.identifier.lower()])
         for ticket in epic.tickets:
             repository_source = f"docs/planning/mvp/epics/{ticket.source.name}"
             description = (
-                f"Local ID: {ticket.identifier}\nEpic: {epic.identifier}\n"
+                f"Local ID: {ticket.identifier}\nEpic: {epic.identifier}\nIncrement: {epic.increment}\n"
                 f"Repository source: {repository_source}\n"
                 "Resource links resolve relative to that repository file.\n"
                 "Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md\n\n"
@@ -245,19 +256,24 @@ def write_outputs(root, outputs, check):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate and generate the repository-owned Sello MVP board.")
+    parser = argparse.ArgumentParser(description="Validate and generate the repository-owned Sello MVP and post-MVP boards.")
     parser.add_argument("--check", action="store_true", help="Validate without writing; fail on stale generated files.")
     arguments = parser.parse_args()
     root = Path(__file__).resolve().parent
     try:
         epics = [parse_epic(path, path.read_text(encoding="utf-8")) for path in sorted((root / "epics").glob("*.md"))]
         validate(epics)
+        mvp_epics = [epic for epic in epics if epic.increment == "MVP"]
+        roadmap_epics = [epic for epic in epics if epic.increment == "Post-MVP"]
         readme = (root / "README.md").read_text(encoding="utf-8")
         shared_contract = readme.split("## Definition of done — every ticket\n", 1)[1].split("## Milestones and safe integration", 1)[0]
         outputs = {
-            "BOARD.md": render_board(epics),
-            "jira-import.csv": render_issue_csv(epics, "Shared definition of done and gates:\n" + shared_contract),
-            "dependency-links.csv": render_dependency_csv(epics),
+            "BOARD.md": render_board(mvp_epics, epics),
+            "jira-import.csv": render_issue_csv(mvp_epics, "Shared definition of done and gates:\n" + shared_contract),
+            "dependency-links.csv": render_dependency_csv(mvp_epics),
+            "ROADMAP.md": render_board(roadmap_epics, epics, "Sello post-MVP roadmap"),
+            "roadmap-jira-import.csv": render_issue_csv(roadmap_epics, "Shared definition of done and gates:\n" + shared_contract),
+            "roadmap-dependency-links.csv": render_dependency_csv(roadmap_epics),
         }
         write_outputs(root, outputs, arguments.check)
     except (ValueError, OSError, IndexError) as error:

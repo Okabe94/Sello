@@ -20,6 +20,11 @@ Sello is an offline-first, local-only Android financial app, Spanish first
 
 - **MUST** retain the reference's non-widget capabilities in the roadmap, with
   acceptance examples per increment. Do not prebuild deferred tables/jobs.
+- **MUST** retain signed budget carryover (surplus **and** overspending) as a future
+  post-MVP requirement, planned in SELLO-E09; optional category/global scope and
+  detailed policy remain undecided. MVP renews configured monthly budgets without carryover.
+  Preserve MVP history/domain boundaries without dormant carryover infrastructure;
+  see [carryover direction](docs/decisions/0002-signed-carryover-direction.md).
 - **MUST NOT** implement widgets/Glance, notification ingestion, capture inboxes,
   merchant parsers, or notification-listener services. Outgoing alerts are different.
 - **SHOULD** launch with two complete tabs, Recibo and Resumen; add Patrimonio when
@@ -103,6 +108,10 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 - **MUST** validate original input and command/storage/wire boundaries: positive
   amounts where required, currencies, references, dates, versions, and bounded text.
   Reject ambiguous pasted input; `1e3` must not become `13`.
+- **MUST** apply [approved D05](docs/decisions/0001-mvp-contract.md#d05--fields-input-grammar-and-income-labels)
+  field/name/source rules and plain-digit or correctly grouped-dot COP input grammar.
+  The manual keypad's 12-digit limit must not truncate larger valid backup values
+  or change them during other-field edits; it is not the domain/storage money range.
 - **MUST** use `LocalDate`/`YearMonth` for effective periods and `Instant` for audit
   time. Persist the financial zone in Room, defaulting to the device zone at setup;
   travel must not rewrite history. Inject time, observe rollover, and exclude
@@ -130,6 +139,17 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
   forecasts. Freeze 95%/100% boundary tests. Before investments, separately approve
   annual-rate convention and dated-cash-flow examples; nominal and effective rates
   cannot be mixed. Estimates never silently become recorded financial movements.
+- **MUST** distinguish explicit zero budgets from unlimited categories. Allow
+  explicit historical corrections without changing unrelated configured limits;
+  announce this capability with accessible contextual guidance and show the target
+  period/change scope before submission and confirmed completion afterward.
+  Signed carryover is deferred beyond MVP; activation details require SELLO-037
+  approval. Do not erase historical overspending/underspending records when renewing
+  a non-carry MVP budget or imply the renewal resets actual funds.
+- **MUST** resolve unopened historical months from configuration effective in that
+  month, not today's default or app-open timing. Retain effective-month default
+  history and explicit month overrides; do not extrapolate before known configuration.
+  Materialization must be idempotent/atomic, without precreating future budgets.
 
 ## 5. Persistence, commands, and recovery
 
@@ -150,9 +170,15 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
   Recover uncertain outcomes with the **same** ID before offering another write.
   A failed notification/export/preference update cannot invalidate saved money.
 - **MUST** implement record deletion with six-second undo and durable, guarded
-  compensation that cannot overwrite later edits. Category removal should archive
-  by default; destructive aggregate deletion requires counts/confirmation and one
-  explicit transaction, never an invisible historical cascade.
+  compensation that cannot overwrite later edits. The elapsed timer survives
+  same-process recreation without extension; process death expires the offer while
+  durable deletion/compensation outcomes remain recoverable. Financial time cannot
+  alter the deadline; offer expiry must not roll back an already committed compensation.
+- **MUST** use archive-only category removal in MVP: retain identity/history and
+  current-month limits, stop automatic budgets in later archived months, and apply
+  [approved D07 restoration/visibility](docs/decisions/0001-mvp-contract.md#d07--archive-and-undo)
+  with explained consequences. Any future destructive aggregate deletion needs
+  separate approval, counts/confirmation and an explicit transaction, never a cascade.
 - **MUST** fence reset/restore against stale commands/jobs with a persisted
   generation. Recovery receipts survive the replacement they describe. Reset
   requires counts, then a second confirmation typing **BORRAR**.
@@ -178,6 +204,10 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 - **MUST** keep full exact amounts on slips/lists and accessible labels; abbreviate
   only chart axes. Respect reduced motion, ≥12sp text, ≥48dp hit targets, contrast,
   keyboard/Switch Access/TalkBack, and font scales 1.0/1.3/2.0 from the first slice.
+- **MUST** apply [approved D06 ordering](docs/decisions/0001-mvp-contract.md#d06--ordering):
+  selected-month expense count/spending/limit metrics, real category/configuration
+  audit time for last update, reversible direction and deterministic alphabetical/ID
+  ties. Unlimited categories remain last even in alphabetical/reversed orders.
 - **MUST** implement saved tab stacks, shared month for Recibo/Resumen/detail,
   no future month selection, and reset month after >30 background minutes without
   clearing drafts. Dock always opens an expense; goals/investment movements start
@@ -201,6 +231,11 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 - **MUST** keep private local storage, disable unapproved OS backup/device transfer,
   redact diagnostics, minimize permissions, and narrowly scope/clean shared cache
   files. Disclose plaintext backups/exports; checksums are not encryption.
+- **MUST**, for approved D08 MVP policy, use manual plaintext JSON backup without
+  password/encryption claims. Explain readable financial contents before saving,
+  manual-recovery responsibility, provider-managed sync for cloud-backed destinations
+  and that app reset does not erase external copies. Clean private temporary files;
+  do not claim the scaffold already enforces these platform/file requirements.
 - **COULD** add reviewed encryption or an isolated legacy JSON translator after
   an explicit product/security decision. Never custom crypto or old database import.
 

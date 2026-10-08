@@ -1,7 +1,7 @@
 # MVP financial example corpus
 
-**Version:** 2 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
-**Status:** D01/D03 policies approved; other policies and independent example review
+**Version:** 11 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
+**Status:** D01/D03–D08 product rules approved; other policies and independent example review
 remain pending. These are not passing app tests.
 Numbers use comma grouping here for readability; amounts are integer COP unless
 an exact intermediate is shown. UI grouping is es-CO (`1.234`).
@@ -18,6 +18,22 @@ All reads below succeed unless explicitly stated. MVP recurringDue = 0.
 | M03 | `12.34`, `1,5`, `$1234`, empty, expense `0` | Reject; zero finite budget is separately valid |
 | M04 | keypad `999999999999`; one more digit | First accepted; further digit does not change value and exposes accessible limit feedback |
 | M05 | portable expense 1,000,000,000,000 | Preserve/display full value; note edit retains it; do not truncate to keypad maximum |
+
+## Field/name/source boundaries — approved D05
+
+| ID | Input/action | Expected outcome |
+| --- | --- | --- |
+| T01 | category name ` Café `, then `cafe` | First saves displayed name `Café`; second conflicts with case/accent-insensitive uniqueness |
+| T02 | archived `Café`, then new `CAFE` | Duplicate rejected; archival does not release the name |
+| T03 | trimmed name of 24 Unicode code points; 25; whitespace only | First valid; second over-limit rejection; third required-name rejection |
+| T04 | note absent; 60 Unicode code points; 61 | First two valid; third rejected rather than truncated |
+| T05 | source Otro with no name, then a trimmed 24-code-point name | First rejected; second valid; 25 is over-limit |
+| T06 | each approved income source; Transferencia recorded manually | Stable keys map to the approved labels; no inferred account debit or matched bank transfer |
+
+Code-point counting is not UTF-16 code-unit length; boundary tests must include
+composed/decomposed accents and supplementary characters. Display normalization and
+uniqueness must be consistent across UI/domain/storage/backup. These are policy
+expectations, not evidence that the scaffold implements validation.
 
 ## Budget and verdict — D03/D04
 
@@ -89,12 +105,86 @@ is downward, not nearest-increment or down-to-hundreds rounding.
 | --- | --- | --- |
 | H01 | September limit 100,000/spent 20,000; October default changed to 120,000 | September remaining remains 80,000; no past daily allowance |
 | H02 | explicit correction: September limit becomes 90,000 | September remaining 70,000; October still 120,000; no default propagation |
-| H03 | October configured; November never materialized; December opened | December snapshots active default; November remains unconfigured, not copied retrospectively |
-| H04 | add backdated November expense 10,000 to H03 | November actual 10,000 and unconfigured limit; no fabricated November forecast/budget |
+| H03 | default 100,000 effective October; November unopened; December default changes to 120,000 | Later November read resolves 100,000 from effective-month history; December uses 120,000; no app-open dependency or backward copy of 120,000 |
+| H04 | add backdated November expense 10,000 to H03 | November actual 10,000; limit 100,000; remaining 90,000; no past daily allowance/forecast |
+| H05 | September spent 20,000/limit 100,000; unchanged default through October | Approved MVP: October limit 100,000, not 180,000; September remaining 80,000 retained in history; no claim that actual funds reset |
+| H06 | user discovers past-month editing, then corrects September limit | Contextual announcement and persistent help explain capability; editor names September and configured-limit scope; committed receipt precedes completion message and refreshed totals |
 | I01 | income 150,000; limits 100,000; expenses 30,000 | Net recorded cash flow 120,000; Sin destinar 50,000; neither is an account balance |
 | I02 | income 50,000; limits 100,000; expenses 30,000 | Net recorded cash flow 20,000; Sin destinar −50,000; planning capacity not clamped to 0 |
 | G01 | Oct 1 expense 10,000; Oct 2 +15,000; Oct 3 +5,000; limit 100,000; income 200,000 | Cumulative 10,000/25,000/30,000; remaining 70,000; net cash flow 170,000; Sin destinar 100,000 |
 | G02 | edit Oct 2 expense in G01 to 12,000 | Cumulative 10,000/22,000/27,000; remaining 73,000; net cash flow 173,000 |
+
+H02/H06 reflect approved historical correction and guidance; B05 reflects the
+approved zero/unlimited distinction. H03/H04 reflect approved skipped-month effective
+configuration, independent of app opening; H05 reflects approved MVP no-carry renewal.
+Future signed carryover direction and conditional C01/C02 illustrations are recorded
+in [ADR 0002](../decisions/0002-signed-carryover-direction.md); they are not active
+MVP test expectations. An earlier month before any
+known category/default configuration stays unconfigured; H03 is not permission to
+invent such history. An explicit November-only correction supersedes its resolved
+default without changing October/December or the default version history.
+
+## Category ordering — approved D06
+
+Synthetic fixture; all categories active. Real category/configuration audit times
+are independent of selected month and simulated financial time.
+
+| ID/name | Monthly limit COP | October count/spent | September count/spent | Last configuration edit (UTC) |
+| --- | --- | --- | --- | --- |
+| cat-a / Alimentación | 100,000 | 2 / 30,000 | 1 / 10,000 | 2026-10-05T12:00:00Z |
+| cat-c / Café | 50,000 | 3 / 15,000 | 0 / 0 | 2026-10-02T12:00:00Z |
+| cat-t / Transporte | 200,000 | 1 / 40,000 | 4 / 20,000 | 2026-10-04T12:00:00Z |
+| cat-u / Arte | unlimited | 8 / 80,000 | 6 / 60,000 | 2026-10-06T12:00:00Z |
+
+| Case | Order/action | Expected category IDs |
+| --- | --- | --- |
+| O01 | October Más usadas descending | cat-c, cat-a, cat-t, cat-u |
+| O02 | September Más usadas descending | cat-t, cat-a, cat-c, cat-u |
+| O03 | Alfabético ascending; reverse | cat-a, cat-c, cat-t, cat-u; cat-t, cat-c, cat-a, cat-u |
+| O04 | October Monto gastado descending | cat-t, cat-a, cat-c, cat-u |
+| O05 | Límite descending | cat-t, cat-a, cat-c, cat-u |
+| O06 | Última actualización descending | cat-a, cat-t, cat-c, cat-u |
+| O07 | October fixture but Café count becomes 2; count descending, then ascending | cat-a, cat-c, cat-t, cat-u; cat-t, cat-a, cat-c, cat-u |
+| O08 | Step financial date without any audit edit, keep selection/fixture fixed | Last-update order remains O06; simulated time is not a configuration edit |
+
+Arte remains last despite highest count/spending, newest edit and alphabetic placement;
+reversing the metric never reverses the unlimited partition or alphabetical tie-break.
+Amounts/counts/limits come from the same selected-month snapshot. Archive visibility
+and budget lifecycle cases follow approved D07 below.
+
+## Archive and undo lifecycle — approved D07
+
+All records are synthetic. Monetary values are exact; clock times below are controlled
+monotonic elapsed times, not financial calendar dates or audit timestamps.
+
+| ID | Inputs/action | Expected outcome |
+| --- | --- | --- |
+| AR01 | October category limit 100,000/spent 20,000; archive in October | October remaining 80,000 and saved limit retained; row visible as archived; absent from new-entry choices |
+| AR02 | AR01 remains archived throughout November | No automatic November budget; October history unchanged; no invisible expense/limit deletion |
+| AR03 | Unarchive AR01 within October | Existing October limit remains 100,000; eligibility returns; no duplicate category identity |
+| AR04 | Unarchive in December; latest configured default 100,000; no December override | December limit uses 100,000; explain restoration before commit; no retrospective November budget |
+| AR05 | Same as AR04, but explicit December limit 90,000 already exists | Preserve December override 90,000 instead of replacing it with the default |
+| AR06 | Archived category has a saved limit but no expenses; rename it | Relevant period row remains visible; historical label changes, identity/limits/amounts do not |
+| U01 | Confirmed delete at elapsed t=0; undo at t=5.999s, then separate case t=6s | First eligible if versions/generation match; at deadline expired; real-Room tests prove boundaries |
+| U02 | Rotate/background at t=4s within same process | Original deadline remains t=6s, never a new six-second interval |
+| U03 | Process ends at t=2s; reopen | No renewed undo offer, even if reopened quickly; recover committed deletion outcome |
+| U04 | Compensation commits; process ends before success feedback | Reopen recovers compensation receipt and restored original row; expiry cannot roll back committed undo |
+| U05 | Advance financial clock or attempt undo after newer conflict/reset | Financial stepping does not change timer; stale/conflicting/reset-generation compensation rejects without overwrite/resurrection |
+
+## Backup privacy and retention — approved D08
+
+| ID | Action/boundary | Expected policy outcome |
+| --- | --- | --- |
+| P01 | Export manual backup | Before destination/save, explain unencrypted readable financial contents and no password protection; successful close/write precedes saved feedback |
+| P02 | Choose cloud-backed destination | Explain provider may sync/store the copy; do not claim Sello performs cloud sync or can control/delete provider copies |
+| P03 | Reset app after successful external backup | External copy is not deleted by Sello; private staging is cleaned on completion/failure/cancellation/startup recovery |
+| P04 | Inspect portable payload and merged release backup rules | Approved history/zone/portable settings retained; permissions/debug/secrets/pending undo excluded; OS-managed cloud/device-transfer backup disabled; manual recovery responsibility disclosed |
+
+These are acceptance expectations for SELLO-028/029/032, not executed backup/device
+tests. The generated manifest's baseline backup setting still needs remediation
+before financial data is stored, as required by SELLO-011.
+
+### Recovery contracts to instantiate in downstream tests — D07–D09
 
 ## Recovery contracts to instantiate in downstream tests — D07–D09
 
@@ -105,7 +195,8 @@ is downward, not nearest-increment or down-to-hundreds rounding.
 - Stale record version/generation: reject without modifying other records/budgets.
 - Delete then conflicting edit/recreation: undo refuses overwrite. At six seconds
   the offer expires; financial-time stepping never changes its deadline. Rotation
-  preserves remaining time; proposed process-death policy expires the offer.
+  preserves remaining time; approved process-death policy expires the offer but
+  recovers actual deletion/compensation outcomes.
 - Archive category: history remains and no new entry can target it. Unarchive
   restores eligibility, not altered amounts/limits. Rename changes labels only.
 - Invalid/truncated/over-limit backup: no financial or settings changes. Valid
@@ -119,8 +210,10 @@ is downward, not nearest-increment or down-to-hundreds rounding.
 ## Review and verification record
 
 Executor arithmetic verification is distinct from independent product review.
-Product approved D01/D03 on 2026-10-08, including the two explicit allowance examples;
-the approval log is in the decision record. This does not approve D02/D04–D10 or
+Product approved D01/D03–D08 on 2026-10-08, including the two explicit allowance examples;
+the approval log is in the decision record. Future signed carryover direction is
+confirmed and deferred beyond MVP; this does not approve its full algorithm,
+D02/D09/D10, or
 claim independent arithmetic review of the full table; that review remains pending.
 Future tests must hardcode independently checked expectations, not compute them
 with the financial implementation being tested. SELLO-001 cannot be Done until

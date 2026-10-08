@@ -1,9 +1,11 @@
 Issue ID,Issue Type,Summary,Description,Parent,Priority,Status,Labels
 1001,Epic,SELLO-E01 — Contracts and engineering foundation,"Local ID: SELLO-E01
+Increment: MVP
 Goal: Make decisions explicit and build/test the app reproducibly before financial work.
 Exit: Approved MVP conventions, enforced module graph, usable CI and injected clocks/composition; existing app remains launchable.",,Highest,Backlog,sello-e01
 1,Task,SELLO-001 — Approve the MVP contract and financial examples,"Local ID: SELLO-001
 Epic: SELLO-E01
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E01-foundation.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -83,15 +85,59 @@ approval and updated example/architecture contracts; no other choices were appro
 Next: owner reviews D04–D07, followed by D08/D09/D02/D10. Independent full-corpus
 review remains outstanding. Ticket stays In Progress; downstream prerequisites
 are not satisfied by this partial approval.
-Executor checks: 25 board unit tests passed; generated board consistency, 268 local
+2026-10-08 continuation: refined the still-unapproved D04 skipped-month proposal to
+resolve known historical defaults from effective-month evidence, independent of app
+opening, and explicitly exclude leftover/overspend rollover. Updated H03–H05;
+request owner approval of zero/unlimited, monthly carry-forward and historical edits.
+2026-10-08 follow-up: owner approved zero/unlimited distinction, prior-month stability
+and historical corrections with discoverable user information. D04 is partially
+approved; carryover is explicitly still under discussion. Added option comparison
+and H06 guidance case; SELLO-019/020/021 must deliver applicable correction messaging.
+2026-10-08 direction: owner confirmed eventual signed surplus/deficit carryover,
+possibly optional and outside MVP. Added ADR 0002 and retention/ownership guardrails;
+no carryover code/schema or new tickets. MVP activation/default and detailed policy
+still need approval; next clarify deferral before moving to the remaining D04/D05 inputs.
+2026-10-08 plan approval: owner approved MVP budget renewal without carryover and
+post-MVP deferral. Added SELLO-E09/037–043 with release/policy/quality dependencies
+and separate generated roadmap views; MVP remains eight epics/36 tickets. Detailed
+carryover decisions are owned by SELLO-037, not blockers for SELLO-001.
+2026-10-08 skipped-month approval: owner agreed that unopened months resolve budget
+configuration effective then, not today's default. Recorded D04 approval, aligned
+H03/H04 and added real-Room history/materialization acceptance to SELLO-013.
+Next: D05 field/input/source rules, then D06/D07 (including archive budget interactions).
+2026-10-08 D05 approval: owner approved all presented name/note/uniqueness, amount
+input/range-preservation and income-source rules. Recorded approval, added T01–T06
+policy examples and aligned SELLO-010 validation acceptance. Next: D06 ordering,
+then D07 archive/undo and the remaining privacy/support/release decisions.
+2026-10-08 D06 approval: owner approved all presented metric/direction/tie and
+unlimited-last ordering rules. Recorded approval, added O01–O08 fixture expectations
+and aligned SELLO-023. Archive visibility/budget interactions remain proposed D07;
+prepared explicit current/future-month archive consequences for the next discussion.
+2026-10-08 D07 approval: owner approved archive/restore/history labels, explained
+current/future-month budget effects and six-second real-time undo with process-death
+offer expiry/outcome recovery. Closes D04/D06 archive decisions; added AR01–AR06/
+U01–U05 and aligned SELLO-013/019/020/021. Next: D08 privacy/portable backup policy.
+2026-10-08 D08 approval: owner approved all presented manual plaintext/privacy/
+contents/retention choices and requested committing accumulated work. Recorded D08,
+added P01–P04 and aligned SELLO-029/032; implementation is still outstanding.
+Next: D09 restore/reset, then D02 identities/support and D10 release/review ownership.
+Executor checks: 32 board unit tests passed, including meaningful red→green scope
+checks (five intended assertion failures before enforcement). Both board/export
+sets passed consistency checks; 325 local
 documentation file/anchor links, design snapshot SHA-256 and exact arithmetic checks
 passed, including 15 COP 50 allowance cases and pre-rounding verdict precision.
 G0 (`./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`)
 passed with cached JVM test/lint results (one sample JVM test, 17 existing lint
-warnings). Tested base: `13803a7` plus uncommitted decision/example documents,
-architecture/decision-input updates, affected foundation/snapshot ticket edits and
-generated board/CSV views. No device run required for this documentation task;
-D01/D03 approval is recorded above, but no independent review is claimed.
+warnings). Latest continuation tested base: `491eb26` plus uncommitted revised
+D04 decision/example documents and carryover-direction ADR, architecture/root README/
+decision-input/workflow changes, foundation/financial-core/correction-messaging/
+recovery-privacy edits,
+new post-MVP epic, board generator/tests and generated MVP/roadmap export views.
+Carryover/archive arithmetic, field/money-range/deadline boundaries and O01–O08 ordering
+illustrations were executor-checked, not executed feature tests or independent review. No device run
+required for this documentation task;
+D01/D03–D08 product approvals and future signed-carryover direction are recorded
+above; no independent review is claimed.
 
 Shared definition of done and gates:
 
@@ -160,6 +206,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1001,Highest,In Progress,sello-001
 2,Task,SELLO-002 — Establish and verify the supported Android toolchain,"Local ID: SELLO-002
 Epic: SELLO-E01
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E01-foundation.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -295,6 +342,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1001,Highest,Ready,sello-002
 3,Task,SELLO-003 — Bootstrap enforced modules and variant identities,"Local ID: SELLO-003
 Epic: SELLO-E01
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E01-foundation.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -427,6 +475,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1001,Highest,Backlog,sello-003
 4,Task,"SELLO-004 — Install CI, quality gates and architecture enforcement","Local ID: SELLO-004
 Epic: SELLO-E01
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E01-foundation.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -602,6 +651,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1001,Highest,Backlog,sello-004
 5,Task,SELLO-005 — Wire production composition and distinct time sources,"Local ID: SELLO-005
 Epic: SELLO-E01
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E01-foundation.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -733,10 +783,12 @@ names expected new test behavior, not pretend pre-existing test classes.
 
 ",1001,Highest,Backlog,sello-005
 1002,Epic,SELLO-E02 — Sello design system and component catalog,"Local ID: SELLO-E02
+Increment: MVP
 Goal: Build the actual reusable visual language and a separately runnable UI laboratory.
 Exit: Shared primitives cover MVP screens, all themes/states are browseable by type, and app release has no catalog dependency.",,Highest,Backlog,sello-e02
 6,Task,SELLO-006 — Implement Sello tokens and the independent catalog shell,"Local ID: SELLO-006
 Epic: SELLO-E02
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E02-design-system.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -867,6 +919,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1002,Highest,Backlog,sello-006
 7,Story,"SELLO-007 — Deliver paper, exact money and feedback components","Local ID: SELLO-007
 Epic: SELLO-E02
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E02-design-system.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -999,6 +1052,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1002,Highest,Backlog,sello-007
 8,Story,SELLO-008 — Build accessible amount-first inputs and entry states,"Local ID: SELLO-008
 Epic: SELLO-E02
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E02-design-system.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -1129,6 +1183,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1002,Highest,Backlog,sello-008
 9,Story,"SELLO-009 — Build category, adaptive navigation and exact-chart primitives","Local ID: SELLO-009
 Epic: SELLO-E02
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E02-design-system.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -1259,10 +1314,12 @@ names expected new test behavior, not pretend pre-existing test classes.
 
 ",1002,High,Backlog,sello-009
 1003,Epic,SELLO-E03 — Financial truth and persistence,"Local ID: SELLO-E03
+Increment: MVP
 Goal: Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them.
 Exit: Tested exact policies, Room contracts/migrations, durable command receipts and same-revision snapshots; no dormant post-MVP schema.",,Highest,Backlog,sello-e03
 10,Task,"SELLO-010 — Implement exact money, dates and command validation","Local ID: SELLO-010
 Epic: SELLO-E03
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E03-financial-core.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -1289,10 +1346,16 @@ exposing unsupported MVP entry currencies or adding rate infrastructure.
   values are explicit failures, never zero/wrap/saturation.
 - Effective dates cannot exceed the financial current date for manual MVP entries;
   audit Instants and translated labels are not embedded in financial identity.
+- Enforce approved D05 name/note/Other-source boundaries and M01–M05/T01–T06;
+  distinguish the 12-digit keypad limit from the wider valid domain/backup range.
+  Category uniqueness normalization is shared, deterministic and enforced by real
+  command/storage boundaries when they ship, not a UI-only duplicate warning.
 
 ### Tests
 Table/property-style tests around Long bounds, grouping/separators, empty drafts,
 checked addition/subtraction, reordered sums, leap days, and future-date rejection.
+Include field-length Unicode boundaries, original invalid-input rejection and the
+large imported amount preserved by an unrelated-field edit at its owning workflow.
 Capture red→green evidence and run G1.
 
 ### Working checkpoint
@@ -1397,6 +1460,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1003,Highest,Backlog,sello-010
 11,Task,"SELLO-011 — Create Room v1, integrity constraints and recovery metadata","Local ID: SELLO-011
 Epic: SELLO-E03
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E03-financial-core.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -1534,6 +1598,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1003,Highest,Backlog,sello-011
 12,Story,SELLO-012 — Save expenses with atomic receipts and uncertain-outcome recovery,"Local ID: SELLO-012
 Epic: SELLO-E03
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E03-financial-core.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -1668,6 +1733,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1003,Highest,Backlog,sello-012
 13,Story,SELLO-013 — Implement category commands and historical monthly budget storage,"Local ID: SELLO-013
 Epic: SELLO-E03
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E03-financial-core.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -1691,12 +1757,24 @@ from SELLO-001, archived-category query rules and atomic readable budget history
   No category color column or translated name used as ID.
 - A limit change targets its explicit month; current/future defaults never rewrite
   previous periods. Unlimited versus zero limit is defined, not conflated.
+- Historical months resolve defaults effective then, including unopened/skipped months;
+  explicit monthly overrides win. Snapshot creation is idempotent/atomic and independent
+  of app-open timing; no backward extrapolation before known configuration.
+- Approved D07 archives preserve the current monthly limit, exclude automatic budgets
+  in following archived months and retain rows in periods with saved limits/expenses.
+  Same-month unarchive preserves its limit; later unarchive preserves any explicit
+  period override, otherwise uses the last configured default. Rename keeps identity.
 - Stale versions/missing rows report conflicts; failed edits do not partially
   mutate budgets or revision. First category creation needs no sample data.
 
 ### Tests
 Real-Room command races/rollback/missing rows, rename/archive retention, multiple
 month rollover, unlimited/zero limits and prior-month stability. Run G2.
+Cover approved H03/H04: October default 100,000, unopened November, December default
+120,000 → November limit 100,000; backdated November expense 10,000 → remaining
+90,000. Reopen/repeated materialization preserves that history and explicit overrides.
+Cover AR01–AR06 archive/unarchive/history/override cases on real Room, including
+zero-expense saved-budget visibility and no retrospective budget after restoration.
 
 ### Working checkpoint
 Real category/budget workflows are callable and observed through domain ports;
@@ -1726,6 +1804,9 @@ Read architecture §§4/5; user workflows consume these ports in SELLO-016/020.
   to substitute the current limit; D04 decides the missing-period presentation.
 - Repeating an archive operation must follow its receipt protocol; an unrelated
   stale editor is a conflict, not an idempotent success.
+- Retain dated financial facts and per-month configured limits needed by MVP;
+  future signed carryover must not require reconstructing history from today's
+  default. ADR 0002 records that direction, not permission for carryover schema now.
 
 ### Verification recipe
 Create/run `CategoryCommandContractTest` and `MonthlyBudgetHistoryTest` on real Room,
@@ -1799,6 +1880,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1003,Highest,Backlog,sello-013
 14,Story,SELLO-014 — Calculate consistent Recibo and Resumen budget snapshots,"Local ID: SELLO-014
 Epic: SELLO-E03
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E03-financial-core.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -1863,6 +1945,9 @@ and architecture §4; forecasts cannot be copied from reference drawings.
   snapshot. Last-good data from another month/date must be labeled with its source.
 - Unrepresentable report totals fail explicitly; SQL SUM promotion or Float conversion
   cannot rescue them by inventing a different amount.
+- Keep configured limit, recorded spending and derived allowance distinct in the
+  domain snapshot. Future signed carryover has a separate base/carry/capacity meaning
+  (ADR 0002); do not hard-code discarded history or add dormant carryover modes.
 
 ### Verification recipe
 Create/run `./gradlew :domain:test --tests '*MonthlyBudgetPolicyTest'` and real-Room
@@ -1935,10 +2020,12 @@ names expected new test behavior, not pretend pre-existing test classes.
 
 ",1003,Highest,Backlog,sello-014
 1004,Epic,SELLO-E04 — First complete financial walking slice,"Local ID: SELLO-E04
+Increment: MVP
 Goal: Turn the greeting into a usable category → expense → receipt → Recibo journey.
 Exit: Users can start empty, create a category, save an expense once, and see truthful persisted budget/detail data after restart.",,Highest,Backlog,sello-e04
 15,Story,"SELLO-015 — Introduce the app shell, month session and restored navigation","Local ID: SELLO-015
 Epic: SELLO-E04
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E04-first-slice.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2070,6 +2157,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1004,Highest,Backlog,sello-015
 16,Story,SELLO-016 — Deliver first-run category creation and amount-entry prerequisites,"Local ID: SELLO-016
 Epic: SELLO-E04
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E04-first-slice.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2199,6 +2287,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1004,Highest,Backlog,sello-016
 17,Story,SELLO-017 — Ship Anotar expense and its durable receipt end-to-end,"Local ID: SELLO-017
 Epic: SELLO-E04
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E04-first-slice.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2331,6 +2420,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1004,Highest,Backlog,sello-017
 18,Story,"SELLO-018 — Deliver Recibo, category detail and expense history","Local ID: SELLO-018
 Epic: SELLO-E04
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E04-first-slice.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2461,10 +2551,12 @@ names expected new test behavior, not pretend pre-existing test classes.
 
 ",1004,Highest,Backlog,sello-018
 1005,Epic,SELLO-E05 — Complete everyday MVP workflows,"Local ID: SELLO-E05
+Increment: MVP
 Goal: Complete maintainable expense/income history and an honest monthly summary.
 Exit: Edits/deletes/undo, category/budget management, income, basic Resumen and preferences all work after restart and preserve prior history.",,Highest,Backlog,sello-e05
 19,Story,"SELLO-019 — Implement expense edits, deletion and guarded six-second undo","Local ID: SELLO-019
 Epic: SELLO-E05
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E05-mvp-workflows.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2488,13 +2580,21 @@ six-second undo offer tied to a real monotonic timer, never simulated financial 
   a deleted/stale record conflicts instead of reporting success; edit has no creation stamp.
 - Undo restores only the original eligible deletion and refuses later conflicting
   edits/recreation/reset. Restart/recomposition cannot extend the original undo offer.
+- Apply approved D07/U01–U05: deadline is six real elapsed seconds; rotation and
+  backgrounding within the live process preserve it. Process death expires the
+  interactive offer, but deletion/compensation receipts still recover actual outcomes.
 - Same operation replays safely; failure/cancellation preserves recoverable outcome.
   Both gesture and accessible menu paths exist, and deadlines/receipts are explicit.
+- Historical expense correction is discoverable through contextual guidance and
+  retained help; effective date/affected period is explicit before saving and
+  completion feedback follows the committed receipt (D04/H06).
 
 ### Tests
 Real-Room stale-edit/delete/undo races, rollback, missing row and reset-generation
 tests; virtual monotonic expiry and rotated/recreated UI tests; device history totals
 before/after edit/delete/undo. Extend catalog states and sandbox regression inputs.
+Include exact deadline, same-process recreation, process-death offer expiry and
+already-committed compensation recovery without re-deleting the restored record.
 
 ### Working checkpoint
 Existing create journey still works; corrections survive restart and never silently
@@ -2523,8 +2623,9 @@ SELLO-018's lists and approved D07. Read architecture §5 and
   A second editor holding the old version must fail without overwriting 12,000.
 - Delete/undo returns the exact original record; repeated undo is idempotent only
   for that operation. Newer recreation/edit/reset must block compensation.
-- Advancing financial clock a year leaves the real undo duration unchanged. On
-  restart, recover the original expiry proof; unavailable timer origin is not a new offer.
+- Advancing financial clock a year leaves the real undo duration unchanged. After
+  process death, recover actual outcomes but expire the offer, never grant fresh time.
+  A previously committed undo still restores the record after receipt recovery.
 
 ### Verification recipe
 Create/run `ExpenseEditDeleteContractTest`, `UndoCompensationContractTest` on real
@@ -2598,6 +2699,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1005,Highest,Backlog,sello-019
 20,Story,SELLO-020 — Complete category management and month-specific budget editing,"Local ID: SELLO-020
 Epic: SELLO-E05
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E05-mvp-workflows.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2621,12 +2723,23 @@ draft/version conflict handling. Category long-press actions have accessible equ
   without moving expenses to another identity. Archived history remains readable.
 - Archive removes category from new-entry chips but does not cascade history.
   No destructive aggregate-delete capability is exposed unless separately accepted.
+- Implement approved AR01–AR06, explain current/future-month budget consequences
+  before archive/unarchive confirmation, and keep archived rows with saved limits or
+  expenses visible in relevant periods. Reuse original identity on restore/rename.
 - Draft conflict includes reload/retry choice; “Guardar cambios” requires a confirmed
   receipt. Removing the final active category returns Anotar to the honest prerequisite.
+- Announce that previous months' limits can be corrected; retain accessible help
+  after dismissal. Historical editor names the target month and explains that other
+  configured limits/defaults are unchanged. Confirmed save explains refreshed totals.
 
 ### Tests
 Device rename/change-limit/archive with prior-month reconciliation; stale edit,
 last-category, empty/archive states and process restoration tests; G2.
+Cover H06 discovery/help before and after dismissal, explicit historical target/scope,
+TalkBack/large-font readability, no success on failed/unknown commit, and receipt-backed
+completion feedback. Extend catalog examples for applicable informational states.
+Run archive/unarchive across month boundaries, preserved current/override limits,
+historical rename and zero-expense archived-budget visibility with exact reconciled totals.
 
 ### Working checkpoint
 Previously recorded expense/detail remains readable after archival; new entries
@@ -2643,6 +2756,9 @@ and approved D04/D05/D07. Read
    load stable category ID, row version and explicit selected month from navigation.
 2. Add rename/icon/change-limit actions with validated commands and durable receipt
    handling. Show which month is being changed before confirmation/submission.
+   Add contextual historical-edit announcement plus retained month/editor help using
+   resource copy; after confirmed commit identify the updated period. Explain any
+   later approved carryover consequences rather than promising unapproved isolation.
 3. Implement archive confirmation with real affected counts, preserve historical
    identity/expenses/limits, and refresh eligible-entry chips through observation.
 4. Handle stale editor/deleted row by explicit reload/keep-draft choice; save cannot
@@ -2729,6 +2845,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1005,Highest,Backlog,sello-020
 21,Story,"SELLO-021 — Ship income recording, history and guarded correction workflows","Local ID: SELLO-021
 Epic: SELLO-E05
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E05-mvp-workflows.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2754,6 +2871,10 @@ Stable source kinds are separate from translated labels and optional free text.
   touch expenses or budgets. Negative/zero invalid income rejects original input.
 - Income deletion and edits use guarded versions/compensation, not a copied unsafe
   implementation; source rename/copy changes cannot change classification identity.
+- Use the same approved D07 six-second real-time offer and process-death expiry /
+  durable outcome recovery as expense deletion; cover U01–U05 for income too.
+- Historical income correction includes contextual/persistent guidance, an explicit
+  effective date/affected month and receipt-backed completion feedback (D04/H06).
 
 ### Tests
 Real-Room income operation contracts and cross-type isolation; ViewModel/Compose
@@ -2861,6 +2982,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1005,Highest,Backlog,sello-021
 22,Story,SELLO-022 — Deliver basic Resumen with exact actuals and history charts,"Local ID: SELLO-022
 Epic: SELLO-E05
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E05-mvp-workflows.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -2994,6 +3116,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1005,Highest,Backlog,sello-022
 23,Story,"SELLO-023 — Ship persisted appearance, ordering and essential settings","Local ID: SELLO-023
 Epic: SELLO-E05
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E05-mvp-workflows.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -3017,12 +3140,18 @@ and settings behind Recibo's gear. Data actions become visible only as their tic
   without invalidating committed money. Financial zone/limits remain in Room.
 - Every supported category order uses actual data; unlimited categories remain last.
   No investment currency, recurrence, notification or debug controls appear in release.
+- Approved D06 defaults/metrics/directions/ties match O01–O08 in the versioned
+  corpus. Más usadas counts selected-month expenses, not lifetime count or amount;
+  last update uses real category/configuration audit time. Unlimited-last and
+  alphabetical/ID ties are not reversed with the selected metric direction.
 - Settings uses narrow collaborators, not a universal manager/ViewModel; drafts
   and selected month are not cleared by appearance changes.
 
 ### Tests
 DataStore codec/default/failure/restart tests, sorting ties and archive interactions,
 device theme/order/settings back-stack tests; G2. Extend catalog preference UI states.
+Execute all O01–O08 orders, cross-month selection and reversed-direction/tie cases;
+financial-time travel without configuration edits cannot change last-update ordering.
 
 ### Working checkpoint
 Daily-use workflows remain functional in all four themes; restart preserves selected
@@ -3123,10 +3252,12 @@ names expected new test behavior, not pretend pre-existing test classes.
 
 ",1005,High,Backlog,sello-023
 1006,Epic,SELLO-E06 — Debug live-testing sandbox,"Local ID: SELLO-E06
+Increment: MVP
 Goal: Explore time-sensitive financial behavior safely through the actual app pipeline.
 Exit: Isolated controllable dates, reproducible histories/graphs, inspectable receipts and restart/failure scenarios; no tooling in customer release.",,Highest,Backlog,sello-e06
 24,Task,SELLO-024 — Create isolated sandbox sessions and financial time controls,"Local ID: SELLO-024
 Epic: SELLO-E06
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E06-live-testing.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -3261,6 +3392,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1006,Highest,Backlog,sello-024
 25,Story,"SELLO-025 — Implement seeded histories, replay and live graph-growth scenarios","Local ID: SELLO-025
 Epic: SELLO-E06
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E06-live-testing.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -3395,6 +3527,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1006,Highest,Backlog,sello-025
 26,Story,"SELLO-026 — Add truthful failure, receipt and recovery diagnostics","Local ID: SELLO-026
 Epic: SELLO-E06
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E06-live-testing.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -3527,6 +3660,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1006,High,Backlog,sello-026
 27,Task,SELLO-027 — Establish the growing temporal regression scenario suite,"Local ID: SELLO-027
 Epic: SELLO-E06
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E06-live-testing.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -3660,10 +3794,12 @@ names expected new test behavior, not pretend pre-existing test classes.
 
 ",1006,High,Backlog,sello-027
 1007,Epic,"SELLO-E07 — Backup, restore, reset and privacy","Local ID: SELLO-E07
+Increment: MVP
 Goal: Ship a local financial app whose data can be recovered and deliberately removed.
 Exit: Real document workflows, bounded portable validation, durable restore/reset recovery and verified privacy boundaries.",,Highest,Backlog,sello-e07
 28,Task,SELLO-028 — Define portable MVP backups and bounded validation,"Local ID: SELLO-028
 Epic: SELLO-E07
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E07-recovery-privacy.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -3799,6 +3935,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1007,Highest,Backlog,sello-028
 29,Story,SELLO-029 — Deliver real document-picker backup creation,"Local ID: SELLO-029
 Epic: SELLO-E07
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E07-recovery-privacy.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -3824,11 +3961,16 @@ Use an approved Sello filename and accessible file/date/size description.
   shared-path write. Retrying file creation cannot mutate financial records.
 - Process recreation restores workflow state honestly; an uncertain file outcome
   is not stamped successful. Backup contents exclude sandbox metadata/internal jobs.
+- Approved D08/P01–P04 disclosure precedes destination/save: plaintext financial
+  contents, no password protection, manual-recovery responsibility and provider-managed
+  sync for cloud-backed locations. Explain that app reset cannot erase external copies.
 
 ### Tests
 Document-port cancellation/write/close fault tests and device picker save→read→validate
 journey; large-file responsiveness and active-write snapshot tests. Catalog backup
 feedback states, plus G2.
+Cover accessible disclosure/cancel/save flows, no encryption claims and temporary
+cleanup without deleting user/provider-owned copies; final copy needs UI review.
 
 ### Working checkpoint
 User-generated backup parses with SELLO-028 and matches actual financial history;
@@ -3932,6 +4074,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1007,Highest,Backlog,sello-029
 30,Story,SELLO-030 — Implement staged atomic restore and resumable preference completion,"Local ID: SELLO-030
 Epic: SELLO-E07
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E07-recovery-privacy.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -4066,6 +4209,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1007,Highest,Backlog,sello-030
 31,Story,SELLO-031 — Deliver fenced two-confirmation reset and recovery,"Local ID: SELLO-031
 Epic: SELLO-E07
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E07-recovery-privacy.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -4201,6 +4345,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1007,Highest,Backlog,sello-031
 32,Task,"SELLO-032 — Verify privacy, file boundaries and developer-data isolation","Local ID: SELLO-032
 Epic: SELLO-E07
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E07-recovery-privacy.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -4226,6 +4371,9 @@ Do not add a production FileProvider solely for deferred analytical exports.
 - Shared diagnostic files are debug-only/synthetic or explicitly redacted; no whole
   database/private-directory provider exposure. Temporary data is cleaned safely.
 - Plaintext document backup is disclosed; checksum is not called encryption.
+- Verify approved D08 manual-backup responsibility, cloud-provider/external-copy
+  disclosures and P01–P04 boundaries with actual merged manifests and file journeys,
+  not an approval record mistaken for implemented privacy protection.
 - Release resources/classes contain no fixtures, clock controllers or tools route;
   normal debug profile, sandbox and production cannot cross storage boundaries.
 
@@ -4335,10 +4483,12 @@ names expected new test behavior, not pretend pre-existing test classes.
 
 ",1007,Highest,Backlog,sello-032
 1008,Epic,SELLO-E08 — Integrated MVP release evidence,"Local ID: SELLO-E08
+Increment: MVP
 Goal: Demonstrate a usable recoverable release, not merely assembled debug APKs.
 Exit: Passed complete MVP journeys, temporal/recovery corpus, accessible adaptive UI and signed optimized release; outstanding risks are explicitly accepted or fixed.",,Highest,Backlog,sello-e08
 33,Task,"SELLO-033 — Execute accessibility, adaptive and process-restoration journeys","Local ID: SELLO-033
 Epic: SELLO-E08
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E08-release.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -4471,6 +4621,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1008,Highest,Backlog,sello-033
 34,Task,SELLO-034 — Prove integrated data retention and recovery failure safety,"Local ID: SELLO-034
 Epic: SELLO-E08
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E08-release.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -4603,6 +4754,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1008,Highest,Backlog,sello-034
 35,Task,SELLO-035 — Validate performance and optimized release composition,"Local ID: SELLO-035
 Epic: SELLO-E08
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E08-release.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
@@ -4740,6 +4892,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1008,Highest,Backlog,sello-035
 36,Task,SELLO-036 — Accept the complete MVP and prepare release handoff,"Local ID: SELLO-036
 Epic: SELLO-E08
+Increment: MVP
 Repository source: docs/planning/mvp/epics/E08-release.md
 Resource links resolve relative to that repository file.
 Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md

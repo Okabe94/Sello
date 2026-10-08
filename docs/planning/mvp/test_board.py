@@ -2,7 +2,9 @@ import csv
 import io
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 import board
 
@@ -61,6 +63,70 @@ class BoardTests(unittest.TestCase):
         board.validate([epic])
         self.assertEqual(epic.tickets[0].dependencies, ())
         self.assertEqual(epic.tickets[0].gate, "G1")
+
+    def test_preserves_post_mvp_increment(self):
+        source = epic_source().replace("- **Goal:**", "- **Increment:** Post-MVP\n- **Goal:**", 1)
+        self.assertEqual(getattr(self.parse(source), "increment", "MVP"), "Post-MVP")
+
+    def test_rejects_unknown_increment(self):
+        source = epic_source().replace("- **Goal:**", "- **Increment:** Unknown\n- **Goal:**", 1)
+        with self.assertRaisesRegex(ValueError, "invalid increment"):
+            board.validate([self.parse(source)])
+
+    def test_mvp_cannot_depend_on_post_mvp(self):
+        mvp = self.parse(epic_source(dependencies="SELLO-002"))
+        roadmap_source = epic_source(ticket_id="SELLO-002").replace("SELLO-E01", "SELLO-E02")
+        roadmap_source = roadmap_source.replace("- **Goal:**", "- **Increment:** Post-MVP\n- **Goal:**", 1)
+        with self.assertRaisesRegex(ValueError, "MVP depends on Post-MVP"):
+            board.validate([mvp, self.parse(roadmap_source)])
+
+    def test_csv_identifies_post_mvp_scope(self):
+        source = epic_source().replace("- **Goal:**", "- **Increment:** Post-MVP\n- **Goal:**", 1)
+        rows = list(csv.DictReader(io.StringIO(board.render_issue_csv([self.parse(source)], "Shared gates"))))
+        self.assertIn("Increment: Post-MVP", rows[0]["Description"])
+        self.assertIn("Increment: Post-MVP", rows[1]["Description"])
+
+    def test_new_epic_requires_explicit_increment(self):
+        with self.assertRaisesRegex(ValueError, "missing Increment"):
+            self.parse(epic_source().replace("SELLO-E01", "SELLO-E09"))
+
+    def test_roadmap_board_resolves_mvp_prerequisites_without_counting_them(self):
+        mvp = self.parse(epic_source())
+        source = epic_source(ticket_id="SELLO-002", dependencies="SELLO-001")
+        source = source.replace("SELLO-E01", "SELLO-E09").replace("- **Goal:**", "- **Increment:** Post-MVP\n- **Goal:**", 1)
+        roadmap = self.parse(source)
+        board.validate([mvp, roadmap])
+        output = board.render_board([roadmap], [mvp, roadmap], "Sello post-MVP roadmap")
+        self.assertIn("# Sello post-MVP roadmap", output)
+        self.assertIn("**Tickets Done:** 0/1", output)
+        self.assertIn("[SELLO-001]", output)
+        self.assertIn("[SELLO-002]", output)
+
+    def test_generator_keeps_increment_exports_separate_and_checks_roadmap_freshness(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "epics").mkdir()
+            (root / "README.md").write_text(
+                "## Definition of done — every ticket\nShared gates\n## Milestones and safe integration\n",
+                encoding="utf-8",
+            )
+            (root / "epics/E01-foundation.md").write_text(epic_source(), encoding="utf-8")
+            roadmap = epic_source(ticket_id="SELLO-002", dependencies="SELLO-001")
+            roadmap = roadmap.replace("SELLO-E01", "SELLO-E09").replace("- **Goal:**", "- **Increment:** Post-MVP\n- **Goal:**", 1)
+            (root / "epics/E09-carryover.md").write_text(roadmap, encoding="utf-8")
+            with patch.object(board, "__file__", str(root / "board.py")), patch("sys.argv", ["board.py"]), redirect_stdout(io.StringIO()):
+                self.assertEqual(board.main(), 0)
+            mvp_rows = list(csv.DictReader(io.StringIO((root / "jira-import.csv").read_text())))
+            roadmap_rows = list(csv.DictReader(io.StringIO((root / "roadmap-jira-import.csv").read_text())))
+            self.assertEqual([row["Issue ID"] for row in mvp_rows], ["1001", "1"])
+            self.assertEqual([row["Issue ID"] for row in roadmap_rows], ["1009", "2"])
+            links = list(csv.DictReader(io.StringIO((root / "roadmap-dependency-links.csv").read_text())))
+            self.assertEqual(links[0]["Source local ID"], "SELLO-001")
+            self.assertEqual(links[0]["Target local ID"], "SELLO-002")
+            (root / "ROADMAP.md").write_text("stale\n", encoding="utf-8")
+            with patch.object(board, "__file__", str(root / "board.py")), patch("sys.argv", ["board.py", "--check"]), redirect_stdout(io.StringIO()), patch("sys.stderr", new_callable=io.StringIO) as errors:
+                self.assertEqual(board.main(), 1)
+                self.assertIn("ROADMAP.md", errors.getvalue())
 
     def test_rejects_missing_acceptance(self):
         with self.assertRaisesRegex(ValueError, "Acceptance criteria"):

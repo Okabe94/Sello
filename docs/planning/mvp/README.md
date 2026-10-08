@@ -40,6 +40,25 @@ notification ingestion are excluded. **The sandbox must support extension to
 recurrence testing when recurrence ships, not introduce a hidden recurrence engine
 into this MVP.** MVP time scenarios exercise dates, budgets, projections, graph
 growth, history, restart and recovery through actual financial commands.
+Signed budget carryover is approved for post-MVP planning, not MVP implementation;
+[ADR 0002](../../decisions/0002-signed-carryover-direction.md) defines
+preparation through retained history/domain boundaries, not extra MVP tables/jobs.
+MVP renews configured monthly budgets without carryover and retains historical results.
+
+## Post-MVP follow-up
+
+[ROADMAP.md](ROADMAP.md) tracks SELLO-E09/037–043 separately from the eight MVP
+epics/36 tickets. Its seven tickets cover approved policy, exact domain replay,
+transactional storage, portable recovery, accessible opt-in UI, live scenarios and
+integrated release. SELLO-037 depends on SELLO-036 Done; every successor inherits
+SELLO-004 quality enforcement and its own gate. This is not a new MVP prerequisite.
+Exact category/global scope and carryover transitions remain decisions of SELLO-037.
+
+Canonical epic files share this directory for stable IDs/cross-links. `Increment`
+metadata is `MVP` (default for the existing eight epics) or explicit `Post-MVP`.
+The generator validates both increments together, rejects MVP dependencies on
+post-MVP tickets, and renders separate boards/issue/dependency exports. Future
+epics MUST declare their increment explicitly; do not infer scope from ticket number.
 
 ## Epics and accountable outcomes
 
@@ -174,6 +193,12 @@ python3 -m unittest discover -s docs/planning/mvp -p test_board.py
 
 The generator checks IDs, required ticket/executor-brief sections, dependency existence/cycles,
 active/ready status prerequisites, and required completion-evidence fields. CSV includes
+scope in each description. The same commands also regenerate/check `ROADMAP.md`,
+`roadmap-jira-import.csv` and `roadmap-dependency-links.csv`. MVP exports keep eight
+epics/36 tickets; roadmap exports contain only post-MVP issues, while their links
+can reference MVP prerequisites. Import MVP issues first and map both sets' local
+IDs when applying roadmap dependency links; no hosted import has been performed.
+CSV includes
 full ticket descriptions/tests/checkpoints and numeric hierarchy IDs. Jira imports
 require a configured target project and field/work-type/workflow mapping: map Issue
 ID + Parent to the importer hierarchy fields, Summary, Description, Priority,

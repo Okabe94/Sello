@@ -25,13 +25,21 @@ six-second undo offer tied to a real monotonic timer, never simulated financial 
   a deleted/stale record conflicts instead of reporting success; edit has no creation stamp.
 - Undo restores only the original eligible deletion and refuses later conflicting
   edits/recreation/reset. Restart/recomposition cannot extend the original undo offer.
+- Apply approved D07/U01–U05: deadline is six real elapsed seconds; rotation and
+  backgrounding within the live process preserve it. Process death expires the
+  interactive offer, but deletion/compensation receipts still recover actual outcomes.
 - Same operation replays safely; failure/cancellation preserves recoverable outcome.
   Both gesture and accessible menu paths exist, and deadlines/receipts are explicit.
+- Historical expense correction is discoverable through contextual guidance and
+  retained help; effective date/affected period is explicit before saving and
+  completion feedback follows the committed receipt (D04/H06).
 
 ### Tests
 Real-Room stale-edit/delete/undo races, rollback, missing row and reset-generation
 tests; virtual monotonic expiry and rotated/recreated UI tests; device history totals
 before/after edit/delete/undo. Extend catalog states and sandbox regression inputs.
+Include exact deadline, same-process recreation, process-death offer expiry and
+already-committed compensation recovery without re-deleting the restored record.
 
 ### Working checkpoint
 Existing create journey still works; corrections survive restart and never silently
@@ -60,8 +68,9 @@ SELLO-018's lists and approved D07. Read architecture §5 and
   A second editor holding the old version must fail without overwriting 12,000.
 - Delete/undo returns the exact original record; repeated undo is idempotent only
   for that operation. Newer recreation/edit/reset must block compensation.
-- Advancing financial clock a year leaves the real undo duration unchanged. On
-  restart, recover the original expiry proof; unavailable timer origin is not a new offer.
+- Advancing financial clock a year leaves the real undo duration unchanged. After
+  process death, recover actual outcomes but expire the offer, never grant fresh time.
+  A previously committed undo still restores the record after receipt recovery.
 
 ### Verification recipe
 Create/run `ExpenseEditDeleteContractTest`, `UndoCompensationContractTest` on real
@@ -89,12 +98,23 @@ draft/version conflict handling. Category long-press actions have accessible equ
   without moving expenses to another identity. Archived history remains readable.
 - Archive removes category from new-entry chips but does not cascade history.
   No destructive aggregate-delete capability is exposed unless separately accepted.
+- Implement approved AR01–AR06, explain current/future-month budget consequences
+  before archive/unarchive confirmation, and keep archived rows with saved limits or
+  expenses visible in relevant periods. Reuse original identity on restore/rename.
 - Draft conflict includes reload/retry choice; “Guardar cambios” requires a confirmed
   receipt. Removing the final active category returns Anotar to the honest prerequisite.
+- Announce that previous months' limits can be corrected; retain accessible help
+  after dismissal. Historical editor names the target month and explains that other
+  configured limits/defaults are unchanged. Confirmed save explains refreshed totals.
 
 ### Tests
 Device rename/change-limit/archive with prior-month reconciliation; stale edit,
 last-category, empty/archive states and process restoration tests; G2.
+Cover H06 discovery/help before and after dismissal, explicit historical target/scope,
+TalkBack/large-font readability, no success on failed/unknown commit, and receipt-backed
+completion feedback. Extend catalog examples for applicable informational states.
+Run archive/unarchive across month boundaries, preserved current/override limits,
+historical rename and zero-expense archived-budget visibility with exact reconciled totals.
 
 ### Working checkpoint
 Previously recorded expense/detail remains readable after archival; new entries
@@ -111,6 +131,9 @@ and approved D04/D05/D07. Read
    load stable category ID, row version and explicit selected month from navigation.
 2. Add rename/icon/change-limit actions with validated commands and durable receipt
    handling. Show which month is being changed before confirmation/submission.
+   Add contextual historical-edit announcement plus retained month/editor help using
+   resource copy; after confirmed commit identify the updated period. Explain any
+   later approved carryover consequences rather than promising unapproved isolation.
 3. Implement archive confirmation with real affected counts, preserve historical
    identity/expenses/limits, and refresh eligible-entry chips through observation.
 4. Handle stale editor/deleted row by explicit reload/keep-draft choice; save cannot
@@ -153,6 +176,10 @@ Stable source kinds are separate from translated labels and optional free text.
   touch expenses or budgets. Negative/zero invalid income rejects original input.
 - Income deletion and edits use guarded versions/compensation, not a copied unsafe
   implementation; source rename/copy changes cannot change classification identity.
+- Use the same approved D07 six-second real-time offer and process-death expiry /
+  durable outcome recovery as expense deletion; cover U01–U05 for income too.
+- Historical income correction includes contextual/persistent guidance, an explicit
+  effective date/affected month and receipt-backed completion feedback (D04/H06).
 
 ### Tests
 Real-Room income operation contracts and cross-type isolation; ViewModel/Compose
@@ -278,12 +305,18 @@ and settings behind Recibo's gear. Data actions become visible only as their tic
   without invalidating committed money. Financial zone/limits remain in Room.
 - Every supported category order uses actual data; unlimited categories remain last.
   No investment currency, recurrence, notification or debug controls appear in release.
+- Approved D06 defaults/metrics/directions/ties match O01–O08 in the versioned
+  corpus. Más usadas counts selected-month expenses, not lifetime count or amount;
+  last update uses real category/configuration audit time. Unlimited-last and
+  alphabetical/ID ties are not reversed with the selected metric direction.
 - Settings uses narrow collaborators, not a universal manager/ViewModel; drafts
   and selected month are not cleared by appearance changes.
 
 ### Tests
 DataStore codec/default/failure/restart tests, sorting ties and archive interactions,
 device theme/order/settings back-stack tests; G2. Extend catalog preference UI states.
+Execute all O01–O08 orders, cross-month selection and reversed-direction/tie cases;
+financial-time travel without configuration edits cannot change last-update ordering.
 
 ### Working checkpoint
 Daily-use workflows remain functional in all four themes; restart preserves selected

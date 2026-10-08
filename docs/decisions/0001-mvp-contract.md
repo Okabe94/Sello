@@ -1,9 +1,10 @@
 # 0001 — MVP product and financial contract
 
-**Ticket:** SELLO-001 · **Version:** 2 · **Updated:** 2026-10-08
-**Status:** Partially approved: D01 and D03 approved; other decisions remain proposed.
+**Ticket:** SELLO-001 · **Version:** 11 · **Updated:** 2026-10-08
+**Status:** Partially approved: D01/D03–D08 product behavior approved;
+signed carryover deferred beyond MVP; detailed carryover and other decisions remain open.
 **Decision owner/approver:** project owner (user). **Executor:** coding agent.
-**Approval/date:** project owner (user), 2026-10-08, for D01 and D03 only;
+**Approval/date:** project owner (user), 2026-10-08, for the logged D01/D03–D08 choices;
 reviewing this draft or authorizing ticket execution is not approval of its policies.
 
 ## Authority and execution boundary
@@ -93,30 +94,97 @@ review and implementation verification remain outstanding.
 
 ## D04 — Budget lifecycle and historical corrections
 
-**Proposed choice:** finite zero is a real zero budget; unlimited is explicit absence
+**Approved distinction (project owner, 2026-10-08):** finite zero is a real zero budget;
+unlimited is explicit absence
 of a limit. Zero does not mean unlimited. Unlimited-category expenses still consume
 the overall finite budget. A zero-only finite budget is Al día at zero spending and
 Pasado for any positive spending; do not divide by zero for a ratio/progress graphic.
 
-Category creation/default-limit changes snapshot the current month's limit and
-set the default for subsequently opened current months. Never rewrite older months.
-Persist each materialized month's limits; materialization is idempotent and atomic.
-Do not precreate future months. For skipped historical months without a snapshot,
-show limits as unconfigured, not reconstructed from today's defaults. Backdated
-expenses may be entered up to today; their month gets explicit unconfigured limits
-unless that month's snapshot already exists. A user can explicitly configure/correct
-a past month's limits, with confirmation saying which month is affected; it does
-not change current/future defaults. Correcting dated records recomputes affected
-actuals/graphs, not unrelated monthly budgets.
+**Approved historical stability and renewal:** changing today's configured budget must not
+rewrite prior months. Category creation/default-limit changes
+snapshot the current month's limit and set the default for following months.
+The owner confirmed future signed carryover of surplus **and** overspending, then
+approved post-MVP deferral. **Approved MVP renewal:** each month renews its configured
+budget without carrying surplus or deficit; this describes a plan, not a reset of
+actual money. Retain the historical results. Optional scope/detailed carryover rules
+remain **unresolved**; see [direction ADR](0002-signed-carryover-direction.md) and
+[SELLO-E09](../planning/mvp/epics/E09-signed-carryover.md), SELLO-037–043.
 
-**Reason/alternative:** preserve known history without inventing historical settings.
-Reject silent retrospective carry-forward or prohibiting all legitimate corrections.
-**Consequences/tests:** H01–H04, zero/unlimited, skipped months, restart/idempotency.
-**Open:** approve explicit past-month correction and skipped-month policy.
+**Approved skipped-month behavior (project owner, 2026-10-08):** an unopened month
+uses the budget configuration effective in that month, not the configuration at
+the time it is later viewed. October default 100,000 and December default 120,000
+therefore resolve November to 100,000 even if the app stayed closed in November.
+Keep effective-month history of default-limit changes, alongside explicit monthly
+limits. Persist materialized monthly snapshots idempotently and atomically; do not
+precreate future month rows or require the app to run at midnight. When an unopened
+month is later read, derive its limit from the default that was effective **then**,
+not today's default. An explicit override for that month takes precedence. For
+months before any known configuration/category existence, show limits as unconfigured;
+never extrapolate backward. Snapshot materialization is an implementation mechanism,
+not a requirement to precreate every month; actual schema choices belong to SELLO-011/013.
+
+**Approved historical corrections:** allow past-dated expenses and explicit
+corrections to historical limits, with information that makes the functionality
+discoverable and identifies the affected month. A past-month limit correction does
+not change other months' configured limits/defaults. Correcting dated records
+recomputes affected actuals/graphs. If rollover is selected, its effect on later
+derived carry amounts needs a separate decision; do not silently promise isolation
+of every future calculated result.
+
+**Required user guidance:** announce historical correction capability in context
+on first relevant use; keep an accessible explanation available from month selection
+and the relevant editor after dismissal. No push notification or recurring blocking
+onboarding is required. Always show the effective month/date and the scope of a limit
+change before submission; after confirmed commit explain which period was updated.
+Proposed Spanish copy (final wording follows UI review):
+- Discovery: “Puedes corregir gastos y límites de meses anteriores. Elige el mes
+  que quieres revisar.” Income forms must explain the equivalent income correction.
+- Historical limit: “Estás cambiando el límite de septiembre de 2026. Los límites
+  configurados de otros meses no cambian.”
+- Confirmed completion: “Límite de septiembre actualizado. Sus totales se recalcularon.”
+Guidance must not claim success before a receipt, rely on color only, or disappear
+as the only way to discover the capability. SELLO-019/020/021 deliver applicable
+expense, limit and income messaging; no implementation is claimed here.
+
+**Reason/alternative:** preserve known history without inventing historical settings
+or making monthly budgets depend on how often the user opens the app. The previous
+unapproved draft treated all skipped months as unconfigured; this revised proposal
+reconstructs only from retained effective-month evidence. Reject copying today's
+default backward, rolling balances over implicitly or prohibiting legitimate corrections.
+**Consequences/tests:** H01–H06, zero/unlimited, skipped months, restart/idempotency,
+discovery and target-month/completion guidance with accessibility coverage.
+**Open:** none for MVP financial meaning; archive interactions are approved in D07.
+Final presentation copy review belongs to the implementing UI tickets and detailed
+post-MVP carryover policy to SELLO-037. Implementation/migration choices remain
+the storage tickets' responsibility; approval is not executed acceptance evidence.
+
+### Carryover options — signed direction confirmed, post-MVP activation
+
+Amounts below are planning capacity, not saved cash or account balance. Assume a
+100,000 monthly base limit and an isolated category with no prior carry. These
+one-step illustrations do not define a multi-month algorithm.
+
+| Option | Previous spend 20,000 | Previous spend 120,000 | Trade-off |
+| --- | --- | --- | --- |
+| Fresh monthly budget | Next capacity 100,000 | Next capacity 100,000 | Simple monthly comparisons; unused capacity cannot accumulate for irregular purchases. |
+| Surplus-only carryover | Next capacity 180,000 | Next capacity 100,000 | Supports saving category capacity; overspending is forgiven at renewal and capacity can grow without a cap. |
+| Signed carryover | Next capacity 180,000 | Next capacity 80,000 | Surplus and overspending both persist; deficits can squeeze later months and complicate corrections. |
+
+The owner's honesty requirement selects signed surplus/deficit as the future direction;
+surplus-only behavior does not meet it. Fresh-budget mode is approved for MVP;
+carryover activation/configuration requires SELLO-037 approval after MVP release.
+Per-category opt-in could suit clothing/travel without changing groceries or rent;
+global rollover is a different policy. This is **not** approved MVP scope expansion.
+If chosen, settle positive-only versus signed carry, caps/negative-capacity behavior,
+start month, archive/unlimited transitions, historical correction cascades and whether
+budget verdicts compare base or effective capacity. Separate monthly planned allocation
+from carried capacity so income is not allocated a second time. Extend the domain,
+backup, sandbox and example contracts only after approval, not with dormant tables.
 
 ## D05 — Fields, input grammar and income labels
 
-**Proposed choice:** category names 1–24 Unicode code points, trimmed, unique ignoring
+**Approved choice (project owner, 2026-10-08):** category names 1–24 Unicode code points,
+trimmed, unique ignoring
 case and accents (including archived names); notes optional, maximum 60 code points.
 Normalize category uniqueness consistently and reject control characters; preserve
 display accents. Unicode normalization/case-fold details require deterministic tests.
@@ -136,45 +204,61 @@ be trimmed explicitly; no other character removal. Keypad emits ungrouped digits
 **Reason/alternative:** preserve design limits without constraining portable financial
 truth to the keypad. Reject sanitizing invalid input into a different amount.
 **Consequences/tests:** M01–M05, accents/emoji boundaries, archived duplicate names,
-large imported amounts, mandatory Otro name. **Open:** approve grammar and limits.
+large imported amounts, mandatory Otro name. **Open:** none for these product rules;
+normalization/parser implementation and independent boundary review remain required.
 
 ## D06 — Ordering
 
-**Proposed choice:** default Más usadas = count of nondeleted expenses in the selected
+**Approved ordering (project owner, 2026-10-08):** default Más usadas = count of nondeleted expenses in the selected
 month, descending. Other design choices: Alfabético = normalized name ascending;
 Monto gastado = selected-month spent descending; Límite = that month's finite limit
 descending; Última actualización = real category/configuration audit Instant descending
 (not latest expense date). Expose direction for each metric. Unlimited categories
 always last regardless of direction; equal metrics tie by normalized name ascending,
-then stable category ID. Archived categories with selected-month expenses remain
-visible in history, but cannot be selected for new expenses until unarchived.
+then stable category ID. Unlimited-last applies even to alphabetical/reversed orders.
+Approved D07 archive visibility/eligibility also applies: archived categories remain
+visible in periods with a saved limit or expenses, but cannot accept new entries
+until unarchived. Keep those historical rows under the same ordering contract.
 
 **Reason/alternative:** selected-month ordering explains what the user is viewing;
 reject undocumented lifetime counts and financial-time changes affecting audit order.
-**Consequences/tests:** cross-month/direction/tie/unlimited/archive cases in SELLO-023.
-**Open:** approve metric windows, update meaning, and archive visibility.
+**Consequences/tests:** O01–O08 and cross-month/direction/tie/unlimited cases in
+SELLO-023; archive interactions use approved D07.
+**Open:** none for ordering/visibility rules; UI/test execution remains outstanding.
 
 ## D07 — Archive and undo
 
-**Proposed choice:** category removal archives only; retain history and monthly limits.
+**Approved choice (project owner, 2026-10-08):** category removal archives only;
+retain history and monthly limits.
 Offer explicit unarchive; renaming updates displayed category name across history,
-but no dates/amounts/limits. A six-second record-delete undo uses durable guarded
+but no dates/amounts/limits. Preserve the current month's configured limit when
+archiving; exclude the category from automatic budgets for following months while
+archived. Keep it visible in historical/current periods with a saved limit or expenses,
+marked archived, so totals remain explainable. Unarchive in the same month preserves
+its existing monthly limit; in a later month use the last configured default unless
+an explicit limit for that month exists. Announce these budget consequences before
+archive/unarchive confirmation. No destructive aggregate category deletion in MVP.
+A six-second record-delete undo uses durable guarded
 compensation. Its live deadline is monotonic, independent of financial-time travel.
 Rotation/recreation within the same live process never restarts the timer. Following
 process death, recover commit status but expire the interactive undo offer rather
-than invent a reliable remaining monotonic interval across restart; no hidden
-automatic restoration. Conflicting changes/generation invalidation reject compensation.
+than guess remaining time across restart; no hidden automatic restoration.
+Still recover the actual deletion/compensation result from durable receipts;
+expiring the offer does not cancel or roll back an already committed undo.
+Conflicting changes/generation invalidation reject compensation.
 
 **Reason/alternative:** no destructive category cascades or extended undo from restart.
 Restoring the remaining offer across process death is a possible alternative but
 needs a reviewed boot/clock discontinuity policy, not a wall-clock guess.
 **Consequences/tests:** six-second boundary, cancellation/unknown commit, archive/
-unarchive, conflict, process restart, zone/time travel. **Open:** approve archive and
-the deliberately conservative process-death undo behavior.
+unarchive, conflict, process restart, zone/time travel; AR01–AR06/U01–U05 examples.
+**Open:** none for these lifecycle/timer rules; actual implementation and independent
+boundary review remain outstanding. Final message wording is reviewed in UI delivery.
 
 ## D08 — Privacy and portable files
 
-**Proposed choice:** manual backup is versioned plaintext JSON, explicitly disclosed
+**Approved choice (project owner, 2026-10-08):** manual backup is versioned plaintext JSON,
+explicitly disclosed
 before choosing its destination. Suggested filename
 `sello-backup-v1-YYYYMMDD-HHmmss.json`; content version is independent of Room.
 Portable payload includes categories (IDs/names/icons/archive state), explicit
@@ -185,13 +269,19 @@ Operation receipts/generation/version recovery machinery is local runtime metada
 not portable replay permission; restore re-establishes fresh guarded runtime identities.
 SELLO-028 owns exact wire keys, validation bounds and format documentation.
 
-No automatic cloud/device-transfer backup in MVP. A picker-created external file
-remains until its owner deletes it; reset cannot erase external copies. Remove
+No automatic cloud/device-transfer backup in MVP. Tell users that loss/uninstallation
+can mean loss of private history without a retained manual backup. A user-selected
+cloud-backed document location may sync through its provider; Sello does not perform
+cloud synchronization itself or promise control over that provider's file lifecycle.
+Sello does not automatically delete externally saved copies; reset cannot erase them. Remove
 app-private temporary staging on success/failure/cancellation and startup recovery;
 no retention of extra shared copies. No custom encryption or password promise.
 **Reason/alternative:** explicit portable recovery without a misleading security claim.
 **Consequences/tests:** plaintext disclosure, round trip, limits/unknown versions,
-private-cache cleanup, release manifest inspection. **Open:** explicit privacy approval.
+private-cache cleanup, release manifest inspection; P01–P04 policy examples.
+**Open:** none for the approved privacy/file choices. Exact format keys, suggested
+filename convention and final disclosure wording are reviewed in SELLO-028/029/032;
+actual implementation/manifest checks remain required, not claimed by this approval.
 
 ## D09 — Restore and reset
 
@@ -237,16 +327,45 @@ performance. **Consequences/tests:** SELLO-033–036 matrices/artifacts/approval
 | 2026-10-08 | Project owner (user) | D03 model | Approved month-to-date pace including today, future days excluding today, and forecasts from day one; F01/F02 demonstrate the discussed behavior. |
 | 2026-10-08 | Project owner (user) | D03 allowance | Approved today-inclusive allowance, changed downward rounding to multiples of COP 50; explicit examples 3,529 → 3,500 and 3,564 → 3,550. F/A expectations updated. |
 | 2026-10-08 | Project owner (user) | D03 forecast/verdict | Approved nearest-peso forecast display and exact pre-rounding 95%/100% verdict comparisons. V05 distinguishes display from classification. |
+| 2026-10-08 | Project owner (user) | D04 zero/unlimited | Agreed on the difference between a zero budget and no limit; B05 illustrates the distinction. |
+| 2026-10-08 | Project owner (user) | D04 historical stability | Agreed today's budget changes must not affect previous months. This does not approve the skipped-month implementation mechanism. |
+| 2026-10-08 | Project owner (user) | D04 historical corrections/guidance | Approved allowing corrections, requiring messages/information to announce the capability and explain it; H02/H06 and SELLO-019/020/021 cover applicable behavior. |
+| 2026-10-08 | Project owner (user) | D04 future signed carryover | Confirmed that both underspending and overspending should affect later availability when the future feature is enabled; optional/category scope and possible post-MVP delivery remain open. Preparation means retaining history and boundaries, not building dormant features. |
+| 2026-10-08 | Project owner (user) | D04 MVP renewal/post-MVP plan | Approved deferring carryover beyond MVP, renewing the configured monthly budget without carryover, and adding a concrete follow-up epic/tasks. SELLO-E09/037–043 cannot delay or become dependencies of MVP acceptance. |
+| 2026-10-08 | Project owner (user) | D04 skipped-month configuration | Approved using the configuration effective in the historical month even when the app was unopened. October default 100,000, December default 120,000 → November limit 100,000. H03/H04 are policy-aligned examples; independent arithmetic review remains pending. |
+| 2026-10-08 | Project owner (user) | D05 fields and duplicates | Approved 24-character trimmed category names, 60-character optional notes and case/accent-insensitive name uniqueness including archived names. |
+| 2026-10-08 | Project owner (user) | D05 amounts and original input | Approved the 12-digit positive COP keypad limit, plain/grouped-dot paste grammar and rejection rather than input repair; larger valid backup amounts remain exact/displayable and survive other-field edits. |
+| 2026-10-08 | Project owner (user) | D05 income sources | Approved Salario/Freelance/Ingresos pasivos/Transferencia/Otro, required 24-character-bounded Otro source name and manually recorded inflow meaning rather than inferred tracked-account transfers. |
+| 2026-10-08 | Project owner (user) | D06 ordering | Approved selected-month expense-count default, the four other metric meanings and reversible direction, unlimited categories always last and alphabetical/stable-ID ties. Archive lifecycle/visibility is still D07. |
+| 2026-10-08 | Project owner (user) | D07 category lifecycle | Approved archive-only category removal, retained historical visibility/identity, historical rename labels and explicit restoration without erasing records. |
+| 2026-10-08 | Project owner (user) | D07 archive budgets/guidance | Approved preserving the current-month limit, excluding automatic budgets while archived in following months and same/later-month restoration semantics, with consequences explained before confirmation. Closes D04/D06 archive choices. |
+| 2026-10-08 | Project owner (user) | D07 record undo | Approved six real elapsed seconds for expense/income undo, no timer reset on rotation/backgrounding, process-death offer expiry with durable outcome recovery and no overwrite/resurrection after conflicts/reset. |
+| 2026-10-08 | Project owner (user) | D08 manual plaintext backup | Approved versioned, unencrypted JSON with explicit readable-content disclosure before saving; no password/encryption promise in MVP. |
+| 2026-10-08 | Project owner (user) | D08 platform/provider privacy | Approved no OS-managed cloud backup/device transfer, manual-recovery responsibility and disclosure that a selected cloud-backed provider may sync the file independently of Sello. |
+| 2026-10-08 | Project owner (user) | D08 contents/retention | Approved financial history/zone/appearance/order recovery without permissions/secrets/debug/pending-undo state, temporary-file cleanup and external copies surviving app reset. |
 
 Approval source: user's numbered answers to the scope, forecast and rounding
-discussion, followed by an explicit instruction to make the changes and record approval.
+discussion, followed by an explicit instruction to make the changes and record approval;
+then the user's D04 answers approving the distinction/stability/correction guidance
+while explicitly requesting further discussion of carryover.
+The subsequent carryover answer confirms signed carryover as an eventual capability,
+without approving its implementation details or category scope. The next explicit
+“yes” to MVP deferral/renewal approved that boundary and requested the follow-up plan.
+The following explicit agreement approved skipped-month effective configuration.
+The subsequent “yes to all of these” approved all three presented D05 recommendations.
+The following “yes, sounds good” approved the three presented D06 ordering rules.
+The next “yes, approved” approved all three presented D07 lifecycle/budget/undo recommendations.
+The following “yes, continue” approved the three presented D08 privacy/file choices;
+the accompanying commit request authorizes committing this accumulated work.
 This approves those choices, not every other proposal or a completed independent
 review of every numerical case.
 
 Next discussion batches:
-1. D04 historical budgets; D05 fields; D06 ordering; D07 archive/undo.
-2. D08 privacy; D09 destructive actions; D02 identities/support; D10 release owners.
+1. D09 restore/reset destructive actions.
+2. D02 identities/support; D10 release owners.
 
 Each approval entry must name decision/subchoice, chosen answer, approver, date and
 example implications. Partial approval does not ratify unrelated proposals. SELLO-001
 remains In Progress until all required inputs and independent review are complete.
+Detailed signed carryover choices move to SELLO-037; SELLO-001 need not decide an
+unshipped post-MVP algorithm to become Done.

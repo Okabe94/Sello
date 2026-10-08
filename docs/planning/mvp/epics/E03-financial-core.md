@@ -28,10 +28,16 @@ exposing unsupported MVP entry currencies or adding rate infrastructure.
   values are explicit failures, never zero/wrap/saturation.
 - Effective dates cannot exceed the financial current date for manual MVP entries;
   audit Instants and translated labels are not embedded in financial identity.
+- Enforce approved D05 name/note/Other-source boundaries and M01–M05/T01–T06;
+  distinguish the 12-digit keypad limit from the wider valid domain/backup range.
+  Category uniqueness normalization is shared, deterministic and enforced by real
+  command/storage boundaries when they ship, not a UI-only duplicate warning.
 
 ### Tests
 Table/property-style tests around Long bounds, grouping/separators, empty drafts,
 checked addition/subtraction, reordered sums, leap days, and future-date rejection.
+Include field-length Unicode boundaries, original invalid-input rejection and the
+large imported amount preserved by an unrelated-field edit at its owning workflow.
 Capture red→green evidence and run G1.
 
 ### Working checkpoint
@@ -223,12 +229,24 @@ from SELLO-001, archived-category query rules and atomic readable budget history
   No category color column or translated name used as ID.
 - A limit change targets its explicit month; current/future defaults never rewrite
   previous periods. Unlimited versus zero limit is defined, not conflated.
+- Historical months resolve defaults effective then, including unopened/skipped months;
+  explicit monthly overrides win. Snapshot creation is idempotent/atomic and independent
+  of app-open timing; no backward extrapolation before known configuration.
+- Approved D07 archives preserve the current monthly limit, exclude automatic budgets
+  in following archived months and retain rows in periods with saved limits/expenses.
+  Same-month unarchive preserves its limit; later unarchive preserves any explicit
+  period override, otherwise uses the last configured default. Rename keeps identity.
 - Stale versions/missing rows report conflicts; failed edits do not partially
   mutate budgets or revision. First category creation needs no sample data.
 
 ### Tests
 Real-Room command races/rollback/missing rows, rename/archive retention, multiple
 month rollover, unlimited/zero limits and prior-month stability. Run G2.
+Cover approved H03/H04: October default 100,000, unopened November, December default
+120,000 → November limit 100,000; backdated November expense 10,000 → remaining
+90,000. Reopen/repeated materialization preserves that history and explicit overrides.
+Cover AR01–AR06 archive/unarchive/history/override cases on real Room, including
+zero-expense saved-budget visibility and no retrospective budget after restoration.
 
 ### Working checkpoint
 Real category/budget workflows are callable and observed through domain ports;
@@ -258,6 +276,9 @@ Read architecture §§4/5; user workflows consume these ports in SELLO-016/020.
   to substitute the current limit; D04 decides the missing-period presentation.
 - Repeating an archive operation must follow its receipt protocol; an unrelated
   stale editor is a conflict, not an idempotent success.
+- Retain dated financial facts and per-month configured limits needed by MVP;
+  future signed carryover must not require reconstructing history from today's
+  default. ADR 0002 records that direction, not permission for carryover schema now.
 
 ### Verification recipe
 Create/run `CategoryCommandContractTest` and `MonthlyBudgetHistoryTest` on real Room,
@@ -326,6 +347,9 @@ and architecture §4; forecasts cannot be copied from reference drawings.
   snapshot. Last-good data from another month/date must be labeled with its source.
 - Unrepresentable report totals fail explicitly; SQL SUM promotion or Float conversion
   cannot rescue them by inventing a different amount.
+- Keep configured limit, recorded spending and derived allowance distinct in the
+  domain snapshot. Future signed carryover has a separate base/carry/capacity meaning
+  (ADR 0002); do not hard-code discarded history or add dormant carryover modes.
 
 ### Verification recipe
 Create/run `./gradlew :domain:test --tests '*MonthlyBudgetPolicyTest'` and real-Room

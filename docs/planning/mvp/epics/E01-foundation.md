@@ -81,15 +81,59 @@ approval and updated example/architecture contracts; no other choices were appro
 Next: owner reviews D04–D07, followed by D08/D09/D02/D10. Independent full-corpus
 review remains outstanding. Ticket stays In Progress; downstream prerequisites
 are not satisfied by this partial approval.
-Executor checks: 25 board unit tests passed; generated board consistency, 268 local
+2026-10-08 continuation: refined the still-unapproved D04 skipped-month proposal to
+resolve known historical defaults from effective-month evidence, independent of app
+opening, and explicitly exclude leftover/overspend rollover. Updated H03–H05;
+request owner approval of zero/unlimited, monthly carry-forward and historical edits.
+2026-10-08 follow-up: owner approved zero/unlimited distinction, prior-month stability
+and historical corrections with discoverable user information. D04 is partially
+approved; carryover is explicitly still under discussion. Added option comparison
+and H06 guidance case; SELLO-019/020/021 must deliver applicable correction messaging.
+2026-10-08 direction: owner confirmed eventual signed surplus/deficit carryover,
+possibly optional and outside MVP. Added ADR 0002 and retention/ownership guardrails;
+no carryover code/schema or new tickets. MVP activation/default and detailed policy
+still need approval; next clarify deferral before moving to the remaining D04/D05 inputs.
+2026-10-08 plan approval: owner approved MVP budget renewal without carryover and
+post-MVP deferral. Added SELLO-E09/037–043 with release/policy/quality dependencies
+and separate generated roadmap views; MVP remains eight epics/36 tickets. Detailed
+carryover decisions are owned by SELLO-037, not blockers for SELLO-001.
+2026-10-08 skipped-month approval: owner agreed that unopened months resolve budget
+configuration effective then, not today's default. Recorded D04 approval, aligned
+H03/H04 and added real-Room history/materialization acceptance to SELLO-013.
+Next: D05 field/input/source rules, then D06/D07 (including archive budget interactions).
+2026-10-08 D05 approval: owner approved all presented name/note/uniqueness, amount
+input/range-preservation and income-source rules. Recorded approval, added T01–T06
+policy examples and aligned SELLO-010 validation acceptance. Next: D06 ordering,
+then D07 archive/undo and the remaining privacy/support/release decisions.
+2026-10-08 D06 approval: owner approved all presented metric/direction/tie and
+unlimited-last ordering rules. Recorded approval, added O01–O08 fixture expectations
+and aligned SELLO-023. Archive visibility/budget interactions remain proposed D07;
+prepared explicit current/future-month archive consequences for the next discussion.
+2026-10-08 D07 approval: owner approved archive/restore/history labels, explained
+current/future-month budget effects and six-second real-time undo with process-death
+offer expiry/outcome recovery. Closes D04/D06 archive decisions; added AR01–AR06/
+U01–U05 and aligned SELLO-013/019/020/021. Next: D08 privacy/portable backup policy.
+2026-10-08 D08 approval: owner approved all presented manual plaintext/privacy/
+contents/retention choices and requested committing accumulated work. Recorded D08,
+added P01–P04 and aligned SELLO-029/032; implementation is still outstanding.
+Next: D09 restore/reset, then D02 identities/support and D10 release/review ownership.
+Executor checks: 32 board unit tests passed, including meaningful red→green scope
+checks (five intended assertion failures before enforcement). Both board/export
+sets passed consistency checks; 325 local
 documentation file/anchor links, design snapshot SHA-256 and exact arithmetic checks
 passed, including 15 COP 50 allowance cases and pre-rounding verdict precision.
 G0 (`./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`)
 passed with cached JVM test/lint results (one sample JVM test, 17 existing lint
-warnings). Tested base: `13803a7` plus uncommitted decision/example documents,
-architecture/decision-input updates, affected foundation/snapshot ticket edits and
-generated board/CSV views. No device run required for this documentation task;
-D01/D03 approval is recorded above, but no independent review is claimed.
+warnings). Latest continuation tested base: `491eb26` plus uncommitted revised
+D04 decision/example documents and carryover-direction ADR, architecture/root README/
+decision-input/workflow changes, foundation/financial-core/correction-messaging/
+recovery-privacy edits,
+new post-MVP epic, board generator/tests and generated MVP/roadmap export views.
+Carryover/archive arithmetic, field/money-range/deadline boundaries and O01–O08 ordering
+illustrations were executor-checked, not executed feature tests or independent review. No device run
+required for this documentation task;
+D01/D03–D08 product approvals and future signed-carryover direction are recorded
+above; no independent review is claimed.
 
 ## SELLO-002 — Establish and verify the supported Android toolchain
 

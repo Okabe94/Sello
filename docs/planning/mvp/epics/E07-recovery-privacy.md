@@ -93,11 +93,16 @@ Use an approved Sello filename and accessible file/date/size description.
   shared-path write. Retrying file creation cannot mutate financial records.
 - Process recreation restores workflow state honestly; an uncertain file outcome
   is not stamped successful. Backup contents exclude sandbox metadata/internal jobs.
+- Approved D08/P01–P04 disclosure precedes destination/save: plaintext financial
+  contents, no password protection, manual-recovery responsibility and provider-managed
+  sync for cloud-backed locations. Explain that app reset cannot erase external copies.
 
 ### Tests
 Document-port cancellation/write/close fault tests and device picker save→read→validate
 journey; large-file responsiveness and active-write snapshot tests. Catalog backup
 feedback states, plus G2.
+Cover accessible disclosure/cancel/save flows, no encryption claims and temporary
+cleanup without deleting user/provider-owned copies; final copy needs UI review.
 
 ### Working checkpoint
 User-generated backup parses with SELLO-028 and matches actual financial history;
@@ -288,6 +293,9 @@ Do not add a production FileProvider solely for deferred analytical exports.
 - Shared diagnostic files are debug-only/synthetic or explicitly redacted; no whole
   database/private-directory provider exposure. Temporary data is cleaned safely.
 - Plaintext document backup is disclosed; checksum is not called encryption.
+- Verify approved D08 manual-backup responsibility, cloud-provider/external-copy
+  disclosures and P01–P04 boundaries with actual merged manifests and file journeys,
+  not an approval record mistaken for implemented privacy protection.
 - Release resources/classes contain no fixtures, clock controllers or tools route;
   normal debug profile, sandbox and production cannot cross storage boundaries.
 

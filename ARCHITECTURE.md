@@ -269,6 +269,13 @@ Integration references: [build variants/source sets][build-variants] and
 
 ## 10. Enforcement and evolution
 
+- **MUST** make SELLO-004's [quality flow](docs/planning/mvp/QUALITY_FLOW.md)
+  a prerequisite for subsequent implementation: one ticket-derived gate runner,
+  validated snapshot-bound evidence before Review/Done, and trusted CI enforcement
+  before protected merges. Passing automation never substitutes for acceptance review.
+- **MUST** follow the repository-owned [MVP board](docs/planning/mvp/README.md)
+  for execution/dependencies and ticket delivery evidence. It operationalizes
+  these guardrails; it does not override financial contracts or expand MVP scope.
 - **MUST** use meaningful red→green behavior tests, controlled clocks/virtual time,
   external fakes, and real Room for transactions/migrations. No arbitrary sleeps,
   live network, global DI, or test-order assumptions.
@@ -302,8 +309,10 @@ This document's explicit scope/financial/safety rules override those sketches.
 - Historical lessons: `/home/okabe94/AndroidStudioProjects/FinanceTracker/docs/greenfield/PROJECT_LESSONS.md`
 - Prior proposal: `/home/okabe94/AndroidStudioProjects/FinanceTracker/docs/greenfield/ARCHITECTURE_SPEC.md`
 
-These external paths are provenance, not build dependencies. **SHOULD** preserve
-an approved design snapshot in this repository before the source worktree is removed.
+These external paths are provenance, not build dependencies. The local
+[design snapshot](docs/design/sello-spec.html) and [provenance](docs/design/README.md)
+are the executor references; no task requires the original worktree. Scope/financial
+approvals remain explicit SELLO-001 deliverables, not implied by copying the reference.
 
 [android-architecture]: https://developer.android.com/topic/architecture/recommendations
 [navigation]: https://developer.android.com/guide/navigation/design/type-safety

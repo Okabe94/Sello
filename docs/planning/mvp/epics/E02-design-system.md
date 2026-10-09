@@ -1,6 +1,6 @@
 # SELLO-E02 — Sello design system and component catalog
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Goal:** Build the actual reusable visual language and a separately runnable UI laboratory.
 - **Exit:** Shared primitives cover MVP screens, all themes/states are browseable by type, and app release has no catalog dependency.
 
@@ -8,7 +8,7 @@
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G2
 

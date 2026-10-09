@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 5/36 · **Epics Done:** 1/8
 
-Backlog: 31 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 5
+Backlog: 30 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 5
 
 [Workflow, gates and definition of done](README.md)
 
@@ -13,7 +13,7 @@ Backlog: 31 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 5
 | Epic | Outcome | Status | Done |
 | --- | --- | --- | --- |
 | [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | Done | 5/5 |
-| [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | Backlog | 0/4 |
+| [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | In Progress | 0/4 |
 | [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | Backlog | 0/5 |
 | [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | Backlog | 0/4 |
 | [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | Backlog | 0/5 |
@@ -27,7 +27,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | None |
 
 ## Review
 
@@ -41,7 +43,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | None |
 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) | Deliver paper, exact money and feedback components | SELLO-E02 | P0 | G2 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell), [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) |
 | [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) | Build accessible amount-first inputs and entry states | SELLO-E02 | P0 | G2 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell), [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) |
 | [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) | Build category, adaptive navigation and exact-chart primitives | SELLO-E02 | P1 | G2 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) |
@@ -85,4 +86,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell), [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation)
+[SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation)

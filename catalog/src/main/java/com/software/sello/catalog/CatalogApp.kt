@@ -90,7 +90,9 @@ private fun CatalogStage(settings: CatalogSettings, content: @Composable () -> U
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val width = settings.window.width
         val stage: @Composable (Modifier) -> Unit = { modifier ->
-            Box(modifier = modifier.fillMaxHeight().testTag(STAGE_TAG)) {
+            val tall = settings.window.height
+                ?.let { Modifier.heightIn(max = it) } ?: Modifier
+            Box(modifier = modifier.then(tall).fillMaxHeight().testTag(STAGE_TAG)) {
                 CompositionLocalProvider(LocalDensity provides scaled, content = content)
             }
         }
@@ -190,13 +192,17 @@ private fun CatalogExampleScreen(example: CatalogExample, onBack: () -> Unit) {
                 modifier = Modifier.semantics { heading() }
             )
         }
-        Box(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = spacing.deskMargin)
-                .padding(bottom = spacing.xl)
-        ) {
-            example.content()
+        if (example.fullBleed) {
+            Box(modifier = Modifier.fillMaxSize()) { example.content() }
+        } else {
+            Box(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = spacing.deskMargin)
+                    .padding(bottom = spacing.xl)
+            ) {
+                example.content()
+            }
         }
     }
 }

@@ -19,6 +19,8 @@ enum class SelloIcon(@DrawableRes val filled: Int, @DrawableRes val outlined: In
     ArrowBack(R.drawable.ic_sello_arrow_back),
     Backspace(R.drawable.ic_sello_backspace),
     Check(R.drawable.ic_sello_check),
+    ChevronLeft(R.drawable.ic_sello_chevron_left),
+    ChevronRight(R.drawable.ic_sello_chevron_right),
     ContentPaste(R.drawable.ic_sello_content_paste),
     DirectionsBus(R.drawable.ic_sello_directions_bus),
     EditNote(R.drawable.ic_sello_edit_note),
@@ -26,10 +28,12 @@ enum class SelloIcon(@DrawableRes val filled: Int, @DrawableRes val outlined: In
     Event(R.drawable.ic_sello_event),
     Home(R.drawable.ic_sello_home),
     Insights(R.drawable.ic_sello_insights),
+    KeyboardArrowDown(R.drawable.ic_sello_keyboard_arrow_down),
     LocalCafe(R.drawable.ic_sello_local_cafe),
     ReceiptLong(R.drawable.ic_sello_receipt_long, R.drawable.ic_sello_receipt_long_outlined),
     Restaurant(R.drawable.ic_sello_restaurant),
-    Settings(R.drawable.ic_sello_settings)
+    Settings(R.drawable.ic_sello_settings),
+    Theaters(R.drawable.ic_sello_theaters)
 }
 
 @Composable

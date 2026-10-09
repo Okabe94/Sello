@@ -1,6 +1,6 @@
 # SELLO-E02 — Sello design system and component catalog
 
-- **Status:** In Progress
+- **Status:** Done
 - **Goal:** Build the actual reusable visual language and a separately runnable UI laboratory.
 - **Exit:** Shared primitives cover MVP screens, all themes/states are browseable by type, and app release has no catalog dependency.
 
@@ -343,7 +343,7 @@ for a squash merge.
 
 - **Type:** Story
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-007, SELLO-004
 - **Gate:** G2
 
@@ -400,3 +400,54 @@ and exact render-input contracts from SELLO-007. No financial aggregate policy i
 Create/run `*ChartExactSelectionTest`, `*CategorySemanticsTest` and adaptive scaffold
 UI tests; run G2 for design-system/catalog. Inspect insets, tap targets and text
 summaries against fixture IDs/values rather than judging screenshots alone.
+
+### Execution progress
+2026-10-09: started on branch `sello-009-category-navigation-charts` after SELLO-008
+merged. No product decision or dependency was needed: architecture §3 already says
+charts start as small Compose drawings, not a chart library.
+
+Delivered in `:design-system`: `CategoryCircle`, `CategoryCell`, `CategoryGrid`;
+`selloWindowLayout` and `SelloScaffold` with `Blotter`; `SelloNavigationBar`,
+`SelloNavigationRail`, `EntryDock`, `MonthSwitcher`, `MonthGrid`; `ColumnsChart`,
+`LineChart` and `SlipHeading`; four more icons. The contracts are in
+`docs/development/layout-and-charts.md`. New catalog example IDs:
+`categories.category-circle`, `categories.category-cell`, `navigation.scaffold`,
+`navigation.entry-dock`, `navigation.navigation-bar`, `navigation.month-switcher`,
+`charts.columns`, `charts.line`. Every one of the nine component types now has examples.
+The catalog gained a "Landscape 760×400" window option and full-screen examples.
+
+Choices made during the work, for owner review:
+- The window breakpoints are the reference's, implemented as a small pure function
+  with no Material adaptive dependency. Architecture §6 says such APIs "should" be used;
+  they can replace this function later without changing the scaffold's contract.
+- The dock and tab bar are laid out under the content instead of floating over it, so
+  content cannot be covered. The paddings handed to the content include the system bars.
+- Navigation takes a list of destinations, so two tabs work today and a third needs no
+  disabled placeholder. The rail's "+" and the dock are the same action.
+- The dock label has no `$`, following ADR 0007.
+- Charts take a short `valueLabel` and reference label from the app; exact amounts are
+  never read back from the drawing.
+- `MonthGrid` shows one year of months and reports picks. The bottom sheet that holds
+  it, the "Volver a octubre" chip and sideways month swiping belong to the screens.
+- The reference's Kotlin sketches take raw amounts and `ImageVector`; these take
+  formatted values and `SelloIcon`, as SELLO-006 and SELLO-007 established.
+- All components stay in the `component` package used since SELLO-007, not the
+  per-type packages the execution guide suggests as targets.
+
+Left for later: hiding the dock and tab bar under the system keyboard is implemented
+but has no automated test. The medium window's side-panel sheet, shared-element dock
+transition, tab cross-fade and blotter behaviour on real lists belong to navigation and
+screen work in E04. `SelloProgressBar` and the investment charts are post-MVP or later
+tickets. The customer app does not compose these primitives yet.
+
+2026-10-09: owner approved pull request 8, including the choices above; moved to Done
+for a squash merge. All four tickets of this epic are Done, so the epic is Done.
+
+### Delivery evidence
+- **Revision:** branch `sello-009-category-navigation-charts`; tested snapshot is commit `0e4542b`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** category meaning from names, icons and brand ink → no component API takes a category colour; `CategorySemanticsTest.aCellIsOneButtonThatSaysItsWholeMeaningAndOpensOnce` keeps the exact overspend in words while the circle is clamped (`LayoutRulesTest.circleFillIsClampedAndOverLimitIsFull`). Compact, short landscape, medium and expanded adaptation → `LayoutRulesTest` breakpoints and `AdaptiveScaffoldTest` at 360×700, 760×400, 700×900 and 900×700. Dock and insets never cover content → `anUprightPhoneStacksContentDockAndTabBarWithoutOverlap` and `aShortWindowUsesARailAndTwoEvenPanesThatClearTheSystemBar` with a 24/30 inset. Stateless navigation callbacks → `navigationAndDockOnlyReportWhatWasPressed`. Exact selection and text equivalents → `ChartExactSelectionTest` with 2^53 and 2^53+1, shown to be equal as doubles, for columns and line; at least 130dp with one labelled reference → `aChartIsNeverShorterThan130dpAndCarriesOneLabelledReference`; empty chart → `anEmptyChartSaysSoAtFullSizeAndOffersNothingToSelect`. Category columns at font scale 1.3 and wide widths → `CategorySemanticsTest` grid tests. Customer app free of catalog chrome and synthetic data → architecture rules `module-edge` and `module-boundary`; fixtures live in `catalog/`.
+- **Red / Green:** the seven layout and geometry tests first ran against naive rules (always compact, always two columns, unclamped fractions): 6 failed, then all passed. The first device run failed five tests, each a mistake in the test or its setup and not in a component except one: test tags sat inside the inset padding so measured bars excluded their inset, the "indistinguishable" amounts were distinguishable (now 2^53 and 2^53+1), a 560dp stage did not fit the test screen, "scroll to" stopped before the bottom padding, and the catalog test still expected a group with no examples. Six mutations of the finished components each failed the expected tests and were reverted: selection by nearest value, no minimum chart height, bottom controls shown beside the rail, content ignoring the bottom inset, a cell announcing only its name, reselecting a tab not reported.
+- **Gate results:** local `./scripts/verify-ticket SELLO-009 --gate G2` passed: 111 host tests (44 domain, 34 app, 30 design-system, 3 catalog), 64 device tests on an isolated API 30 emulator (6 app, 48 design-system, 10 catalog, which open every example by ID), ktlint, architecture rules, lint with 0 errors and 22 warnings, all in `:app` and present before this ticket. No dependency or lock file changed.
+- **Quality run:** run 20261009T231956Z-8103dafa; SELLO-009 G2 passed; HEAD 0e4542b, inputs sha256 dc5d35b18f03; report docs/planning/mvp/quality-reports/SELLO-009.json sha256 d77dcced211453a8a1d40902d25c91d57005e0d08d8477bcca306896d93efa03
+- **Device / Artifact:** ten captures of the installed catalog on the API 30 emulator are in `docs/testing/evidence/SELLO-009/`: circles, cells, dock, tab bar and rail, month grid, both charts, and the scaffold as a phone (both inks) and in the 760×400 window with its rail. Medium and expanded windows were verified by the layout tests, not captured, because they are wider than the emulator's screen. Hosted run 38004075605 on the pull request's merge commit passed the `quality` check with the ticket in Review.
+- **Review:** executor self-review of the diff, captures against the reference, reports and logs. Project owner reviewed pull request 8 and approved on 2026-10-09, including the listed choices. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it.

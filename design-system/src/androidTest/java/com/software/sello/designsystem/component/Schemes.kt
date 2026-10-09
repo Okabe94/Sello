@@ -20,12 +20,14 @@ private val schemes = SelloInk.entries.flatMap { ink -> listOf(false, true).map 
 
 /**
  * Shows [content] in a fixed-width stage and runs [check] once in each of the four
- * colour schemes. [reset] runs before each scheme after the first.
+ * colour schemes. [reset] runs before each scheme after the first. [densityScale] shrinks
+ * every dp so a stage wider than the test screen still fits on it.
  */
 fun ComposeContentTestRule.inEveryScheme(
     reducedMotion: Boolean = true,
     fontScale: Float = 1f,
     width: Dp = 360.dp,
+    densityScale: Float = 1f,
     reset: () -> Unit = {},
     content: @Composable () -> Unit,
     check: (String) -> Unit
@@ -33,7 +35,9 @@ fun ComposeContentTestRule.inEveryScheme(
     var scheme by mutableStateOf(schemes.first())
     setContent {
         val density = LocalDensity.current
-        CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+        CompositionLocalProvider(
+            LocalDensity provides Density(density.density * densityScale, fontScale)
+        ) {
             SelloTheme(
                 ink = scheme.first,
                 darkTheme = scheme.second,

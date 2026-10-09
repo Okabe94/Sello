@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 7/36 · **Epics Done:** 1/8
 
-Backlog: 28 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 7
+Backlog: 28 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 7
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,13 +27,13 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) | Deliver paper, exact money and feedback components | SELLO-E02 | P0 | G2 | None |
+No tickets.
 
 ## Review
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) | Deliver paper, exact money and feedback components | SELLO-E02 | P0 | G2 | None |
 
 ## Blocked
 

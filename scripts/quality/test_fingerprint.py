@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 import fingerprint
-from support import EPIC, epic, make_repo, ticket, write
+from support import EPIC, epic, git, make_repo, ticket, write
 
 
 class FingerprintTests(unittest.TestCase):
@@ -76,6 +76,21 @@ class FingerprintTests(unittest.TestCase):
         first = self.after()
         write(self.root, EPIC, base.replace("Reject incomplete outcomes.", "Accept anything.", 2))
         self.assertNotEqual(first, self.after())
+
+    def test_fresh_clone_matches_a_working_tree_with_converted_line_endings(self):
+        git(self.root, "config", "core.autocrlf", "input")
+        (self.root / "gradlew.bat").write_bytes(b"@echo off\r\necho hi\r\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "script with Windows line endings")
+        self.assertEqual("", git(self.root, "status", "--porcelain"))
+        clone = tempfile.TemporaryDirectory()
+        self.addCleanup(clone.cleanup)
+        git(self.root, "clone", "-q", str(self.root), clone.name)
+        self.assertEqual(b"@echo off\necho hi\n", (Path(clone.name) / "gradlew.bat").read_bytes())
+        self.assertEqual(
+            fingerprint.input_fingerprint(self.root)["value"],
+            fingerprint.input_fingerprint(clone.name)["value"],
+        )
 
     def test_reports_file_count(self):
         self.assertEqual(3, fingerprint.input_fingerprint(self.root)["files"])

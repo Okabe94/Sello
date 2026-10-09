@@ -40,14 +40,27 @@ def input_files(root):
     )
 
 
+def is_epic(name):
+    return name.startswith(EPIC_DIR) and name.endswith(".md")
+
+
 def input_fingerprint(root):
-    digest = hashlib.sha256()
+    """Hash file contents as Git would store them, so a checkout with converted
+    line endings and a fresh clone of the same commit agree."""
     names = input_files(root)
+    plain = [name for name in names if not is_epic(name)]
+    stored = subprocess.run(
+        ["git", "-C", str(root), "hash-object", "--stdin-paths"],
+        input="".join(f"{name}\n" for name in plain), check=True, capture_output=True, text=True, cwd=root,
+    ).stdout.split()
+    identities = dict(zip(plain, stored))
     for name in names:
-        content = (Path(root) / name).read_bytes()
-        if name.startswith(EPIC_DIR) and name.endswith(".md"):
-            content = acceptance_text(content.decode("utf-8")).encode("utf-8")
-        digest.update(name.encode("utf-8") + b"\0" + hashlib.sha256(content).digest())
+        if is_epic(name):
+            text = (Path(root) / name).read_text(encoding="utf-8").replace("\r\n", "\n")
+            identities[name] = hashlib.sha256(acceptance_text(text).encode("utf-8")).hexdigest()
+    digest = hashlib.sha256()
+    for name in names:
+        digest.update(f"{name}\0{identities[name]}\n".encode("utf-8"))
     return {"algorithm": "sha256", "value": digest.hexdigest(), "files": len(names)}
 
 
@@ -59,7 +72,7 @@ def ticket_section(epic_text, ticket_id):
 def ticket_acceptance(root, ticket_id):
     """Hash of one ticket's own text without bookkeeping, or None for an unknown ticket."""
     for path in sorted((Path(root) / EPIC_DIR).glob("*.md")):
-        section = ticket_section(path.read_text(encoding="utf-8"), ticket_id)
+        section = ticket_section(path.read_text(encoding="utf-8").replace("\r\n", "\n"), ticket_id)
         if section is not None:
             return hashlib.sha256(acceptance_text(section).encode("utf-8")).hexdigest()
     return None

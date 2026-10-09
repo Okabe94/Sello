@@ -1,8 +1,9 @@
 # 0001 — MVP product and financial contract
 
 **Ticket:** SELLO-001 · **Version:** 32 · **Updated:** 2026-10-08
-**Status:** D01–D10 product policies/process and owner walkthrough approved; implementation, independent
-example review and named independent technical reviewer remain outstanding.
+**Status:** D01–D10 product policies/process and owner walkthrough approved;
+SELLO-001 independent technical/example review passed. Implementation and later
+verification remain outstanding. See the [review](../testing/reviews/SELLO-001-independent-review.md).
 D06 latest-expense addition and its scope/boundaries are owner-approved.
 Signed carryover is deferred beyond MVP; detailed policy belongs to SELLO-037.
 **Decision owner/approver:** project owner (user). **Executor:** coding agent.
@@ -14,8 +15,8 @@ reviewing this draft or authorizing ticket execution is not approval of its poli
 [Architecture](../../ARCHITECTURE.md) owns mandatory technical contracts; the
 [design](../design/sello-spec.html) owns presentation. This record resolves product
 choices from [D01–D10](../planning/mvp/DECISION_INPUTS.md), not a second architecture.
-[Worked examples](../testing/mvp-financial-examples.md) reflect the approved D03
-policy and remaining proposals, not executed feature tests. No financial functionality
+[Worked examples](../testing/mvp-financial-examples.md) reflect approved MVP policies
+and explicitly conditional post-MVP illustrations, not executed feature tests. No financial functionality
 exists in the scaffold. Unapproved decisions need approval before dependent implementation. Changes to an
 existing guardrail require explicit approval and a corresponding architecture update.
 
@@ -397,7 +398,7 @@ Private APK channel is approved in D02, not an unresolved choice.
 | Responsibility | Owner/status | Required evidence |
 | --- | --- | --- |
 | Product/privacy and release go/no-go | Project owner (user) | Logged policy approval; final candidate walkthrough and explicit release acceptance still required |
-| Independent financial/recovery technical review | Unassigned | Named reviewer, independently checked example corpus and later implementation/quality review |
+| Independent financial/recovery technical review | SELLO-001: independent review agent Singer (`01a11de6-b349-7b51-9d2d-300c3f9b2b39`), Pass on 2026-10-08; future implementation/release reviewers unassigned | [Full-corpus technical review](../testing/reviews/SELLO-001-independent-review.md); later implementation/quality review must be separately assigned and executed |
 | Physical-device release testing | Project owner (user); periodic manual testing planned | Identified device/API, production-signed candidate and recorded installation/recovery journeys; periodic tests do not automatically complete the final release matrix |
 | Customer-distribution release build/signing custody | Project owner (user) | Secure external key custody/access and certificate identity; no keys/passwords in source or reports; agent does not generate/manage the release key without separate authorization |
 
@@ -464,8 +465,9 @@ No example batch is approved merely by requesting that walkthrough.
 This approves those choices, not every other proposal or a completed independent
 review of every numerical case.
 
-Remaining execution inputs:
-1. Assign the independent technical reviewer and obtain full-corpus example review.
+Remaining execution inputs after SELLO-001's independent review:
+1. Assign independent reviewers for later implementation/release gates; the
+   SELLO-001 agent assignment does not appoint a permanent reviewer.
 2. Obtain device and signed-release evidence from the project owner at affected gates.
 3. Verify toolchain/support in SELLO-002 and establish measured targets in SELLO-035.
 
@@ -558,8 +560,18 @@ walkthrough is complete, including requested policy/copy revisions. No unresolve
 owner choice remains in this walkthrough; independent technical/fixture review,
 toolchain verification and actual feature/artifact/device evidence remain separate.
 
+2026-10-08 closure: the owner authorized a separate review agent. Singer
+(`01a11de6-b349-7b51-9d2d-300c3f9b2b39`) independently reviewed the complete
+version-32 contract/corpus: Pass, no blocking findings. The
+[review report](../testing/reviews/SELLO-001-independent-review.md) records
+independent calculations, all 88 corpus case IDs, C01/C02 and unnumbered examples.
+This is an independent agent review, not a human technical review or feature,
+device, signing or release acceptance. SELLO-001 is Done; canonical gate evidence
+is in [the ticket](../planning/mvp/epics/E01-foundation.md#delivery-evidence).
+Earlier dated pending-review statements are historical checkpoints, superseded
+by this closure; no approved formula, fixture or product policy changed.
+
 Each approval entry must name decision/subchoice, chosen answer, approver, date and
-example implications. Partial approval does not ratify unrelated proposals. SELLO-001
-remains In Progress until all required inputs and independent review are complete.
+example implications. Partial approval does not ratify unrelated proposals.
 Detailed signed carryover choices move to SELLO-037; SELLO-001 need not decide an
 unshipped post-MVP algorithm to become Done.

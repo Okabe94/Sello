@@ -1,13 +1,16 @@
 # MVP decisions and independent examples
 
-**Status:** inputs for SELLO-001, not completed delivery evidence. D01–D10 were
+**Status:** approved inputs from completed SELLO-001; delivery evidence is in the
+[canonical ticket](epics/E01-foundation.md#delivery-evidence). D01–D10 were
 approved by the project owner on 2026-10-08; see the
 [decision record](../../decisions/0001-mvp-contract.md). D04 zero/unlimited,
 historical stability and corrections with user guidance are also approved;
 unopened months use configuration effective then, not today's default.
 signed carryover is deferred beyond MVP, whose budgets renew without carryover.
-Detailed carryover policy belongs to SELLO-037; independent example review and named
-technical reviewer remain outstanding. User owns physical-device testing and release
+Detailed carryover policy belongs to SELLO-037; SELLO-001's independent agent
+technical/example review passed; see the
+[review report](../../testing/reviews/SELLO-001-independent-review.md). Later
+implementation/release reviewers must be separately assigned. User owns physical-device testing and release
 build/signing; actual evidence is still required. Policy approval is not gate completion.
 The guided owner walkthrough is complete, including the revised transaction range,
 expense-addition ordering and explicit partial-restore wording. It is not executed

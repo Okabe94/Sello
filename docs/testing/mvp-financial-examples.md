@@ -1,8 +1,9 @@
 # MVP financial example corpus
 
 **Version:** 32 · **Updated:** 2026-10-08 · **Ticket:** SELLO-001
-**Status:** D01–D10 product policies/process and owner walkthrough approved; independent example review
-and named independent technical reviewer remain pending. User owns physical-device
+**Status:** D01–D10 product policies/process and owner walkthrough approved;
+independent agent technical/example review passed for version 32; see the
+[review report](reviews/SELLO-001-independent-review.md). User owns physical-device
 testing and release build/signing; actual evidence is still required. These are not passing app tests.
 Numbers use comma grouping here for readability; amounts are integer COP unless
 an exact intermediate is shown. UI grouping is es-CO (`1.234`).
@@ -389,7 +390,22 @@ Product approved D01–D10 on 2026-10-08, including the two explicit allowance e
 the approval log is in the decision record. Future signed carryover direction is
 confirmed and deferred beyond MVP; this does not approve its full algorithm,
 or claim independent arithmetic review of the full table; that review remains pending.
-The approved D10 process requires an independent technical reviewer, still unassigned.
+The approved D10 process requires an independent technical reviewer. The historical
+pending-review statements above are superseded by the closure below; future
+implementation/release reviewer assignments are separate.
 Future tests must hardcode independently checked expectations, not compute them
 with the financial implementation being tested. SELLO-001 cannot be Done until
 required decisions, arithmetic review and its documentation/G0 checks are complete.
+
+## Independent review and closure
+
+2026-10-08: product owner authorized independent review agent Singer
+(`01a11de6-b349-7b51-9d2d-300c3f9b2b39`) for SELLO-001. Its
+[full-corpus review](reviews/SELLO-001-independent-review.md) passed all 88 case
+IDs, C01/C02 and unnumbered illustrations, including exact arithmetic and 17
+ordering comparisons, with no blocking findings. These are independently checked
+documentation expectations, not passing app tests or human technical review.
+SELLO-001 is Done with documentation/G0 evidence in the
+[canonical ticket](../planning/mvp/epics/E01-foundation.md#delivery-evidence).
+Policies, numerical expectations and corpus version 32 are unchanged. Older
+walkthrough/pending-review entries preserve chronology, not current blockers.

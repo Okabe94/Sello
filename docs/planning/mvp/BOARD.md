@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 8/36 · **Epics Done:** 1/8
 
-Backlog: 27 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 8
+Backlog: 27 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 8
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,13 +27,13 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) | Build accessible amount-first inputs and entry states | SELLO-E02 | P0 | G2 | None |
+No tickets.
 
 ## Review
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) | Build accessible amount-first inputs and entry states | SELLO-E02 | P0 | G2 | None |
 
 ## Blocked
 

@@ -19,8 +19,9 @@ Do not execute all tickets at once or copy a proposed API blindly over completed
    that the files already exist. Prefer established compatible names after bootstrap.
 4. For UI work, open the [local Sello reference](../../design/sello-spec.html) and
    the exact anchors named in the ticket. Never infer money from its mockup figures.
-5. Use SELLO-002's environment/matrix record once available. Until then, the baseline
-   commands below reproduce the inspected setup. Record unavailable devices/keys/
+5. Use SELLO-002's [setup](../../development/setup.md) and
+   [toolchain decision](../../decisions/0005-toolchain.md). The baseline commands
+   below use this host's inspected paths. Record unavailable devices/keys/
    approvals as blockers where acceptance requires them; never waive the gate.
 
 ## Module and file map

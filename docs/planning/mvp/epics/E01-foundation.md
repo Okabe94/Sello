@@ -403,7 +403,7 @@ complete financial implementation, toolchain compatibility or release acceptance
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** None
 - **Gate:** G0
 
@@ -507,6 +507,28 @@ obtain launcher smoke evidence before completion. Use ADR 0005 because ADR 0002
 already owns signed carryover; do not overwrite or duplicate its decision number.
 No independent review, release signing or SELLO-002 completion is claimed.
 
+2026-10-08 completion: recorded [ADR 0005](../../../decisions/0005-toolchain.md),
+[reproducible setup](../../../development/setup.md) and
+[verification evidence](../../../testing/SELLO-002-toolchain-verification.md).
+Retained AGP 9.3.3/Gradle 9.5/JDK 25/SDK 37/30/BOM 2026.02.01. Aligned Kotlin
+and Compose compiler to 2.4.20 because the old JVM plugin's published fully
+supported range excludes Gradle 9.5; documented the tested AGP 9.3.3 patch versus
+Kotlin's published 9.3.1 bound. Added catalog JVM/KSP aliases, KSP 2.3.12 pin
+and root JVM declaration before AGP. No runtime feature, production module,
+Room schema/dependency, signing secret or product identity changed.
+The old KSP candidate failed with built-in Kotlin source-set validation;
+the selected KSP2/Room/JVM combination generated/exported/compiled successfully.
+Final clean builds and API-30 greeting/context-test execution passed. SELLO-002
+is Done; earlier progress entries describe superseded inspected configurations.
+
+### Delivery evidence
+- **Revision:** `b76214d` plus tested uncommitted `build.gradle.kts`, `gradle/libs.versions.toml`, `docs/planning/mvp/EXECUTION_GUIDE.md`, `docs/planning/mvp/epics/E01-foundation.md`, new `docs/decisions/0005-toolchain.md`, `docs/development/setup.md`, `docs/testing/SELLO-002-toolchain-verification.md` and regenerated `docs/planning/mvp/BOARD.md`/`jira-import.csv`. Final cold-source export includes the working-tree build changes; build-input hashes match the evidence record. Not a tested clean commit.
+- **Requirement mapping:** reproducible matrix/pins/daemon-versus-output → ADR 0005, catalog, root plugin declaration and compiler/class inspection; clean-checkout/environment handling → setup and empty-cache source exports/negative SDK/JDK checks; SDK-30 floor/current identity → merged manifest, lint and isolated API-30 greeting/context test; KSP capability → temporary real Room processor/schema/export/compile/lint probe; secret-free release assembly → unsigned release output, ignored local.properties/signing files and owner signing boundary. Debug/catalog implementation and coexistence remain SELLO-003, not substituted with synthetic production modules.
+- **Red / Green:** no product behavior change or invented financial red test. Actual negative integration: old KSP rejected forbidden sourceSets, selected KSP2 generated and compiled; child-only JVM plugin request failed, root declaration passed. Invalid JDK/SDK environments exited nonzero with documented messages. Old Kotlin JVM compilation succeeded but its vendor support range did not include Gradle 9.5, motivating the coordinated Kotlin/Compose compatibility change rather than claiming a behavioral red failure.
+- **Gate results:** final `./gradlew clean testDebugUnitTest lintDebug assembleDebug assembleRelease :app:assembleDebugAndroidTest --no-build-cache --no-configuration-cache --rerun-tasks --continue` passed locally (128 executed tasks) and in an initially empty-cache isolated source export (128 tasks, 127 executed/1 up-to-date). One sample JVM test passed, zero failures/errors/skips; lint passed with 18 warnings, including one additional JVM-plugin newer-version advisory, no suppressed checks. Selected Room/KSP/JVM probe passed 30 executed tasks with 21 temporary-fixture lint warnings. Board unit tests, generation/consistency, local links and diff checks passed on final documents. Logs `/tmp/sello-002-final-g0.log`, `/tmp/sello-002-final-fresh-checkout.log`, `/tmp/sello-002-kotlin-2.4.20-probe.log`; bootstrap runner exemption applies, no hosted CI claim.
+- **Device / Artifact:** newly isolated `sello002_api30`, `emulator-5580`, API 30, Google APIs x86_64 revision 16, 320×640/density 160; selected-pin debug APK install/launch returned Status ok and UIAutomator contained Hello Android!. `:app:connectedDebugAndroidTest --no-configuration-cache` executed one context test, zero failures/errors/skips, 68 tasks (1 executed/67 up-to-date). Emulator shut down after verification. Final release output is unsigned; no physical-device/production-signing, target-API runtime, financial journey or debug/catalog isolation acceptance is claimed.
+- **Review:** executor technical self-review cross-checked exact diff, official version-specific sources, compiler/plugin/daemon versions, matching source-export build hashes, probe artifacts, JVM/device XML and lint reports. SELLO-002 does not assign an independent financial/release reviewer; no independent human/agent approval or release acceptance is claimed. No product-policy question was introduced; identities/floor and signing ownership follow approved D02/D10.
+
 ## SELLO-003 — Bootstrap enforced modules and variant identities
 
 - **Type:** Task
@@ -549,6 +571,10 @@ official build-variant guidance in the source library before altering Gradle.
 ### Implementation plan
 1. Add the four target siblings to `settings.gradle.kts`; configure JVM domain and
    Android library/application plugins using the accepted matrix/catalog, not copy-pasted versions.
+   Declare the catalog's versioned JVM plugin at root with `apply false` before
+   AGP/Compose and apply it in the child; SELLO-002's probe exposed a child-only
+   version request's unknown-classpath-version failure. Use pinned KSP2 without
+   suppressing built-in Kotlin source-set validation; see ADR 0005.
 2. Create build/test/resource/manifest skeletons for each module; set namespaces,
    SDK/bytecode/test-runner settings and allowed dependency edges explicitly.
 3. Give app debug and catalog independent accepted IDs; move reusable theme ownership

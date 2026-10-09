@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 1/36 · **Epics Done:** 0/8
+**Tickets Done:** 2/36 · **Epics Done:** 0/8
 
-Backlog: 34 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 1
+Backlog: 34 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 2
 
 [Workflow, gates and definition of done](README.md)
 
@@ -12,7 +12,7 @@ Backlog: 34 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 1
 
 | Epic | Outcome | Status | Done |
 | --- | --- | --- | --- |
-| [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | In Progress | 1/5 |
+| [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | In Progress | 2/5 |
 | [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | Backlog | 0/4 |
 | [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | Backlog | 0/5 |
 | [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | Backlog | 0/4 |
@@ -27,9 +27,7 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-002](epics/E01-foundation.md#sello-002--establish-and-verify-the-supported-android-toolchain) | Establish and verify the supported Android toolchain | SELLO-E01 | P0 | G0 | None |
+No tickets.
 
 ## Review
 
@@ -43,7 +41,7 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities) | Bootstrap enforced modules and variant identities | SELLO-E01 | P0 | G1 | [SELLO-002](epics/E01-foundation.md#sello-002--establish-and-verify-the-supported-android-toolchain) |
+| [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities) | Bootstrap enforced modules and variant identities | SELLO-E01 | P0 | G1 | None |
 | [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) | Install CI, quality gates and architecture enforcement | SELLO-E01 | P0 | G1 | [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities) |
 | [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources) | Wire production composition and distinct time sources | SELLO-E01 | P0 | G1 | [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
@@ -83,7 +81,8 @@ No tickets.
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
 | [SELLO-001](epics/E01-foundation.md#sello-001--approve-the-mvp-contract-and-financial-examples) | Approve the MVP contract and financial examples | SELLO-E01 | P0 | G0 | None |
+| [SELLO-002](epics/E01-foundation.md#sello-002--establish-and-verify-the-supported-android-toolchain) | Establish and verify the supported Android toolchain | SELLO-E01 | P0 | G0 | None |
 
 ## Ready promotion candidates
 
-None. Complete current Ready tickets first.
+[SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities)

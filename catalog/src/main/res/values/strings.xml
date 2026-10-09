@@ -49,6 +49,12 @@
     <string name="catalog_example_empty_slip">EmptySlip</string>
     <string name="catalog_example_error_slip">ErrorSlip</string>
     <string name="catalog_example_slip_skeleton">SlipSkeleton</string>
+    <string name="catalog_example_amount_keypad">AmountKeypad</string>
+    <string name="catalog_example_chip">SelloChip</string>
+    <string name="catalog_example_field_pill">FieldPill</string>
+    <string name="catalog_example_form_field">FormField</string>
+    <string name="catalog_example_switch">Switches</string>
+    <string name="catalog_example_expense_entry">Entry controls together</string>
     <string name="catalog_control_motion">Motion</string>
     <string name="catalog_motion_full">Full</string>
     <string name="catalog_motion_reduced">Reduced</string>

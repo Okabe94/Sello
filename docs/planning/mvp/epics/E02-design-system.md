@@ -234,7 +234,7 @@ snackbar with undo and `SlipHeading` are not in this ticket's deliverables.
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-006, SELLO-010, SELLO-004
 - **Gate:** G2
 

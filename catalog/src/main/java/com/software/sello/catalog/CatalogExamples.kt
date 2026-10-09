@@ -2,17 +2,23 @@ package com.software.sello.catalog
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import com.software.sello.catalog.components.AmountKeypadExample
 import com.software.sello.catalog.components.ButtonExample
+import com.software.sello.catalog.components.ChipExample
 import com.software.sello.catalog.components.ConfirmSlipExample
 import com.software.sello.catalog.components.CountingExample
 import com.software.sello.catalog.components.EmptySlipExample
 import com.software.sello.catalog.components.ErrorSlipExample
+import com.software.sello.catalog.components.ExpenseEntryExample
+import com.software.sello.catalog.components.FieldPillExample
+import com.software.sello.catalog.components.FormFieldExample
 import com.software.sello.catalog.components.KeyValueExample
 import com.software.sello.catalog.components.LeaderLineExample
 import com.software.sello.catalog.components.MoneyTextExample
 import com.software.sello.catalog.components.SlipExample
 import com.software.sello.catalog.components.SlipSkeletonExample
 import com.software.sello.catalog.components.StampExample
+import com.software.sello.catalog.components.SwitchExample
 import com.software.sello.catalog.components.TearLineExample
 import com.software.sello.catalog.components.TotalLineExample
 import com.software.sello.catalog.foundations.ColorsExample
@@ -122,6 +128,36 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Inputs,
         R.string.catalog_example_button
     ) { ButtonExample() },
+    CatalogExample(
+        "inputs.amount-keypad",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_amount_keypad
+    ) { AmountKeypadExample() },
+    CatalogExample(
+        "inputs.chip",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_chip
+    ) { ChipExample() },
+    CatalogExample(
+        "inputs.field-pill",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_field_pill
+    ) { FieldPillExample() },
+    CatalogExample(
+        "inputs.form-field",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_form_field
+    ) { FormFieldExample() },
+    CatalogExample(
+        "inputs.switch",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_switch
+    ) { SwitchExample() },
+    CatalogExample(
+        "inputs.expense-entry",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_expense_entry
+    ) { ExpenseEntryExample() },
     CatalogExample(
         "feedback.confirm-slip",
         CatalogGroup.Feedback,

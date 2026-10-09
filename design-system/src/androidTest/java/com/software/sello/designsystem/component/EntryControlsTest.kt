@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -126,22 +127,26 @@ class EntryControlsTest {
     @Test
     fun aHardwareKeyboardTypesDeletesAndSubmitsAndTabFollowsReadingOrder() {
         val presses = mutableListOf<String>()
-        var inputMode: InputModeManager? = null
+        // A keyboard user is not in touch mode; only then can a button take focus. The
+        // mode is supplied here so the test does not depend on what ran before it.
+        val keyboardMode = object : InputModeManager {
+            override val inputMode = InputMode.Keyboard
+
+            override fun requestInputMode(inputMode: InputMode) = inputMode == InputMode.Keyboard
+        }
         rule.setContent {
-            inputMode = LocalInputModeManager.current
-            SelloTheme {
-                AmountKeypad(
-                    onDigit = { presses += it.toString() },
-                    onTripleZero = { presses += "000" },
-                    onBackspace = { presses += "back" },
-                    onClearAll = { presses += "clear" },
-                    onSubmit = { presses += "submit" }
-                )
+            CompositionLocalProvider(LocalInputModeManager provides keyboardMode) {
+                SelloTheme {
+                    AmountKeypad(
+                        onDigit = { presses += it.toString() },
+                        onTripleZero = { presses += "000" },
+                        onBackspace = { presses += "back" },
+                        onClearAll = { presses += "clear" },
+                        onSubmit = { presses += "submit" }
+                    )
+                }
             }
         }
-        // A keyboard user is not in touch mode; only then can a button take focus.
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(false)
-        rule.runOnIdle { inputMode!!.requestInputMode(InputMode.Keyboard) }
 
         // Tab walks the keys in reading order, starting with the first.
         for (key in listOf("1", "2", "3", "4")) {

@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
@@ -87,7 +88,7 @@ fun SwitchRow(
         ) {
             Box(
                 modifier = Modifier
-                    .offset(x = thumb)
+                    .offset { IntOffset(thumb.roundToPx(), 0) }
                     .size(ThumbSize)
                     .background(if (checked) colors.onBrand else colors.outline, CircleShape)
             )
@@ -122,7 +123,7 @@ fun SegmentedSwitch(
         val start by animateDpAsState(segment * selectedIndex, spec, "segment")
         Box(
             modifier = Modifier
-                .offset(x = start)
+                .offset { IntOffset(start.roundToPx(), 0) }
                 .width(segment)
                 .height(SegmentHeight)
                 .background(colors.paper, SegmentShape)

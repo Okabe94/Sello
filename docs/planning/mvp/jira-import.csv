@@ -1103,7 +1103,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G1
 
@@ -1229,7 +1229,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1001,Highest,Backlog,sello-005
+",1001,Highest,In Progress,sello-005
 1002,Epic,SELLO-E02 — Sello design system and component catalog,"Local ID: SELLO-E02
 Increment: MVP
 Goal: Build the actual reusable visual language and a separately runnable UI laboratory.

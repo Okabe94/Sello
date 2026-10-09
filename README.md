@@ -14,15 +14,18 @@ a deliberately smaller, tested MVP and the Sello visual language.
   definition of done, evidence and Jira handoff.
 - [Independent executor guide](docs/planning/mvp/EXECUTION_GUIDE.md): prerequisites,
   file ownership, tools, verification procedures and source library.
+- [Time and composition](docs/development/time-and-composition.md): the three clocks,
+  the financial zone, the Koin composition root and who cancels what.
 - [Quality flow](docs/planning/mvp/QUALITY_FLOW.md): `./scripts/verify-ticket`, the
   evidence every ticket needs and what CI enforces.
 - [Local visual reference](docs/design/README.md): Sello snapshot and provenance.
 - [Inspected baseline](docs/planning/mvp/BASELINE.md): what actually builds today.
 
-The app is still the generated greeting. SELLO-003 added the module boundaries
-(`:domain`, `:data`, `:design-system`, `:app`, `:catalog`) and the debug/catalog
-identities; the catalog is an empty shell. Financial features, live-testing
-sandbox, catalog components, architecture checks and CI are planned, not implemented.
+The app is still the generated greeting and the catalog an empty shell. The
+foundation epic delivered the module boundaries (`:domain`, `:data`,
+`:design-system`, `:app`, `:catalog`), debug/catalog identities, quality gates with
+CI, and injected clocks with a Koin composition root. Financial features, the
+live-testing sandbox and catalog components are planned, not implemented.
 
 ## Local host verification (G1)
 

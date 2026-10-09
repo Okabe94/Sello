@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Rewrite every module's gradle.lockfile after a deliberate dependency change.
 
-Resolves the same configurations the quality gate uses, so strict locking has
-state for all of them. Review the resulting lockfile diff: it is the dependency review.
+Resolves every declared configuration plus the ones the build creates while
+assembling and linting, so strict locking has state for all of them. Review the resulting lockfile diff: it is the dependency review.
 """
 import subprocess
 import sys
@@ -14,6 +14,8 @@ import architecture  # noqa: E402
 import gates  # noqa: E402
 
 reports = [f":{module}:dependencies" for module in sorted(architecture.ALLOWED_EDGES)]
-command = ["./gradlew", *reports, *gates.HOST_TASKS, "assembleDebugAndroidTest", "--write-locks"]
+# Build tasks only: tests and style checks must not be able to block a lock refresh.
+build = [task for task in gates.HOST_TASKS if "assemble" in task or task == "lintDebug"]
+command = ["./gradlew", *reports, *build, "assembleDebugAndroidTest", "--write-locks"]
 print(" ".join(command))
 sys.exit(subprocess.run(command, cwd=ROOT).returncode)

@@ -4,12 +4,14 @@
 This is a starting-state guide, not a second architecture or permission to bypass
 ticket dependencies. Verify current HEAD, Git status, code and ticket status first.
 
-**Update 2026-10-08:** SELLO-003 and SELLO-004 have since been delivered. The sections
+**Update 2026-10-09:** SELLO-003, SELLO-004 and SELLO-005 have since been delivered. The sections
 below describe the state before them; use each ticket's Delivery evidence in the
 [foundation epic](../planning/mvp/epics/E01-foundation.md), [setup](setup.md#modules-identities-and-tasks)
 and the [quality runner guide](../planning/mvp/EXECUTION_GUIDE.md#quality-runner) for the
 actual modules, identities and commands. Work now reaches `main` only through a pull
-request with a passing `quality` check. SELLO-005 is the next eligible ticket.
+request with a passing `quality` check. Clocks, composition and scope ownership are
+described in [time and composition](time-and-composition.md). With E01 complete,
+SELLO-006 and SELLO-010 are the next eligible tickets.
 
 ## Read before editing
 

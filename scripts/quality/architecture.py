@@ -10,6 +10,9 @@ Rules
   composition-is-root     an :app feature references the composition package
   feature-isolation       an :app feature references another feature's package
   debug-tools-in-release  developer tools are declared or referenced outside debug source sets
+  ad-hoc-time             wall clock, device zone or uptime is read outside :app's platform package
+  global-coroutines       GlobalScope anywhere, or a global dispatcher named outside the platform package
+  di-composition-only     Koin is used outside :app's composition directory and debug developer tools
 
 Coverage: every .kt/.java file under <module>/src/*/{java,kotlin}, matched on any
 mention of a package in code, so plain, aliased and wildcard imports and fully
@@ -20,8 +23,11 @@ reflection or inside string templates, a type re-exported through an allowed
 package (for example a typealias in a shared presentation package), or project
 dependencies added by anything other than a literal project(":name") in a module's
 own build file. Test source sets of :app are exempt from the composition-only,
-composition-is-root and feature-isolation rules. Gradle's own classpaths still
-enforce the module edges at compile time.
+composition-is-root and feature-isolation rules, and test source sets of every
+module from the time, coroutine and Koin rules. The time rule matches the common
+JDK and Android entry points listed in AD_HOC_TIME; a clock obtained another way
+(for example through a third-party library) is not seen. Gradle's own classpaths
+still enforce the module edges at compile time.
 """
 import re
 import sys
@@ -46,6 +52,17 @@ PACKAGE = re.compile(r"^\s*package\s+([\w.]+)", re.MULTILINE)
 PROJECT_EDGE = re.compile(r'project\(\s*(?:path\s*=\s*)?":([\w-]+)"\s*\)')
 PROJECT_ACCESSOR = re.compile(r"(?<![\w.])projects\.\w+")
 DEBUG_SOURCE_SETS = {"debug", "testDebug", "androidTest", "androidTestDebug"}
+AD_HOC_TIME = re.compile(
+    r"(?<![\w.])(?:"
+    r"(?:Instant|LocalDate|LocalDateTime|LocalTime|ZonedDateTime|OffsetDateTime|YearMonth|Year)\.now\s*\("
+    r"|Clock\.system\w*|Clock\.System\b|System\.(?:currentTimeMillis|nanoTime)\b|SystemClock\."
+    r"|ZoneId\.systemDefault\b|TimeZone\.(?:getDefault|currentSystemDefault)\b|Calendar\.getInstance\b|Date\s*\(\s*\)"
+    r")"
+)
+QUALIFIED_TIME = re.compile(r"(?<![\w.])(?:java\.time|java\.util|android\.os|kotlinx\.datetime)\.(?=[A-Z])")
+GLOBAL_SCOPE = re.compile(r"(?<![\w])GlobalScope\b")
+GLOBAL_DISPATCHER = re.compile(r"(?<![\w])Dispatchers\.(?:Main|Default|IO|Unconfined)\b")
+KOIN = re.compile(r"(?<![\w.])org\.koin\.")
 
 
 @dataclass(frozen=True)
@@ -113,6 +130,22 @@ def source_violations(module, source_set, relative, text):
     def report(offset, rule, message):
         found.append(Violation(relative, line_of(code, offset), rule, message))
 
+    in_platform = module == "app" and package.startswith(f"{NAMESPACE}.platform") and "/com/software/sello/platform/" in relative
+    in_composition_directory = module == "app" and "/com/software/sello/composition/" in relative
+    in_debug_tools = module == "app" and package.startswith(f"{NAMESPACE}.devtools") and source_set in DEBUG_SOURCE_SETS
+    if not is_test:
+        # Fully qualified calls (java.time.LocalDate.now()) are matched after dropping the qualifier.
+        unqualified = QUALIFIED_TIME.sub(lambda match: " " * len(match.group(0)), code)
+        if not in_platform:
+            for match in AD_HOC_TIME.finditer(unqualified, package_end):
+                report(match.start(), "ad-hoc-time", f"read time through an injected clock, not {match.group(0).strip('( ')}")
+            for match in GLOBAL_DISPATCHER.finditer(code, package_end):
+                report(match.start(), "global-coroutines", f"inject DispatcherProvider instead of naming {match.group(0)}")
+        for match in GLOBAL_SCOPE.finditer(code, package_end):
+            report(match.start(), "global-coroutines", "GlobalScope has no owner; launch in an injected scope")
+        if not (in_composition_directory or in_debug_tools) and module != "domain":
+            for match in KOIN.finditer(code, package_end):
+                report(match.start(), "di-composition-only", "Koin belongs in the composition root; pass collaborators through constructors")
     if module == "domain":
         for match in FORBIDDEN_IN_DOMAIN.finditer(code, package_end):
             report(match.start(), "domain-pure", f":domain must stay platform-neutral but references {match.group(1)}.*")

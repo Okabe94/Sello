@@ -807,7 +807,7 @@ of Gradle plugin classpaths. The architecture checker's stated limits apply.
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G1
 

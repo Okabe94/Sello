@@ -169,6 +169,65 @@ class ArchitectureTests(unittest.TestCase):
         write(self.root, "settings.gradle.kts", SETTINGS + 'include(":dev-tools")\n')
         self.assert_violation("unknown-module", "settings.gradle.kts:6")
 
+    def test_wall_clock_reads_are_only_allowed_in_the_platform_package(self):
+        reads = ("Instant.now()", "LocalDate.now()", "YearMonth.now(zone)", "System.currentTimeMillis()",
+                 "System.nanoTime()", "SystemClock.elapsedRealtime()", "ZoneId.systemDefault()",
+                 "TimeZone.getDefault()", "Clock.systemUTC()")
+        for read in reads:
+            with self.subTest(read):
+                path = f"{APP}/feature/expense/Bad.kt"
+                write(self.root, path, f"package com.software.sello.feature.expense\n\nval value = {read}\n")
+                self.assert_violation("ad-hoc-time", f"{path}:3")
+
+    def test_wall_clock_reads_are_rejected_in_every_module(self):
+        for module, path in (
+            ("domain", "domain/src/main/kotlin/com/software/sello/domain/policy/Bad.kt"),
+            ("data", "data/src/main/java/com/software/sello/data/local/Bad.kt"),
+            ("composition", f"{APP}/composition/Bad.kt"),
+        ):
+            with self.subTest(module):
+                package = path.split("/com/software/sello/")[1].rsplit("/", 1)[0].replace("/", ".")
+                write(self.root, path, f"package com.software.sello.{package}\n\nval today = java.time.LocalDate.now()\n")
+                self.assert_violation("ad-hoc-time", f"{path}:3")
+                (self.root / path).unlink()
+
+    def test_platform_package_may_read_the_wall_clock(self):
+        write(self.root, f"{APP}/platform/SystemClocks.kt",
+              "package com.software.sello.platform\n\nimport java.time.Instant\n\nfun now() = Instant.now()\nval zone = java.time.ZoneId.systemDefault()\n")
+        self.assertEqual([], self.found())
+
+    def test_tests_may_build_their_own_instants(self):
+        write(self.root, "app/src/test/java/com/software/sello/platform/ClockTest.kt",
+              "package com.software.sello.platform\n\nval started = System.nanoTime()\n")
+        self.assertEqual([], self.found())
+
+    def test_global_scope_is_rejected_everywhere(self):
+        path = f"{APP}/platform/Bad.kt"
+        write(self.root, path, "package com.software.sello.platform\n\nimport kotlinx.coroutines.GlobalScope\n")
+        self.assert_violation("global-coroutines", f"{path}:3")
+
+    def test_global_dispatchers_are_only_named_in_the_platform_package(self):
+        path = f"{APP}/feature/expense/Bad.kt"
+        write(self.root, path, "package com.software.sello.feature.expense\n\nimport kotlinx.coroutines.Dispatchers\n\nval io = Dispatchers.IO\n")
+        found = self.found()
+        self.assertEqual(["global-coroutines"], sorted({line.split("[")[1].split("]")[0] for line in found}))
+        write(self.root, f"{APP}/platform/Dispatchers.kt", "package com.software.sello.platform\n\nval io = kotlinx.coroutines.Dispatchers.IO\n")
+        (self.root / path).unlink()
+        self.assertEqual([], self.found())
+
+    def test_koin_is_only_used_from_composition(self):
+        for path in (f"{APP}/feature/expense/Bad.kt", f"{APP}/platform/Bad.kt", "data/src/main/java/com/software/sello/data/Bad.kt"):
+            with self.subTest(path):
+                package = path.split("/com/software/sello/")[1].rsplit("/", 1)[0].replace("/", ".")
+                write(self.root, path, f"package com.software.sello.{package}\n\nimport org.koin.core.component.KoinComponent\n")
+                self.assert_violation("di-composition-only", f"{path}:3")
+                (self.root / path).unlink()
+
+    def test_composition_and_debug_tools_may_define_koin_modules(self):
+        write(self.root, f"{APP}/composition/Modules.kt", "package com.software.sello.composition\n\nimport org.koin.dsl.module\n")
+        write(self.root, "app/src/debug/java/com/software/sello/devtools/Override.kt", "package com.software.sello.devtools\n\nimport org.koin.dsl.module\n")
+        self.assertEqual([], self.found())
+
     def test_java_sources_are_checked_too(self):
         path = "domain/src/main/java/com/software/sello/domain/Bad.java"
         write(self.root, path, "package com.software.sello.domain;\n\nimport android.os.Bundle;\n")

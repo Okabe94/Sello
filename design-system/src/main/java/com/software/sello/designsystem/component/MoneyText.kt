@@ -165,6 +165,7 @@ private const val GROUP_POINT = '.'
 
 /** A space between a currency code and its figure that never becomes a line break. */
 private const val MARK_GAP = "\u00A0"
+private const val MARK_GAP_EXTRA_EM = 0.2f
 private const val DECIMAL_COMMA = ','
 private const val SYMBOL_ALPHA = 0.72f
 
@@ -201,7 +202,9 @@ internal fun moneyAnnotatedString(
             letterSpacing = 0.em,
             color = if (ink.isSpecified) ink.copy(alpha = ink.alpha * SYMBOL_ALPHA) else ink
         )
-        withStyle(mark) { append(value.symbol + MARK_GAP) }
+        withStyle(mark) { append(value.symbol) }
+        // Full-size and widened: this font's own space is too thin beside a heavy figure.
+        withStyle(SpanStyle(letterSpacing = MARK_GAP_EXTRA_EM.em)) { append(MARK_GAP) }
     }
     value.digits.forEachIndexed { index, char ->
         val isMark = char == GROUP_POINT || char == DECIMAL_COMMA

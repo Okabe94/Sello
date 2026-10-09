@@ -65,7 +65,8 @@ class MoneyTextRenderTest {
         val text =
             moneyAnnotatedString(value(MoneySign.None, "1.234", "USD"), MoneyStyle.Hero, style)
         val symbol = text.spanStyles.single { it.item.fontSize == 0.56.em }
-        assertEquals("USD\u00A0", text.text.substring(symbol.start, symbol.end))
+        assertEquals("USD", text.text.substring(symbol.start, symbol.end))
+        assertEquals("USD\u00A01.234", text.text.replace("\u200B", ""))
         assertTrue(symbol.item.baselineShift!!.multiplier > 0f)
         // The style's own -0.04em tracking plus 0.13em of tightening.
         val tight = text.spanStyles.filter { abs(it.item.letterSpacing.value + 0.17f) < 1e-4f }

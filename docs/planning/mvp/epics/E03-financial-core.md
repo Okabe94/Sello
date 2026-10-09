@@ -1,6 +1,6 @@
 # SELLO-E03 — Financial truth and persistence
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Goal:** Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them.
 - **Exit:** Tested exact policies, Room contracts/migrations, durable command receipts and same-revision snapshots; no dormant post-MVP schema.
 
@@ -8,7 +8,7 @@
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G1
 

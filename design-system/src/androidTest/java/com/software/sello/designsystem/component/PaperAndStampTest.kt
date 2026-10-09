@@ -76,7 +76,7 @@ class PaperAndStampTest {
             content = {
                 Slip(modifier = Modifier.testTag("slip"), onClick = { presses++ }) {
                     Text("Te quedan")
-                    MoneyText(MoneyTextValue(MoneySign.None, "$", "937.200", "937.200 pesos"))
+                    MoneyText(MoneyTextValue(MoneySign.None, "", "937.200", "937.200 pesos"))
                 }
             }
         ) {
@@ -94,13 +94,13 @@ class PaperAndStampTest {
             content = {
                 Slip {
                     LeaderLine("Uber", Modifier.testTag("leader"), caption = "Transporte") {
-                        MoneyText(MoneyTextValue(MoneySign.None, "$", "18.400", "18.400 pesos"))
+                        MoneyText(MoneyTextValue(MoneySign.None, "", "18.400", "18.400 pesos"))
                     }
                     LeaderLine("Fecha", "jue 22 oct", Modifier.testTag("plain"))
                     LeaderLine("Abrir", "Detalle", Modifier.testTag("action"), onClick = {})
                     TotalLine("Total", Modifier.testTag("total")) {
                         MoneyText(
-                            MoneyTextValue(MoneySign.None, "$", "126.000", "126.000 pesos"),
+                            MoneyTextValue(MoneySign.None, "", "126.000", "126.000 pesos"),
                             style = MoneyStyle.Title
                         )
                     }

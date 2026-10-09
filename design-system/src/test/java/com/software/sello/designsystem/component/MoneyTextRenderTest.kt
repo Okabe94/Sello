@@ -9,7 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MoneyTextRenderTest {
-    private fun value(sign: MoneySign, digits: String, symbol: String = "$") =
+    private fun value(sign: MoneySign, digits: String, symbol: String = "") =
         MoneyTextValue(sign, symbol, digits, "spoken")
 
     private val style = TextStyle(fontSize = 60.sp, letterSpacing = (-0.04).em)
@@ -18,16 +18,16 @@ class MoneyTextRenderTest {
         moneyAnnotatedString(value, style, this.style).text.replace("\u200B", "")
 
     @Test
-    fun theFullFigureIsDrawnWithItsSymbolAndATrueMinus() {
-        assertEquals("$937.200", drawn(value(MoneySign.None, "937.200"), MoneyStyle.Hero))
-        assertEquals("+$850.000", drawn(value(MoneySign.Plus, "850.000"), MoneyStyle.Total))
-        assertEquals("\u2212$10.000", drawn(value(MoneySign.Minus, "10.000"), MoneyStyle.Card))
+    fun theFullFigureIsDrawnWithATrueMinusAndNoMarkForPesos() {
+        assertEquals("937.200", drawn(value(MoneySign.None, "937.200"), MoneyStyle.Hero))
+        assertEquals("+850.000", drawn(value(MoneySign.Plus, "850.000"), MoneyStyle.Total))
+        assertEquals("\u221210.000", drawn(value(MoneySign.Minus, "10.000"), MoneyStyle.Card))
         assertEquals(
-            "\u2212$9.223.372.036.854.775.808",
+            "\u22129.223.372.036.854.775.808",
             drawn(value(MoneySign.Minus, "9.223.372.036.854.775.808"), MoneyStyle.Title)
         )
         assertEquals(
-            "USD2.340,00",
+            "USD\u00A02.340,00",
             drawn(value(MoneySign.None, "2.340,00", "USD"), MoneyStyle.Title)
         )
     }
@@ -55,14 +55,17 @@ class MoneyTextRenderTest {
             style
         ).text
         val pieces = text.split("\u200B")
-        assertEquals(listOf("$9.", "223.", "372.", "036.", "854.", "775.", "807"), pieces)
+        assertEquals(listOf("9.", "223.", "372.", "036.", "854.", "775.", "807"), pieces)
     }
 
     @Test
-    fun thousandsPointsAreTightenedAndTheSymbolIsSmallAndRaised() {
-        val text = moneyAnnotatedString(value(MoneySign.None, "1.234"), MoneyStyle.Hero, style)
-        val symbol = text.spanStyles.last { it.item.fontSize == 0.56.em }
-        assertEquals("$", text.text.substring(symbol.start, symbol.end))
+    fun thousandsPointsAreTightenedAndACurrencyCodeIsSmallAndRaised() {
+        val pesos = moneyAnnotatedString(value(MoneySign.None, "1.234"), MoneyStyle.Hero, style)
+        assertTrue(pesos.spanStyles.none { it.item.fontSize == 0.56.em })
+        val text =
+            moneyAnnotatedString(value(MoneySign.None, "1.234", "USD"), MoneyStyle.Hero, style)
+        val symbol = text.spanStyles.single { it.item.fontSize == 0.56.em }
+        assertEquals("USD\u00A0", text.text.substring(symbol.start, symbol.end))
         assertTrue(symbol.item.baselineShift!!.multiplier > 0f)
         // The style's own -0.04em tracking plus 0.13em of tightening.
         val tight = text.spanStyles.filter { abs(it.item.letterSpacing.value + 0.17f) < 1e-4f }
@@ -76,8 +79,8 @@ class MoneyTextRenderTest {
             MoneyStyle.Title,
             style
         )
-        val wide = text.spanStyles.single { it.item.letterSpacing == 0.14.em }
-        assertEquals("D", text.text.substring(wide.start, wide.end))
+        // The code is followed by a space that cannot become a line break.
+        assertEquals("USD\u00A02.340,00", text.text.replace("\u200B", ""))
         val tight = text.spanStyles.filter { abs(it.item.letterSpacing.value + 0.17f) < 1e-4f }
         assertEquals(
             listOf("2", ".", "0", ","),

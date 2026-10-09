@@ -21,7 +21,7 @@ fun copFixture(pesos: Long, signed: Boolean = false): MoneyTextValue {
         MoneySign.Plus -> "más $digits pesos"
         MoneySign.None -> "$digits pesos"
     }
-    return MoneyTextValue(sign, "$", digits, words)
+    return MoneyTextValue(sign, "", digits, words)
 }
 
 val usdFixture = MoneyTextValue(MoneySign.None, "USD", "2.340,00", "2.340,00 USD")

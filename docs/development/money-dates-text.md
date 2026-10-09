@@ -39,7 +39,8 @@ never substitutes zero, empty or a "repaired" value.
 Formatting and drawing have different owners (SELLO-007):
 
 - `MoneyFormatter` in `:app` (`presentation.money`) turns a `Money` into a
-  `MoneyTextValue`: sign, currency mark, the full es-CO grouped figure and the words a
+  `MoneyTextValue`: sign, currency code (none for pesos, ADR 0007), the full es-CO
+  grouped figure and the words a
   screen reader says, taken from string resources through `ResourceMoneyLabels`. It
   never abbreviates; short forms such as `3,53 M` are for chart axes only.
 - `MoneyText` in `:design-system` only draws a `MoneyTextValue`. It does not know

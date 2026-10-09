@@ -27,7 +27,7 @@ class MoneySemanticsTest {
     val rule = createComposeRule()
 
     private fun cop(sign: MoneySign, digits: String, spoken: String) =
-        MoneyTextValue(sign, "$", digits, spoken)
+        MoneyTextValue(sign, "", digits, spoken)
 
     private fun fixture(pesos: Long): MoneyTextValue {
         val digits = pesos.toString().reversed().chunked(3).joinToString(".").reversed()
@@ -62,13 +62,13 @@ class MoneySemanticsTest {
             }
         ) {
             rule.onNodeWithTag("hero").assertContentDescriptionEquals("937.200 pesos")
-            rule.onNodeWithTag("hero").assertTextEquals("$937.200")
+            rule.onNodeWithTag("hero").assertTextEquals("937.200")
             rule.onNodeWithTag("loss").assertContentDescriptionEquals("menos 10.000 pesos")
-            rule.onNodeWithTag("loss").assertTextEquals("\u2212$10.000")
+            rule.onNodeWithTag("loss").assertTextEquals("\u221210.000")
             rule.onNodeWithTag("line").assertContentDescriptionEquals("más 850.000 pesos")
             rule.onNodeWithTag("line").assertTextEquals("+850.000")
             rule.onNodeWithTag("usd").assertContentDescriptionEquals("2.340,00 USD")
-            rule.onNodeWithTag("usd").assertTextEquals("USD2.340,00")
+            rule.onNodeWithTag("usd").assertTextEquals("USD\u00A02.340,00")
         }
     }
 
@@ -102,7 +102,7 @@ class MoneySemanticsTest {
                 rule.onNodeWithTag(tag).assertContentDescriptionEquals(max.spoken)
                 rule.onNodeWithTag(tag).assertTextEquals(
                     if (tag == "hero") {
-                        "\u2212$9.223.372.036.854.775.808"
+                        "\u22129.223.372.036.854.775.808"
                     } else {
                         "\u22129.223.372.036.854.775.808"
                     }
@@ -126,12 +126,12 @@ class MoneySemanticsTest {
             }
         }
         rule.mainClock.advanceTimeByFrame()
-        rule.onNodeWithTag("count").assertTextEquals("$0")
+        rule.onNodeWithTag("count").assertTextEquals("0")
 
         amount = 937_200
         rule.mainClock.advanceTimeByFrame()
         rule.mainClock.advanceTimeByFrame()
-        rule.onNodeWithTag("count").assertTextEquals("$937.200")
+        rule.onNodeWithTag("count").assertTextEquals("937.200")
         rule.onNodeWithTag("count").assertContentDescriptionEquals("937.200 pesos")
     }
 
@@ -146,7 +146,7 @@ class MoneySemanticsTest {
         }
         rule.mainClock.advanceTimeByFrame()
         // The first appearance does not count up from zero.
-        rule.onNodeWithTag("count").assertTextEquals("$0")
+        rule.onNodeWithTag("count").assertTextEquals("0")
 
         amount = 999_999_999_999
         rule.mainClock.advanceTimeBy(200)
@@ -155,10 +155,10 @@ class MoneySemanticsTest {
             .config[androidx.compose.ui.semantics.SemanticsProperties.Text].single().text
         assertTrue(
             "still counting at 200 ms: $midway",
-            midway != "$0" && midway != "$999.999.999.999"
+            midway != "0" && midway != "999.999.999.999"
         )
 
         rule.mainClock.advanceTimeBy(400)
-        rule.onNodeWithTag("count").assertTextEquals("$999.999.999.999")
+        rule.onNodeWithTag("count").assertTextEquals("999.999.999.999")
     }
 }

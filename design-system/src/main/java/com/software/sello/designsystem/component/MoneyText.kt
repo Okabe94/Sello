@@ -39,7 +39,8 @@ enum class MoneySign { None, Plus, Minus }
  * An amount already formatted by the application: the design system draws it and
  * never computes, rounds or abbreviates it.
  *
- * @param symbol the currency mark drawn small and raised, such as `$` or `USD`.
+ * @param symbol the currency code drawn small and raised before the figure, such as
+ * `USD`; empty for pesos, which carry no mark.
  * @param digits the full grouped figure without sign or symbol, such as `937.200`.
  * @param spoken what a screen reader says, with the currency: `937.200 pesos`.
  */
@@ -51,11 +52,11 @@ data class MoneyTextValue(
     val spoken: String
 )
 
-/** Hero 60sp, Total 44sp, Card 32sp, Title 19sp, Line 14sp. Line drops the symbol. */
+/** Hero 60sp, Total 44sp, Card 32sp, Title 19sp, Line 14sp. Line drops the currency code. */
 enum class MoneyStyle { Hero, Total, Card, Title, Line }
 
 /**
- * The only way an amount is drawn: raised currency mark, tabular figures, tightened
+ * The only way an amount is drawn: tabular figures, a raised currency code, tightened
  * thousands points and a true minus. A figure too wide for its place wraps between
  * groups, never clips; Hero first steps down to Total.
  */
@@ -161,6 +162,9 @@ private fun MoneyStyle.textStyle(weight: FontWeight?): TextStyle {
 private const val TRUE_MINUS = "\u2212"
 private const val ZERO_WIDTH_SPACE = "\u200B"
 private const val GROUP_POINT = '.'
+
+/** A space between a currency code and its figure that never becomes a line break. */
+private const val MARK_GAP = "\u00A0"
 private const val DECIMAL_COMMA = ','
 private const val SYMBOL_ALPHA = 0.72f
 
@@ -173,9 +177,12 @@ private fun signText(sign: MoneySign) = when (sign) {
     MoneySign.Minus -> TRUE_MINUS
 }
 
+private fun markText(value: MoneyTextValue, style: MoneyStyle) =
+    if (style == MoneyStyle.Line || value.symbol.isEmpty()) "" else value.symbol + MARK_GAP
+
 /** The figure as plain characters, for tests and semantics. */
 internal fun moneyPlainText(value: MoneyTextValue, style: MoneyStyle): String =
-    signText(value.sign) + (if (style == MoneyStyle.Line) "" else value.symbol) + value.digits
+    signText(value.sign) + markText(value, style) + value.digits
 
 internal fun moneyAnnotatedString(
     value: MoneyTextValue,
@@ -194,9 +201,7 @@ internal fun moneyAnnotatedString(
             letterSpacing = 0.em,
             color = if (ink.isSpecified) ink.copy(alpha = ink.alpha * SYMBOL_ALPHA) else ink
         )
-        // Only the gap after the mark is widened, not the letters of a code like USD.
-        withStyle(mark) { append(value.symbol.dropLast(1)) }
-        withStyle(mark.copy(letterSpacing = 0.14.em)) { append(value.symbol.takeLast(1)) }
+        withStyle(mark) { append(value.symbol + MARK_GAP) }
     }
     value.digits.forEachIndexed { index, char ->
         val isMark = char == GROUP_POINT || char == DECIMAL_COMMA

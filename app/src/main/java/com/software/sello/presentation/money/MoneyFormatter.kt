@@ -43,7 +43,8 @@ class MoneyFormatter(private val labels: MoneyLabels) {
         return MoneyTextValue(sign, symbol(currency), digits, spoken)
     }
 
-    private fun symbol(currency: Currency) = if (currency == Currency.COP) "$" else currency.code
+    /** Pesos carry no mark (ADR 0007); any other currency is named by its code. */
+    private fun symbol(currency: Currency) = if (currency == Currency.COP) "" else currency.code
 
     private fun group(magnitude: String, scale: Int): String {
         val padded = magnitude.padStart(scale + 1, '0')

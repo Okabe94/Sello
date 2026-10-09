@@ -42,7 +42,7 @@ class MoneyFormatterTest {
         for ((pesos, digits) in expected) {
             val value = cop(pesos)
             assertEquals(digits, value.digits)
-            assertEquals("$", value.symbol)
+            assertEquals("COP shows no currency mark", "", value.symbol)
             assertEquals(MoneySign.None, value.sign)
         }
     }
@@ -50,7 +50,7 @@ class MoneyFormatterTest {
     @Test
     fun negativesCarryAMinusSignAndKeepEveryDigit() {
         assertEquals(
-            MoneyTextValue(MoneySign.Minus, "$", "10.000", "menos 10.000 COP/other"),
+            MoneyTextValue(MoneySign.Minus, "", "10.000", "menos 10.000 COP/other"),
             cop(-10_000)
         )
         assertEquals(MoneySign.Minus, cop(-1).sign)
@@ -65,10 +65,10 @@ class MoneyFormatterTest {
     fun aPlusAppearsOnlyWhenAskedAndNeverOnZero() {
         assertEquals(MoneySign.None, cop(850_000).sign)
         assertEquals(
-            MoneyTextValue(MoneySign.Plus, "$", "850.000", "más 850.000 COP/other"),
+            MoneyTextValue(MoneySign.Plus, "", "850.000", "más 850.000 COP/other"),
             cop(850_000, signed = true)
         )
-        assertEquals(MoneyTextValue(MoneySign.None, "$", "0", "0 COP/other"), cop(0, signed = true))
+        assertEquals(MoneyTextValue(MoneySign.None, "", "0", "0 COP/other"), cop(0, signed = true))
         assertEquals(MoneySign.Minus, cop(-5, signed = true).sign)
     }
 

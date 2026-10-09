@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Run the quality gate a ticket requires and write a report. See docs/planning/mvp/QUALITY_FLOW.md."""
+import argparse
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts/quality"))
+import gates  # noqa: E402
+import runner  # noqa: E402
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Run the gate the canonical ticket requires. Checks cannot be skipped or downgraded.",
+    )
+    parser.add_argument("ticket", nargs="?", help="Ticket ID, for example SELLO-017")
+    parser.add_argument(
+        "--merge-candidate", metavar="BASE",
+        help="CI mode: verify every ticket advanced since BASE, or the bare gate if none is.",
+    )
+    parser.add_argument(
+        "--gate", choices=gates.GATES[1:],
+        help="Run a higher gate than the ticket requires. A lower one is refused.",
+    )
+    parser.add_argument(
+        "--retain", action="store_true",
+        help="After a passed run, copy the report to docs/planning/mvp/quality-reports and print the Quality run field.",
+    )
+    arguments = parser.parse_args()
+    if bool(arguments.ticket) == bool(arguments.merge_candidate):
+        parser.error("give either a ticket ID or --merge-candidate BASE")
+    if arguments.merge_candidate:
+        if arguments.retain:
+            parser.error("--retain needs a ticket ID")
+        return runner.run_merge_candidate(arguments.merge_candidate, ROOT, requested_gate=arguments.gate)[0]
+    return runner.run(arguments.ticket, ROOT, requested_gate=arguments.gate, retain=arguments.retain)[0]
+
+
+if __name__ == "__main__":
+    sys.exit(main())

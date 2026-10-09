@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 3/36 · **Epics Done:** 0/8
 
-Backlog: 33 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 3
+Backlog: 32 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 3
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,7 +27,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) | Install CI, quality gates and architecture enforcement | SELLO-E01 | P0 | G1 | None |
 
 ## Review
 
@@ -41,7 +43,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) | Install CI, quality gates and architecture enforcement | SELLO-E01 | P0 | G1 | None |
 | [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources) | Wire production composition and distinct time sources | SELLO-E01 | P0 | G1 | [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) | Deliver paper, exact money and feedback components | SELLO-E02 | P0 | G2 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell), [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
@@ -85,4 +86,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement)
+None. Complete current Ready tickets first.

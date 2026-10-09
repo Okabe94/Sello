@@ -634,7 +634,7 @@ app's OS-backup disablement (SELLO-011), Sello tokens and catalog examples (SELL
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-003
 - **Gate:** G1
 
@@ -735,6 +735,44 @@ validate its retained report, and demonstrate rejected invalid completion fixtur
 Attach local report and hosted check/protection evidence to `Quality run` and delivery
 fields; request review only after required checks pass. Do not mark Done without
 hosted acceptance or silently replace it with local-only verification.
+
+### Execution progress
+2026-10-08: started after SELLO-003 was committed and pushed. Owner inputs settled:
+GitHub remote `Okabe94/Sello` (public, `main`) with push and admin access verified;
+device tests run in CI on every pull request; ktlint 1.8.0 through ktlint-gradle
+14.2.0 approved subject to a compatibility probe; Detekt deferred because the latest
+stable 1.23.8 predates this toolchain and 2.0 is still alpha (to be recorded in an
+ADR); architecture rules will be an in-repo script, not a library.
+
+Part 1 of 5 delivered, uncommitted: `scripts/verify-ticket` with `scripts/quality/`
+(`fingerprint.py`, `gates.py`, `runner.py`) and 29 unit tests written before the
+implementation. The runner derives the gate from the canonical ticket, refuses
+unknown tickets, unfinished prerequisites, downgrades, a missing toolchain or device
+and the not-yet-available G3, and writes a schema-version-1 report under ignored
+`build/reports/quality/`. A real G1 run for this ticket passed. G2 has only been
+exercised with a simulated device.
+
+Part 2 of 5 delivered, uncommitted: `scripts/quality/report-schema-v1.json` and
+`evidence.py`, plus `board.py --check` now validating the retained report of every
+Review/Done ticket from SELLO-004 onward (`--skip-evidence` for use inside a run,
+`--base` to compare statuses with a merge base). Owner chose to commit final reports
+under `docs/planning/mvp/quality-reports/` and keep CI artifacts as well;
+`verify-ticket --retain` copies a passed report there and prints the `Quality run`
+field. 60 quality-tool tests and the 32 existing board tests pass; disabling the
+report hook in `board.py` makes seven of the nine end-to-end tests fail.
+
+Part 3 of 5 delivered, uncommitted: `scripts/quality/architecture.py` with 26 tests
+(module edges, module boundaries, domain purity, composition-only `:data`,
+composition-is-root, feature isolation, debug tools in release; coverage and limits
+are stated in the file header). Eight deliberate violations placed in the real tree
+were all reported and then removed. ktlint 1.8.0 through ktlint-gradle 14.2.0 passed
+its probe on Kotlin 2.4.20, AGP 9.3.3 built-in Kotlin and Gradle 9.5.0 and is applied
+to all five modules with `.editorconfig` (Android Studio style, Composable naming);
+existing sources were auto-formatted and two wildcard test imports made explicit. Both
+checks are in the G1 profile, and a test keeps the documented gate in the board README
+identical to `gates.py`. 91 quality-tool tests pass; a real G1 run passed after first
+failing, correctly, on stale generated board views. Lint remains at 22 warnings.
+Still owed: CI and merge protection, Detekt-deferral ADR and guide updates.
 
 ## SELLO-005 — Wire production composition and distinct time sources
 

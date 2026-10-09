@@ -98,7 +98,7 @@ def parse_epic(source, text):
                 epic_fields.get("Increment", "MVP"))
 
 
-def validate(epics):
+def validate(epics, verify_report=None):
     if not epics:
         raise ValueError("No epic sources")
     epic_ids = [epic.identifier for epic in epics]
@@ -140,6 +140,8 @@ def validate(epics):
             require_fields(fields, ("Quality run",), ticket.identifier)
             if re.search(r"\b(TODO|TBD|Pending)\b|<[^>]+>", fields["Quality run"], re.IGNORECASE):
                 raise ValueError(f"{ticket.identifier}: placeholder Delivery evidence in Quality run")
+            if verify_report:
+                verify_report(ticket, fields["Quality run"])
         if ticket.status == "Done":
             evidence = sections(ticket.body).get("Delivery evidence", "").strip()
             if not evidence:
@@ -255,14 +257,36 @@ def write_outputs(root, outputs, check):
         raise ValueError(f"Stale generated views: {', '.join(stale)}; run board.py")
 
 
+def report_evidence(board_root, base):
+    """Validate retained quality reports for Review/Done tickets from SELLO-004 onward."""
+    def check(ticket, quality_run):
+        repository = board_root.parents[2]
+        sys.path.insert(0, str(repository / "scripts/quality"))
+        try:
+            import evidence
+        except ImportError:
+            raise ValueError(f"{ticket.identifier}: evidence validator scripts/quality/evidence.py is unavailable") from None
+        # A ticket already Done at the base revision keeps its historical tested snapshot.
+        fresh = ticket.status != "Done" or evidence.status_at(repository, base, ticket.identifier) != "Done"
+        try:
+            evidence.check(repository, ticket.identifier, ticket.gate, quality_run, fresh)
+        except evidence.EvidenceError as error:
+            raise ValueError(f"{ticket.identifier}: {error}") from None
+    return check
+
+
 def main():
     parser = argparse.ArgumentParser(description="Validate and generate the repository-owned Sello MVP and post-MVP boards.")
     parser.add_argument("--check", action="store_true", help="Validate without writing; fail on stale generated files.")
+    parser.add_argument("--skip-evidence", action="store_true",
+                        help="Check structure and generated views only. Used inside a quality run; never completion validation.")
+    parser.add_argument("--base", default="HEAD",
+                        help="Revision to compare statuses with; tickets not Done there need a report matching current inputs.")
     arguments = parser.parse_args()
     root = Path(__file__).resolve().parent
     try:
         epics = [parse_epic(path, path.read_text(encoding="utf-8")) for path in sorted((root / "epics").glob("*.md"))]
-        validate(epics)
+        validate(epics, None if arguments.skip_evidence else report_evidence(root, arguments.base))
         mvp_epics = [epic for epic in epics if epic.increment == "MVP"]
         roadmap_epics = [epic for epic in epics if epic.increment == "Post-MVP"]
         readme = (root / "README.md").read_text(encoding="utf-8")

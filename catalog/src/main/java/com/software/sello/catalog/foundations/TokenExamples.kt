@@ -103,7 +103,7 @@ fun typeTag(name: String) = "type:$name"
 private val LongMoneySamples = listOf(
     "$ 937.200",
     "+$ 6.050.000",
-    "−$ 1.234.567.890",
+    "\u2212$ 1.234.567.890",
     "$ 9.223.372.036.854.775.807",
     "USD 2.340,00"
 )

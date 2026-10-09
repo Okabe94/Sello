@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Sello</string>
+    <plurals name="money_cop">
+        <item quantity="one">%1$s peso</item>
+        <item quantity="other">%1$s pesos</item>
+    </plurals>
+    <string name="money_other_currency">%1$s %2$s</string>
+    <string name="money_negative">menos %1$s</string>
+    <string name="money_positive">más %1$s</string>
 </resources>

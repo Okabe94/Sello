@@ -111,7 +111,7 @@ and debug app were also installed on the owner's phone (Android 16, API 36) over
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-006, SELLO-010, SELLO-004
 - **Gate:** G2
 
@@ -169,6 +169,66 @@ Shared application formatting and design-system rendering have different owners.
 Create/run `*MoneyFormatterTest`, `*MoneySemanticsTest` and feedback interaction UI
 tests, then G2 for design-system/catalog. Review reference shape/spacing screenshots
 at scales 1.0/1.3/2.0; list every implemented example ID in delivery evidence.
+
+### Execution progress
+2026-10-09: started on branch `sello-007-paper-money-feedback` after SELLO-010 merged.
+No new product decision or dependency was needed.
+
+Delivered in `:design-system` (`component`): `Slip` with `PinkedBottomShape`,
+`TearLine`, `LeaderLine`, `TotalLine`, `KeyValue`, `MoneyText`, `CountingMoneyText`,
+`Stamp`, `ConfirmSlip`, `EmptySlip`, `ErrorSlip`, `SlipSkeleton` and a minimal
+`SelloButton`, which the feedback slips need before SELLO-008 extends it. `SelloTheme`
+now takes `reducedMotion`, defaulting to the system setting. Delivered in `:app`
+(`presentation.money`): `MoneyFormatter` with resource-backed `ResourceMoneyLabels`.
+The design system draws a pre-formatted `MoneyTextValue` and knows nothing of `Money`.
+The catalog gained a Motion control and these example IDs: `paper.slip`,
+`paper.tear-line`, `paper.leader-line`, `paper.total-line`, `paper.key-value`,
+`stamps.stamp`, `money.money-text`, `money.counting`, `inputs.button`,
+`feedback.confirm-slip`, `feedback.empty-slip`, `feedback.error-slip`,
+`feedback.slip-skeleton`.
+
+Choices made during the work, for owner review:
+- Tabular figures now apply to the display, headline and title roles and to money and
+  receipt values, not to body and label text. In Schibsted Grotesk the feature also
+  widens points, commas and colons, which visibly broke sentences; the reference's own
+  stylesheet applies it to figures only. This revises a SELLO-006 token.
+- `MoneyText` takes a formatted value, where the reference sketch took a `Long`, so
+  formatting stays in the application as this ticket requires. Counting takes the
+  application's formatter as a parameter.
+- A figure too wide for its place wraps after a thousands point. Hero first steps down
+  to Total, as the reference says.
+- Spoken amounts use `peso`/`pesos`, `menos` and `más`. Non-COP currencies format with
+  two decimals and their code but have no MVP use.
+- The empty and error slips use an outlined button, keeping one filled button per screen.
+- The confirmation has a `busy` state so its action cannot be requested twice.
+
+2026-10-09, owner review of the running catalog: the owner chose to show pesos with no
+currency symbol and other currencies as code, space, figure (`USD 2.340,00`), recorded
+as [ADR 0007](../../../decisions/0007-no-peso-symbol.md). This supersedes the
+reference's raised peso sign. The tests were changed first and six failed before the
+formatter and `MoneyText` were updated; the gate was run again on the result.
+
+2026-10-09: owner approved pull request 6, including the choices above; moved to Done
+for a squash merge.
+
+Found and fixed during the work: the device test caught `BigInteger.longValueExact`,
+which does not exist on API 30. Some escape sequences in Kotlin sources, including two
+SELLO-010 test files, had been saved as the literal invisible characters; they are
+escapes again, with no behaviour change.
+
+Left for later: the customer app does not call the formatter or components yet (first
+slice, E04). `SlipSkeleton` leaves the 150 ms show delay to its caller. The reduced
+motion setting is read when the theme is composed, not observed while running. The
+snackbar with undo and `SlipHeading` are not in this ticket's deliverables.
+
+### Delivery evidence
+- **Revision:** branch `sello-007-paper-money-feedback`; tested snapshot is commit `16c5c62`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** exact values, currency-aware semantics, no abbreviation, true minus → `MoneyFormatterTest` (hand-typed tables from 0 to both Long limits, signs, singular, a scale-2 currency), device `ResourceMoneyLabelsTest` for the real wording, `MoneyTextRenderTest` and device `MoneySemanticsTest.amountsAnnounceTheFullFigureWithCurrencyAndDrawATrueMinus`. Long-boundary amounts wrap without clipping at font scale 2.0 → `theLargestAmountWrapsInsideANarrowSlipAtDoubleFontSize` in a 320dp slip. Stamps announce ordinary words → `PaperAndStampTest`. Reduced motion exposes the final answer at once and no value exists only mid-count → `withReducedMotionANewAmountIsShownAtOnce`, `aCountNeverHidesTheFinalAmountFromAScreenReaderAndEndsExact`, and host `countFrame` tests at the Long limits. Roles, callbacks and 48dp targets → `FeedbackInteractionTest` (retry once per press, cancel only cancels, confirm only confirms, back cancels, busy blocks both) and the action line in `PaperAndStampTest`. No component depends on domain types or writes → `:design-system` has no `:domain` edge under the architecture rules. Scheme-parameterised device tests run their assertions in all four schemes.
+- **Red / Green:** against naive versions, 5 of 5 formatter tests failed (comma grouping, no sign, wrong symbol and wording, `Math.abs` of the lowest Long) and 3 design-system tests failed (floating-point count frames wrong at the limits, no break points, partial teeth); all pass with the real code. A fourth, on tightening, first failed on a float comparison in the test itself and was corrected. Five mutations of the finished components each failed the expected device tests and were reverted: cancel also confirming, a single-line hero figure, stamp read in capitals, reduced motion ignored, a loading button left enabled.
+- **Gate results:** local `./scripts/verify-ticket SELLO-007 --gate G2` passed: 95 host tests (35 domain, 34 app, 23 design-system, 3 catalog), 35 device tests on an isolated API 30 emulator (6 app, 19 design-system, 10 catalog, which open every example by ID), ktlint, architecture rules, lint with 0 errors and 22 warnings, all in `:app` and present before this ticket. No dependency or lock file changed.
+- **Quality run:** run 20261009T212536Z-8540c6b2; SELLO-007 G2 passed; HEAD 16c5c62, inputs sha256 9bf67f3c73f3; report docs/planning/mvp/quality-reports/SELLO-007.json sha256 24a408b53676e5b2364906ffa12828322892cf94b2e46f9f046314e0980228c8
+- **Device / Artifact:** twelve captures of the installed catalog on the API 30 emulator are in `docs/testing/evidence/SELLO-007/`, including the pinked edge, tear-line notches, the confirmation over its scrim and money at font scale 2.0 in Violeta dark. Font scale 1.3 was neither captured nor separately tested; scales 1.0 and 2.0 were. Hosted run 37993487360 on the pull request's merge commit passed the `quality` check with the ticket in Review.
+- **Review:** executor self-review of the diff, captures against the reference, reports and logs. Project owner tried the catalog on an emulator, asked for the currency-mark change, reviewed pull request 6 and approved on 2026-10-09. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it.
 
 ## SELLO-008 — Build accessible amount-first inputs and entry states
 

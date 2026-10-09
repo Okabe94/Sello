@@ -29,7 +29,7 @@ class TextPolicyTest {
         assertEquals(cafe, key("cafe"))
         assertEquals(cafe, key("CAFE"))
         assertEquals(cafe, key("CAFÉ"))
-        assertEquals(cafe, key("Café")) // decomposed e + combining acute
+        assertEquals(cafe, key("Cafe\u0301")) // decomposed e + combining acute
         assertEquals(cafe, key("ｃａｆｅ")) // full-width letters
         assertEquals(key("Año"), key("ano"))
         assertEquals(key("STRASSE"), key("straße"))
@@ -42,7 +42,7 @@ class TextPolicyTest {
     @Test
     fun composedAndDecomposedAccentsDisplayAndCountTheSame() {
         val composed = name("Café").valueOrFail()
-        val decomposed = name("Café").valueOrFail()
+        val decomposed = name("Cafe\u0301").valueOrFail()
         assertEquals(composed, decomposed)
         assertEquals(4, composed.value.codePointCount(0, composed.value.length))
     }
@@ -58,21 +58,28 @@ class TextPolicyTest {
         assertEquals(TextError.TooLong(24, 25), name(emoji.repeat(25)).errorOrFail())
 
         // 24 accented letters written decomposed are 48 code points before normalization.
-        assertEquals("é".repeat(24), name("é".repeat(24)).valueOrFail().value)
+        assertEquals("é".repeat(24), name("e\u0301".repeat(24)).valueOrFail().value)
         // Surrounding whitespace does not count towards the limit.
         assertEquals("b".repeat(24), name("  " + "b".repeat(24) + "  ").valueOrFail().value)
     }
 
     @Test
     fun whitespaceOnlyNamesAreRequiredNameFailures() { // T03
-        for (raw in listOf("", " ", "   ", "\t\n", " ", " ")) {
+        for (raw in listOf("", " ", "   ", "\t\n", "\u00A0", "\u2003")) {
             assertEquals(TextError.Required, name(raw).errorOrFail())
         }
     }
 
     @Test
     fun controlCharactersAreRejectedNotRemoved() {
-        for (raw in listOf("Ca\u0000fé", "Ca\nfé", "Ca\tfé", "Café\u007F", "Ca\u0085fé", "Ca fé")) {
+        for (raw in listOf(
+            "Ca\u0000fé",
+            "Ca\nfé",
+            "Ca\tfé",
+            "Café\u007F",
+            "Ca\u0085fé",
+            "Ca\u2028fé"
+        )) {
             assertEquals(TextError.ControlCharacter, name(raw).errorOrFail())
         }
     }

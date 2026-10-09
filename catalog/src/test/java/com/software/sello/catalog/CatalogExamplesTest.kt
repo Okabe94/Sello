@@ -15,7 +15,20 @@ class CatalogExamplesTest {
                 "foundations.money-text",
                 "foundations.shape-spacing",
                 "foundations.motion",
-                "foundations.icons"
+                "foundations.icons",
+                "paper.slip",
+                "paper.tear-line",
+                "paper.leader-line",
+                "paper.total-line",
+                "paper.key-value",
+                "stamps.stamp",
+                "money.money-text",
+                "money.counting",
+                "inputs.button",
+                "feedback.confirm-slip",
+                "feedback.empty-slip",
+                "feedback.error-slip",
+                "feedback.slip-skeleton"
             ),
             catalogExamples.map { it.id }
         )

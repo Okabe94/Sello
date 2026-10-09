@@ -34,29 +34,37 @@ val SchibstedGrotesk = FontFamily(
 /** Stamps only. Never use it for running text. */
 internal val SairaStencilOne = FontFamily(Font(R.font.saira_stencil_one, FontWeight.Normal))
 
-/** Figures line up in columns everywhere. */
+/**
+ * Figures line up in columns. Only the roles that carry figures ask for it: in this
+ * font the feature also widens points, commas and colons, which spoils a sentence.
+ */
 private const val TABULAR_FIGURES = "tnum"
+
+private fun figures(size: Double, line: Int, weight: Int, tracking: TextUnit = 0.em) =
+    text(size, line, weight, tracking).copy(fontFeatureSettings = TABULAR_FIGURES)
 
 private fun text(size: Double, line: Int, weight: Int, tracking: TextUnit = 0.em) = TextStyle(
     fontFamily = SchibstedGrotesk,
     fontWeight = FontWeight(weight),
     fontSize = size.sp,
     lineHeight = line.sp,
-    letterSpacing = tracking,
-    fontFeatureSettings = TABULAR_FIGURES
+    letterSpacing = tracking
 )
 
-/** Material roles as the reference sizes them. 12sp is the smallest text in the app. */
+/**
+ * Material roles as the reference sizes them. 12sp is the smallest text in the app.
+ * Display, headline and title roles hold figures; body and label roles hold sentences.
+ */
 val SelloTypography = Typography(
-    displayLarge = text(60.0, 61, 900, (-0.04).em),
-    displayMedium = text(44.0, 46, 900, (-0.04).em),
-    displaySmall = text(32.0, 34, 900, (-0.035).em),
-    headlineLarge = text(28.0, 32, 800, (-0.02).em),
-    headlineMedium = text(26.0, 30, 800, (-0.02).em),
-    headlineSmall = text(23.0, 26, 800, (-0.02).em),
-    titleLarge = text(19.0, 22, 800, (-0.01).em),
-    titleMedium = text(16.0, 20, 800),
-    titleSmall = text(14.0, 19, 800),
+    displayLarge = figures(60.0, 61, 900, (-0.04).em),
+    displayMedium = figures(44.0, 46, 900, (-0.04).em),
+    displaySmall = figures(32.0, 34, 900, (-0.035).em),
+    headlineLarge = figures(28.0, 32, 800, (-0.02).em),
+    headlineMedium = figures(26.0, 30, 800, (-0.02).em),
+    headlineSmall = figures(23.0, 26, 800, (-0.02).em),
+    titleLarge = figures(19.0, 22, 800, (-0.01).em),
+    titleMedium = figures(16.0, 20, 800),
+    titleSmall = figures(14.0, 19, 800),
     bodyLarge = text(14.0, 19, 400),
     bodyMedium = text(13.5, 18, 400),
     bodySmall = text(12.5, 16, 400),

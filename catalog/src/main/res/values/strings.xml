@@ -36,4 +36,20 @@
     <string name="catalog_type_sample">Te quedan $ 937.200</string>
     <string name="catalog_motion_play">Play</string>
     <string name="catalog_icons_outlined">%1$s, outlined</string>
+    <string name="catalog_example_slip">Slip</string>
+    <string name="catalog_example_tear_line">TearLine</string>
+    <string name="catalog_example_leader_line">LeaderLine</string>
+    <string name="catalog_example_total_line">TotalLine</string>
+    <string name="catalog_example_key_value">KeyValue</string>
+    <string name="catalog_example_stamp">Stamp</string>
+    <string name="catalog_example_money_text_component">MoneyText</string>
+    <string name="catalog_example_counting">Counting amount</string>
+    <string name="catalog_example_button">SelloButton</string>
+    <string name="catalog_example_confirm_slip">ConfirmSlip</string>
+    <string name="catalog_example_empty_slip">EmptySlip</string>
+    <string name="catalog_example_error_slip">ErrorSlip</string>
+    <string name="catalog_example_slip_skeleton">SlipSkeleton</string>
+    <string name="catalog_control_motion">Motion</string>
+    <string name="catalog_motion_full">Full</string>
+    <string name="catalog_motion_reduced">Reduced</string>
 </resources>

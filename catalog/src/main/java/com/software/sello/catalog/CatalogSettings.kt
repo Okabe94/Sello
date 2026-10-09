@@ -19,6 +19,11 @@ enum class CatalogFontScale(val scale: Float) {
     Largest(2.0f)
 }
 
+enum class CatalogMotion(@StringRes val label: Int) {
+    Full(R.string.catalog_motion_full),
+    Reduced(R.string.catalog_motion_reduced)
+}
+
 /** Widths at the reference's breakpoints; [Device] uses whatever the screen offers. */
 enum class CatalogWindow(@StringRes val label: Int, val width: Dp?) {
     Device(R.string.catalog_window_device, null),
@@ -32,17 +37,21 @@ data class CatalogSettings(
     val ink: SelloInk = SelloInk.Cobalto,
     val mode: CatalogMode = CatalogMode.System,
     val fontScale: CatalogFontScale = CatalogFontScale.Normal,
-    val window: CatalogWindow = CatalogWindow.Device
+    val window: CatalogWindow = CatalogWindow.Device,
+    val motion: CatalogMotion = CatalogMotion.Full
 ) {
     companion object {
         val Saver: Saver<CatalogSettings, Any> = listSaver(
-            save = { listOf(it.ink.name, it.mode.name, it.fontScale.name, it.window.name) },
+            save = {
+                listOf(it.ink.name, it.mode.name, it.fontScale.name, it.window.name, it.motion.name)
+            },
             restore = {
                 CatalogSettings(
                     ink = SelloInk.valueOf(it[0]),
                     mode = CatalogMode.valueOf(it[1]),
                     fontScale = CatalogFontScale.valueOf(it[2]),
-                    window = CatalogWindow.valueOf(it[3])
+                    window = CatalogWindow.valueOf(it[3]),
+                    motion = CatalogMotion.valueOf(it[4])
                 )
             }
         )

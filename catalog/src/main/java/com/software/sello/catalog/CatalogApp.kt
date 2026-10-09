@@ -57,7 +57,11 @@ fun CatalogApp() {
 
     BackHandler(enabled = open != null) { openId = null }
 
-    SelloTheme(ink = settings.ink, darkTheme = dark) {
+    SelloTheme(
+        ink = settings.ink,
+        darkTheme = dark,
+        reducedMotion = settings.motion == CatalogMotion.Reduced
+    ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = SelloTheme.colors.desk

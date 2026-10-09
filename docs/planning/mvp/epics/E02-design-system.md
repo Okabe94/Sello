@@ -8,7 +8,7 @@
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** In Progress
+- **Status:** Review
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G2
 
@@ -64,6 +64,45 @@ the guide's module map and Compose testing/accessibility sources.
 Create `*SelloThemeTest` and catalog launcher/control UI tests. Run catalog host
 tests/assembleDebug plus catalog connected tests and G2; record four-scheme previews,
 contrast results, bundled assets/licenses and distinct application IDs.
+
+### Execution progress
+2026-10-09: started on branch `sello-006-tokens-catalog-shell` after SELLO-005 merged.
+The owner chose to ship Material Symbols Rounded as individual vectors, not the
+15.2 MB icon font. The two text fonts were already fixed by the architecture.
+
+Delivered in `:design-system`: `SelloColors` for Cobalto/Violeta × light/dark with a
+shared `semantic` group, the full Material mapping, `SelloTypography` plus stamp-only
+`SelloType`, `SelloShapes`, `SelloSpacing`, `SelloMotion`, `SelloIcon` with a starter
+set of ten icons, the two bundled fonts and three licence texts
+(`design-system/THIRD_PARTY_NOTICES.md`). `SelloTheme(ink, darkTheme)` no longer has a
+dynamic-colour path. Delivered in `:catalog`: a home grouped by component type, six
+foundations examples with stable IDs, and local ink, mode, font-scale and window-width
+controls. The customer app's placeholder screen renders through the same theme.
+
+Choices made during the work, for owner review. Dark `errorContainer` uses the
+documented `lossSoft` value `#5A171B`; the reference's stylesheet also carries an
+unused `#6B1A1F`. Material slots the reference does not name (fixed, inverse, tint,
+low/highest containers) are fed from the nearest Sello token so none keeps a Material
+baseline colour. Roles the type table omits (`headlineLarge`, `headlineMedium`,
+`titleSmall`, `bodySmall`) are interpolated in Schibsted Grotesk. Selecting a weight
+from the variable font needs Compose's experimental `Font(variationSettings)` API in
+BOM 2026.02.01, opted into in one place. The only dependency change is Compose UI test
+for the catalog's device tests; no existing locked version moved.
+
+Left for later tickets: reduced-motion handling and the tightened thousands point
+belong to the components that animate and print money (SELLO-007); the status bar does
+not follow the catalog's own light/dark choice until the scaffold exists (SELLO-009);
+saving the chosen ink is SELLO-023. Catalog width presets cover compact, medium and
+expanded; short-landscape is checked by rotating the device.
+
+### Delivery evidence
+- **Revision:** branch `sello-006-tokens-catalog-shell`; tested snapshot is commit `0af2b5a`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** no dynamic palette replaces the inks → `SelloTheme` has no dynamic-colour path and `SelloMaterialMappingTest.noMaterialSlotFallsBackToAColourOutsideSello` reads every colour slot of the pinned Material version; device `BundledAssetsTest.themeProvidesTheChosenSchemeToSelloAndMaterialReaders`. Semantic meaning unchanged across inks → `SelloColorsTest.changingInkChangesBrandButNeverMeaning` and device `CatalogShellTest.switchingInkChangesBrandButNotGainOrLoss`. Stencil limited to stamps, 12sp minimum → `SelloTypographyTest`. Contrast → `SelloColorsTest.everyReferencePairMeetsItsContrastNeed` over all four schemes with a helper checked against the reference's published ratios. Own launcher and application ID, no platform permission → `CatalogIdentityTest`, `CatalogIsolationTest`; no repository or production DI → architecture rule `module-edge` allows `:catalog` to depend on `:design-system` only. Controls and fixtures outside the shared API → they live in `catalog/src/main`; `:design-system` exposes none. Stable example IDs → `CatalogExamplesTest`. Bundled, licensed, offline assets → `BundledAssetsTest` loads both fonts, every icon and the three licence texts from the package.
+- **Red / Green:** the slot test failed first on real behaviour: twelve Material fixed slots still held baseline purples; mapping them made it pass. Mutations of the finished code each failed the expected tests and were reverted: a Violeta-only green, one wrong brand hex, a low-contrast outline, an unmapped surface slot, 11sp label text, stencil in a title role, tabular figures removed, a changed stamp spring; on the device, ignoring the ink and font controls and adding the INTERNET permission failed 5 of 10 catalog tests.
+- **Gate results:** local `./scripts/verify-ticket SELLO-006 --gate G2` passed: 45 host tests (29 app, 13 design-system, 3 catalog), 19 device tests on an isolated API 30 emulator (5 app, 4 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 22 warnings, all in `:app` and of kinds present before this ticket.
+- **Quality run:** run 20261009T145645Z-a629f308; SELLO-006 G2 passed; HEAD 0af2b5a, inputs sha256 990bcc176aae; report docs/planning/mvp/quality-reports/SELLO-006.json sha256 ddfa52c5b9269d923bca6bfdae612b6da08462f173c2058442d27a31eb440b82
+- **Device / Artifact:** four-scheme captures from the installed catalog on the API 30 emulator are in `docs/testing/evidence/SELLO-006/`. The unsigned release APK of the customer app contains `font/schibsted_grotesk`, `font/saira_stencil_one`, the three `raw/license_*` texts and twelve `ic_sello_*` drawables per `aapt2 dump resources`; the merged catalog manifest requests only AndroidX's own package-scoped receiver permission. Application IDs: `com.software.sello`, `com.software.sello.debug`, `com.software.sello.catalog`. Hosted CI evidence is the pull request's `quality` run.
+- **Review:** executor self-review of the diff, lock-file changes, reports and captures. Owner review of the pull request is outstanding; that will be owner acceptance, not an independent technical review.
 
 ## SELLO-007 — Deliver paper, exact money and feedback components
 

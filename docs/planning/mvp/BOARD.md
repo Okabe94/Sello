@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 5/36 · **Epics Done:** 1/8
 
-Backlog: 30 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 5
+Backlog: 30 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 5
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,13 +27,13 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | None |
+No tickets.
 
 ## Review
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | None |
 
 ## Blocked
 

@@ -14,6 +14,8 @@ a deliberately smaller, tested MVP and the Sello visual language.
   definition of done, evidence and Jira handoff.
 - [Independent executor guide](docs/planning/mvp/EXECUTION_GUIDE.md): prerequisites,
   file ownership, tools, verification procedures and source library.
+- [Quality flow](docs/planning/mvp/QUALITY_FLOW.md): `./scripts/verify-ticket`, the
+  evidence every ticket needs and what CI enforces.
 - [Local visual reference](docs/design/README.md): Sello snapshot and provenance.
 - [Inspected baseline](docs/planning/mvp/BASELINE.md): what actually builds today.
 
@@ -30,10 +32,12 @@ matrix documented by SELLO-002:
 ```bash
 ANDROID_HOME=/home/okabe94/Android/Sdk JAVA_HOME=/opt/android-studio/jbr \
   PATH="/opt/android-studio/jbr/bin:$PATH" \
-  ./gradlew :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
-  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
-  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+  ./scripts/verify-ticket SELLO-0XX
 ```
+
+Replace `SELLO-0XX` with the ticket being worked on. The command runs that ticket's
+gate (board checks, architecture rules, ktlint, unit tests, lint and assembly for
+G1) and writes a report under `build/reports/quality/`.
 
 Build/dependency/IDE caches, machine-local configuration and signing secrets are
 not tracked. No Git remote or hosted Jira project is configured by this setup.

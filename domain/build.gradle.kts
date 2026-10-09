@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.ktlint)
 }
 
 java {
@@ -17,4 +18,13 @@ kotlin {
 
 dependencies {
     testImplementation(libs.junit)
+}
+
+ktlint {
+    version.set(libs.versions.ktlint.get())
+}
+
+dependencyLocking {
+    lockAllConfigurations()
+    lockMode = LockMode.STRICT
 }

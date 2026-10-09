@@ -1,6 +1,9 @@
 # Mandatory ticket quality flow
 
-**Contract owner:** SELLO-004. This defines its deliverables, not an installed runner.
+**Contract owner:** SELLO-004, which delivered the runner and validator described
+here. Commands and failure recovery are in the
+[execution guide](EXECUTION_GUIDE.md#quality-runner); choices are in
+[ADR 0006](../../decisions/0006-quality-tooling.md).
 Bootstrap tickets SELLO-001–003 use their existing verification recipes. Every
 subsequent ticket explicitly depends on SELLO-004; future implementation tickets
 must inherit this flow too. Ordinary unticketed work still follows architecture
@@ -58,14 +61,20 @@ gates; do not invent a ticket ID to run checks.
   the integrated ticket gate. Additional enforcement plugins/hooks **COULD** improve
   feedback; they cannot replace trusted CI or designated review.
 
-## Enforcement today versus after 004
+## What is enforced, and by what
 
-Today `board.py` rejects missing explicit 004 dependencies and missing/placeholder
-`Quality run` fields for SELLO-004 onward in Review/Done. It does **not** prove the
-referenced tests ran or validate report contents. Agent instructions enforce the
-workflow by policy; they are not a security boundary.
+- **Runner:** `scripts/verify-ticket` derives the gate from the canonical ticket and
+  exits nonzero on any refusal or failed check. It has no skip or downgrade option.
+- **Validator:** `board.py --check` opens the retained report of every Review/Done
+  ticket from SELLO-004 onward and rejects a missing, malformed, failed,
+  wrong-ticket, lower-gate, edited or stale one. Bootstrap tickets are exempt.
+- **CI:** the `quality` check runs the same entrypoint on the merge commit of every
+  pull request and on `main`, then validates completion evidence against the base.
+  `main` requires that check to pass.
 
-004 must replace that evidence-field-only check with the validator above, add
-negative tests and wire the runner into CI. No remote/admin access currently exists;
-hosted execution and merge protection remain incomplete acceptance until verified.
-Do not call 004 Done merely because local checks or workflow YAML exist.
+These tools prove that checks ran on a known snapshot. They do not judge whether
+acceptance is met; the designated review still does. Agent instructions are policy,
+not a security boundary: a committed report can be hand-edited, which is why CI
+re-executes the gate instead of trusting it.
+
+G3 is not executable until SELLO-035 delivers its checks; the runner refuses it.

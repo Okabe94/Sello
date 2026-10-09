@@ -634,7 +634,7 @@ app's OS-backup disablement (SELLO-011), Sello tokens and catalog examples (SELL
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-003
 - **Gate:** G1
 
@@ -735,6 +735,73 @@ validate its retained report, and demonstrate rejected invalid completion fixtur
 Attach local report and hosted check/protection evidence to `Quality run` and delivery
 fields; request review only after required checks pass. Do not mark Done without
 hosted acceptance or silently replace it with local-only verification.
+
+### Execution progress
+2026-10-08: started after SELLO-003 was committed and pushed. Owner inputs settled:
+GitHub remote `Okabe94/Sello` (public, `main`) with push and admin access verified;
+device tests run in CI on every pull request; ktlint 1.8.0 through ktlint-gradle
+14.2.0 approved subject to a compatibility probe; Detekt deferred because the latest
+stable 1.23.8 predates this toolchain and 2.0 is still alpha (to be recorded in an
+ADR); architecture rules will be an in-repo script, not a library.
+
+Part 1 of 5 delivered, uncommitted: `scripts/verify-ticket` with `scripts/quality/`
+(`fingerprint.py`, `gates.py`, `runner.py`) and 29 unit tests written before the
+implementation. The runner derives the gate from the canonical ticket, refuses
+unknown tickets, unfinished prerequisites, downgrades, a missing toolchain or device
+and the not-yet-available G3, and writes a schema-version-1 report under ignored
+`build/reports/quality/`. A real G1 run for this ticket passed. G2 has only been
+exercised with a simulated device.
+
+Part 2 of 5 delivered, uncommitted: `scripts/quality/report-schema-v1.json` and
+`evidence.py`, plus `board.py --check` now validating the retained report of every
+Review/Done ticket from SELLO-004 onward (`--skip-evidence` for use inside a run,
+`--base` to compare statuses with a merge base). Owner chose to commit final reports
+under `docs/planning/mvp/quality-reports/` and keep CI artifacts as well;
+`verify-ticket --retain` copies a passed report there and prints the `Quality run`
+field. 60 quality-tool tests and the 32 existing board tests pass; disabling the
+report hook in `board.py` makes seven of the nine end-to-end tests fail.
+
+Part 3 of 5 delivered, uncommitted: `scripts/quality/architecture.py` with 26 tests
+(module edges, module boundaries, domain purity, composition-only `:data`,
+composition-is-root, feature isolation, debug tools in release; coverage and limits
+are stated in the file header). Eight deliberate violations placed in the real tree
+were all reported and then removed. ktlint 1.8.0 through ktlint-gradle 14.2.0 passed
+its probe on Kotlin 2.4.20, AGP 9.3.3 built-in Kotlin and Gradle 9.5.0 and is applied
+to all five modules with `.editorconfig` (Android Studio style, Composable naming);
+existing sources were auto-formatted and two wildcard test imports made explicit. Both
+checks are in the G1 profile, and a test keeps the documented gate in the board README
+identical to `gates.py`. 91 quality-tool tests pass; a real G1 run passed after first
+failing, correctly, on stale generated board views. Lint remains at 22 warnings.
+
+Parts 4 and 5 delivered on branch `sello-004-quality-gates`, pull request 1:
+`.github/workflows/quality.yml` runs `verify-ticket --merge-candidate BASE --gate G2`
+on an API 30 emulator for the merge commit of every pull request and for `main`,
+then `board.py --check --base BASE`, and uploads reports for 90 days. Actions are
+pinned to commit SHAs, permissions are read-only and no secret exists. `main` is
+protected. Owner chose dependency review by strict Gradle dependency locking alone
+(`scripts/update-dependency-locks`) over GitHub's dependency review. ADR 0006, the
+execution guide, quality flow, setup, README and agent rules describe the result,
+and the owner's pull request format is the repository template.
+
+Defect found and fixed during hosted verification: CI and the local machine computed
+different fingerprints for the same commit, because `gradlew.bat` has CRLF endings
+in this working tree and LF in the repository. The fingerprint now hashes files as
+Git stores them; a regression test compares a working tree with a fresh clone.
+
+Not delivered, by decision or dependency: Detekt (deferred, ADR 0006); an executable
+G3 profile (SELLO-035); vulnerability and licence scanning of dependencies; locking
+of Gradle plugin classpaths. The architecture checker's stated limits apply.
+
+2026-10-08: owner approved pull request 1; moved to Done for a squash merge.
+
+### Delivery evidence
+- **Revision:** branch `sello-004-quality-gates`; tested snapshot is commit `726f228` plus the handoff note, with only this ticket's status, progress and evidence text and regenerated board views added afterwards. Those later edits are bookkeeping that the input fingerprint excludes by design. Hosted runs tested the pull request merge commits named below.
+- **Requirement mapping:** boundary rules (feature importing data, domain importing Android, cross-feature internals, customer modules depending on catalog, debug tools in release) → `scripts/quality/architecture.py`, 26 tests, eight real-tree violations. CI compiles customer release and catalog debug, failing tests fail the job → `gates.py` task list run by `.github/workflows/quality.yml`; no lint baseline exists. Secrets external → the workflow uses none, has read-only permissions and runs on `pull_request`. Runner derives the gate without downgrade and returns nonzero on failures, missing checks, devices or toolchain → `scripts/quality/runner.py`, `test_runner.py`, `test_merge_candidate.py`. Review/Done need a matching current report; wrong ticket, lower gate, malformed, stale or absent evidence fails; historical Done stays verifiable → `evidence.py`, `board.py`, `test_evidence.py`, `test_board_evidence.py`. CI runs the same entrypoint on the merge candidate with verified protection → hosted runs and protection settings below. Dependency review → strict Gradle locking. Schema → `scripts/quality/report-schema-v1.json`. Documentation → execution guide "Quality runner", QUALITY_FLOW, ADR 0006.
+- **Red / Green:** each tool's tests were written first and run against a deliberately naive implementation: fingerprint 5 of 13 failing, runner all 16, evidence 16 of 22, architecture 24 of 26, merge candidate 10 of 12, then all passing. Disabling the report hook in `board.py` fails 7 of the 9 end-to-end board tests. Real negative runs: eight architecture violations in the real tree reported with file and line; a badly spaced function failed `ktlintCheck`; a deliberately failing JVM test made `verify-ticket SELLO-004` exit 1 with "gradle-host reported 1 failing tests" (run `20261009T031303Z-843bf00d`); a library version bump without a refreshed lock failed resolution with "Dependency version enforced by Dependency Locking"; stale generated board views failed a real gate run. All fixtures removed.
+- **Gate results:** 104 quality-tool tests and 32 board tests pass. Local `./scripts/verify-ticket SELLO-004` passed G1, and passed G2 on an isolated API 30 emulator with strict locking (run `20261009T030417Z-45975c74`, two device tests). One JVM test executes; `:domain`, `:data`, `:design-system` and `:catalog` unit-test tasks have no sources. Lint has zero errors and 22 warnings, all newer-version advisories or scaffold leftovers, none suppressed. ktlint prints a JDK 25 `sun.misc.Unsafe` deprecation warning.
+- **Quality run:** run 20261009T032509Z-a2275acb; SELLO-004 G1 passed; HEAD 726f228, inputs sha256 0bf18c212e24; report docs/planning/mvp/quality-reports/SELLO-004.json sha256 a838247f454df580144dbe39e3e679e6b96c9e1edc7b8647c5d729e33af2078c
+- **Device / Artifact:** hosted GitHub Actions runs on `ubuntu-latest`, Temurin 25, API 30 Google APIs x86_64 emulator. Run 37876804478 (first push), run 37877672196 (with locking and documentation) and run 37878319263 (ticket in Review, completion evidence validated) passed every step; the second run's retained artifact `quality-reports` holds report `20261009T030712Z-4eaf3fda`: SELLO-004, G2, passed, clean merge commit, one host test, two device tests. Protection on `main`: required check `quality`, branch must be up to date, pull request required, administrators included, force pushes and deletions off; a direct push was rejected. Pull request 2 added a forbidden Android import to `:domain`: run 37877708840 failed with "architecture exited 1", merge state was BLOCKED, and both a normal merge and an administrator override were refused; it was closed unmerged and its branch deleted. Not executed: physical device, API levels other than 30, a pull request from a fork.
+- **Review:** executor self-review of the diff, reports, hosted logs and protection settings. Project owner reviewed pull request 1 and approved on 2026-10-08, and instructed a squash merge. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it, so no GitHub approval is recorded.
 
 ## SELLO-005 — Wire production composition and distinct time sources
 

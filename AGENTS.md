@@ -68,11 +68,11 @@ COULD have the meanings defined in `ARCHITECTURE.md`.
 - **MUST** run focused tests first, then the ticket's integrated gate on the final
   changes. Use G0 until module bootstrap exists; G1/G2/G3 are defined in the board
   README. Do not edit tests, disable checks or blanket-baseline warnings to pass.
-- **MUST** follow `docs/planning/mvp/QUALITY_FLOW.md`. SELLO-004 delivers the
-  mandatory ticket runner and evidence validator; after it ships, use that runner
-  and record a fresh `Quality run` before Review/Done. No manual gate downgrade,
-  skipped-check success or free-text substitute for validated execution evidence.
-  Bootstrap SELLO-001–003 use their recipes; do not claim the runner exists today.
+- **MUST** follow `docs/planning/mvp/QUALITY_FLOW.md`. Run
+  `./scripts/verify-ticket <ticket>` and record a fresh `Quality run` from
+  `--retain` before Review/Done. No manual gate downgrade, skipped-check success
+  or free-text substitute for validated execution evidence. Bootstrap
+  SELLO-001–003 used their own recipes and are exempt.
 - **MUST** distinguish configured, compiled, executed and passed. Assembly is not
   a device test; rotation is not proof of process-death restoration; CI signing is
   not upload signing. Missing device/SDK/credentials are explicit incomplete gates.

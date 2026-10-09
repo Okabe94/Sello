@@ -1,6 +1,6 @@
 # SELLO-E03 — Financial truth and persistence
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Goal:** Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them.
 - **Exit:** Tested exact policies, Room contracts/migrations, durable command receipts and same-revision snapshots; no dormant post-MVP schema.
 
@@ -8,7 +8,7 @@
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G1
 
@@ -77,6 +77,52 @@ There is no legacy helper to transplant wholesale.
 Create/run `./gradlew :domain:test --tests '*MoneyPolicyTest'` and `*DatePolicyTest`,
 then G1. Record independent boundary tables and red→green output. Tests must execute
 on JVM without Android, database or DI initialization.
+
+### Execution progress
+2026-10-09: started on branch `sello-010-money-dates-validation` after SELLO-006 merged.
+No new product decision was needed: D05 and ADR 0003 were already approved.
+
+Delivered in `:domain`, with no Android, DI or new dependency: `Outcome`; `Currency`
+(COP scale 0 as the only MVP entry currency, USD/EUR/GBP scale 2 nameable only);
+`Money` with checked `+`/`-`; `ExactTotal` for widened sums; `TransactionAmount`
+(1–999.999.999.999 COP); `CopAmountInput.parse`; `EffectiveDates` (strict date and
+month parsing, manual-entry and month-selection rules against an injected today);
+`CategoryName` with `uniquenessKey`, `Note`, `SourceName` and `IncomeSource`.
+`docs/development/money-dates-text.md` states the contracts for controls, Room and backup.
+
+Interpretations taken where the approved text is silent, each the stricter reading,
+for owner review:
+- Leading zeros (`007`, `0.123`) are rejected, not dropped. A single `0` parses.
+- Only whitespace at the ends is ignored; a space or non-breaking space inside a
+  number is rejected, as are non-ASCII digits.
+- Text is stored with composed accents (NFC), so `Café` counts 4 code points however it
+  was typed. The uniqueness key also ignores compatibility forms (full-width letters),
+  `ß`/`SS` and repeated inner spaces; `Año` and `Ano` therefore conflict.
+- Control characters and line breaks are rejected in names, notes and source names, so
+  notes are single-line.
+- A name supplied with a source other than Otro is rejected, not ignored.
+- Dates accept only four-digit years in `yyyy-MM-dd`; no earliest-date limit was invented.
+- Month selection up to the current month is included here because architecture §6
+  forbids future months and it is the same rule as future-dated entries.
+
+Not delivered here because the owning workflow does not exist yet: the keypad's
+thirteenth-digit feedback (M04, SELLO-008; `MAX_DIGITS` is provided), the maximum
+amount surviving a note edit and backup rejection before mutation (M05, SELLO-015 and
+SELLO-028/030), and uniqueness enforced by storage (T01/T02, SELLO-011). This ticket
+supplies and tests the shared rule each of them must call. Currency conversion
+rounding has no code: no MVP path converts.
+
+2026-10-09: owner approved pull request 5, including the interpretations above; moved
+to Done for a squash merge.
+
+### Delivery evidence
+- **Revision:** branch `sello-010-money-dates-validation`; tested snapshot is commit `a053c5f`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** valid COP round-trips and invalid fraction, zero or negative where forbidden, exponent, overflow and ambiguous paste reject the original input → `MoneyPolicyTest` grammar tables (M01–M03) with every error carrying the received text. Summation order creates no false overflow and a final unrepresentable value is an explicit failure → `anIntermediateBeyondLongDoesNotFailWhenTheFinalFigureFits`, `aFinalFigureBeyondLongIsAnExplicitFailure`, and `everyOrderOfTheSameTermsGivesTheSameResult` over 700 seeded shuffles with a hand-worked expected total. Transaction range and uncapped totals → `transactionAmountsAreOneTo999Billion` (0, 1, maximum, maximum plus one), `totalsMayExceedTheTransactionMaximum` (M06). No future manual dates against the injected day → `DatePolicyTest`, including leap days and impossible dates. No audit Instant or label in financial identity → the model types hold neither; `IncomeSource` exposes keys only. D05 text bounds and T01–T06 → `TextPolicyTest` with composed, decomposed and supplementary characters. Runs without Android or DI → `:domain` is a Kotlin/JVM module and the architecture rule `domain-pure` passes.
+- **Red / Green:** the 35 tests were first run against a deliberately naive implementation (digits filtered out of any text, unchecked `Long` arithmetic, no range, future or length checks, lower-case-only uniqueness): 27 failed on those behaviours and 8 passed. With the rules implemented all 35 pass. Nine mutations of the finished code (maximum off by one, narrower overflow check, leading zeros accepted, loose grouping, today treated as future, accents kept in the key, UTF-16 length, currency check removed, no NFC) each failed the expected tests and were reverted.
+- **Gate results:** local `./scripts/verify-ticket SELLO-010` passed G1: 80 host tests (35 domain, 29 app, 13 design-system, 3 catalog), ktlint, architecture rules, lint with 0 errors and 22 warnings, all in `:app` and present before this ticket. No dependency or lock file changed.
+- **Quality run:** run 20261009T153955Z-9e316e7b; SELLO-010 G1 passed; HEAD a053c5f, inputs sha256 254d9593b3e0; report docs/planning/mvp/quality-reports/SELLO-010.json sha256 e448ff6c3d08e39ec158819f21019a4c0811783f80818251af6cce8bd7754092
+- **Device / Artifact:** no device behaviour changes; nothing in the app or catalog calls these rules yet. Hosted run 37953517920 on the pull request's merge commit passed the `quality` check with the ticket in Review.
+- **Review:** executor self-review of the diff, tables and reports. Project owner reviewed pull request 5 and approved on 2026-10-09, including the listed interpretations. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it.
 
 ## SELLO-011 — Create Room v1, integrity constraints and recovery metadata
 

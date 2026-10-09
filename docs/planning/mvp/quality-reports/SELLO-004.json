@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "run_id": "20261009T031336Z-dca51595",
+  "run_id": "20261009T032509Z-a2275acb",
   "ticket": "SELLO-004",
   "gate": {
     "required": "G1",
@@ -13,15 +13,14 @@
     "tested an uncommitted working tree, not a clean commit"
   ],
   "snapshot": {
-    "head": "9639a996bb05001ef4b734ce18234dbecc94745b",
+    "head": "726f22817ed5dafb023638660d38aa87d965727c",
     "dirty": true,
     "dirty_files": [
-      "docs/planning/mvp/epics/E01-foundation.md",
-      "docs/planning/mvp/jira-import.csv"
+      "docs/development/HANDOFF.md"
     ],
     "fingerprint": {
       "algorithm": "sha256",
-      "value": "57cf02463ba3ae08f0c3b93ea1c515d316fc13632abccb468663513bd6a4094f",
+      "value": "0bf18c212e24490b5018d4786c4215f2b3a56878a2ae9717c199d27886783df9",
       "files": 109
     },
     "acceptance": "35e45b65eb21293452a4e36cdb7687a92c10c4ecae9065305e1fd230f8ff02ee"
@@ -41,41 +40,41 @@
       "name": "board-check",
       "command": "python3 docs/planning/mvp/board.py --check --skip-evidence",
       "log": "board-check.log",
-      "started_at": "2026-10-09T03:13:36+00:00",
+      "started_at": "2026-10-09T03:25:09+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-09T03:13:36+00:00"
+      "finished_at": "2026-10-09T03:25:09+00:00"
     },
     {
       "name": "board-tests",
       "command": "python3 -m unittest discover -s docs/planning/mvp -p test_board.py",
       "log": "board-tests.log",
-      "started_at": "2026-10-09T03:13:36+00:00",
+      "started_at": "2026-10-09T03:25:09+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-09T03:13:36+00:00"
+      "finished_at": "2026-10-09T03:25:10+00:00"
     },
     {
       "name": "quality-tests",
       "command": "python3 -m unittest discover -s scripts/quality -p test_*.py",
       "log": "quality-tests.log",
-      "started_at": "2026-10-09T03:13:36+00:00",
+      "started_at": "2026-10-09T03:25:10+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-09T03:13:38+00:00"
+      "finished_at": "2026-10-09T03:25:12+00:00"
     },
     {
       "name": "architecture",
       "command": "python3 scripts/quality/architecture.py",
       "log": "architecture.log",
-      "started_at": "2026-10-09T03:13:38+00:00",
+      "started_at": "2026-10-09T03:25:12+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-09T03:13:38+00:00"
+      "finished_at": "2026-10-09T03:25:12+00:00"
     },
     {
       "name": "gradle-host",
       "command": "./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue",
       "log": "gradle-host.log",
-      "started_at": "2026-10-09T03:13:38+00:00",
+      "started_at": "2026-10-09T03:25:12+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-09T03:13:39+00:00",
+      "finished_at": "2026-10-09T03:25:12+00:00",
       "results": {
         "suites": 1,
         "tests": 1,
@@ -90,6 +89,6 @@
       }
     }
   ],
-  "started_at": "2026-10-09T03:13:36+00:00",
-  "finished_at": "2026-10-09T03:13:39+00:00"
+  "started_at": "2026-10-09T03:25:09+00:00",
+  "finished_at": "2026-10-09T03:25:12+00:00"
 }

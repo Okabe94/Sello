@@ -1162,6 +1162,35 @@ Create/run `*FinancialClockTest`, `*ClockOwnershipTest` and composition graph te
 with controlled coroutine time. Run G1; retain midnight/resume/zone/cancellation
 assertions and confirm app/catalog launch with production adapters.
 
+### Execution progress
+2026-10-09: started on branch `sello-005-composition-time` after the owner approved
+Koin 4.2.2, kotlinx-coroutines 1.11.0 and lifecycle-process 2.9.4, and gave standing
+permission to branch, commit, push and open the pull request for each ticket.
+
+Delivered: clock and dispatcher ports in `:domain` (`domain.port`); production
+adapters, `ProcessFinancialZone` and `ApplicationScope` in `:app` `platform`; the
+composition root and `SelloApplication` in `:app` `composition`; a debug-only
+`ControlledFinancialClock` with `financialTimeOverride`; architecture rules
+`ad-hoc-time`, `global-coroutines` and `di-composition-only`; and
+`docs/development/time-and-composition.md` for ownership and disposal. The app still
+shows the greeting and the debug app runs on production time.
+
+Decision taken during the work, for owner review: the lock-file diff showed that
+`koin-android` would raise activity 1.8.0 to 1.12.4, core-ktx 1.10.1 to 1.16.0 and
+lifecycle 2.9.4 to 2.10.0, and add AppCompat and Fragment. `koin-core` 4.2.2 is used
+instead and the application context is bound explicitly, so none of those moved.
+What did move: coroutines 1.9.0 to 1.11.0 as approved, compile-time lifecycle
+artifacts from 2.8.7 to the 2.9.4 already used at runtime, and new Koin core, Stately
+and test-only kotlin-reflect/kotlin-test 2.3.20 entries. `koin-android` or its
+Compose artifact will be needed when ViewModels arrive and should be decided then.
+
+`scripts/update-dependency-locks` now runs build tasks only, so a failing test or
+style finding cannot block a lock refresh.
+
+Not delivered: a preference contract. The ticket says such contracts are neutral;
+none exists because nothing consumes one before SELLO-023, and `:domain` already
+cannot reference DataStore. The financial zone is not persisted (SELLO-011).
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes

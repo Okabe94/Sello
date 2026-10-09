@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 6/36 · **Epics Done:** 1/8
 
-Backlog: 30 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 6
+Backlog: 29 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 6
 
 [Workflow, gates and definition of done](README.md)
 
@@ -14,7 +14,7 @@ Backlog: 30 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 6
 | --- | --- | --- | --- |
 | [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | Done | 5/5 |
 | [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | In Progress | 1/4 |
-| [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | Backlog | 0/5 |
+| [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | In Progress | 0/5 |
 | [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | Backlog | 0/4 |
 | [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | Backlog | 0/5 |
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Backlog | 0/4 |
@@ -27,7 +27,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) | Implement exact money, dates and command validation | SELLO-E03 | P0 | G1 | None |
 
 ## Review
 
@@ -44,7 +46,6 @@ No tickets.
 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) | Deliver paper, exact money and feedback components | SELLO-E02 | P0 | G2 | [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) |
 | [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) | Build accessible amount-first inputs and entry states | SELLO-E02 | P0 | G2 | [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) |
 | [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) | Build category, adaptive navigation and exact-chart primitives | SELLO-E02 | P1 | G2 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) |
-| [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) | Implement exact money, dates and command validation | SELLO-E03 | P0 | G1 | None |
 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata) | Create Room v1, integrity constraints and recovery metadata | SELLO-E03 | P0 | G2 | [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) |
 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) | Save expenses with atomic receipts and uncertain-outcome recovery | SELLO-E03 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata) |
 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) | Implement category commands and historical monthly budget storage | SELLO-E03 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata), [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) |
@@ -85,4 +86,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation)
+None. Complete current Ready tickets first.

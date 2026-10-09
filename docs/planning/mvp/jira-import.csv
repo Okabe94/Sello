@@ -1859,7 +1859,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 1003,Epic,SELLO-E03 — Financial truth and persistence,"Local ID: SELLO-E03
 Increment: MVP
 Goal: Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them.
-Exit: Tested exact policies, Room contracts/migrations, durable command receipts and same-revision snapshots; no dormant post-MVP schema.",,Highest,Backlog,sello-e03
+Exit: Tested exact policies, Room contracts/migrations, durable command receipts and same-revision snapshots; no dormant post-MVP schema.",,Highest,In Progress,sello-e03
 10,Task,"SELLO-010 — Implement exact money, dates and command validation","Local ID: SELLO-010
 Epic: SELLO-E03
 Increment: MVP
@@ -1869,7 +1869,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G1
 
@@ -2006,7 +2006,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1003,Highest,Backlog,sello-010
+",1003,Highest,In Progress,sello-010
 11,Task,"SELLO-011 — Create Room v1, integrity constraints and recovery metadata","Local ID: SELLO-011
 Epic: SELLO-E03
 Increment: MVP

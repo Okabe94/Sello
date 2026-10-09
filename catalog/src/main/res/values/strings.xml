@@ -1,0 +1,4 @@
+<resources>
+    <string name="catalog_name">Sello Catalog</string>
+    <string name="catalog_empty">No components yet.</string>
+</resources>

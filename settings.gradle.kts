@@ -24,4 +24,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "Sello"
 include(":app")
+include(":catalog")
+include(":data")
+include(":design-system")
+include(":domain")
  

@@ -2,7 +2,8 @@
 
 **Verified:** 2026-10-08 · **Owner:** SELLO-002
 Version decisions and limits: [ADR 0005](../decisions/0005-toolchain.md).
-Current code is the single-module Compose greeting, not the future module graph.
+Modules and identities below were bootstrapped by SELLO-003; the app is still the
+Compose greeting and the catalog an empty shell, with no financial implementation.
 
 ## Prerequisites
 
@@ -64,11 +65,52 @@ CLI's help, not an assumed syntax. Install platform-tools/emulator for device wo
 that tooling need not be committed to the project. The new image installed for
 this verification was `system-images/android-30/google_apis/x86_64`, revision 16.
 
+## Modules, identities and tasks
+
+| Module | Plugin / namespace | Project dependencies | Host tests | Device tests |
+| --- | --- | --- | --- | --- |
+| `:domain` | Kotlin/JVM, `com.software.sello.domain` | none (Kotlin stdlib only) | `:domain:test` | — |
+| `:data` | Android library + KSP, `com.software.sello.data` | `:domain` | `:data:testDebugUnitTest` | `:data:connectedDebugAndroidTest` |
+| `:design-system` | Android library + Compose, `com.software.sello.designsystem` | none | `:design-system:testDebugUnitTest` | `:design-system:connectedDebugAndroidTest` |
+| `:app` | Android application, `com.software.sello` | `:domain`, `:design-system`, `:data` | `:app:testDebugUnitTest` | `:app:connectedDebugAndroidTest` |
+| `:catalog` | Android application, `com.software.sello.catalog` | `:design-system` | `:catalog:testDebugUnitTest` | `:catalog:connectedDebugAndroidTest` |
+
+| Artifact | Application ID | Launcher label |
+| --- | --- | --- |
+| `:app` release (customer) | `com.software.sello` | Sello |
+| `:app` debug | `com.software.sello.debug` | Sello Debug |
+| `:catalog` debug | `com.software.sello.catalog` | Sello Catalog |
+
+- Only `:app` has tests today: one sample JVM test and one debug identity test in
+  `app/src/androidTestDebug`; `:catalog` has one identity test in `androidTest`.
+  `:domain`, `:data` and `:design-system` report `NO-SOURCE` for their test tasks.
+  That is a configured task, not an executed suite.
+- `:app`'s Gradle edge to `:data` exists for the composition root only. Gradle
+  cannot enforce that package rule; SELLO-004 owns the source-level check.
+- `:data` applies KSP with Room 2.8.4 and `room.schemaLocation` set to
+  `data/schemas/`. No database exists yet, so that directory is created by the
+  first real schema in SELLO-011. Do not add a placeholder database to fill it.
+- The debug label comes from `app/src/debug/res/values/strings.xml`. The class name
+  stays `com.software.sello.MainActivity`; only the application ID gains `.debug`.
+
+Inspect the graph and built identities:
+
+```bash
+./gradlew projects
+./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep 'project :'
+./gradlew :catalog:dependencies --configuration debugRuntimeClasspath | grep 'project :'
+./gradlew :domain:dependencies --configuration runtimeClasspath
+"$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging app/build/outputs/apk/debug/app-debug.apk
+```
+
 ## Build and focused inspection
 
 ```bash
-./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue
-./gradlew :app:assembleDebugAndroidTest
+./gradlew :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+./gradlew :app:assembleDebugAndroidTest :catalog:assembleDebugAndroidTest \
+  :data:assembleDebugAndroidTest :design-system:assembleDebugAndroidTest
 python3 -m unittest discover -s docs/planning/mvp -p test_board.py
 python3 docs/planning/mvp/board.py --check
 ```
@@ -81,6 +123,8 @@ Inspect actual compiler versions independently of Gradle's embedded Kotlin:
 ./gradlew :app:dependencies --configuration debugRuntimeClasspath
 ```
 
+`:domain` uses the same Kotlin plugin pin through the root `apply false` declaration.
+
 Expected app compiler and Compose compiler plugin: **2.4.20**. `--version` reports
 embedded Kotlin **2.3.20**, which is not the app compiler. Java/Kotlin output remains
 JVM 11. Build warning counts and resolved artifacts belong in ticket evidence;
@@ -90,9 +134,9 @@ For independent-output validation in a clean source checkout:
 
 ```bash
 export GRADLE_USER_HOME="$(mktemp -d)"
-./gradlew clean testDebugUnitTest lintDebug assembleDebug assembleRelease \
-  :app:assembleDebugAndroidTest --no-build-cache --no-configuration-cache \
-  --rerun-tasks --continue
+./gradlew clean :domain:test testDebugUnitTest lintDebug assembleDebug \
+  :app:assembleRelease assembleDebugAndroidTest --no-build-cache \
+  --no-configuration-cache --rerun-tasks --continue
 ```
 
 An empty Gradle user home forces wrapper/dependency provisioning, not just clean
@@ -125,16 +169,20 @@ timeout 90 adb -s "$ANDROID_SERIAL" wait-for-device
 adb -s "$ANDROID_SERIAL" shell getprop sys.boot_completed
 adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk
 adb -s "$ANDROID_SERIAL" install -r app/build/outputs/apk/debug/app-debug.apk
-adb -s "$ANDROID_SERIAL" shell am start -W -n com.software.sello/.MainActivity
-./gradlew :app:connectedDebugAndroidTest
+adb -s "$ANDROID_SERIAL" install -r catalog/build/outputs/apk/debug/catalog-debug.apk
+adb -s "$ANDROID_SERIAL" shell am start -W \
+  -n com.software.sello.debug/com.software.sello.MainActivity
+adb -s "$ANDROID_SERIAL" shell am start -W -n com.software.sello.catalog/.CatalogActivity
+./gradlew :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest
 ```
 
 Wait for boot completion `1` with a bounded condition check; device connectivity
-alone is not readiness. Confirm API `30` and visible `Hello Android!`, not just a
-successful install. The current instrumented test checks package identity only.
-After SELLO-003, use the actual `.debug` package/test expectations instead; these
-scaffold names must not override the approved variant identities. Shut down only
-the emulator you created: `adb -s "$ANDROID_SERIAL" emu kill`.
+alone is not readiness. Confirm API `30`, visible `Hello Android!` in the debug app
+and `Sello Catalog` in the catalog, not just successful installs. The instrumented
+tests check package identity and launcher label only. The unsigned release APK
+cannot be installed, so customer/debug coexistence on a device needs the owner's
+signed build. Shut down only the emulator you created:
+`adb -s "$ANDROID_SERIAL" emu kill`.
 
 ## Troubleshooting and signing
 

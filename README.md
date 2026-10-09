@@ -17,11 +17,12 @@ a deliberately smaller, tested MVP and the Sello visual language.
 - [Local visual reference](docs/design/README.md): Sello snapshot and provenance.
 - [Inspected baseline](docs/planning/mvp/BASELINE.md): what actually builds today.
 
-The current app is the generated Android scaffold. Financial features, module
-boundaries, live-testing sandbox, UI catalog and CI are planned, not implemented.
-Only the initial scaffold/guardrails are in baseline commit `0a31cc2`.
+The app is still the generated greeting. SELLO-003 added the module boundaries
+(`:domain`, `:data`, `:design-system`, `:app`, `:catalog`) and the debug/catalog
+identities; the catalog is an empty shell. Financial features, live-testing
+sandbox, catalog components, architecture checks and CI are planned, not implemented.
 
-## Local baseline verification
+## Local host verification (G1)
 
 Use the installed Android SDK and Android Studio JBR, or the validated replacement
 matrix documented by SELLO-002:
@@ -29,7 +30,9 @@ matrix documented by SELLO-002:
 ```bash
 ANDROID_HOME=/home/okabe94/Android/Sdk JAVA_HOME=/opt/android-studio/jbr \
   PATH="/opt/android-studio/jbr/bin:$PATH" \
-  ./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue
+  ./gradlew :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
 ```
 
 Build/dependency/IDE caches, machine-local configuration and signing secrets are

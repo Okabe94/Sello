@@ -4,6 +4,12 @@
 This is a starting-state guide, not a second architecture or permission to bypass
 ticket dependencies. Verify current HEAD, Git status, code and ticket status first.
 
+**Update 2026-10-08:** SELLO-003 has since been implemented and is Done (owner approved).
+The sections below describe the state before it; use the ticket's
+[Delivery evidence](../planning/mvp/epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities)
+and [setup](setup.md#modules-identities-and-tasks) for the actual modules, identities
+and commands. SELLO-004 is the next eligible ticket.
+
 ## Read before editing
 
 1. Root [AGENTS.md](../../AGENTS.md) and [ARCHITECTURE.md](../../ARCHITECTURE.md).

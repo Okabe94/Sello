@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.software.sello"
+    namespace = "com.software.sello.catalog"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.software.sello"
+        applicationId = "com.software.sello.catalog"
         minSdk = 30
         targetSdk = 37
         versionCode = 1
@@ -19,16 +19,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
-        debug {
-            applicationIdSuffix = ".debug"
-        }
-        release {
-            optimization {
-                enable = false
-            }
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -39,23 +29,14 @@ android {
 }
 
 dependencies {
-    implementation(project(":domain"))
     implementation(project(":design-system"))
-    // Composition root only: features and platform adapters must not import :data.
-    implementation(project(":data"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(libs.androidx.test.runner)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

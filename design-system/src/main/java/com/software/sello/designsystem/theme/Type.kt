@@ -1,4 +1,4 @@
-package com.software.sello.ui.theme
+package com.software.sello.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

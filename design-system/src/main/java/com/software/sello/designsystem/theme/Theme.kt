@@ -1,4 +1,4 @@
-package com.software.sello.ui.theme
+package com.software.sello.designsystem.theme
 
 import android.app.Activity
 import android.os.Build

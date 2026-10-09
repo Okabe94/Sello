@@ -533,7 +533,7 @@ is Done; earlier progress entries describe superseded inspected configurations.
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-001, SELLO-002
 - **Gate:** G1
 
@@ -595,6 +595,40 @@ official build-variant guidance in the source library before altering Gradle.
 Run `./gradlew projects`, module `dependencies` reports and G1. Compile app/catalog
 test APKs and install both launchers. Demonstrate a temporary forbidden domain import
 fails compilation, remove it, rerun green, and attach the dependency/package-ID evidence.
+
+### Execution progress
+2026-10-08: started from clean `475d3f8` after the owner chose SELLO-003 and the
+split "agent implements, owner reviews". G0 passed on the untouched scaffold first.
+
+Added `:domain` (Kotlin/JVM), `:data` and `:design-system` (Android libraries) and
+`:catalog` (Android application) to settings; root declares the Android-library and
+KSP aliases `apply false` after the JVM plugin. Moved the template theme files from
+`app/.../ui/theme` to `design-system/.../designsystem/theme` (package renamed, content
+unchanged); app and catalog both consume that one `SelloTheme`. App debug gained
+`.debug` and the "Sello Debug" label; catalog has its own ID, label, launcher icon,
+activity and disabled backup/transfer. The package assertion moved to
+`app/src/androidTestDebug` with the debug ID and label; catalog has an equivalent test.
+
+Catalog additions, all pinned to already verified or already resolved versions: Room
+2.8.4 runtime/compiler (the SELLO-002 probe candidate) in `:data` only, and
+`androidx.test:runner` 1.5.2, the version `:app` already resolved transitively. No
+existing pin changed. `:data` sets `room.schemaLocation` to `data/schemas`; no
+database, entity or placeholder schema ships. `:domain`, `:data` and `:design-system`
+have no test sources, and `:domain`/`:data` no production sources yet.
+
+Not done here by design: source-level composition-only `:data` import rule and other
+architecture checks (SELLO-004), Room migration-test configuration and the customer
+app's OS-backup disablement (SELLO-011), Sello tokens and catalog examples (SELLO-006).
+
+2026-10-08: owner approved the delivery and authorized the commit; moved to Done.
+
+### Delivery evidence
+- **Revision:** `475d3f8` plus tested uncommitted changes: modified `settings.gradle.kts`, `build.gradle.kts`, `gradle/libs.versions.toml`, `app/build.gradle.kts`, `app/src/main/java/com/software/sello/MainActivity.kt`, `README.md`, `docs/development/setup.md`, `docs/development/HANDOFF.md`, this epic and regenerated board exports; deleted `app/src/main/java/com/software/sello/ui/theme/` and `app/src/androidTest/`; new `domain/`, `data/`, `design-system/`, `catalog/`, `app/src/debug/`, `app/src/androidTestDebug/`. Not a tested clean commit.
+- **Requirement mapping:** five modules → `./gradlew projects` lists `:app`, `:catalog`, `:data`, `:design-system`, `:domain`. Allowed graph → runtime-classpath reports: app debug/release = `:data`, `:design-system`, `:domain`; catalog = `:design-system` only; data = `:domain` only; design-system = no project; domain = `kotlin-stdlib` only; Room is absent from app's compile classpath. Customer never depends on catalog → no `:catalog` edge in app release classpath. Identities → `aapt2 dump badging`: debug APK `com.software.sello.debug` / Sello Debug, unsigned release APK `com.software.sello` / Sello, catalog APK `com.software.sello.catalog` / Sello Catalog. Variant-aware assertion → `app/src/androidTestDebug/.../ExampleInstrumentedTest.kt` and `catalog/src/androidTest/.../CatalogIdentityTest.kt`, both executed. Theme ownership without duplication → files exist only under `design-system`. Room/KSP/schema capability → temporary Room database in `:data` generated `ProbeDatabase_Impl.kt` and exported `data/schemas/com.software.sello.data.probe.ProbeDatabase/1.json`; fixture and schema then removed. Module inventory → `docs/development/setup.md`. Composition-only source rule for `:data` is not enforced by this ticket; it is SELLO-004's.
+- **Red / Green:** build/configuration ticket, no financial behavior. Boundary red: a temporary `:domain` file importing `android.os.Bundle` failed `:domain:compileKotlin` with `Unresolved reference 'android'`; a temporary `:design-system` file importing a `:domain` class failed `:design-system:compileDebugKotlin` with `Unresolved reference 'domain'`. Both fixtures removed, gate rerun green. Identity red: with the former literal `com.software.sello`, `:app:connectedDebugAndroidTest` failed with a ComparisonFailure (expected `com.software.sello`, was `com.software.sello.debug`); with the debug expectation it passed.
+- **Gate results:** G1 (`:domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue`) passed on the final tree. Superset `./gradlew clean :domain:test testDebugUnitTest lintDebug assembleDebug :app:assembleRelease assembleDebugAndroidTest --no-build-cache --no-configuration-cache --rerun-tasks --continue` passed, 421 executed tasks, including all four module test APKs. Executed host tests: one sample JVM test in `:app`, zero failures/errors/skips; `:domain:test` and the `:data`, `:design-system`, `:catalog` unit-test tasks are NO-SOURCE, not executed suites. Lint: zero errors; `:app` 22 warnings (18 pre-existing plus four newer-version advisories for the Android-library plugin, Room runtime/compiler and test runner), `:catalog`, `:data`, `:design-system` zero; nothing suppressed or baselined. Board generation, `--check` and board unit tests passed. Logs `/tmp/sello003-g1-final.log`, `/tmp/sello003-final-clean.log`; bootstrap runner exemption applies, no hosted CI claim.
+- **Device / Artifact:** newly created isolated `sello_api30`, `emulator-5580`, API 30, Google APIs x86_64, 320×640, on the final build. `:app:connectedDebugAndroidTest` and `:catalog:connectedDebugAndroidTest` each executed one test, zero failures/errors/skips; `:data` and `:design-system` connected tasks ran with no tests. Debug app and catalog installed side by side, both `am start -W` returned Status ok, UIAutomator showed `Hello Android!` in `com.software.sello.debug` and `Sello Catalog` / `No components yet.` in `com.software.sello.catalog`; both stayed installed with separate `/data/user/0/` directories named after each application ID. Emulator shut down and its AVD removed. Not executed: installing the customer `com.software.sello` build beside them (release APK is unsigned; owner signs), physical device, launcher-icon visual check, API levels other than 30.
+- **Review:** executor self-review of the exact diff, dependency reports, built package IDs and test XML. Project owner reviewed the handoff and approved on 2026-10-08, including the Room 2.8.4 and test-runner 1.5.2 catalog pins, and authorized the commit. This is owner acceptance, not an independent technical review; customer-build coexistence on a device remains for the owner's signed build.
 
 ## SELLO-004 — Install CI, quality gates and architecture enforcement
 

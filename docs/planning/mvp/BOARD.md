@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 2/36 · **Epics Done:** 0/8
+**Tickets Done:** 3/36 · **Epics Done:** 0/8
 
-Backlog: 34 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 2
+Backlog: 33 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 3
 
 [Workflow, gates and definition of done](README.md)
 
@@ -12,7 +12,7 @@ Backlog: 34 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 2
 
 | Epic | Outcome | Status | Done |
 | --- | --- | --- | --- |
-| [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | In Progress | 2/5 |
+| [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | In Progress | 3/5 |
 | [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | Backlog | 0/4 |
 | [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | Backlog | 0/5 |
 | [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | Backlog | 0/4 |
@@ -41,14 +41,13 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities) | Bootstrap enforced modules and variant identities | SELLO-E01 | P0 | G1 | None |
-| [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) | Install CI, quality gates and architecture enforcement | SELLO-E01 | P0 | G1 | [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities) |
-| [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources) | Wire production composition and distinct time sources | SELLO-E01 | P0 | G1 | [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
-| [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
+| [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) | Install CI, quality gates and architecture enforcement | SELLO-E01 | P0 | G1 | None |
+| [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources) | Wire production composition and distinct time sources | SELLO-E01 | P0 | G1 | [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
+| [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) | Deliver paper, exact money and feedback components | SELLO-E02 | P0 | G2 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell), [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) | Build accessible amount-first inputs and entry states | SELLO-E02 | P0 | G2 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell), [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) | Build category, adaptive navigation and exact-chart primitives | SELLO-E02 | P1 | G2 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
-| [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) | Implement exact money, dates and command validation | SELLO-E03 | P0 | G1 | [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
+| [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) | Implement exact money, dates and command validation | SELLO-E03 | P0 | G1 | [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata) | Create Room v1, integrity constraints and recovery metadata | SELLO-E03 | P0 | G2 | [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation), [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) | Save expenses with atomic receipts and uncertain-outcome recovery | SELLO-E03 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) | Implement category commands and historical monthly budget storage | SELLO-E03 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata), [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement) |
@@ -82,7 +81,8 @@ No tickets.
 | --- | --- | --- | --- | --- | --- |
 | [SELLO-001](epics/E01-foundation.md#sello-001--approve-the-mvp-contract-and-financial-examples) | Approve the MVP contract and financial examples | SELLO-E01 | P0 | G0 | None |
 | [SELLO-002](epics/E01-foundation.md#sello-002--establish-and-verify-the-supported-android-toolchain) | Establish and verify the supported Android toolchain | SELLO-E01 | P0 | G0 | None |
+| [SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities) | Bootstrap enforced modules and variant identities | SELLO-E01 | P0 | G1 | None |
 
 ## Ready promotion candidates
 
-[SELLO-003](epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities)
+[SELLO-004](epics/E01-foundation.md#sello-004--install-ci-quality-gates-and-architecture-enforcement)

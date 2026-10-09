@@ -38,3 +38,8 @@ dependencies {
 ktlint {
     version.set(libs.versions.ktlint.get())
 }
+
+dependencyLocking {
+    lockAllConfigurations()
+    lockMode = LockMode.STRICT
+}

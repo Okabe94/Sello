@@ -86,7 +86,7 @@ this verification was `system-images/android-30/google_apis/x86_64`, revision 16
   `:domain`, `:data` and `:design-system` report `NO-SOURCE` for their test tasks.
   That is a configured task, not an executed suite.
 - `:app`'s Gradle edge to `:data` exists for the composition root only. Gradle
-  cannot enforce that package rule; SELLO-004 owns the source-level check.
+  cannot enforce that package rule; `scripts/quality/architecture.py` does.
 - `:data` applies KSP with Room 2.8.4 and `room.schemaLocation` set to
   `data/schemas/`. No database exists yet, so that directory is created by the
   first real schema in SELLO-011. Do not add a placeholder database to fill it.
@@ -106,7 +106,8 @@ Inspect the graph and built identities:
 ## Build and focused inspection
 
 ```bash
-./gradlew :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+./scripts/verify-ticket SELLO-0XX   # the ticket's whole gate; see the execution guide
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
   :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
   :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
 ./gradlew :app:assembleDebugAndroidTest :catalog:assembleDebugAndroidTest \

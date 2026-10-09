@@ -15,3 +15,5 @@
 
 ## Evidence
 <!-- Required: image, video, test results or other real proof that the work does what it says. -->
+
+**Not covered:** <!-- Anything skipped, not tested or left for later. Write "Nothing" if so. -->

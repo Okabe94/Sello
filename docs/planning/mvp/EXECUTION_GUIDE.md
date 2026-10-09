@@ -145,9 +145,9 @@ until SELLO-001 is reviewed; never turn a pending example into hidden product po
 
 ## Delivery record
 
-Follow [QUALITY_FLOW.md](QUALITY_FLOW.md) for mandatory runner, snapshot freshness,
-artifact retention and completion validation. The runner is a SELLO-004 deliverable,
-not an existing command; do not start dependent work until its acceptance is Done.
+Follow [QUALITY_FLOW.md](QUALITY_FLOW.md) and the [quality runner](#quality-runner)
+section below for the mandatory run, snapshot freshness, retention and completion
+validation. Do not start dependent work until SELLO-004's acceptance is Done.
 
 Add `### Delivery evidence` to the canonical ticket after verification. Required fields:
 
@@ -165,6 +165,62 @@ This is a template, not completed evidence. Do not mark Done while device/approv
 signing acceptance remains missing. Regenerate board/CSV after ticket/shared-workflow
 edits, then check the generated output and board unit tests. Do not commit/publish
 unless the current user request authorizes it.
+
+## Quality runner
+
+Prerequisites: the environment from [setup](../../development/setup.md) (JDK 25 on
+`PATH`, `ANDROID_HOME` or `sdk.dir`), Python 3, Git, and for G2 a booted device.
+
+```bash
+./scripts/verify-ticket SELLO-017            # run the gate the ticket requires
+./scripts/verify-ticket SELLO-017 --gate G2  # run a higher gate; lower is refused
+./scripts/verify-ticket SELLO-017 --retain   # passed run -> retained report + field text
+python3 docs/planning/mvp/board.py           # regenerate views after ticket edits
+python3 docs/planning/mvp/board.py --check   # completion validation
+python3 scripts/quality/architecture.py      # architecture rules alone, quick feedback
+./gradlew ktlintFormat                       # fix formatting findings
+./scripts/update-dependency-locks            # after a deliberate dependency change
+python3 -m unittest discover -s scripts/quality -p 'test_*.py'
+```
+
+Flow for a ticket:
+
+1. Keep the ticket In Progress while working. Run `verify-ticket` as often as needed;
+   each run writes `build/reports/quality/<ticket>/<run id>/report.json` and one log
+   per check. That directory is ignored by Git.
+2. When the work is final, run with `--retain`. It copies the passed report to
+   `docs/planning/mvp/quality-reports/<ticket>.json` and prints a
+   `- **Quality run:** ...` line. Paste that line into the ticket's Delivery evidence.
+3. Set the status to Review, regenerate the board, run `board.py --check`, commit
+   the retained report with the change and open the pull request.
+4. CI runs `verify-ticket --merge-candidate <base> --gate G2` on the merge commit
+   and then `board.py --check --base <base>`. Its reports are the `quality-reports`
+   artifact of the workflow run, kept 90 days:
+   `gh run download <run id> -n quality-reports`.
+
+What makes a report stale: any change to a tracked or untracked-but-not-ignored
+file, including code, tests, build files, guardrail documents and a ticket's own
+text. What does not: ticket status lines, `Execution progress` and `Delivery evidence`
+sections, generated board views, retained reports and ignored build outputs. A
+ticket already Done in the base revision keeps its original snapshot; rewriting its
+acceptance text still invalidates it.
+
+Recovering from failures:
+
+| Message | Meaning and action |
+| --- | --- |
+| `REFUSED: Unknown ticket` / `prerequisite ... is not Done` | Nothing ran. Fix the ID or finish the prerequisite; do not verify out of order. |
+| `REFUSED: ... would be a downgrade` | The ticket's gate is the minimum. Remove `--gate` or pass a higher one. |
+| `REFUSED: No working java` / `Android SDK not found` | Export the setup environment in this shell. |
+| `REFUSED: ... no connected device` | Boot the isolated emulator from setup; test-APK assembly is not a substitute. |
+| `REFUSED: G3 ... not available` | Release checks arrive with SELLO-035. The ticket cannot be verified earlier. |
+| `FAILED: <check> exited N` | Read `<check>.log` beside the report, fix the cause, run again. |
+| `FAILED: ... produced no test results` | The task ran no tests. Device results must be newer than the run. |
+| `FAILED: inputs changed while checks were running` | Stop editing during a run and run again. |
+| `Dependency Locking` / `does not have lock state` in a Gradle log | A dependency changed without its lock. If intended, run `./scripts/update-dependency-locks` and review the lockfile diff as the dependency review. |
+| `board-check` fails on stale views | Run `python3 docs/planning/mvp/board.py`, then verify again. |
+| `report is stale` / `acceptance text changed` | Something changed after the retained run. Verify again with `--retain` and update the field. |
+| `does not match the recorded sha256` | The retained file or the field was edited. Regenerate both with `--retain`. |
 
 ## Source library
 

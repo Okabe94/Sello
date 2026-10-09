@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Rewrite every module's gradle.lockfile after a deliberate dependency change.
+
+Resolves the same configurations the quality gate uses, so strict locking has
+state for all of them. Review the resulting lockfile diff: it is the dependency review.
+"""
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts/quality"))
+import architecture  # noqa: E402
+import gates  # noqa: E402
+
+reports = [f":{module}:dependencies" for module in sorted(architecture.ALLOWED_EDGES)]
+command = ["./gradlew", *reports, *gates.HOST_TASKS, "assembleDebugAndroidTest", "--write-locks"]
+print(" ".join(command))
+sys.exit(subprocess.run(command, cwd=ROOT).returncode)

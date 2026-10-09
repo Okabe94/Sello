@@ -111,7 +111,7 @@ and debug app were also installed on the owner's phone (Android 16, API 36) over
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Review
+- **Status:** Done
 - **Depends on:** SELLO-006, SELLO-010, SELLO-004
 - **Gate:** G2
 
@@ -208,6 +208,9 @@ as [ADR 0007](../../../decisions/0007-no-peso-symbol.md). This supersedes the
 reference's raised peso sign. The tests were changed first and six failed before the
 formatter and `MoneyText` were updated; the gate was run again on the result.
 
+2026-10-09: owner approved pull request 6, including the choices above; moved to Done
+for a squash merge.
+
 Found and fixed during the work: the device test caught `BigInteger.longValueExact`,
 which does not exist on API 30. Some escape sequences in Kotlin sources, including two
 SELLO-010 test files, had been saved as the literal invisible characters; they are
@@ -224,8 +227,8 @@ snackbar with undo and `SlipHeading` are not in this ticket's deliverables.
 - **Red / Green:** against naive versions, 5 of 5 formatter tests failed (comma grouping, no sign, wrong symbol and wording, `Math.abs` of the lowest Long) and 3 design-system tests failed (floating-point count frames wrong at the limits, no break points, partial teeth); all pass with the real code. A fourth, on tightening, first failed on a float comparison in the test itself and was corrected. Five mutations of the finished components each failed the expected device tests and were reverted: cancel also confirming, a single-line hero figure, stamp read in capitals, reduced motion ignored, a loading button left enabled.
 - **Gate results:** local `./scripts/verify-ticket SELLO-007 --gate G2` passed: 95 host tests (35 domain, 34 app, 23 design-system, 3 catalog), 35 device tests on an isolated API 30 emulator (6 app, 19 design-system, 10 catalog, which open every example by ID), ktlint, architecture rules, lint with 0 errors and 22 warnings, all in `:app` and present before this ticket. No dependency or lock file changed.
 - **Quality run:** run 20261009T212536Z-8540c6b2; SELLO-007 G2 passed; HEAD 16c5c62, inputs sha256 9bf67f3c73f3; report docs/planning/mvp/quality-reports/SELLO-007.json sha256 24a408b53676e5b2364906ffa12828322892cf94b2e46f9f046314e0980228c8
-- **Device / Artifact:** twelve captures of the installed catalog on the API 30 emulator are in `docs/testing/evidence/SELLO-007/`, including the pinked edge, tear-line notches, the confirmation over its scrim and money at font scale 2.0 in Violeta dark. Font scale 1.3 was neither captured nor separately tested; scales 1.0 and 2.0 were. Hosted CI evidence is the pull request's `quality` run.
-- **Review:** executor self-review of the diff, captures against the reference, reports and logs. Owner review of the pull request is outstanding; that will be owner acceptance, not an independent technical review.
+- **Device / Artifact:** twelve captures of the installed catalog on the API 30 emulator are in `docs/testing/evidence/SELLO-007/`, including the pinked edge, tear-line notches, the confirmation over its scrim and money at font scale 2.0 in Violeta dark. Font scale 1.3 was neither captured nor separately tested; scales 1.0 and 2.0 were. Hosted run 37993487360 on the pull request's merge commit passed the `quality` check with the ticket in Review.
+- **Review:** executor self-review of the diff, captures against the reference, reports and logs. Project owner tried the catalog on an emulator, asked for the currency-mark change, reviewed pull request 6 and approved on 2026-10-09. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it.
 
 ## SELLO-008 — Build accessible amount-first inputs and entry states
 

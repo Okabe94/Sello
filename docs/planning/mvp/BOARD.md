@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 4/36 · **Epics Done:** 0/8
 
-Backlog: 31 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 4
+Backlog: 31 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 4
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,13 +27,13 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources) | Wire production composition and distinct time sources | SELLO-E01 | P0 | G1 | None |
+No tickets.
 
 ## Review
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources) | Wire production composition and distinct time sources | SELLO-E01 | P0 | G1 | None |
 
 ## Blocked
 

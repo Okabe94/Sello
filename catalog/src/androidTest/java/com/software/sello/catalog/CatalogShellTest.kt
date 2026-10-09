@@ -4,6 +4,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -42,8 +44,18 @@ class CatalogShellTest {
         rule.onNodeWithTag(groupTag(CatalogGroup.Foundations)).assertIsDisplayed()
         rule.onNodeWithText("Foundations").assertIsDisplayed()
         catalogExamples.forEach { rule.onNodeWithTag(exampleLinkTag(it.id)).assertExists() }
-        // Types without examples yet are not advertised.
-        rule.onNodeWithTag(groupTag(CatalogGroup.Charts)).assertDoesNotExist()
+        // Every component type now has examples, and each link sits inside its own group.
+        CatalogGroup.entries.forEach { group ->
+            val links = catalogExamples.filter { it.group == group }
+            assertTrue(group.id, links.isNotEmpty())
+            links.forEach {
+                rule.onNode(
+                    hasTestTag(exampleLinkTag(it.id)) and
+                        hasAnyAncestor(hasTestTag(groupTag(group)))
+                )
+                    .assertExists()
+            }
+        }
     }
 
     @Test

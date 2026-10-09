@@ -4,17 +4,25 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import com.software.sello.catalog.components.AmountKeypadExample
 import com.software.sello.catalog.components.ButtonExample
+import com.software.sello.catalog.components.CategoryCellExample
+import com.software.sello.catalog.components.CategoryCircleExample
 import com.software.sello.catalog.components.ChipExample
+import com.software.sello.catalog.components.ColumnsChartExample
 import com.software.sello.catalog.components.ConfirmSlipExample
 import com.software.sello.catalog.components.CountingExample
 import com.software.sello.catalog.components.EmptySlipExample
+import com.software.sello.catalog.components.EntryDockExample
 import com.software.sello.catalog.components.ErrorSlipExample
 import com.software.sello.catalog.components.ExpenseEntryExample
 import com.software.sello.catalog.components.FieldPillExample
 import com.software.sello.catalog.components.FormFieldExample
 import com.software.sello.catalog.components.KeyValueExample
 import com.software.sello.catalog.components.LeaderLineExample
+import com.software.sello.catalog.components.LineChartExample
 import com.software.sello.catalog.components.MoneyTextExample
+import com.software.sello.catalog.components.MonthSwitcherExample
+import com.software.sello.catalog.components.NavigationBarExample
+import com.software.sello.catalog.components.ScaffoldExample
 import com.software.sello.catalog.components.SlipExample
 import com.software.sello.catalog.components.SlipSkeletonExample
 import com.software.sello.catalog.components.StampExample
@@ -49,6 +57,8 @@ class CatalogExample(
     val id: String,
     val group: CatalogGroup,
     @StringRes val title: Int,
+    /** Fills the stage itself and scrolls on its own, like a whole screen. */
+    val fullBleed: Boolean = false,
     val content: @Composable () -> Unit
 )
 
@@ -124,6 +134,16 @@ val catalogExamples: List<CatalogExample> = listOf(
         R.string.catalog_example_counting
     ) { CountingExample() },
     CatalogExample(
+        "categories.category-circle",
+        CatalogGroup.Categories,
+        R.string.catalog_example_category_circle
+    ) { CategoryCircleExample() },
+    CatalogExample(
+        "categories.category-cell",
+        CatalogGroup.Categories,
+        R.string.catalog_example_category_cell
+    ) { CategoryCellExample() },
+    CatalogExample(
         "inputs.button",
         CatalogGroup.Inputs,
         R.string.catalog_example_button
@@ -158,6 +178,37 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Inputs,
         R.string.catalog_example_expense_entry
     ) { ExpenseEntryExample() },
+    CatalogExample(
+        "navigation.scaffold",
+        CatalogGroup.Navigation,
+        R.string.catalog_example_scaffold,
+        fullBleed = true
+    ) { ScaffoldExample() },
+    CatalogExample(
+        "navigation.entry-dock",
+        CatalogGroup.Navigation,
+        R.string.catalog_example_entry_dock
+    ) { EntryDockExample() },
+    CatalogExample(
+        "navigation.navigation-bar",
+        CatalogGroup.Navigation,
+        R.string.catalog_example_navigation_bar
+    ) { NavigationBarExample() },
+    CatalogExample(
+        "navigation.month-switcher",
+        CatalogGroup.Navigation,
+        R.string.catalog_example_month_switcher
+    ) { MonthSwitcherExample() },
+    CatalogExample(
+        "charts.columns",
+        CatalogGroup.Charts,
+        R.string.catalog_example_columns_chart
+    ) { ColumnsChartExample() },
+    CatalogExample(
+        "charts.line",
+        CatalogGroup.Charts,
+        R.string.catalog_example_line_chart
+    ) { LineChartExample() },
     CatalogExample(
         "feedback.confirm-slip",
         CatalogGroup.Feedback,

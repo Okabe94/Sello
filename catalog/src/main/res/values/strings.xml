@@ -55,6 +55,15 @@
     <string name="catalog_example_form_field">FormField</string>
     <string name="catalog_example_switch">Switches</string>
     <string name="catalog_example_expense_entry">Entry controls together</string>
+    <string name="catalog_example_category_circle">CategoryCircle</string>
+    <string name="catalog_example_category_cell">CategoryCell</string>
+    <string name="catalog_example_scaffold">SelloScaffold</string>
+    <string name="catalog_example_entry_dock">EntryDock</string>
+    <string name="catalog_example_navigation_bar">Tab bar and rail</string>
+    <string name="catalog_example_month_switcher">MonthSwitcher</string>
+    <string name="catalog_example_columns_chart">ColumnsChart</string>
+    <string name="catalog_example_line_chart">LineChart</string>
+    <string name="catalog_window_landscape">Landscape 760×400</string>
     <string name="catalog_control_motion">Motion</string>
     <string name="catalog_motion_full">Full</string>
     <string name="catalog_motion_reduced">Reduced</string>

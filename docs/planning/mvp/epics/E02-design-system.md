@@ -343,7 +343,7 @@ for a squash merge.
 
 - **Type:** Story
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-007, SELLO-004
 - **Gate:** G2
 

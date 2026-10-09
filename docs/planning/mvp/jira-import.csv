@@ -1838,7 +1838,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-007, SELLO-004
 - **Gate:** G2
 
@@ -1963,7 +1963,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1002,High,Backlog,sello-009
+",1002,High,In Progress,sello-009
 1003,Epic,SELLO-E03 — Financial truth and persistence,"Local ID: SELLO-E03
 Increment: MVP
 Goal: Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them.

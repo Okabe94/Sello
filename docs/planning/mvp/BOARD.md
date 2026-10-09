@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 9/36 · **Epics Done:** 1/8
 
-Backlog: 27 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 9
+Backlog: 26 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 9
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,7 +27,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) | Build category, adaptive navigation and exact-chart primitives | SELLO-E02 | P1 | G2 | None |
 
 ## Review
 
@@ -41,7 +43,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) | Build category, adaptive navigation and exact-chart primitives | SELLO-E02 | P1 | G2 | None |
 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata) | Create Room v1, integrity constraints and recovery metadata | SELLO-E03 | P0 | G2 | None |
 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) | Save expenses with atomic receipts and uncertain-outcome recovery | SELLO-E03 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata) |
 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) | Implement category commands and historical monthly budget storage | SELLO-E03 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata), [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) |
@@ -85,4 +86,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives), [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata)
+[SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata)

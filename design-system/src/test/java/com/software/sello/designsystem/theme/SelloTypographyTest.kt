@@ -55,12 +55,19 @@ class SelloTypographyTest {
     }
 
     @Test
-    fun everyMaterialRoleIsSchibstedWithTabularFiguresAndAtLeast12sp() {
+    fun everyMaterialRoleIsSchibstedAndAtLeast12sp() {
         assertEquals(15, roles.size)
         for ((role, style) in roles) {
             assertEquals(role, SchibstedGrotesk, style.fontFamily)
-            assertEquals(role, "tnum", style.fontFeatureSettings)
             assertTrue("$role is ${style.fontSize}", style.fontSize.value >= 12f)
+        }
+    }
+
+    @Test
+    fun figureRolesUseTabularFiguresAndSentenceRolesDoNot() {
+        for ((role, style) in roles) {
+            val holdsFigures = !role.startsWith("body") && !role.startsWith("label")
+            assertEquals(role, if (holdsFigures) "tnum" else null, style.fontFeatureSettings)
         }
     }
 

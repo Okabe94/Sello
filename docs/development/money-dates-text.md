@@ -33,3 +33,16 @@ never substitutes zero, empty or a "repaired" value.
   `AuditClock` and belongs to the record's audit fields.
 - `Currency.USD`, `EUR` and `GBP` exist only so future policies can be named. They
   cannot become a `TransactionAmount`, and there is no rate or rounding code yet.
+
+## Showing money
+
+Formatting and drawing have different owners (SELLO-007):
+
+- `MoneyFormatter` in `:app` (`presentation.money`) turns a `Money` into a
+  `MoneyTextValue`: sign, currency mark, the full es-CO grouped figure and the words a
+  screen reader says, taken from string resources through `ResourceMoneyLabels`. It
+  never abbreviates; short forms such as `3,53 M` are for chart axes only.
+- `MoneyText` in `:design-system` only draws a `MoneyTextValue`. It does not know
+  `Money`, compute or round. `CountingMoneyText` animates between two amounts but always
+  announces, and ends on, the exact target; with reduced motion it does not count.
+- A failed read has no `MoneyTextValue`. Show `ErrorSlip`, never a zero.

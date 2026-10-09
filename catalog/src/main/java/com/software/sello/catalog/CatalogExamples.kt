@@ -2,9 +2,22 @@ package com.software.sello.catalog
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import com.software.sello.catalog.components.ButtonExample
+import com.software.sello.catalog.components.ConfirmSlipExample
+import com.software.sello.catalog.components.CountingExample
+import com.software.sello.catalog.components.EmptySlipExample
+import com.software.sello.catalog.components.ErrorSlipExample
+import com.software.sello.catalog.components.KeyValueExample
+import com.software.sello.catalog.components.LeaderLineExample
+import com.software.sello.catalog.components.MoneyTextExample
+import com.software.sello.catalog.components.SlipExample
+import com.software.sello.catalog.components.SlipSkeletonExample
+import com.software.sello.catalog.components.StampExample
+import com.software.sello.catalog.components.TearLineExample
+import com.software.sello.catalog.components.TotalLineExample
 import com.software.sello.catalog.foundations.ColorsExample
 import com.software.sello.catalog.foundations.IconsExample
-import com.software.sello.catalog.foundations.MoneyTextExample
+import com.software.sello.catalog.foundations.MoneyTextExample as LongMoneyTextExample
 import com.software.sello.catalog.foundations.MotionExample
 import com.software.sello.catalog.foundations.ShapeSpacingExample
 import com.software.sello.catalog.foundations.TypographyExample
@@ -48,7 +61,7 @@ val catalogExamples: List<CatalogExample> = listOf(
         "foundations.money-text",
         CatalogGroup.Foundations,
         R.string.catalog_example_money_text
-    ) { MoneyTextExample() },
+    ) { LongMoneyTextExample() },
     CatalogExample(
         "foundations.shape-spacing",
         CatalogGroup.Foundations,
@@ -63,5 +76,70 @@ val catalogExamples: List<CatalogExample> = listOf(
         "foundations.icons",
         CatalogGroup.Foundations,
         R.string.catalog_example_icons
-    ) { IconsExample() }
+    ) { IconsExample() },
+    CatalogExample(
+        "paper.slip",
+        CatalogGroup.Paper,
+        R.string.catalog_example_slip
+    ) { SlipExample() },
+    CatalogExample(
+        "paper.tear-line",
+        CatalogGroup.Paper,
+        R.string.catalog_example_tear_line
+    ) { TearLineExample() },
+    CatalogExample(
+        "paper.leader-line",
+        CatalogGroup.Paper,
+        R.string.catalog_example_leader_line
+    ) { LeaderLineExample() },
+    CatalogExample(
+        "paper.total-line",
+        CatalogGroup.Paper,
+        R.string.catalog_example_total_line
+    ) { TotalLineExample() },
+    CatalogExample(
+        "paper.key-value",
+        CatalogGroup.Paper,
+        R.string.catalog_example_key_value
+    ) { KeyValueExample() },
+    CatalogExample(
+        "stamps.stamp",
+        CatalogGroup.Stamps,
+        R.string.catalog_example_stamp
+    ) { StampExample() },
+    CatalogExample(
+        "money.money-text",
+        CatalogGroup.Money,
+        R.string.catalog_example_money_text_component
+    ) { MoneyTextExample() },
+    CatalogExample(
+        "money.counting",
+        CatalogGroup.Money,
+        R.string.catalog_example_counting
+    ) { CountingExample() },
+    CatalogExample(
+        "inputs.button",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_button
+    ) { ButtonExample() },
+    CatalogExample(
+        "feedback.confirm-slip",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_confirm_slip
+    ) { ConfirmSlipExample() },
+    CatalogExample(
+        "feedback.empty-slip",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_empty_slip
+    ) { EmptySlipExample() },
+    CatalogExample(
+        "feedback.error-slip",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_error_slip
+    ) { ErrorSlipExample() },
+    CatalogExample(
+        "feedback.slip-skeleton",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_slip_skeleton
+    ) { SlipSkeletonExample() }
 )

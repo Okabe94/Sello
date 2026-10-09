@@ -96,6 +96,14 @@ fun CatalogControls(settings: CatalogSettings, onChange: (CatalogSettings) -> Un
                     tag = { controlTag("window", it.name) },
                     onSelect = { onChange(settings.copy(window = it)) }
                 )
+                ControlRow(
+                    label = stringResource(R.string.catalog_control_motion),
+                    options = CatalogMotion.entries,
+                    selected = settings.motion,
+                    name = { stringResource(it.label) },
+                    tag = { controlTag("motion", it.name) },
+                    onSelect = { onChange(settings.copy(motion = it)) }
+                )
             }
         }
     }

@@ -45,7 +45,7 @@ class MoneyPolicyTest {
 
     @Test
     fun emptyDraftsAreEmptyNotZero() {
-        for (text in listOf("", " ", "   ", "\t", "\n", " ")) {
+        for (text in listOf("", " ", "   ", "\t", "\n", "\u00A0")) {
             assertEquals(AmountInputError.Empty(text), parse(text).errorOrFail())
         }
     }
@@ -53,8 +53,8 @@ class MoneyPolicyTest {
     @Test
     fun anythingButDigitsAndGroupingDotsIsRejectedWithTheOriginalText() {
         val notDigits = listOf(
-            "1e3", "1E3", "-100", "+100", "−100", "1,5", "1,234", "$1234", "$ 1.234",
-            "1234 COP", "COP 1234", "1 234", "1 234", "1_234", "1'234", "12a4", "abc",
+            "1e3", "1E3", "-100", "+100", "\u2212100", "1,5", "1,234", "$1234", "$ 1.234",
+            "1234 COP", "COP 1234", "1 234", "1\u00A0234", "1_234", "1'234", "12a4", "abc",
             "0x10", "١٢٣", "１２３", "1.234,00", "(100)", "1.234-", "1..234e2"
         )
         for (text in notDigits) {

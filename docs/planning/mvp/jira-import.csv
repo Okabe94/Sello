@@ -1460,7 +1460,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-006, SELLO-010, SELLO-004
 - **Gate:** G2
 
@@ -1586,7 +1586,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1002,Highest,Backlog,sello-007
+",1002,Highest,In Progress,sello-007
 8,Story,SELLO-008 — Build accessible amount-first inputs and entry states,"Local ID: SELLO-008
 Epic: SELLO-E02
 Increment: MVP

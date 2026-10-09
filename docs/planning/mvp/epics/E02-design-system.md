@@ -111,7 +111,7 @@ and debug app were also installed on the owner's phone (Android 16, API 36) over
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-006, SELLO-010, SELLO-004
 - **Gate:** G2
 

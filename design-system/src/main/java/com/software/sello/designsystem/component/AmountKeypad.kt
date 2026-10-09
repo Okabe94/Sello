@@ -1,0 +1,159 @@
+package com.software.sello.designsystem.component
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.software.sello.designsystem.R
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
+import com.software.sello.designsystem.theme.SelloTheme
+
+/**
+ * The in-app keypad for amounts: 1 to 9, then 000, 0 and backspace. It only reports
+ * presses; the draft, its 12-digit limit and every validation belong to the caller.
+ *
+ * A hardware keyboard works while focus is inside the keypad: digits, Backspace, and
+ * Enter for [onSubmit] when one is given. A long press on backspace, or its "Borrar
+ * todo" accessibility action, calls [onClearAll].
+ */
+@Composable
+fun AmountKeypad(
+    onDigit: (Int) -> Unit,
+    onTripleZero: () -> Unit,
+    onBackspace: () -> Unit,
+    onClearAll: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onSubmit: (() -> Unit)? = null
+) {
+    val hardware = Modifier.onPreviewKeyEvent { event ->
+        if (!enabled || event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+        val digit = HardwareDigits[event.key]
+        when {
+            digit != null -> onDigit(digit)
+
+            event.key == Key.Backspace -> onBackspace()
+
+            (event.key == Key.Enter || event.key == Key.NumPadEnter) && onSubmit != null ->
+                onSubmit()
+
+            else -> return@onPreviewKeyEvent false
+        }
+        true
+    }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(KeyGap),
+        modifier = modifier.then(hardware)
+    ) {
+        for (row in listOf(1..3, 4..6, 7..9)) {
+            KeyRow {
+                for (digit in row) {
+                    Key(enabled, onClick = { onDigit(digit) }) { KeyLabel(digit.toString()) }
+                }
+            }
+        }
+        KeyRow {
+            Key(enabled, onClick = onTripleZero) { KeyLabel("000") }
+            Key(enabled, onClick = { onDigit(0) }) { KeyLabel("0") }
+            Key(
+                enabled = enabled,
+                onClick = onBackspace,
+                onLongClick = onClearAll,
+                longClickLabel = stringResource(R.string.sello_clear_all),
+                description = stringResource(R.string.sello_backspace)
+            ) {
+                Icon(
+                    painter = SelloIcon.Backspace.painter(),
+                    contentDescription = null,
+                    tint = SelloTheme.colors.ink,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun KeyRow(content: @Composable RowScope.() -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), content = content)
+}
+
+@Composable
+private fun KeyLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 26.sp),
+        color = SelloTheme.colors.ink
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RowScope.Key(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
+    description: String? = null,
+    content: @Composable () -> Unit
+) {
+    val haptics = LocalHapticFeedback.current
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .weight(1f)
+            .heightIn(min = SelloTheme.spacing.minTouchTarget)
+            .alpha(if (enabled) 1f else DISABLED_KEY_ALPHA)
+            .clip(SelloTheme.shapes.control)
+            .background(SelloTheme.colors.paper)
+            .combinedClickable(
+                enabled = enabled,
+                role = Role.Button,
+                onLongClickLabel = longClickLabel,
+                onLongClick = onLongClick,
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                }
+            )
+            .semantics { if (description != null) contentDescription = description }
+    ) { content() }
+}
+
+private val KeyGap = 6.dp
+private const val DISABLED_KEY_ALPHA = 0.38f
+
+private val HardwareDigits = mapOf(
+    Key.Zero to 0, Key.One to 1, Key.Two to 2, Key.Three to 3, Key.Four to 4,
+    Key.Five to 5, Key.Six to 6, Key.Seven to 7, Key.Eight to 8, Key.Nine to 9,
+    Key.NumPad0 to 0, Key.NumPad1 to 1, Key.NumPad2 to 2, Key.NumPad3 to 3, Key.NumPad4 to 4,
+    Key.NumPad5 to 5, Key.NumPad6 to 6, Key.NumPad7 to 7, Key.NumPad8 to 8, Key.NumPad9 to 9
+)

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.widthIn
@@ -66,7 +67,8 @@ fun CatalogApp() {
             modifier = Modifier.fillMaxSize(),
             containerColor = SelloTheme.colors.desk
         ) { innerPadding ->
-            Column(modifier = Modifier.padding(innerPadding)) {
+            // imePadding keeps a focused field above the system keyboard.
+            Column(modifier = Modifier.padding(innerPadding).imePadding()) {
                 CatalogControls(settings = settings, onChange = { settings = it })
                 CatalogStage(settings = settings) {
                     if (open == null) {

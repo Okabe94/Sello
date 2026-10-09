@@ -47,3 +47,19 @@ Formatting and drawing have different owners (SELLO-007):
   `Money`, compute or round. `CountingMoneyText` animates between two amounts but always
   announces, and ends on, the exact target; with reduced motion it does not count.
 - A failed read has no `MoneyTextValue`. Show `ErrorSlip`, never a zero.
+
+## Entering an amount
+
+- `AmountDraft` in `:domain` is the amount being typed for one expense or income:
+  `Empty`, `Digits` (1–12, no leading zero) or `Rejected` (pasted text kept exactly as
+  received, with its typed reason). `digit`, `tripleZero` and `backspace` return the next
+  draft; a refused thirteenth digit reports `limitReached`. `paste` runs the whole text
+  through `CopAmountInput` and `TransactionAmount`. An empty draft is not zero, and only
+  `toTransactionAmount()` yields something a command may receive, which the command
+  validates again.
+- The controls in `:design-system` hold no rules. `AmountKeypad` reports presses,
+  `AmountField` shows the amount, an empty draft or refused text, and `FormField` returns
+  exactly what was typed. A feature maps its typed error to a `FieldMessage`; the
+  control shows it and never changes the value instead.
+- A loading `SelloButton` ignores presses, which prevents an accidental double tap. It
+  does not make a command idempotent; operation IDs do (SELLO-013).

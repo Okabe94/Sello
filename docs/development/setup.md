@@ -81,15 +81,16 @@ this verification was `system-images/android-30/google_apis/x86_64`, revision 16
 | `:app` debug | `com.software.sello.debug` | Sello Debug |
 | `:catalog` debug | `com.software.sello.catalog` | Sello Catalog |
 
-- Only `:app` has tests today: one sample JVM test and one debug identity test in
-  `app/src/androidTestDebug`; `:catalog` has one identity test in `androidTest`.
-  `:domain`, `:data` and `:design-system` report `NO-SOURCE` for their test tasks.
-  That is a configured task, not an executed suite.
+- Only `:app` and `:catalog` have tests today. `:domain`, `:data` and
+  `:design-system` report `NO-SOURCE` for their test tasks. That is a configured
+  task, not an executed suite.
 - `:app`'s Gradle edge to `:data` exists for the composition root only. Gradle
   cannot enforce that package rule; `scripts/quality/architecture.py` does.
 - `:data` applies KSP with Room 2.8.4 and `room.schemaLocation` set to
   `data/schemas/`. No database exists yet, so that directory is created by the
   first real schema in SELLO-011. Do not add a placeholder database to fill it.
+- `:domain` now holds the clock and dispatcher ports; `:app` has 29 JVM tests for
+  the clocks, scope ownership and graph. See [time and composition](time-and-composition.md).
 - The debug label comes from `app/src/debug/res/values/strings.xml`. The class name
   stays `com.software.sello.MainActivity`; only the application ID gains `.debug`.
 

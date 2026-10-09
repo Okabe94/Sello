@@ -1,6 +1,6 @@
 # SELLO-E01 — Contracts and engineering foundation
 
-- **Status:** In Progress
+- **Status:** Done
 - **Goal:** Make decisions explicit and build/test the app reproducibly before financial work.
 - **Exit:** Approved MVP conventions, enforced module graph, usable CI and injected clocks/composition; existing app remains launchable.
 
@@ -807,7 +807,7 @@ of Gradle plugin classpaths. The architecture checker's stated limits apply.
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-001, SELLO-003, SELLO-004
 - **Gate:** G1
 
@@ -865,3 +865,45 @@ Domain clock ports are neutral; Android system observation belongs in app/platfo
 Create/run `*FinancialClockTest`, `*ClockOwnershipTest` and composition graph tests
 with controlled coroutine time. Run G1; retain midnight/resume/zone/cancellation
 assertions and confirm app/catalog launch with production adapters.
+
+### Execution progress
+2026-10-09: started on branch `sello-005-composition-time` after the owner approved
+Koin 4.2.2, kotlinx-coroutines 1.11.0 and lifecycle-process 2.9.4, and gave standing
+permission to branch, commit, push and open the pull request for each ticket.
+
+Delivered: clock and dispatcher ports in `:domain` (`domain.port`); production
+adapters, `ProcessFinancialZone` and `ApplicationScope` in `:app` `platform`; the
+composition root and `SelloApplication` in `:app` `composition`; a debug-only
+`ControlledFinancialClock` with `financialTimeOverride`; architecture rules
+`ad-hoc-time`, `global-coroutines` and `di-composition-only`; and
+`docs/development/time-and-composition.md` for ownership and disposal. The app still
+shows the greeting and the debug app runs on production time.
+
+Decision taken during the work, for owner review: the lock-file diff showed that
+`koin-android` would raise activity 1.8.0 to 1.12.4, core-ktx 1.10.1 to 1.16.0 and
+lifecycle 2.9.4 to 2.10.0, and add AppCompat and Fragment. `koin-core` 4.2.2 is used
+instead and the application context is bound explicitly, so none of those moved.
+What did move: coroutines 1.9.0 to 1.11.0 as approved, compile-time lifecycle
+artifacts from 2.8.7 to the 2.9.4 already used at runtime, and new Koin core, Stately
+and test-only kotlin-reflect/kotlin-test 2.3.20 entries. `koin-android` or its
+Compose artifact will be needed when ViewModels arrive and should be decided then.
+
+`scripts/update-dependency-locks` now runs build tasks only, so a failing test or
+style finding cannot block a lock refresh.
+
+Not delivered: a preference contract. The ticket says such contracts are neutral;
+none exists because nothing consumes one before SELLO-023, and `:domain` already
+cannot reference DataStore. The financial zone is not persisted (SELLO-011).
+
+2026-10-09: owner approved pull request 3; moved to Done for a squash merge. All five
+tickets of this epic are Done, so the epic is Done.
+
+### Delivery evidence
+- **Revision:** branch `sello-005-composition-time`; tested snapshot is commit `cf3e52d`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design. The hosted run tested that commit's pull request merge commit.
+- **Requirement mapping:** logic never calls global DI or reads wall time ad hoc → architecture rules `ad-hoc-time`, `global-coroutines`, `di-composition-only` with tests in `scripts/quality/test_architecture.py`; the only wall-clock reads are in `app/.../platform/SystemClocks.kt`. Cancellation propagates → `ClockOwnershipTest`. Financial zone initialized once, travel does not rewrite history, explicit initialization and no persistence → `ProcessFinancialZone`, `ProcessFinancialZoneTest`, `SystemFinancialClockTest.travelDoesNotChangeTheFinancialZoneOrDate`, `SelloApplication`. Missing bindings fail graph construction, no no-op services → `ProductionGraphTest`. Financial stepping cannot change undo timers or audit timestamps → `DebugGraphTest`, `ControlledFinancialClock`. Production clock reacts to midnight, resume, zone and time changes → `SystemFinancialClock`, `AndroidTimeSignals`, `SystemFinancialClockTest`. Debug composition replaces only financial time and is absent from release → `financialTimeOverride`, `DebugGraphTest`, release APK inspection. Lifecycle ownership documented → `docs/development/time-and-composition.md`. Neutral preference contracts → none defined, see Execution progress.
+- **Red / Green:** clock and zone tests were written against a naive clock that read the date once and a zone holder that accepted any call: 6 of 11 failed (rollover, following days, resume after a background month change, clock moved back, zone replaced, read before initialization), then all passed. The architecture rule tests failed 17 cases before the rules existed. Mutations of the finished code each failed the matching tests: clock not created with the graph (3 graph tests), graph close not cancelling the scope (1), scope without a supervisor job (1), clock launched outside its owning scope (ownership and rollover tests), override not bound to the contract (3 debug-graph tests). All mutations reverted.
+- **Gate results:** local `./scripts/verify-ticket SELLO-005` passed G1, and G2 on an isolated API 30 emulator before the final wiring change (run `20261009T051845Z-d1c2d574`). 29 JVM tests in `:app` pass (7 clock, 3 zone, 6 ownership, 6 production graph, 3 controlled clock, 3 debug graph, 1 sample); `:domain`, `:data`, `:design-system` and `:catalog` unit-test tasks have no sources. 112 quality-tool tests and 32 board tests pass. Lint has zero errors and 23 warnings, one more than before: a newer-version advisory for the approved lifecycle-process pin. One compiler warning: Koin's `verify` is marked experimental and is used in one test. Nothing suppressed.
+- **Quality run:** run 20261009T052945Z-98365a66; SELLO-005 G1 passed; HEAD cf3e52d, inputs sha256 ddf36a705b65; report docs/planning/mvp/quality-reports/SELLO-005.json sha256 5a907966f95ff6e3636ea17c14e8dfc72f6dc979fbb4d646a12af4452f63d271
+- **Device / Artifact:** hosted run 37888271058 on `ubuntu-latest`, Temurin 25, API 30 emulator passed every step with the final wiring; a later run, 37888867539, also validated this ticket's completion evidence in Review. The report of the first, `20261009T052412Z-7e7cdbf8`, records SELLO-005, G2, 29 host tests and 6 device tests. Device tests: the app starts `SelloApplication` with the production graph, the financial day equals the real date in the device zone, the monotonic clock moves forward, bringing the activity to the foreground emits a time signal, and the app and catalog identity tests still pass. Release APK contains no `ControlledFinancialClock` (0 strings) while the debug APK does; lock files contain no AppCompat or Fragment entry. Not executed: a real midnight on a device, delivery of the system time, date and zone broadcasts, physical device, API levels other than 30.
+- **Review:** executor self-review of the diff, lock-file changes, reports and hosted logs. Project owner reviewed pull request 3 and approved on 2026-10-09, including the choice of `koin-core` over `koin-android`. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it.
+

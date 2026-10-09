@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 8/36 · **Epics Done:** 1/8
+**Tickets Done:** 9/36 · **Epics Done:** 1/8
 
-Backlog: 27 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 8
+Backlog: 27 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 9
 
 [Workflow, gates and definition of done](README.md)
 
@@ -13,7 +13,7 @@ Backlog: 27 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 8
 | Epic | Outcome | Status | Done |
 | --- | --- | --- | --- |
 | [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | Done | 5/5 |
-| [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | In Progress | 2/4 |
+| [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | In Progress | 3/4 |
 | [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | In Progress | 1/5 |
 | [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | Backlog | 0/4 |
 | [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | Backlog | 0/5 |
@@ -31,9 +31,7 @@ No tickets.
 
 ## Review
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) | Build accessible amount-first inputs and entry states | SELLO-E02 | P0 | G2 | None |
+No tickets.
 
 ## Blocked
 
@@ -49,12 +47,12 @@ No tickets.
 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) | Implement category commands and historical monthly budget storage | SELLO-E03 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata), [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) |
 | [SELLO-014](epics/E03-financial-core.md#sello-014--calculate-consistent-recibo-and-resumen-budget-snapshots) | Calculate consistent Recibo and Resumen budget snapshots | SELLO-E03 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) |
 | [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation) | Introduce the app shell, month session and restored navigation | SELLO-E04 | P0 | G2 | [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) |
-| [SELLO-016](epics/E04-first-slice.md#sello-016--deliver-first-run-category-creation-and-amount-entry-prerequisites) | Deliver first-run category creation and amount-entry prerequisites | SELLO-E04 | P0 | G2 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage), [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation), [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) |
-| [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end) | Ship Anotar expense and its durable receipt end-to-end | SELLO-E04 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-014](epics/E03-financial-core.md#sello-014--calculate-consistent-recibo-and-resumen-budget-snapshots), [SELLO-016](epics/E04-first-slice.md#sello-016--deliver-first-run-category-creation-and-amount-entry-prerequisites), [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) |
+| [SELLO-016](epics/E04-first-slice.md#sello-016--deliver-first-run-category-creation-and-amount-entry-prerequisites) | Deliver first-run category creation and amount-entry prerequisites | SELLO-E04 | P0 | G2 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage), [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation) |
+| [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end) | Ship Anotar expense and its durable receipt end-to-end | SELLO-E04 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-014](epics/E03-financial-core.md#sello-014--calculate-consistent-recibo-and-resumen-budget-snapshots), [SELLO-016](epics/E04-first-slice.md#sello-016--deliver-first-run-category-creation-and-amount-entry-prerequisites) |
 | [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history) | Deliver Recibo, category detail and expense history | SELLO-E04 | P0 | G2 | [SELLO-014](epics/E03-financial-core.md#sello-014--calculate-consistent-recibo-and-resumen-budget-snapshots), [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end), [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) |
 | [SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo) | Implement expense edits, deletion and guarded six-second undo | SELLO-E05 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end), [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history) |
-| [SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing) | Complete category management and month-specific budget editing | SELLO-E05 | P0 | G2 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage), [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history), [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) |
-| [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Ship income recording, history and guarded correction workflows | SELLO-E05 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation), [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states), [SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo) |
+| [SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing) | Complete category management and month-specific budget editing | SELLO-E05 | P0 | G2 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage), [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history) |
+| [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Ship income recording, history and guarded correction workflows | SELLO-E05 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation), [SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo) |
 | [SELLO-022](epics/E05-mvp-workflows.md#sello-022--deliver-basic-resumen-with-exact-actuals-and-history-charts) | Deliver basic Resumen with exact actuals and history charts | SELLO-E05 | P0 | G2 | [SELLO-014](epics/E03-financial-core.md#sello-014--calculate-consistent-recibo-and-resumen-budget-snapshots), [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history), [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows), [SELLO-009](epics/E02-design-system.md#sello-009--build-category-adaptive-navigation-and-exact-chart-primitives) |
 | [SELLO-023](epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings) | Ship persisted appearance, ordering and essential settings | SELLO-E05 | P1 | G2 | [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation), [SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing) |
 | [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls) | Create isolated sandbox sessions and financial time controls | SELLO-E06 | P0 | G2 | [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata), [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation) |
@@ -82,6 +80,7 @@ No tickets.
 | [SELLO-005](epics/E01-foundation.md#sello-005--wire-production-composition-and-distinct-time-sources) | Wire production composition and distinct time sources | SELLO-E01 | P0 | G1 | None |
 | [SELLO-006](epics/E02-design-system.md#sello-006--implement-sello-tokens-and-the-independent-catalog-shell) | Implement Sello tokens and the independent catalog shell | SELLO-E02 | P0 | G2 | None |
 | [SELLO-007](epics/E02-design-system.md#sello-007--deliver-paper-exact-money-and-feedback-components) | Deliver paper, exact money and feedback components | SELLO-E02 | P0 | G2 | None |
+| [SELLO-008](epics/E02-design-system.md#sello-008--build-accessible-amount-first-inputs-and-entry-states) | Build accessible amount-first inputs and entry states | SELLO-E02 | P0 | G2 | None |
 | [SELLO-010](epics/E03-financial-core.md#sello-010--implement-exact-money-dates-and-command-validation) | Implement exact money, dates and command validation | SELLO-E03 | P0 | G1 | None |
 
 ## Ready promotion candidates

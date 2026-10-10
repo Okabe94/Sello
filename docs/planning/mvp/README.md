@@ -54,6 +54,10 @@ integrated release. SELLO-037 depends on SELLO-036 Done; every successor inherit
 SELLO-004 quality enforcement and its own gate. This is not a new MVP prerequisite.
 Exact category/global scope and carryover transitions remain decisions of SELLO-037.
 
+The roadmap also holds SELLO-E10/044, an owner-requested legacy data import that
+runs through the released backup validator and restore. It needs a legacy export
+from the owner when it starts and depends on SELLO-036 Done.
+
 Canonical epic files share this directory for stable IDs/cross-links. `Increment`
 metadata is `MVP` (default for the existing eight epics) or explicit `Post-MVP`.
 The generator validates both increments together, rejects MVP dependencies on

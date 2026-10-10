@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 15/36 · **Epics Done:** 3/8
+**Tickets Done:** 16/36 · **Epics Done:** 3/8
 
-Backlog: 20 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 15
+Backlog: 20 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 16
 
 [Workflow, gates and definition of done](README.md)
 
@@ -15,7 +15,7 @@ Backlog: 20 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 15
 | [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | Done | 5/5 |
 | [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | Done | 4/4 |
 | [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | Done | 5/5 |
-| [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | In Progress | 1/4 |
+| [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | In Progress | 2/4 |
 | [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | Backlog | 0/5 |
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Backlog | 0/4 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Backlog | 0/5 |
@@ -27,9 +27,7 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-016](epics/E04-first-slice.md#sello-016--deliver-first-run-category-creation-and-amount-entry-prerequisites) | Deliver first-run category creation and amount-entry prerequisites | SELLO-E04 | P0 | G2 | None |
+No tickets.
 
 ## Review
 
@@ -43,7 +41,7 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end) | Ship Anotar expense and its durable receipt end-to-end | SELLO-E04 | P0 | G2 | [SELLO-016](epics/E04-first-slice.md#sello-016--deliver-first-run-category-creation-and-amount-entry-prerequisites) |
+| [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end) | Ship Anotar expense and its durable receipt end-to-end | SELLO-E04 | P0 | G2 | None |
 | [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history) | Deliver Recibo, category detail and expense history | SELLO-E04 | P0 | G2 | [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end) |
 | [SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo) | Implement expense edits, deletion and guarded six-second undo | SELLO-E05 | P0 | G2 | [SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end), [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history) |
 | [SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing) | Complete category management and month-specific budget editing | SELLO-E05 | P0 | G2 | [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history) |
@@ -83,7 +81,8 @@ No tickets.
 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) | Implement category commands and historical monthly budget storage | SELLO-E03 | P0 | G2 | None |
 | [SELLO-014](epics/E03-financial-core.md#sello-014--calculate-consistent-recibo-and-resumen-budget-snapshots) | Calculate consistent Recibo and Resumen budget snapshots | SELLO-E03 | P0 | G2 | None |
 | [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation) | Introduce the app shell, month session and restored navigation | SELLO-E04 | P0 | G2 | None |
+| [SELLO-016](epics/E04-first-slice.md#sello-016--deliver-first-run-category-creation-and-amount-entry-prerequisites) | Deliver first-run category creation and amount-entry prerequisites | SELLO-E04 | P0 | G2 | None |
 
 ## Ready promotion candidates
 
-[SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls)
+[SELLO-017](epics/E04-first-slice.md#sello-017--ship-anotar-expense-and-its-durable-receipt-end-to-end), [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls)

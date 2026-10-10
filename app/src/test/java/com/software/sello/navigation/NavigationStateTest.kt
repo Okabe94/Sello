@@ -1,0 +1,230 @@
+package com.software.sello.navigation
+
+import androidx.lifecycle.SavedStateHandle
+import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.TransactionAmount
+import com.software.sello.presentation.month.MonthNames
+import java.time.YearMonth
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class NavigationStateTest {
+    private val clock = HandFinancialClock("2026-10-09")
+    private val monotonic = HandMonotonicClock()
+    private val august = YearMonth.of(2026, 8)
+    private val october = YearMonth.of(2026, 10)
+
+    @Before
+    fun mainDispatcher() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun resetDispatcher() = Dispatchers.resetMain()
+
+    private fun shell(saved: SavedStateHandle = SavedStateHandle()) =
+        ShellViewModel(saved, MonthSession(clock, monotonic))
+
+    /** What the system hands a new process: the same keys and values, new objects. */
+    private fun SavedStateHandle.afterProcessDeath() =
+        SavedStateHandle(keys().associateWith { get<Any?>(it) })
+
+    @Test
+    fun backClosesAPanelThenADetailThenReturnsToReciboThenLeaves() {
+        val recibo = ShellTab.Recibo
+
+        assertEquals(BackTarget.ClosePanel, backTarget(panelOpen = true, onDetail = true, recibo))
+        assertEquals(BackTarget.ClosePanel, backTarget(panelOpen = true, onDetail = false, recibo))
+        assertEquals(BackTarget.LeaveDetail, backTarget(panelOpen = false, onDetail = true, recibo))
+        assertEquals(BackTarget.Exit, backTarget(panelOpen = false, onDetail = false, recibo))
+    }
+
+    @Test
+    fun onlyReciboIsExposedAsATab() {
+        assertEquals(listOf("recibo"), ShellTab.entries.map { it.id })
+    }
+
+    @Test
+    fun theFrameStartsOnTheCurrentMonthWithNothingOpenOrPending() {
+        assertEquals(
+            ShellState(
+                currentMonth = october,
+                selectedMonth = october,
+                monthPickerOpen = false,
+                pickerYear = 2026,
+                pendingEntry = null
+            ),
+            shell().state.value
+        )
+    }
+
+    @Test
+    fun pickingAMonthSelectsItAndClosesThePicker() {
+        val shell = shell()
+        shell.onAction(ShellAction.OpenMonthPicker)
+        val open = shell.state.value
+
+        shell.onAction(ShellAction.PickMonth(august))
+
+        assertEquals(true, open.monthPickerOpen)
+        assertEquals(august to false, shell.state.value.run { selectedMonth to monthPickerOpen })
+    }
+
+    @Test
+    fun aFutureMonthIsNotSelectedAndThePickerStaysOpen() {
+        val shell = shell()
+        shell.onAction(ShellAction.OpenMonthPicker)
+
+        shell.onAction(ShellAction.PickMonth(YearMonth.of(2026, 11)))
+
+        assertEquals(october to true, shell.state.value.run { selectedMonth to monthPickerOpen })
+    }
+
+    @Test
+    fun thePickerOpensOnTheSelectedMonthsYearAndNeverShowsAFutureYear() {
+        val shell = shell()
+        shell.onAction(ShellAction.PickMonth(YearMonth.of(2024, 3)))
+        shell.onAction(ShellAction.OpenMonthPicker)
+        val opened = shell.state.value.pickerYear
+
+        shell.onAction(ShellAction.ShowPickerYear(2025))
+        val shown = shell.state.value.pickerYear
+        shell.onAction(ShellAction.ShowPickerYear(2027))
+        val capped = shell.state.value.pickerYear
+        shell.onAction(ShellAction.ShowPickerYear(1900))
+
+        assertEquals(listOf(2024, 2025, 2026), listOf(opened, shown, capped))
+        assertEquals(ShellViewModel.EARLIEST_YEAR, shell.state.value.pickerYear)
+    }
+
+    @Test
+    fun reopeningThePickerStartsAgainOnTheSelectedMonthsYear() {
+        val shell = shell()
+        shell.onAction(ShellAction.OpenMonthPicker)
+        shell.onAction(ShellAction.ShowPickerYear(2023))
+        shell.onAction(ShellAction.CloseMonthPicker)
+
+        shell.onAction(ShellAction.OpenMonthPicker)
+
+        assertEquals(2026, shell.state.value.pickerYear)
+    }
+
+    @Test
+    fun theMonthGridDisablesMonthsAfterTheCurrentOne() {
+        val names = MonthNames(
+            full = (1..12).map { "Mes$it" },
+            short = (1..12).map { "M$it" },
+            titleFormat = "%1\$s %2\$d"
+        )
+
+        val thisYear = monthCells(2026, october, names)
+        val lastYear = monthCells(2025, october, names)
+
+        assertEquals((1..12).map { it <= 10 }, thisYear.map { it.enabled })
+        assertEquals(listOf("2026-10"), thisYear.filter { it.isCurrent }.map { it.id })
+        assertEquals("M8" to "Mes8 2026", thisYear[7].run { label to spoken })
+        assertEquals(List(12) { true }, lastYear.map { it.enabled })
+        assertEquals(emptyList<String>(), lastYear.filter { it.isCurrent }.map { it.id })
+    }
+
+    @Test
+    fun aLongAbsenceResetsTheMonthAndLeavesThePendingEntryAlone() {
+        val shell = shell()
+        shell.onAction(ShellAction.PickMonth(august))
+        shell.onAction(ShellAction.OpenLink("sello://anotar?monto=48700"))
+        val entry = shell.state.value.pendingEntry
+
+        shell.onAction(ShellAction.EnteredBackground)
+        monotonic.now += 31.minutes
+        shell.onAction(ShellAction.ReturnedToForeground)
+
+        assertEquals(october, shell.state.value.selectedMonth)
+        assertEquals(entry, shell.state.value.pendingEntry)
+        assertEquals(
+            (TransactionAmount.of(Money.cop(48_700)) as Outcome.Success).value,
+            shell.state.value.pendingEntry?.amount
+        )
+    }
+
+    @Test
+    fun theMonthPickerAndPendingEntryComeBackAfterTheProcessIsKilled() {
+        val saved = SavedStateHandle()
+        val first = shell(saved)
+        first.onAction(ShellAction.PickMonth(august))
+        first.onAction(ShellAction.OpenMonthPicker)
+        first.onAction(ShellAction.ShowPickerYear(2025))
+        first.onAction(ShellAction.OpenLink("sello://anotar?monto=48700"))
+        first.onAction(ShellAction.EnteredBackground)
+        val before = first.state.value
+
+        monotonic.now += 10.minutes
+        val restored = shell(saved.afterProcessDeath())
+        restored.onAction(ShellAction.ReturnedToForeground)
+
+        assertEquals(
+            ShellState(
+                october,
+                august,
+                monthPickerOpen = true,
+                pickerYear = 2025,
+                before.pendingEntry
+            ),
+            restored.state.value
+        )
+    }
+
+    @Test
+    fun aProcessRestoredAfterALongAbsenceResetsTheMonthOnly() {
+        val saved = SavedStateHandle()
+        val first = shell(saved)
+        first.onAction(ShellAction.PickMonth(august))
+        first.onAction(ShellAction.OpenLink("sello://anotar?monto=48700"))
+        first.onAction(ShellAction.EnteredBackground)
+        val entry = first.state.value.pendingEntry
+
+        monotonic.now += 31.minutes
+        val restored = shell(saved.afterProcessDeath())
+        restored.onAction(ShellAction.ReturnedToForeground)
+
+        assertEquals(october, restored.state.value.selectedMonth)
+        assertEquals(entry, restored.state.value.pendingEntry)
+    }
+
+    @Test
+    fun savedValuesThatWereTamperedWithDoNotBecomeARequest() {
+        val saved = SavedStateHandle(
+            mapOf(
+                "shell.session" to true,
+                "shell.month" to "2099-12",
+                "shell.entry" to 1,
+                "shell.entry.category" to "' OR 1=1 --",
+                "shell.entry.amount" to -5L
+            )
+        )
+
+        val state = shell(saved).state.value
+
+        assertEquals(october, state.selectedMonth)
+        assertEquals(EntryRequest(null, null), state.pendingEntry)
+    }
+
+    @Test
+    fun theMonthChangeReachesTheFrameWhileItIsOpen() {
+        val shell = shell()
+
+        clock.goTo("2026-11-01")
+
+        assertEquals(
+            YearMonth.of(2026, 11) to YearMonth.of(2026, 11),
+            shell.state.value.run { currentMonth to selectedMonth }
+        )
+    }
+}

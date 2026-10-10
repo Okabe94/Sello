@@ -1,0 +1,204 @@
+package com.software.sello.feature.recibo
+
+import com.software.sello.designsystem.component.MoneySign
+import com.software.sello.designsystem.component.MoneyTextValue
+import com.software.sello.domain.model.Category
+import com.software.sello.domain.model.CategoryId
+import com.software.sello.domain.model.CategoryMonth
+import com.software.sello.domain.model.CategoryName
+import com.software.sello.domain.model.Currency
+import com.software.sello.domain.model.IconKey
+import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.MonthlySnapshot
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.OverallBudget
+import com.software.sello.domain.model.SnapshotFailure
+import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.policy.MonthBudgetState
+import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.SnapshotState
+import com.software.sello.navigation.HandFinancialClock
+import com.software.sello.navigation.HandMonotonicClock
+import com.software.sello.navigation.MonthSession
+import com.software.sello.presentation.money.MoneyFormatter
+import com.software.sello.presentation.money.MoneyLabels
+import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ReciboViewModelTest {
+    private val october = YearMonth.of(2026, 10)
+    private val august = YearMonth.of(2026, 8)
+    private val clock = HandFinancialClock("2026-10-09")
+    private val session = MonthSession(clock, HandMonotonicClock())
+
+    /** A snapshot source a test drives; it records which months were observed. */
+    private class HandSnapshots : MonthlySnapshots {
+        val observed = mutableListOf<YearMonth>()
+        val states = mutableMapOf<YearMonth, MutableStateFlow<SnapshotState>>()
+
+        fun of(month: YearMonth) = states.getOrPut(month) {
+            MutableStateFlow(SnapshotState.Loading)
+        }
+
+        override suspend fun read(month: YearMonth): Outcome<MonthlySnapshot, SnapshotFailure> =
+            error("Recibo observes; it does not read once")
+
+        override fun observe(month: YearMonth): Flow<SnapshotState> =
+            of(month).onStart { observed += month }
+    }
+
+    private val snapshots = HandSnapshots()
+    private val labels = object : MoneyLabels {
+        override fun amount(currency: Currency, digits: String, isOne: Boolean) = "$digits pesos"
+
+        override fun negative(amount: String) = "menos $amount"
+
+        override fun positive(amount: String) = "más $amount"
+    }
+
+    @Before
+    fun mainDispatcher() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun resetDispatcher() = Dispatchers.resetMain()
+
+    private fun TestScope.started(): Pair<ReciboViewModel, Job> {
+        val viewModel = ReciboViewModel(session, snapshots, MoneyFormatter(labels))
+        // Something has to be watching for the state to be kept up to date.
+        val watching =
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                viewModel.state.collect {}
+            }
+        return viewModel to watching
+    }
+
+    private fun snapshot(month: YearMonth, spent: Long, categories: Int) = MonthlySnapshot(
+        month = month,
+        asOf = LocalDate.of(2026, 10, 9),
+        zone = ZoneId.of("America/Bogota"),
+        generation = 1,
+        revision = 7,
+        categories = List(categories) { index ->
+            CategoryMonth(
+                Category(
+                    (CategoryId.of("00000000-0000-4000-8000-00000000000$index") as Outcome.Success)
+                        .value,
+                    (CategoryName.of("Categoría $index") as Outcome.Success).value,
+                    (IconKey.of("home") as Outcome.Success).value,
+                    archived = false,
+                    version = 1,
+                    createdAt = Instant.EPOCH,
+                    updatedAt = Instant.EPOCH
+                ),
+                MonthBudgetState.Unconfigured,
+                Money.cop(0),
+                budget = null
+            )
+        },
+        spent = Money.cop(spent),
+        overall = OverallBudget.NoLimit,
+        futureDatedExpenses = 0
+    )
+
+    @Test
+    fun itShowsLoadingUntilTheFirstReadArrives() = runTest {
+        val (viewModel) = started()
+
+        assertEquals(ReciboState.Loading, viewModel.state.value)
+        assertEquals(listOf(october), snapshots.observed)
+    }
+
+    @Test
+    fun aMonthWithNoCategoriesIsTheFirstRunNotZeroSpending() = runTest {
+        val (viewModel) = started()
+
+        snapshots.of(october).value = SnapshotState.Ready(snapshot(october, 0, categories = 0))
+
+        assertEquals(ReciboState.FirstRun, viewModel.state.value)
+    }
+
+    @Test
+    fun spendingIsShownWithTheExactFullAmount() = runTest {
+        val (viewModel) = started()
+
+        snapshots.of(october).value =
+            SnapshotState.Ready(snapshot(october, 3_000_001_199_997, categories = 2))
+
+        assertEquals(
+            ReciboState.Spending(
+                MoneyTextValue(MoneySign.None, "", "3.000.001.199.997", "3.000.001.199.997 pesos")
+            ),
+            viewModel.state.value
+        )
+    }
+
+    @Test
+    fun aFailedReadIsShownAsFailedEvenWhenOlderFiguresExist() = runTest {
+        val (viewModel) = started()
+        val failure = SnapshotFailure.Storage(StorageFailure.Unavailable("SQLiteException"))
+
+        snapshots.of(october).value =
+            SnapshotState.Failed(failure, lastGood = snapshot(october, 5_000, categories = 1))
+
+        assertEquals(ReciboState.Failed, viewModel.state.value)
+    }
+
+    @Test
+    fun retryObservesTheSameMonthAgain() = runTest {
+        val (viewModel) = started()
+        val failure = SnapshotFailure.Storage(StorageFailure.Unavailable("SQLiteException"))
+        snapshots.of(october).value = SnapshotState.Failed(failure, lastGood = null)
+
+        viewModel.onAction(ReciboAction.Retry)
+        snapshots.of(october).value = SnapshotState.Ready(snapshot(october, 0, categories = 0))
+
+        assertEquals(listOf(october, october), snapshots.observed)
+        assertEquals(ReciboState.FirstRun, viewModel.state.value)
+    }
+
+    @Test
+    fun selectingAnotherMonthShowsThatMonth() = runTest {
+        val (viewModel) = started()
+        snapshots.of(october).value = SnapshotState.Ready(snapshot(october, 9_000, categories = 1))
+        snapshots.of(august).value = SnapshotState.Ready(snapshot(august, 0, categories = 0))
+
+        session.select(august)
+
+        assertEquals(listOf(october, august), snapshots.observed)
+        assertEquals(ReciboState.FirstRun, viewModel.state.value)
+    }
+
+    @Test
+    fun theMonthChangeMovesRecibotoTheNewMonth() = runTest {
+        val (viewModel) = started()
+        val november = YearMonth.of(2026, 11)
+        snapshots.of(november).value = SnapshotState.Ready(snapshot(november, 1, categories = 1))
+
+        clock.goTo("2026-11-01")
+
+        assertEquals(listOf(october, november), snapshots.observed)
+        assertEquals(
+            ReciboState.Spending(MoneyTextValue(MoneySign.None, "", "1", "1 pesos")),
+            viewModel.state.value
+        )
+    }
+}

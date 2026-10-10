@@ -1,47 +1,40 @@
 package com.software.sello
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.activity.viewModels
+import com.software.sello.composition.SelloApplication
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.navigation.SelloAppRoot
+import com.software.sello.navigation.ShellAction
+import com.software.sello.navigation.ShellViewModel
 
 class MainActivity : ComponentActivity() {
+    private val factory get() = (application as SelloApplication).viewModels
+    private val shell: ShellViewModel by viewModels { factory }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Only a fresh start carries a link to act on; a restored one already did.
+        if (savedInstanceState == null) open(intent)
         setContent {
-            SelloTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+            SelloTheme { SelloAppRoot(factory) }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        open(intent)
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SelloTheme {
-        Greeting("Android")
+    /** A link only ever becomes a request to prefill a draft; see `EntryLinks`. */
+    private fun open(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW) {
+            shell.onAction(ShellAction.OpenLink(intent.dataString))
+        }
     }
 }

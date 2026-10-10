@@ -59,5 +59,9 @@ fun productionModules(
     context: Context,
     financialZone: ProcessFinancialZone,
     storage: FinancialStorage
-): List<Module> =
-    listOf(androidModule(context), platformModule(financialZone), storageModule(storage))
+): List<Module> = listOf(
+    androidModule(context),
+    platformModule(financialZone),
+    storageModule(storage),
+    presentationModule()
+)

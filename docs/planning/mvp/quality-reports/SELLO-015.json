@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "run_id": "20261010T115119Z-96989e9a",
+  "run_id": "20261010T121327Z-3e269c1b",
   "ticket": "SELLO-015",
   "gate": {
     "required": "G2",
@@ -12,12 +12,12 @@
     "gradle-host: 29 lint warnings"
   ],
   "snapshot": {
-    "head": "46d8b13d21143228a06900f46a1a8fae300c47a2",
+    "head": "946ded76b005970139b01d2b0e46b4f8ed0400a4",
     "dirty": false,
     "dirty_files": [],
     "fingerprint": {
       "algorithm": "sha256",
-      "value": "e2591959d330dfb09245b43ef157fea419f7c02406d0fc084be83574a6b6ae44",
+      "value": "03ca1960c014d5094782880563cfc27d11d766dbf6d4526b9967abb745bfd91c",
       "files": 367
     },
     "acceptance": "3acebeb0ebda7f7f52632a80f6a1a7a89f3ced9535d0324855fbcf543ca67bc1"
@@ -43,41 +43,41 @@
       "name": "board-check",
       "command": "python3 docs/planning/mvp/board.py --check --skip-evidence",
       "log": "board-check.log",
-      "started_at": "2026-10-10T11:51:19+00:00",
+      "started_at": "2026-10-10T12:13:27+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-10T11:51:19+00:00"
+      "finished_at": "2026-10-10T12:13:27+00:00"
     },
     {
       "name": "board-tests",
       "command": "python3 -m unittest discover -s docs/planning/mvp -p test_board.py",
       "log": "board-tests.log",
-      "started_at": "2026-10-10T11:51:19+00:00",
+      "started_at": "2026-10-10T12:13:27+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-10T11:51:19+00:00"
+      "finished_at": "2026-10-10T12:13:27+00:00"
     },
     {
       "name": "quality-tests",
       "command": "python3 -m unittest discover -s scripts/quality -p test_*.py",
       "log": "quality-tests.log",
-      "started_at": "2026-10-10T11:51:19+00:00",
+      "started_at": "2026-10-10T12:13:27+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-10T11:51:21+00:00"
+      "finished_at": "2026-10-10T12:13:29+00:00"
     },
     {
       "name": "architecture",
       "command": "python3 scripts/quality/architecture.py",
       "log": "architecture.log",
-      "started_at": "2026-10-10T11:51:21+00:00",
+      "started_at": "2026-10-10T12:13:29+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-10T11:51:21+00:00"
+      "finished_at": "2026-10-10T12:13:29+00:00"
     },
     {
       "name": "gradle-host",
       "command": "./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue",
       "log": "gradle-host.log",
-      "started_at": "2026-10-10T11:51:21+00:00",
+      "started_at": "2026-10-10T12:13:29+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-10T11:51:29+00:00",
+      "finished_at": "2026-10-10T12:13:32+00:00",
       "results": {
         "suites": 28,
         "tests": 194,
@@ -95,9 +95,9 @@
       "name": "gradle-device",
       "command": "./gradlew :data:connectedDebugAndroidTest :design-system:connectedDebugAndroidTest :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest --continue",
       "log": "gradle-device.log",
-      "started_at": "2026-10-10T11:51:29+00:00",
+      "started_at": "2026-10-10T12:13:32+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-10T11:52:47+00:00",
+      "finished_at": "2026-10-10T12:14:49+00:00",
       "results": {
         "suites": 4,
         "tests": 180,
@@ -107,6 +107,6 @@
       }
     }
   ],
-  "started_at": "2026-10-10T11:51:19+00:00",
-  "finished_at": "2026-10-10T11:52:47+00:00"
+  "started_at": "2026-10-10T12:13:27+00:00",
+  "finished_at": "2026-10-10T12:14:49+00:00"
 }

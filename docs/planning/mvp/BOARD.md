@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 11/36 · **Epics Done:** 2/8
 
-Backlog: 25 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 11
+Backlog: 24 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 11
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,7 +27,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) | Save expenses with atomic receipts and uncertain-outcome recovery | SELLO-E03 | P0 | G2 | None |
 
 ## Review
 
@@ -41,7 +43,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) | Save expenses with atomic receipts and uncertain-outcome recovery | SELLO-E03 | P0 | G2 | None |
 | [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) | Implement category commands and historical monthly budget storage | SELLO-E03 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) |
 | [SELLO-014](epics/E03-financial-core.md#sello-014--calculate-consistent-recibo-and-resumen-budget-snapshots) | Calculate consistent Recibo and Resumen budget snapshots | SELLO-E03 | P0 | G2 | [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-013](epics/E03-financial-core.md#sello-013--implement-category-commands-and-historical-monthly-budget-storage) |
 | [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation) | Introduce the app shell, month session and restored navigation | SELLO-E04 | P0 | G2 | None |
@@ -85,4 +86,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery), [SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation)
+[SELLO-015](epics/E04-first-slice.md#sello-015--introduce-the-app-shell-month-session-and-restored-navigation)

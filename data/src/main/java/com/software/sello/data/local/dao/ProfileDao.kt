@@ -17,6 +17,16 @@ abstract class ProfileDao {
     abstract suspend fun rows(): List<ProfileEntity>
 
     /**
+     * Moves the revision from [from] to [to] only if the profile is still at
+     * [generation] and [from]. Returns the number of rows changed: 1, or 0 if not.
+     */
+    @Query(
+        "UPDATE profile SET revision = :to " +
+            "WHERE id = 1 AND generation = :generation AND revision = :from"
+    )
+    abstract suspend fun advanceRevision(generation: Long, from: Long, to: Long): Int
+
+    /**
      * Stores [candidate] only if no profile exists, then reads what is stored. One
      * transaction, so zone, generation and revision appear together or not at all.
      */

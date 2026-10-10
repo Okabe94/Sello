@@ -2424,7 +2424,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-011, SELLO-004
 - **Gate:** G2
 
@@ -2484,6 +2484,39 @@ Architecture §5 defines the command outcomes; no form UI belongs to this ticket
 Create `ExpenseCommandContractTest` in data/androidTest; use its instrumented class
 selector from the guide, then data connected suite and G2. Record row/receipt/revision
 assertions independently, including actual rollback and reopen—not only returned results.
+
+### Execution progress
+2026-10-09: started on branch `sello-012-expense-commands` after SELLO-011 merged. No
+product decision or dependency was needed, and the schema did not change.
+
+Delivered. `:domain`: `OperationId`, `OperationKind`, `OperationReceipt`,
+`CreateExpense`, the `ExpenseCommands` port with typed `Committed`, `Rejected` and
+`OutcomeUnknown`, and `RecordIdSource`. `:data`: `RoomExpenseCommands`, the input
+digest and the strict receipt mapper. `:app`: a random identifier source and the
+workflow bound in the graph; no screen calls it yet. `docs/development/commands.md`
+states the protocol the next commands reuse.
+
+Choices made during the work, for owner review:
+- The order inside the transaction is generation, replay, validation, write. A
+  command prepared against a replaced history is refused even if it once committed;
+  its original result stays available through lookup.
+- Replaying a committed operation returns its receipt even if the category has been
+  archived since, because nothing new is written.
+- Once the transaction starts it always finishes, and the caller is checked for
+  cancellation before and after. A cancelled caller always gets the cancellation,
+  never a result.
+- A database error before the commit is `Rejected`, because the rollback is certain.
+  Only an error from the commit itself is `OutcomeUnknown`.
+- The store creates the expense's identifier; the caller supplies only the operation's.
+- The input identity is a SHA-256 of the meaningful fields, so a receipt holds no
+  amount or note.
+- No totals are checked when saving: a month would need over nine million maximum
+  records to exceed what a total can hold. Totals are checked where they are computed.
+- `Committed` carries no follow-up state because nothing follows a save yet.
+
+Left for later: the form, drafts and success stamp (SELLO-017); category and limit
+commands (SELLO-013); edit, delete and undo (SELLO-019); the sandbox scenario that
+replays expenses through this workflow (SELLO-024).
 
 Shared definition of done and gates:
 
@@ -2552,7 +2585,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1003,Highest,Backlog,sello-012
+",1003,Highest,In Progress,sello-012
 13,Story,SELLO-013 — Implement category commands and historical monthly budget storage,"Local ID: SELLO-013
 Epic: SELLO-E03
 Increment: MVP

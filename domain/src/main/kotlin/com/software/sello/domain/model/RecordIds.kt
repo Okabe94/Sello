@@ -47,3 +47,15 @@ data class IncomeId private constructor(val value: String) {
         fun of(raw: String): Outcome<IncomeId, RecordIdError> = canonical(raw, ::IncomeId)
     }
 }
+
+/**
+ * The identity of one attempt to change something. The caller chooses it before
+ * submitting and keeps it, so the same attempt can be recognized, replayed or looked
+ * up afterwards instead of being made twice.
+ */
+@ConsistentCopyVisibility
+data class OperationId private constructor(val value: String) {
+    companion object {
+        fun of(raw: String): Outcome<OperationId, RecordIdError> = canonical(raw, ::OperationId)
+    }
+}

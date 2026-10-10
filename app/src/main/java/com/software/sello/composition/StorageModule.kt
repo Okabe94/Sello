@@ -8,6 +8,7 @@ import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.DispatcherProvider
+import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialProfileStore
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
@@ -51,4 +52,5 @@ fun openStorage(
 fun storageModule(storage: FinancialStorage): Module = module {
     single { storage } onClose { it?.close() }
     single<FinancialProfileStore> { storage.profiles }
+    single<ExpenseCommands> { storage.expenseCommands(get(), get(), get()) }
 }

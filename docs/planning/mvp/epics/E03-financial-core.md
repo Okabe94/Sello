@@ -493,7 +493,7 @@ limit, which no screen needs yet; the sandbox scenarios (SELLO-024).
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-001, SELLO-012, SELLO-013, SELLO-004
 - **Gate:** G2
 
@@ -563,3 +563,40 @@ and architecture §4; forecasts cannot be copied from reference drawings.
 Create/run `./gradlew :domain:test --tests '*MonthlyBudgetPolicyTest'` and real-Room
 `MonthlySnapshotConsistencyTest`, then G2. Include approved day-cutoff/rational-rounding
 examples, first/subsequent read faults and observable clock-triggered recomputation.
+
+### Execution progress
+2026-10-10: started on branch `sello-014-budget-snapshots` after SELLO-013 merged. No
+product decision or dependency was needed and the schema did not change.
+
+Delivered. `:domain`: `MonthlySnapshot` and its parts, `MonthlyBudgetPolicy` with the
+approved D03 rules, and the `MonthlySnapshots` port with `Loading`, `Ready` and
+`Failed` states. `:data`: `RoomMonthlySnapshots`, which reads a month in one
+transaction and observes committed changes and the financial day. `:app`: the port
+bound in the graph; no screen uses it yet. `docs/development/monthly-snapshot.md`
+states the contract for the screens.
+
+Choices made during the work, for owner review:
+- The snapshot covers spending and budgets only. Income, net flow and "por asignar"
+  join it with the income tickets (SELLO-021, SELLO-022), which is where the plan
+  puts them; so do per-day series for charts.
+- Each category with a finite limit gets its own remaining and verdict by the same
+  rule as the whole month, as B08 requires. Only the whole month has a daily allowance.
+- An archived category is listed in a month only if it has a limit or spending
+  there. A category that is not archived is always listed, even in months before it
+  was configured.
+- A finished month is "over" only when more than the limit was spent; spending
+  exactly the limit is within it.
+- A month after the current one is refused instead of shown empty.
+- Expenses dated after the financial day are left out and their count is reported,
+  so a clock moved back cannot silently hide money.
+- Sums are done in the app with exact arithmetic over rows read in pages. SQL does
+  not add anything.
+- When the latest read fails, the last good snapshot of that month is kept alongside
+  the failure, with its own date and revision, for the screen to show as older data.
+
+Found on the way: the first device run failed every test because the policy used a
+Java constant that Android 11 does not have. Host tests cannot see that; the device
+tests did, and the constant was replaced.
+
+Left for later: the screens that show this (SELLO-017, SELLO-018, SELLO-022); income
+figures and chart series; the sandbox scenarios that step through days (SELLO-024).

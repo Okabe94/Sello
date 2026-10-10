@@ -57,10 +57,11 @@ read at, all in one transaction. A damaged row fails the whole read.
   The expense command refuses an archived category anyway.
 - **Showing a month:** archived categories stay in the answer so that a month where
   they had a limit or spending remains explainable. Whether one is shown also
-  depends on its expenses that month, which the monthly snapshot adds (SELLO-014).
+  depends on its expenses that month, which the [monthly snapshot](monthly-snapshot.md) decides.
 
 ## Not here yet
 
-- Observing changes, and combining limits with spending: SELLO-014.
+- Combining limits with spending, and observing changes, is the
+  [monthly snapshot](monthly-snapshot.md).
 - Removing a month's own limit to fall back to the default: no screen needs it yet.
 - Carryover of surplus or overspending: post-MVP (SELLO-E09).

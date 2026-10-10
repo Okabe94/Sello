@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.software.sello.data.local.entity.ProfileEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 abstract class ProfileDao {
@@ -15,6 +16,10 @@ abstract class ProfileDao {
     /** At most two rows: enough for the mapper to tell "one" from "more than one". */
     @Query("SELECT * FROM profile ORDER BY id LIMIT 2")
     abstract suspend fun rows(): List<ProfileEntity>
+
+    /** The profile rows now and again after every committed change to them. */
+    @Query("SELECT * FROM profile ORDER BY id LIMIT 2")
+    abstract fun changes(): Flow<List<ProfileEntity>>
 
     /**
      * Moves the revision from [from] to [to] only if the profile is still at

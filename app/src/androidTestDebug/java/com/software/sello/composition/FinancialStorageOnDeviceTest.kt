@@ -5,14 +5,18 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.OverallBudget
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
+import com.software.sello.domain.port.SnapshotState
 import java.time.YearMonth
 import java.time.ZoneId
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -86,6 +90,21 @@ class FinancialStorageOnDeviceTest {
         assertEquals(emptyList<Any>(), budget.value.categories)
         assertEquals(month, budget.value.month)
         assertEquals(Outcome.Success(null), koin.get<CategoryCommands>().find(never.value))
+    }
+
+    @Test
+    fun theMonthlySnapshotOfANewInstallationIsEmptyAndReadInTheStoredZone() = runBlocking {
+        val today = koin.get<FinancialClock>().today.value
+        val snapshots = koin.get<MonthlySnapshots>()
+
+        val read = snapshots.read(YearMonth.from(today.date)) as Outcome.Success
+        val observed = snapshots.observe(YearMonth.from(today.date))
+            .first { it !is SnapshotState.Loading }
+
+        assertEquals(OverallBudget.NoLimit, read.value.overall)
+        assertEquals(emptyList<Any>(), read.value.categories)
+        assertEquals(today.date to today.zone, read.value.asOf to read.value.zone)
+        assertEquals(SnapshotState.Ready(read.value), observed)
     }
 
     @Test

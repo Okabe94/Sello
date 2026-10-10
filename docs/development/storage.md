@@ -39,7 +39,7 @@ of Room.
 | Money | `*_minor` whole minor units plus a `currency` code; only `COP` is valid in the MVP |
 | Date, month | `yyyy-MM-dd`, `yyyy-MM` text, so text order is calendar order |
 | Audit time | Milliseconds since the epoch, from `AuditClock`. A writer truncates to milliseconds first so a value reads back equal |
-| Kind, source, icon | Stable lower-case keys (`finite`, `unlimited`, `salary`, `shopping_cart`); never a label or an enum position |
+| Kind, source, icon | Stable lower-case keys (`finite`, `unlimited`, `paused` for a default only, `salary`, `shopping_cart`); never a label or an enum position |
 | Zone | The IANA identifier, such as `America/Bogota` |
 
 ## Who enforces what
@@ -94,6 +94,4 @@ revision and the receipt in one transaction.
 
 ## Not here yet
 
-- Limit commands, and how archiving pauses a default: SELLO-013 with the two limit
-  tables above.
 - Deletion and undo records: SELLO-019. Restore and reset: SELLO-030, SELLO-031.

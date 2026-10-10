@@ -3,6 +3,7 @@ package com.software.sello.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import com.software.sello.data.local.entity.CategoryEntity
 
 @Dao
@@ -10,6 +11,14 @@ interface CategoryDao {
     /** Fails on a duplicate identifier or name key; nothing is replaced. */
     @Insert
     suspend fun insert(category: CategoryEntity)
+
+    /** Writes every column of the row with this identifier. Returns the rows changed: 1 or 0. */
+    @Update
+    suspend fun update(category: CategoryEntity): Int
+
+    /** The category holding this uniqueness key, archived or not. */
+    @Query("SELECT * FROM category WHERE name_key = :nameKey")
+    suspend fun byNameKey(nameKey: String): CategoryEntity?
 
     @Query("SELECT * FROM category WHERE id = :id")
     suspend fun byId(id: String): CategoryEntity?

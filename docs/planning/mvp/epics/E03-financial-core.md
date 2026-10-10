@@ -368,7 +368,7 @@ for a squash merge.
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-011, SELLO-012, SELLO-004
 - **Gate:** G2
 
@@ -440,6 +440,45 @@ Read architecture §§4/5; user workflows consume these ports in SELLO-016/020.
 Create/run `CategoryCommandContractTest` and `MonthlyBudgetHistoryTest` on real Room,
 plus pure budget-policy tests and G2. Test current/past month commands, concurrent
 edit/archive and rollback with exact retained IDs/amounts.
+
+### Execution progress
+2026-10-10: started on branch `sello-013-category-budget-commands` after SELLO-012
+merged. No product decision or dependency was needed and the schema did not change:
+the tables are those of SELLO-011, with one new stored kind, `paused`, for a default.
+
+Delivered. `:domain`: the seven category commands and their typed outcomes,
+`CategoryReads` with `MonthBudget`, and `CategoryBudgetPolicy`, the one rule for
+what a month's limit is. `:data`: `RoomCategoryCommands`, `RoomCategoryReads`, and
+the steps shared by every command moved into `CommandProtocol.kt`, which the expense
+workflow now uses too. `:app`: both ports bound in the graph; no screen calls them
+yet. `docs/development/categories-and-limits.md` states the contract.
+
+Choices made during the work, for owner review:
+- No row is created per month. A month's limit is worked out from the history of
+  defaults and that month's own limit whenever it is read, so it cannot depend on
+  when the app was open. D04 allows this: materialization is "an implementation
+  mechanism, not a requirement".
+- Archiving records a pause that starts the following month. Unarchiving in the
+  same month removes it; unarchiving later restores the last default from that
+  month and leaves the gap paused.
+- A category and its limits share one version. Changing a limit and renaming at the
+  same time from two places is a conflict for the second.
+- A default cannot be changed while the category is archived; unarchive first. A
+  specific month's limit can still be corrected, and the category renamed.
+- A month's own limit can be set for the current or any past month, including one
+  before the category existed, because that is an explicit correction. It cannot be
+  set for a month that has not started.
+- Renaming to the same name with different capitals or accents is allowed.
+- Archiving an archived category, or unarchiving one that is not, is refused with
+  its own reason instead of counted as success.
+- An operation identifier belongs to one kind of command. Reusing an expense's
+  identifier for a category change, or the reverse, is a conflict.
+- The month read returns archived categories too. Hiding one that has neither a
+  limit nor spending in a month needs spending, so it belongs to SELLO-014.
+
+Left for later: observing changes and combining limits with spending (SELLO-014);
+the first-run and editing screens (SELLO-016, SELLO-020); removing a month's own
+limit, which no screen needs yet; the sandbox scenarios (SELLO-024).
 
 ## SELLO-014 — Calculate consistent Recibo and Resumen budget snapshots
 

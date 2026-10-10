@@ -1,13 +1,10 @@
 package com.software.sello.data.repository
 
-import android.database.sqlite.SQLiteException
-import androidx.room.withTransaction
 import com.software.sello.data.local.SelloDatabase
-import com.software.sello.data.local.entity.OperationReceiptEntity
-import com.software.sello.data.mapper.profileFrom
-import com.software.sello.data.mapper.toCommittedExpense
+import com.software.sello.data.mapper.StoredReceipt
 import com.software.sello.data.mapper.toDomain
 import com.software.sello.data.mapper.toEntity
+import com.software.sello.data.mapper.toStored
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.OperationId
@@ -26,11 +23,6 @@ import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseRejection
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.RecordIdSource
-import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withContext
 
 /**
  * Records expenses in one short transaction each: check the generation, answer a
@@ -45,62 +37,41 @@ class RoomExpenseCommands(
     private val clock: FinancialClock,
     private val ids: RecordIdSource
 ) : ExpenseCommands {
-    override suspend fun create(command: CreateExpense): ExpenseCommandOutcome {
-        currentCoroutineContext().ensureActive()
-        // Once started, the transaction finishes whatever happens to the caller, so a
-        // cancellation can never stop it halfway. Until every statement has run, a
-        // failure means the transaction rolled back. A failure after that came from the
-        // commit itself, and whether it took effect is not known here.
-        var everyStatementRan = false
-        val outcome = try {
-            withContext(NonCancellable) {
-                database.withTransaction { decide(command).also { everyStatementRan = true } }
-            }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (failure: SQLiteException) {
-            if (everyStatementRan) OutcomeUnknown(command.operationId) else rolledBack(failure)
-        } catch (failure: IllegalStateException) {
-            if (everyStatementRan) OutcomeUnknown(command.operationId) else rolledBack(failure)
+    override suspend fun create(command: CreateExpense): ExpenseCommandOutcome =
+        when (val run = database.runCommand { decide(command) }) {
+            is CommandRun.Finished -> run.value
+            is CommandRun.RolledBack -> Rejected(ExpenseRejection.StorageFailed(run.failure))
+            CommandRun.Unknown -> OutcomeUnknown(command.operationId)
         }
-        // A caller cancelled meanwhile is told so, not handed a result it may never see.
-        // The receipt is already durable; `find` or the same command recovers it.
-        currentCoroutineContext().ensureActive()
-        return outcome
-    }
 
-    private fun rolledBack(failure: Exception) =
-        Rejected(failed(StorageFailure.Unavailable(failure.javaClass.simpleName)))
+    private fun failed(failure: StorageFailure) = Rejected(ExpenseRejection.StorageFailed(failure))
 
-    private fun failed(failure: StorageFailure) = ExpenseRejection.StorageFailed(failure)
+    private fun StoredReceipt.committedExpense() =
+        CommittedExpense(receipt, checkNotNull(expenseId) { "Not an expense receipt" })
 
     /** Runs inside the transaction. Every rejection returns before the first write. */
     private suspend fun decide(command: CreateExpense): ExpenseCommandOutcome {
-        val profile = when (val stored = profileFrom(database.profileDao().rows())) {
-            is Outcome.Success -> stored.value
-            is Outcome.Failure -> return Rejected(failed(stored.error))
-        }
-        if (profile.generation != command.generation) {
-            return Rejected(ExpenseRejection.StaleGeneration(profile.generation))
-        }
-
+        val kind = OperationKind.CreateExpense
         val digest = inputDigest(command)
-        database.operationReceiptDao().find(command.operationId.value)?.let { receipt ->
-            return when (val original = receipt.toCommittedExpense()) {
-                is Outcome.Failure -> Rejected(failed(original.error))
+        val start = database.startCommand(command.operationId, command.generation, kind, digest)
+        val profile = when (start) {
+            is CommandStart.Proceed -> start.profile
 
-                is Outcome.Success -> if (receipt.inputDigest == digest) {
-                    Committed(original.value, replayed = true)
-                } else {
-                    Rejected(ExpenseRejection.OperationConflict)
-                }
-            }
+            is CommandStart.Stale -> return Rejected(
+                ExpenseRejection.StaleGeneration(start.current)
+            )
+
+            is CommandStart.Replay -> return Committed(start.original.committedExpense(), true)
+
+            CommandStart.Conflict -> return Rejected(ExpenseRejection.OperationConflict)
+
+            is CommandStart.Damaged -> return failed(start.failure)
         }
 
         val category = database.categoryDao().byId(command.categoryId.value)
             ?: return Rejected(ExpenseRejection.CategoryMissing)
         when (val stored = category.toDomain()) {
-            is Outcome.Failure -> return Rejected(failed(stored.error))
+            is Outcome.Failure -> return failed(stored.error)
 
             is Outcome.Success -> if (stored.value.archived) {
                 return Rejected(ExpenseRejection.CategoryArchived)
@@ -112,14 +83,18 @@ class RoomExpenseCommands(
         }
 
         val now = audit.now()
-        val revision = Math.addExact(profile.revision, 1)
-        val advanced =
-            database.profileDao().advanceRevision(profile.generation, profile.revision, revision)
-        check(advanced == 1) { "The profile changed inside the transaction that read it" }
         val expenseId = when (val id = ExpenseId.of(ids.next())) {
             is Outcome.Success -> id.value
             is Outcome.Failure -> error("The identifier source returned a malformed identifier")
         }
+        val receipt = database.commitCommand(
+            profile,
+            command.operationId,
+            kind,
+            digest,
+            expenseId.value,
+            now
+        )
         val expense = Expense(
             id = expenseId,
             categoryId = command.categoryId,
@@ -132,34 +107,19 @@ class RoomExpenseCommands(
             updatedAt = now
         )
         database.expenseDao().insert(expense.toEntity())
-        val receipt = OperationReceiptEntity(
-            operationId = command.operationId.value,
-            kind = OperationKind.CreateExpense.key,
-            inputDigest = digest,
-            generation = profile.generation,
-            revision = revision,
-            subjectId = expenseId.value,
-            committedAt = now.toEpochMilli()
-        )
-        database.operationReceiptDao().insert(receipt)
-        return when (val committed = receipt.toCommittedExpense()) {
-            is Outcome.Success -> Committed(committed.value, replayed = false)
-            is Outcome.Failure -> error("A receipt written by this command did not read back")
-        }
+        return Committed(receipt.committedExpense(), replayed = false)
     }
 
     override suspend fun find(
         operationId: OperationId
-    ): Outcome<CommittedExpense?, StorageFailure> = try {
-        when (val receipt = database.operationReceiptDao().find(operationId.value)) {
+    ): Outcome<CommittedExpense?, StorageFailure> = reading {
+        when (val receipt = database.operationReceiptDao().find(operationId.value)?.toStored()) {
             null -> Outcome.Success(null)
-            else -> receipt.toCommittedExpense()
+
+            is Outcome.Failure -> receipt
+
+            is Outcome.Success ->
+                Outcome.Success(receipt.value.expenseId?.let { receipt.value.committedExpense() })
         }
-    } catch (cancelled: CancellationException) {
-        throw cancelled
-    } catch (failure: SQLiteException) {
-        Outcome.Failure(StorageFailure.Unavailable(failure.javaClass.simpleName))
-    } catch (failure: IllegalStateException) {
-        Outcome.Failure(StorageFailure.Unavailable(failure.javaClass.simpleName))
     }
 }

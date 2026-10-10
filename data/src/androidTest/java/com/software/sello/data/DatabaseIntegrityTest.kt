@@ -7,6 +7,7 @@ import com.software.sello.data.mapper.decodeAll
 import com.software.sello.data.mapper.toDomain
 import com.software.sello.data.mapper.toEntity
 import com.software.sello.data.repository.RoomFinancialProfileStore
+import com.software.sello.domain.model.AutomaticBudget
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.DefaultLimit
@@ -91,7 +92,13 @@ class DatabaseIntegrityTest {
         }
         refused {
             database.limitDao()
-                .insert(DefaultLimit(missing, october, BudgetLimit.Unlimited).toEntity())
+                .insert(
+                    DefaultLimit(
+                        missing,
+                        october,
+                        AutomaticBudget.Limit(BudgetLimit.Unlimited)
+                    ).toEntity()
+                )
         }
 
         assertEquals(0, database.count("month_limit"))
@@ -121,24 +128,34 @@ class DatabaseIntegrityTest {
         val mercado = category(1, "Mercado")
         database.categoryDao().insert(mercado.toEntity())
         database.limitDao().insert(MonthLimit(mercado.id, october, finite(100_000)).toEntity())
-        database.limitDao().insert(DefaultLimit(mercado.id, october, finite(100_000)).toEntity())
+        database.limitDao().insert(
+            DefaultLimit(mercado.id, october, AutomaticBudget.Limit(finite(100_000))).toEntity()
+        )
 
         refused {
             database.limitDao().insert(MonthLimit(mercado.id, october, finite(120_000)).toEntity())
         }
         refused {
             database.limitDao()
-                .insert(DefaultLimit(mercado.id, october, BudgetLimit.Unlimited).toEntity())
+                .insert(
+                    DefaultLimit(
+                        mercado.id,
+                        october,
+                        AutomaticBudget.Limit(BudgetLimit.Unlimited)
+                    ).toEntity()
+                )
         }
 
-        val month = database.limitDao().forMonth("2026-10", 10).decodeAll { it.toDomain() }
+        val month = database.limitDao().forMonth("2026-10", "", 10).decodeAll { it.toDomain() }
         val defaults = database.limitDao().defaults(uuid(1), 10).decodeAll { it.toDomain() }
         assertEquals(
             Outcome.Success(listOf(MonthLimit(mercado.id, october, finite(100_000)))),
             month
         )
         assertEquals(
-            Outcome.Success(listOf(DefaultLimit(mercado.id, october, finite(100_000)))),
+            Outcome.Success(
+                listOf(DefaultLimit(mercado.id, october, AutomaticBudget.Limit(finite(100_000))))
+            ),
             defaults
         )
     }
@@ -211,8 +228,12 @@ class DatabaseIntegrityTest {
         )
         val monthLimits = listOf(MonthLimit(mercado.id, october, finite(0)))
         val defaults = listOf(
-            DefaultLimit(mercado.id, YearMonth.of(2026, 9), finite(Long.MAX_VALUE)),
-            DefaultLimit(mercado.id, october, BudgetLimit.Unlimited)
+            DefaultLimit(
+                mercado.id,
+                YearMonth.of(2026, 9),
+                AutomaticBudget.Limit(finite(Long.MAX_VALUE))
+            ),
+            DefaultLimit(mercado.id, october, AutomaticBudget.Limit(BudgetLimit.Unlimited))
         )
         val first = files.open()
         val profile = RoomFinancialProfileStore(first) { recordedAt }.establish(bogota)
@@ -247,7 +268,7 @@ class DatabaseIntegrityTest {
         )
         assertEquals(
             Outcome.Success(monthLimits),
-            reopened.limitDao().forMonth("2026-10", 10).decodeAll { it.toDomain() }
+            reopened.limitDao().forMonth("2026-10", "", 10).decodeAll { it.toDomain() }
         )
         assertEquals(
             Outcome.Success(defaults),

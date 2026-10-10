@@ -239,7 +239,9 @@ class StrictMapperTest {
         val cases = limitCases + listOf(
             listOf<Pair<String, Any?>>("month" to "2026-13") to "month",
             listOf<Pair<String, Any?>>("month" to "2026-1") to "month",
-            listOf<Pair<String, Any?>>("month" to "octubre") to "month"
+            listOf<Pair<String, Any?>>("month" to "octubre") to "month",
+            // Only a default can be paused; a month's own limit cannot.
+            listOf("kind" to "paused", "limit_minor" to null) to "kind"
         )
 
         for ((changes, field) in cases) {
@@ -253,7 +255,7 @@ class StrictMapperTest {
             assertEquals(
                 "$changes",
                 damaged("month_limit", "${uuid(1)}/$month", field),
-                database.limitDao().forMonth(month, 10).decodeAll { it.toDomain() }
+                database.limitDao().forMonth(month, "", 10).decodeAll { it.toDomain() }
             )
         }
     }
@@ -264,7 +266,9 @@ class StrictMapperTest {
         database.categoryDao().insert(category(1, "Mercado").toEntity())
         val cases = limitCases + listOf(
             listOf<Pair<String, Any?>>("effective_month" to "2026-00") to "effective_month",
-            listOf<Pair<String, Any?>>("effective_month" to "2026-10-01") to "effective_month"
+            listOf<Pair<String, Any?>>("effective_month" to "2026-10-01") to "effective_month",
+            listOf<Pair<String, Any?>>("kind" to "paused") to "limit_minor",
+            listOf("kind" to "paused", "limit_minor" to null, "currency" to "USD") to "currency"
         )
 
         for ((changes, field) in cases) {

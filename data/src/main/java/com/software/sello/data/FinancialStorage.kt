@@ -3,9 +3,13 @@ package com.software.sello.data
 import android.content.Context
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
+import com.software.sello.data.repository.RoomCategoryCommands
+import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomFinancialProfileStore
 import com.software.sello.domain.port.AuditClock
+import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
@@ -30,6 +34,14 @@ class FinancialStorage internal constructor(
         clock: FinancialClock,
         ids: RecordIdSource
     ): ExpenseCommands = RoomExpenseCommands(database, audit, clock, ids)
+
+    fun categoryCommands(
+        audit: AuditClock,
+        clock: FinancialClock,
+        ids: RecordIdSource
+    ): CategoryCommands = RoomCategoryCommands(database, audit, clock, ids)
+
+    val categoryReads: CategoryReads = RoomCategoryReads(database)
 
     override fun close() = database.close()
 }

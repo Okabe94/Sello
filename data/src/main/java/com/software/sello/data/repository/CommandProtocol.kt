@@ -1,0 +1,150 @@
+package com.software.sello.data.repository
+
+import android.database.sqlite.SQLiteException
+import androidx.room.withTransaction
+import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.entity.OperationReceiptEntity
+import com.software.sello.data.mapper.StoredReceipt
+import com.software.sello.data.mapper.profileFrom
+import com.software.sello.data.mapper.toStored
+import com.software.sello.domain.model.FinancialProfile
+import com.software.sello.domain.model.OperationId
+import com.software.sello.domain.model.OperationKind
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.StorageFailure
+import java.time.Instant
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+
+/*
+ * The steps every command shares. A workflow supplies its own typed command, checks
+ * and writes; these keep the parts that must never differ between them the same.
+ */
+
+/** How a command's transaction ended, before it is turned into a typed outcome. */
+internal sealed interface CommandRun<out T> {
+    /** The transaction committed, or decided to write nothing; [value] says which. */
+    data class Finished<T>(val value: T) : CommandRun<T>
+
+    /** A statement failed, so the transaction rolled back. Nothing was written. */
+    data class RolledBack(val failure: StorageFailure) : CommandRun<Nothing>
+
+    /** Every statement ran and the commit itself failed. Whether it took effect is not known. */
+    data object Unknown : CommandRun<Nothing>
+}
+
+/**
+ * Runs [decide] in one transaction. The caller is checked for cancellation before it
+ * starts and after it ends; in between the transaction always runs to its end, so a
+ * cancellation can never stop it halfway. A cancelled caller is told so instead of
+ * being handed a result it may never see; the receipt is already durable by then.
+ */
+internal suspend fun <T> SelloDatabase.runCommand(decide: suspend () -> T): CommandRun<T> {
+    currentCoroutineContext().ensureActive()
+    var everyStatementRan = false
+    val run = try {
+        withContext(NonCancellable) {
+            CommandRun.Finished(withTransaction { decide().also { everyStatementRan = true } })
+        }
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (failure: SQLiteException) {
+        if (everyStatementRan) CommandRun.Unknown else rolledBack(failure)
+    } catch (failure: IllegalStateException) {
+        if (everyStatementRan) CommandRun.Unknown else rolledBack(failure)
+    }
+    currentCoroutineContext().ensureActive()
+    return run
+}
+
+private fun rolledBack(failure: Exception) =
+    CommandRun.RolledBack(StorageFailure.Unavailable(failure.javaClass.simpleName))
+
+/** A read that is not a command: a database error becomes a typed failure. */
+internal suspend fun <T> reading(
+    read: suspend () -> Outcome<T, StorageFailure>
+): Outcome<T, StorageFailure> = try {
+    read()
+} catch (cancelled: CancellationException) {
+    throw cancelled
+} catch (failure: SQLiteException) {
+    Outcome.Failure(StorageFailure.Unavailable(failure.javaClass.simpleName))
+} catch (failure: IllegalStateException) {
+    Outcome.Failure(StorageFailure.Unavailable(failure.javaClass.simpleName))
+}
+
+/** What the first two steps of a command found, before any workflow-specific check. */
+internal sealed interface CommandStart {
+    /** Nothing committed under this operation yet; continue against [profile]. */
+    data class Proceed(val profile: FinancialProfile) : CommandStart
+
+    /** The history was replaced since the command was prepared. */
+    data class Stale(val current: Long) : CommandStart
+
+    /** This operation already committed with this very input. */
+    data class Replay(val original: StoredReceipt) : CommandStart
+
+    /** This operation already committed something else. */
+    data object Conflict : CommandStart
+
+    data class Damaged(val failure: StorageFailure.Integrity) : CommandStart
+}
+
+/**
+ * Step 1, the generation: a command prepared against a replaced history is refused
+ * even if it once committed. Step 2, replay: the same kind and input is the original
+ * result; anything else under that identifier is a conflict.
+ */
+internal suspend fun SelloDatabase.startCommand(
+    operationId: OperationId,
+    generation: Long,
+    kind: OperationKind,
+    digest: String
+): CommandStart {
+    val profile = when (val stored = profileFrom(profileDao().rows())) {
+        is Outcome.Success -> stored.value
+        is Outcome.Failure -> return CommandStart.Damaged(stored.error)
+    }
+    if (profile.generation != generation) return CommandStart.Stale(profile.generation)
+    val receipt = operationReceiptDao().find(operationId.value)
+        ?: return CommandStart.Proceed(profile)
+    return when (val original = receipt.toStored()) {
+        is Outcome.Failure -> CommandStart.Damaged(original.error)
+
+        is Outcome.Success -> {
+            val same = original.value.receipt.kind == kind && original.value.inputDigest == digest
+            if (same) CommandStart.Replay(original.value) else CommandStart.Conflict
+        }
+    }
+}
+
+/** The last step: advance the revision by one and store the receipt. Returns the receipt. */
+internal suspend fun SelloDatabase.commitCommand(
+    profile: FinancialProfile,
+    operationId: OperationId,
+    kind: OperationKind,
+    digest: String,
+    subjectId: String,
+    at: Instant
+): StoredReceipt {
+    val revision = Math.addExact(profile.revision, 1)
+    val advanced = profileDao().advanceRevision(profile.generation, profile.revision, revision)
+    check(advanced == 1) { "The profile changed inside the transaction that read it" }
+    val receipt = OperationReceiptEntity(
+        operationId = operationId.value,
+        kind = kind.key,
+        inputDigest = digest,
+        generation = profile.generation,
+        revision = revision,
+        subjectId = subjectId,
+        committedAt = at.toEpochMilli()
+    )
+    operationReceiptDao().insert(receipt)
+    return when (val stored = receipt.toStored()) {
+        is Outcome.Success -> stored.value
+        is Outcome.Failure -> error("A receipt written by this command did not read back")
+    }
+}

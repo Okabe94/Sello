@@ -4,7 +4,14 @@ import java.time.Instant
 
 /** What an operation did. [key] is the stable stored spelling. */
 enum class OperationKind(val key: String) {
-    CreateExpense("expense.create")
+    CreateExpense("expense.create"),
+    CreateCategory("category.create"),
+    RenameCategory("category.rename"),
+    ChangeCategoryIcon("category.change_icon"),
+    ArchiveCategory("category.archive"),
+    UnarchiveCategory("category.unarchive"),
+    SetDefaultLimit("category.set_default_limit"),
+    SetMonthLimit("category.set_month_limit")
 }
 
 /**

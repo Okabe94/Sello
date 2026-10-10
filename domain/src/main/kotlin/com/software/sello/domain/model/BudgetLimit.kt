@@ -32,11 +32,23 @@ sealed interface BudgetLimit {
     }
 }
 
-/** The limit a category has from [effectiveMonth] onwards, until a later entry replaces it. */
+/** What a category is given automatically each month. */
+sealed interface AutomaticBudget {
+    data class Limit(val limit: BudgetLimit) : AutomaticBudget
+
+    /** Nothing: the category is archived, so no budget is created for it. */
+    data object Paused : AutomaticBudget
+}
+
+/**
+ * What a category gets from [effectiveMonth] onwards, until a later entry replaces
+ * it. Entries are never rewritten for past months, which is how an earlier month
+ * keeps the limit it had even if nobody opened the app then.
+ */
 data class DefaultLimit(
     val categoryId: CategoryId,
     val effectiveMonth: YearMonth,
-    val limit: BudgetLimit
+    val budget: AutomaticBudget
 )
 
 /** The limit set for one category in one month. It wins over any default for that month. */

@@ -6,6 +6,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.software.sello.feature.category.CategoryEditorViewModel
+import com.software.sello.feature.expense.ExpenseEntryViewModel
 import com.software.sello.feature.recibo.ReciboViewModel
 import com.software.sello.navigation.MonthSession
 import com.software.sello.navigation.ShellViewModel
@@ -29,6 +30,17 @@ fun presentationModule(): Module = module {
 fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     initializer { ShellViewModel(createSavedStateHandle(), koin.get(), koin.get()) }
     initializer { ReciboViewModel(koin.get(), koin.get(), koin.get()) }
+    initializer {
+        ExpenseEntryViewModel(
+            createSavedStateHandle(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get()
+        )
+    }
     initializer {
         CategoryEditorViewModel(
             createSavedStateHandle(),

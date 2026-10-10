@@ -14,6 +14,10 @@ interface ExpenseDao {
     @Query("SELECT MAX(sequence) FROM expense")
     suspend fun highestSequence(): Long?
 
+    /** The category of the expense added last, or null when there is no expense. */
+    @Query("SELECT category_id FROM expense ORDER BY sequence DESC LIMIT 1")
+    suspend fun lastAddedCategory(): String?
+
     @Query("SELECT * FROM expense WHERE id = :id")
     suspend fun byId(id: String): ExpenseEntity?
 

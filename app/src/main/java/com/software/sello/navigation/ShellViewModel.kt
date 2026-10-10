@@ -29,7 +29,9 @@ data class ShellState(
     val pickerYear: Int,
     val pendingEntry: EntryRequest?,
     /** An entry was asked for and there is no category to record it in yet. */
-    val entryNeedsCategory: Boolean = false
+    val entryNeedsCategory: Boolean = false,
+    /** An entry was asked for and can be recorded: the form should open. */
+    val entryReady: Boolean = false
 )
 
 sealed interface ShellAction {
@@ -44,6 +46,9 @@ sealed interface ShellAction {
     data object EnteredBackground : ShellAction
 
     data object ReturnedToForeground : ShellAction
+
+    /** The "Anotar" action: record an expense, with nothing filled in. */
+    data object StartEntry : ShellAction
 
     /** A link that opened the app. Anything that is not an entry link is ignored. */
     data class OpenLink(val link: String?) : ShellAction
@@ -90,7 +95,8 @@ class ShellViewModel(
             monthPickerOpen = saved[KEY_PICKER] ?: false,
             pickerYear = saved[KEY_PICKER_YEAR] ?: selected.year,
             pendingEntry = pendingEntry(),
-            entryNeedsCategory = saved[KEY_NEEDS_CATEGORY] ?: false
+            entryNeedsCategory = saved[KEY_NEEDS_CATEGORY] ?: false,
+            entryReady = saved[KEY_ENTRY_READY] ?: false
         )
     }
 
@@ -116,9 +122,14 @@ class ShellViewModel(
 
             ShellAction.ReturnedToForeground -> session.returnedToForeground()
 
+            ShellAction.StartEntry -> {
+                hold(EntryRequest(categoryId = null, amount = null))
+                routeEntry()
+            }
+
             is ShellAction.OpenLink -> EntryLinks.parse(action.link)?.let { request ->
                 hold(request)
-                checkThereIsACategory()
+                routeEntry()
             }
 
             ShellAction.CategoryPrerequisiteShown -> saved[KEY_NEEDS_CATEGORY] = false
@@ -127,6 +138,8 @@ class ShellViewModel(
                 saved[KEY_ENTRY_CATEGORY] = null
                 saved[KEY_ENTRY_AMOUNT] = null
                 saved[KEY_ENTRY] = NO_ENTRY
+                saved[KEY_ENTRY_READY] = false
+                saved[KEY_NEEDS_CATEGORY] = false
             }
         }
         val session = session.save()
@@ -136,17 +149,17 @@ class ShellViewModel(
     }
 
     /**
-     * An entry needs a category that can take it. If there is none, the person is sent
-     * to create one. A failed read sends nobody anywhere: the screen underneath
-     * already shows that the data could not be read.
+     * An entry needs a category that can take it. With one, the entry form opens;
+     * without, the person is sent to create one first. A failed read sends nobody
+     * anywhere: the screen underneath already shows that the data could not be read.
      */
-    private fun checkThereIsACategory() {
+    private fun routeEntry() {
         viewModelScope.launch {
             val read = categories.monthBudget(session.currentMonthNow) as? Outcome.Success
-            if (read != null && read.value.categories.none { !it.category.archived }) {
-                saved[KEY_NEEDS_CATEGORY] = true
-                changes.update { it + 1 }
-            }
+                ?: return@launch
+            val canRecord = read.value.categories.any { !it.category.archived }
+            saved[if (canRecord) KEY_ENTRY_READY else KEY_NEEDS_CATEGORY] = true
+            changes.update { it + 1 }
         }
     }
 
@@ -183,5 +196,6 @@ class ShellViewModel(
         private const val KEY_ENTRY_CATEGORY = "shell.entry.category"
         private const val KEY_ENTRY_AMOUNT = "shell.entry.amount"
         private const val KEY_NEEDS_CATEGORY = "shell.entry.needsCategory"
+        private const val KEY_ENTRY_READY = "shell.entry.ready"
     }
 }

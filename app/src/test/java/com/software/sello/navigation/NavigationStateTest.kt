@@ -262,6 +262,27 @@ class NavigationStateTest {
     }
 
     @Test
+    fun anotarOpensTheEntryFormWhenThereIsACategoryAndAsksForOneWhenThereIsNot() {
+        val empty = shell()
+        empty.onAction(ShellAction.StartEntry)
+
+        categories.categories = listOf(categories.category(1, "Mercado"))
+        val withCategory = shell()
+        withCategory.onAction(ShellAction.StartEntry)
+        val ready = withCategory.state.value
+        withCategory.onAction(ShellAction.EntryTaken)
+
+        assertEquals(true to false, empty.state.value.run { entryNeedsCategory to entryReady })
+        assertEquals(false to true, ready.entryNeedsCategory to ready.entryReady)
+        // Nothing prefilled: the form starts empty.
+        assertEquals(EntryRequest(null, null), ready.pendingEntry)
+        assertEquals(
+            ShellState(october, october, false, 2026, pendingEntry = null),
+            withCategory.state.value
+        )
+    }
+
+    @Test
     fun theMonthChangeReachesTheFrameWhileItIsOpen() {
         val shell = shell()
 

@@ -18,6 +18,14 @@ data object ReciboRoute
 @Serializable
 data class CategoryEditorRoute(val forEntry: Boolean = false)
 
+/**
+ * The entry form for one expense. Both arguments are hints for the draft that came
+ * from outside (a link, or a category just created): the form checks them like any
+ * other input and may ignore them. Neither is a record or a result.
+ */
+@Serializable
+data class ExpenseEntryRoute(val categoryId: String? = null, val amount: String? = null)
+
 /** Where the editor leaves the new category's identifier for the screen that opened it. */
 const val CREATED_CATEGORY_RESULT = "result.createdCategoryId"
 

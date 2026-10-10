@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -17,11 +18,11 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.designsystem.component.SCAFFOLD_BAR_TAG
-import com.software.sello.designsystem.component.SCAFFOLD_DOCK_TAG
 import com.software.sello.designsystem.component.SCAFFOLD_RAIL_TAG
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.month.monthNames
@@ -95,13 +96,16 @@ class ShellScreenLayoutTest {
     }
 
     @Test
-    fun withOneTabThereIsNoTabBarRailOrDockInAnyWindow() {
+    fun withOneTabThereIsNoTabBarOrRailAndTheDockAsksToRecordAnExpense() {
         showInWindow(900, 700, pickerOpen = false)
 
         rule.onNodeWithTag(SCAFFOLD_BAR_TAG).assertDoesNotExist()
         rule.onNodeWithTag(SCAFFOLD_RAIL_TAG).assertDoesNotExist()
-        rule.onNodeWithTag(SCAFFOLD_DOCK_TAG).assertDoesNotExist()
         rule.onNodeWithTag("content").assertExists()
+        rule.onNodeWithContentDescription("Anotar un gasto")
+            .performSemanticsAction(SemanticsActions.OnClick)
+
+        assertEquals(listOf<ShellAction>(ShellAction.StartEntry), actions)
     }
 
     @Test

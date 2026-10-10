@@ -4,6 +4,7 @@ import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.repository.RoomCategoryCommands
 import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
+import com.software.sello.data.repository.RoomExpenseReads
 import com.software.sello.data.repository.RoomFinancialProfileStore
 import com.software.sello.data.repository.RoomMonthlySnapshots
 import com.software.sello.domain.model.BudgetLimit
@@ -22,6 +23,7 @@ import com.software.sello.domain.port.CommittedCategoryChange
 import com.software.sello.domain.port.CreateCategory
 import com.software.sello.domain.port.CreateExpense
 import com.software.sello.domain.port.ExpenseCommands
+import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialDay
 import com.software.sello.domain.port.MonthlySnapshots
@@ -59,6 +61,7 @@ class TestLedger(private val files: DatabaseFiles) {
     lateinit var expenses: ExpenseCommands
     lateinit var reads: CategoryReads
     lateinit var snapshots: MonthlySnapshots
+    lateinit var expenseReads: ExpenseReads
 
     /** A fresh handle on the same file, as after a process restart. */
     fun open() {
@@ -67,6 +70,7 @@ class TestLedger(private val files: DatabaseFiles) {
         expenses = RoomExpenseCommands(database, { audit }, clock, ids)
         reads = RoomCategoryReads(database)
         snapshots = RoomMonthlySnapshots(database, clock)
+        expenseReads = RoomExpenseReads(database)
     }
 
     /** A new installation: a profile and nothing else. */

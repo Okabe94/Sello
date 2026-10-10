@@ -29,14 +29,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.software.sello.R
 import com.software.sello.designsystem.component.Blotter
 import com.software.sello.designsystem.component.MonthSwitcher
+import com.software.sello.designsystem.component.SelloDock
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.category.CategoryEditorRoot
+import com.software.sello.feature.expense.ExpenseEntryRoot
 import com.software.sello.feature.recibo.ReciboRoot
 import com.software.sello.presentation.month.MonthNames
 import com.software.sello.presentation.month.monthNames
@@ -65,7 +68,8 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 ReciboRoot(viewModels, padding) { navigation.navigate(CategoryEditorRoute()) }
             }
         }
-        composable<CategoryEditorRoute> {
+        composable<CategoryEditorRoute> { entry ->
+            val forEntry = entry.toRoute<CategoryEditorRoute>().forEntry
             CategoryEditorRoot(viewModels) { createdId ->
                 val onEditor =
                     navigation.currentBackStackEntry?.destination?.hasRoute<CategoryEditorRoute>()
@@ -76,7 +80,21 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                             ?.set(CREATED_CATEGORY_RESULT, createdId)
                     }
                     navigation.popBackStack()
+                    // The category was created so that an expense could be recorded:
+                    // carry on to that, with the new category chosen.
+                    if (createdId != null && forEntry) {
+                        val amount = state.pendingEntry?.amount?.money?.minorUnits?.toString()
+                        shell.onAction(ShellAction.EntryTaken)
+                        navigation.navigate(ExpenseEntryRoute(createdId, amount))
+                    }
                 }
+            }
+        }
+        composable<ExpenseEntryRoute> {
+            ExpenseEntryRoot(viewModels) {
+                val onEntry =
+                    navigation.currentBackStackEntry?.destination?.hasRoute<ExpenseEntryRoute>()
+                if (onEntry == true) navigation.popBackStack()
             }
         }
     }
@@ -86,6 +104,18 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
         if (state.entryNeedsCategory) {
             shell.onAction(ShellAction.CategoryPrerequisiteShown)
             navigation.navigate(CategoryEditorRoute(forEntry = true)) { launchSingleTop = true }
+        }
+    }
+    LaunchedEffect(state.entryReady) {
+        if (state.entryReady) {
+            val request = state.pendingEntry
+            shell.onAction(ShellAction.EntryTaken)
+            navigation.navigate(
+                ExpenseEntryRoute(
+                    categoryId = request?.categoryId?.value,
+                    amount = request?.amount?.money?.minorUnits?.toString()
+                )
+            ) { launchSingleTop = true }
         }
     }
     // Declared after the content so that it is asked before the navigation host: an
@@ -99,7 +129,7 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
 /**
  * The frame: the month in the title, the content, and the month picker. The picker is
  * a bottom sheet, or a side panel beside the content in a window wide enough for one.
- * There is no tab bar while there is one tab, and no dock until the entry form exists.
+ * There is no tab bar while there is one tab. The dock asks to record an expense.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,6 +156,11 @@ fun ShellScreen(
                 )
             },
             blotter = Blotter.Short,
+            dock = SelloDock(
+                label = stringResource(R.string.dock_entry_label),
+                actionLabel = stringResource(R.string.dock_entry_action),
+                onClick = { onAction(ShellAction.StartEntry) }
+            ),
             secondaryPane = if (state.monthPickerOpen && sidePanel) {
                 { padding ->
                     Column(

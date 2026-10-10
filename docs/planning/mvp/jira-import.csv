@@ -2996,7 +2996,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 1004,Epic,SELLO-E04 — First complete financial walking slice,"Local ID: SELLO-E04
 Increment: MVP
 Goal: Turn the greeting into a usable category → expense → receipt → Recibo journey.
-Exit: Users can start empty, create a category, save an expense once, and see truthful persisted budget/detail data after restart.",,Highest,Backlog,sello-e04
+Exit: Users can start empty, create a category, save an expense once, and see truthful persisted budget/detail data after restart.",,Highest,In Progress,sello-e04
 15,Story,"SELLO-015 — Introduce the app shell, month session and restored navigation","Local ID: SELLO-015
 Epic: SELLO-E04
 Increment: MVP
@@ -3006,7 +3006,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-005, SELLO-006, SELLO-009, SELLO-004
 - **Gate:** G2
 
@@ -3063,6 +3063,68 @@ clock ownership from SELLO-005 and adaptive primitives from SELLO-009. Read
 Create/run `*MonthSessionTest`, `*NavigationStateTest`, `*DeepLinkDraftTest`; run app
 connected Root/back/keyboard tests and G2. Follow the guide for eligible process death,
 not just rotation, and record compact/landscape/expanded behavior.
+
+### Execution progress
+2026-10-10: started on branch `sello-015-app-shell` after SELLO-014 merged and E03 closed.
+
+Delivered in `:app`: typed route and tab list, `MonthSession`, `ShellViewModel` with
+restoration, the back order, `EntryLinks`, `SelloAppRoot` and `ShellScreen` on the
+design system's scaffold with an adaptive month picker, a minimal honest Recibo fed
+by the monthly snapshot, and one factory for view models. The greeting is gone.
+`docs/development/app-shell.md` states the contracts for the screens that follow.
+In `:design-system`, a device test for the keyboard hiding the dock and tab bar,
+which had none.
+
+Dependencies added to `:app`, all at versions that leave every existing pin as it
+was: Navigation Compose 2.9.8 (the architecture's default engine; 2.10 was not used
+because it would force newer Compose, lifecycle and activity versions than those
+pinned), lifecycle `runtime-compose`, `viewmodel-compose` and `viewmodel-savedstate`
+at the 2.9.4 already resolved, and the Kotlin serialization plugin with
+`kotlinx-serialization-core` 1.11.0, which typed routes need. Only `app/gradle.lockfile` changed.
+
+Choices made during the work, for owner review:
+- No tab bar with a single tab, and no ""Anotar"" dock until the entry form exists
+  (SELLO-017). A button that opens nothing would be a fake.
+- Recibo already reads the real monthly snapshot instead of showing fixed text, so
+  what it says is true: empty explanation, exact total, or error with retry.
+  SELLO-018 replaces this minimal content.
+- The month follows the current month across a month change unless an earlier
+  month was picked. Picking the current month goes back to following.
+- ""In the background"" means the screen is no longer visible. Returning after a
+  device restart counts as a long absence.
+- The 30-minute rule also holds when the app was killed in the background: the
+  moment it left is saved with the selection.
+- The entry link is `sello://anotar?categoria=…&monto=…`. It is parsed and kept as
+  a pending request, but the manifest does not declare it yet: declaring it before
+  the form exists would let other apps open Sello on a link that does nothing visible.
+- A link that is not a valid address, or not exactly that shape, is ignored whole.
+  Inside a valid link, an invalid amount or category is dropped and the rest kept.
+- The month picker is a bottom sheet, and a side panel in a window wide enough for one.
+  It goes back as far as the year 2000.
+- View models are built by one factory in the composition package instead of adding
+  Koin's Android artifact, which keeps Koin out of the screens as the architecture
+  rule requires.
+
+Found on the way: on the real process-death check the picked month first seemed
+lost. The app was right; the check had returned to it with a different kind of
+launch than it was started with, which makes Android open a second copy. Repeated
+through the launcher both times, the month and the open picker were restored.
+
+Left for later: the dock, the entry form and the link declaration (SELLO-017);
+first-run category creation and its button on the empty Recibo (SELLO-016); the
+real Recibo content (SELLO-018); the Resumen tab (SELLO-022); showing a database
+that cannot be opened at startup as a screen instead of a crash, noted in SELLO-011,
+which still needs an owner: it fits this shell and is small, but was not in this
+ticket's acceptance.
+
+### Delivery evidence
+- **Revision:** branch `sello-015-app-shell`; tested snapshot is commit `946ded7`, with only this ticket's status and evidence text, the retained report, the captures and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** no Patrimonio, widget, recurrence or disabled Resumen destination → `NavigationStateTest.onlyReciboIsExposedAsATab`, and on the installed app `ShellOnDeviceTest.aNewInstallationOpensOnAnHonestEmptyReciboForTheCurrentMonth` finds no tab bar and no dock. Back closes a sheet or detail before Recibo and exit → `backClosesAPanelThenADetailThenReturnsToReciboThenLeaves`, `ShellOnDeviceTest.backClosesTheMonthPickerBeforeItLeavesTheApp` (sheet) and `WideWindowBackTest.backClosesTheMonthPanelBesideTheContentWithoutLeaving` (side panel, real root and view models). Month cannot exceed the current month → `MonthSessionTest.aMonthAfterTheCurrentOneCannotBeSelected`, `theMonthGridDisablesMonthsAfterTheCurrentOne` and, on device, `anEarlierMonthCanBePickedAndALaterOneCannot`. More than 30 minutes resets the month, not drafts → `exactlyThirtyMinutesAwayKeepsTheSelection`, `anythingOverThirtyMinutesAwayResetsToTheCurrentMonth` (30 minutes plus one millisecond) and `aLongAbsenceResetsTheMonthAndLeavesThePendingEntryAlone`. Financial clock and inactivity timer have distinct ownership → `movingFinancialTimeIsNotTimeInTheBackground`, and the root reports leaving and returning in `leavingAndReturningAreReportedToTheMonthSession`. Process restoration → `theMonthPickerAndPendingEntryComeBackAfterTheProcessIsKilled`, `aProcessRestoredAfterALongAbsenceResetsTheMonthOnly`, `savedValuesThatWereTamperedWithDoNotBecomeARequest`, plus the real kill described under Device. Deep links only validate and prefill → `DeepLinkDraftTest` (15 invalid amounts, 10 invalid categories, 22 strings that are not entry links, repeated and unknown parameters) and on device `anEntryLinkOnlyLeavesARequestWaitingAndCreatesNoMoney` and `aHostileOrForeignLinkOpensTheAppAndIsOtherwiseIgnored`, which count the financial rows afterwards. Unknown category stays unselected → the request carries only a well-formed identifier; whether it exists is the form's check (SELLO-017), as the document says. Keyboard hides dock and tab bar and does not cover focused content → design-system `KeyboardInsetsTest`. Compact and expanded windows → `ShellScreenLayoutTest` at 360×700, 760×400, 900×700 and at font scale 2.0. Honest first-run Recibo, no fake success → `ReciboViewModelTest` and `ReciboScreenTest` (loading, first run, exact spending, failure with retry and no amount).
+- **Red / Green:** the host tests were written together with the code, so the first run was not a red against a naive version; two of them failed on mistakes in the tests (a collector that never ran, and links with raw spaces, which the parser rightly refuses whole) and were corrected. The first device run failed three tests: the keyboard test sent its insets to the window frame, which consumes them, instead of to the Compose view; two layout tests looked a month cell up by its short label although a cell is announced by its full name; and one exposed a real defect, the month sheet opening half-way and not scrolling, so months were cut off at twice the font size. The sheet now opens whole and scrolls. Thirty-five mutations of the finished code were then run. Thirty-three failed the expected tests at once, across the session (30-minute boundary, restart while away, future month, current month pinned, leaving not recorded, away time tied to financial time, month or leaving moment not restored), the back order, the link parser (any scheme, any host, path, user info, port, fragment, no length limit, first of a repeated value, amount outside the record range), the shell state (picker left open, year uncapped, taken entry kept, session not restored or not saved, second link ignored), the month grid, Recibo (empty month shown as spending, older figures shown on failure, retry doing nothing, month change not followed) and the root (panel not closed by Back, picker always a sheet). Two survived and each got a test that now fails them: the picker reopening on a stale year, and the root never reporting that the app left the foreground. The first hosted run of the pull request (38050007885) then failed three of the new device tests, all for one reason: they asserted that things were visible on screen, and the hosted emulator's screen is smaller than the local one. No app code was wrong. The wide-window cases now check what is laid out and where instead of what is on screen, the phone cases use the device's own window, and the keyboard test uses a fixed phone-sized stage; they were re-run locally on 320×640 and normal screens before the gate was repeated.
+- **Gate results:** local `./scripts/verify-ticket SELLO-015 --gate G2` passed, on the final commit after the test corrections: 194 host tests (79 domain, 78 app, 30 design-system, 4 data, 3 catalog), 180 device tests on an isolated API 30 emulator (88 data, 33 app, 49 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, all in `:app`: the 24 present before and five ""newer version available"" notes for the five entries this ticket added, each deliberately held at the version that fits the existing pins. `app/gradle.lockfile` gained Navigation 2.9.8, `lifecycle-viewmodel-compose` 2.9.4 and the serialization plugin, and `kotlinx-serialization` moved from the 1.7.3 that came in indirectly to the declared 1.11.0. No other lock file changed.
+- **Quality run:** run 20261010T121327Z-3e269c1b; SELLO-015 G2 passed; HEAD 946ded7, inputs sha256 03ca1960c014; report docs/planning/mvp/quality-reports/SELLO-015.json sha256 cb54e08c027b2dad309d3691520d94f28f75bd1eb808af2960b7340d60cbd1a7
+- **Device / Artifact:** the debug app on the API 30 emulator (1080×2340, Cobalto light, font scale 1.0), started from the launcher on cleared data. It opened on the empty Recibo for October 2026. March 2025 was picked and the picker reopened; then Home, `am kill` (process id 10678 gone), and back through the launcher: a new process (10950) showed the picker open on 2025 with March selected, and Back closed it to ""Marzo 2025"" without leaving. Rotated to landscape, the month and picker were kept. A `sello://anotar?monto=48700` link opened the app and left zero categories, expenses and receipts and revision 0. Six captures are in `docs/testing/evidence/SELLO-015/`. An expanded window was verified by the layout and back tests, not captured, because it is wider than the emulator's screen.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
 
 Shared definition of done and gates:
 
@@ -3131,7 +3193,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1004,Highest,Backlog,sello-015
+",1004,Highest,Done,sello-015
 16,Story,SELLO-016 — Deliver first-run category creation and amount-entry prerequisites,"Local ID: SELLO-016
 Epic: SELLO-E04
 Increment: MVP

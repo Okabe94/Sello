@@ -46,8 +46,10 @@ zone change triggers a recompute but cannot change the financial zone.
 
 ## Composition
 
-`composition/PlatformModule.kt` is the only place that knows the adapters, and
-`composition/StorageModule.kt` the only place that knows `:data`. Every
+`composition/PlatformModule.kt` is the only place that knows the adapters,
+`composition/StorageModule.kt` the only place that knows `:data`, and
+`composition/PresentationModule.kt` the only place that builds view models
+([app shell](app-shell.md)). Every
 collaborator is a required constructor parameter and the financial clock is
 created with the graph, so a missing binding or an uninitialized zone fails at
 startup. New workflows are bound when they exist; do not register a placeholder

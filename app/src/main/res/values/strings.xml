@@ -7,4 +7,41 @@
     <string name="money_other_currency">%1$s %2$s</string>
     <string name="money_negative">menos %1$s</string>
     <string name="money_positive">más %1$s</string>
+    <string name="month_title">%1$s %2$d</string>
+    <string-array name="month_names">
+        <item>Enero</item>
+        <item>Febrero</item>
+        <item>Marzo</item>
+        <item>Abril</item>
+        <item>Mayo</item>
+        <item>Junio</item>
+        <item>Julio</item>
+        <item>Agosto</item>
+        <item>Septiembre</item>
+        <item>Octubre</item>
+        <item>Noviembre</item>
+        <item>Diciembre</item>
+    </string-array>
+    <string-array name="month_names_short">
+        <item>Ene</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Abr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Ago</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dic</item>
+    </string-array>
+    <string name="month_picker_open">Cambiar de mes. Mes actual: %1$s</string>
+    <string name="month_picker_previous_year">Año anterior</string>
+    <string name="month_picker_next_year">Año siguiente</string>
+    <string name="month_picker_title">Elige un mes</string>
+    <string name="recibo_first_run_title">Tu recibo está en blanco</string>
+    <string name="recibo_first_run_body">Aún no hay categorías. Cuando crees la primera, aquí verás cuánto llevas gastado y cuánto te queda este mes.</string>
+    <string name="recibo_spent">Has gastado</string>
+    <string name="recibo_failed">No pudimos leer tus datos de este mes.</string>
 </resources>

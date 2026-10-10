@@ -16,6 +16,8 @@ a deliberately smaller, tested MVP and the Sello visual language.
   file ownership, tools, verification procedures and source library.
 - [Time and composition](docs/development/time-and-composition.md): the three clocks,
   the financial zone, the Koin composition root and who cancels what.
+- [Financial storage](docs/development/storage.md): the Room tables, what the database
+  and the mappers each enforce, and how to change the schema.
 - [Quality flow](docs/planning/mvp/QUALITY_FLOW.md): `./scripts/verify-ticket`, the
   evidence every ticket needs and what CI enforces.
 - [Local visual reference](docs/design/README.md): Sello snapshot and provenance.

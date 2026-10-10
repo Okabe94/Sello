@@ -2,15 +2,25 @@ package com.software.sello.composition
 
 import android.app.Application
 import com.software.sello.platform.ProcessFinancialZone
+import com.software.sello.platform.SystemAuditClock
+import com.software.sello.platform.SystemDispatcherProvider
 import com.software.sello.platform.deviceZone
 import org.koin.core.context.startKoin
 
 class SelloApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Explicit initialization: the device zone becomes the financial zone once per
-        // process. SELLO-011 supplies the persisted zone here instead.
-        val financialZone = ProcessFinancialZone().apply { initialize(deviceZone()) }
-        startKoin { modules(productionModules(applicationContext, financialZone)) }
+        // The financial zone comes from the database: the device zone is stored on first
+        // use and never read again, so a later trip does not move recorded days.
+        val opened = openStorage(
+            applicationContext,
+            deviceZone(),
+            SystemDispatcherProvider(),
+            SystemAuditClock()
+        )
+        val financialZone = ProcessFinancialZone().apply { initialize(opened.profile.zone) }
+        startKoin {
+            modules(productionModules(applicationContext, financialZone, opened.storage))
+        }
     }
 }

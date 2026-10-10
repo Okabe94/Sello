@@ -6,8 +6,9 @@ import java.time.ZoneId
  * The financial zone for this process. It is set once, explicitly, at startup;
  * a later device zone (travel) does not replace it, so effective dates do not move.
  *
- * Nothing is persisted here. SELLO-011 stores the zone in Room and supplies it at
- * startup instead of the device zone; until then each process start initializes it again.
+ * Nothing is persisted here: the composition root reads the zone stored in the
+ * database and passes it in. Only the first start of a new installation passes the
+ * device zone, at the moment it is stored.
  */
 class ProcessFinancialZone {
     private var initialized: ZoneId? = null
@@ -15,7 +16,7 @@ class ProcessFinancialZone {
     val zone: ZoneId
         get() = checkNotNull(initialized) { "Financial zone was read before initialize()" }
 
-    /** Returns the financial zone in effect: [deviceZone] on the first call, the existing zone afterwards. */
+    /** Returns the financial zone in effect: [zone] on the first call, the existing zone afterwards. */
     @Synchronized
-    fun initialize(deviceZone: ZoneId): ZoneId = initialized ?: deviceZone.also { initialized = it }
+    fun initialize(zone: ZoneId): ZoneId = initialized ?: zone.also { initialized = it }
 }

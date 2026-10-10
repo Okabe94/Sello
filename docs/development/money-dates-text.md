@@ -23,7 +23,7 @@ never substitutes zero, empty or a "repaired" value.
 - **Controls (SELLO-008):** the keypad emits ungrouped digits and stops at
   `TransactionAmount.MAX_DIGITS`; pasted text goes through `CopAmountInput.parse`
   unchanged. Show the error for the original text; do not strip characters first.
-- **Room (SELLO-011) and backup (SELLO-028/030):** decode a stored amount with
+- **Room ([storage](storage.md)) and backup (SELLO-028/030):** decode a stored amount with
   `TransactionAmount.of` and a stored name with `CategoryName.of`. A failure is a typed
   read or validation failure for the whole operation, not a skipped or clipped record.
   Enforce category uniqueness on `uniquenessKey` with a real constraint.

@@ -128,7 +128,7 @@ to Done for a squash merge.
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-010, SELLO-005, SELLO-004
 - **Gate:** G2
 
@@ -191,6 +191,68 @@ Use `data/local` for schema ownership; app sees it only through composition.
 Create `DatabaseIntegrityTest`/`ProfileInitializationTest` in data/androidTest and
 run `./gradlew :data:connectedDebugAndroidTest`, followed by G2. Inspect exported
 schema, merged backup rules and reopened-file results; mocked DAOs are insufficient.
+
+### Execution progress
+2026-10-09: started on branch `sello-011-room-v1` after SELLO-009 merged and E02 closed.
+No product decision was needed: D04, D05, D07 and D09 are approved and say the schema
+is this ticket's choice.
+
+Delivered. `:data`: Room schema version 1 exported to `data/schemas`, with tables
+`profile`, `category`, `default_limit`, `month_limit`, `expense`, `income` and
+`operation_receipt`; entities, DAOs with bounded ordered reads, strict mappers, the
+profile store, and `openFinancialStorage` as the one entry point. `:domain`: record
+identifiers, `Category`, `IconKey`, `BudgetLimit`, `DefaultLimit`, `MonthLimit`,
+`Expense`, `Income`, `FinancialProfile`, `StorageFailure` and the
+`FinancialProfileStore` port. `:app`: startup reads the financial zone from the
+database, and system backup and device transfer are switched off.
+`docs/development/storage.md` describes the tables, formats and how to change them.
+
+One dependency was added, for tests only: `androidx.room:room-testing` at the Room
+version already pinned, which provides the migration harness this ticket requires.
+
+Choices made during the work, for owner review:
+- Identifiers are lower-case hyphenated UUID text. Any other spelling is rejected,
+  not normalized.
+- Limits use two tables: a category's default limit from a month onwards, and the
+  limit set for one month, which wins. A month with neither is unconfigured. This
+  answers H01 to H04 without creating a row for every month. SELLO-013 owns the
+  commands and how archiving pauses a default.
+- A category and its limits share the category's version; limit rows have none.
+- Each expense and income has a sequence that is unique in its table and decides the
+  order of records on the same day.
+- A receipt stores a digest of the submitted input, not the input, and has no link
+  to the record it describes, so it can outlive a replacement without keeping erased
+  amounts, names or notes. SELLO-012 defines the operation kinds and the digest.
+- Room cannot declare value checks, so ranges are enforced by the domain types on
+  the way in and the mappers on the way out. No hand-written triggers.
+- Android deletes a damaged database file and starts an empty one by default. That
+  is removed: the damaged file is kept and the open fails.
+- If the database cannot be read at startup the app stops instead of continuing on
+  the device zone or an empty database. Showing that as a screen belongs to the app
+  shell (SELLO-015); today it is a crash with a clear cause.
+- Startup waits for one small read of the profile row, because the financial zone
+  must be known before any date is computed.
+- An icon key is any well-formed lower-case key; which keys have a drawing is the
+  app's concern, so a file from a newer version stays readable.
+
+Left for later, each with its owner: the meaning of receipts and their lookup
+(SELLO-012); limit and category commands (SELLO-013); deletion and undo records
+(SELLO-019), which will add their own schema version; restore and reset, which
+advance the generation and remove old receipts (SELLO-030, SELLO-031). The first
+later schema change adds the first real migration and its upgrade test; none was
+invented here.
+
+2026-10-09: owner approved pull request 9, including the choices above; moved to Done
+for a squash merge.
+
+### Delivery evidence
+- **Revision:** branch `sello-011-room-v1`; tested snapshot is commit `0d16435`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** only MVP tables and no preference in Room → host `ExportedSchemaTest.theSchemaHoldsOnlyTheMvpTables` reads the committed export and expects exactly the seven tables. Unknown stored kind, currency or date is a failure, not a default or empty list → `StrictMapperTest`, which writes damaged rows into a real database and reads them through the real queries: 76 damaged values across expense, income, both limit tables, category and profile, each expected to name its table, row and column, plus three malformed identifiers and `oneDamagedRowFailsTheWholeReadInsteadOfShorteningIt`. Recovery metadata survives replacement → `receiptsAndTheGenerationOutliveTheFinancialRowsTheyDescribe`. Generation and revision initialize atomically, first use is deterministic and the zone persists → `ProfileInitializationTest` (first use, later device zone ignored in the same process and after reopening, 32 concurrent first calls on an unopened file leaving one row and one answer) and app `FinancialStorageOnDeviceTest`. No destructive fallback → `aFileFromANewerSchemaIsRefusedAndLeftExactlyAsItWas`, `anUnreadableFileIsAFailureAndIsNotDeletedOrRecreated` (bytes compared) and host `noSourceAsksRoomForADestructiveFallback`. Storage rejects a foreign category reference and a duplicate operation → `DatabaseIntegrityTest` (T01 and T02 name uniqueness, missing category for expense and limits, no cascade, one limit per month, second receipt refused with the first kept, unique sequence, ordered bounded pages, exact read-back after closing and reopening the file, including 999.999.999.999 and a limit of `Long.MAX_VALUE`). Exported schema validation and migration harness → `ExportedSchemaOnDeviceTest` builds a database from `1.json` alone and opens it with this build. System backup and transfer off before any financial data → app `BackupDisabledTest` on the installed app, and the manifest of both built APKs.
+- **Red / Green:** the 25 `:data` device tests first ran against a naive version (no foreign keys or unique indexes, receipts keyed by row number, profile written with replace, mappers that check nothing, read an unknown currency as COP and drop a row they cannot read, and Android's default handling of a damaged file): 22 failed for those reasons and 3 passed (ordered pages, first use, newer schema refused), then all 25 passed with the real implementation. One test was wrong in that run: its "upper-case" identifier had no letters, so it was not malformed; it now uses one that is. The 6 new `:app` device tests failed before the startup and manifest change (3 because the database did not exist yet, 3 on backup) and pass after. The domain tests for identifiers, icon keys and limits were written with the code. Twenty mutations of the finished code were then run: 19 failed the expected tests (page order, inclusive end date, repeated last row, unchecked name key, archived flag, note, currency, version, unlimited with an amount, two profile rows, zone spelling, revision bound, cascade, uncaught newer schema, replace on profile, default damage handling, icon length, zero limit, upper-case in the last identifier block). One survived, upper-case accepted in the first identifier block; the test gained a case per block and now fails it. All were reverted and the exported schema compared unchanged.
+- **Gate results:** local `./scripts/verify-ticket SELLO-011 --gate G2` passed: 120 host tests (49 domain, 34 app, 30 design-system, 4 data, 3 catalog), 95 device tests on an isolated API 30 emulator (25 data, 12 app, 48 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 24 warnings, all in `:app`: the 22 present before plus two more "newer version available" notes, one of them for the new `room-testing` entry. `data/gradle.lockfile` gained `room-testing` 2.8.4 for the device-test classpaths only; no other lock file changed.
+- **Quality run:** run 20261010T001629Z-1cb139c5; SELLO-011 G2 passed; HEAD 0d16435, inputs sha256 e6cf535e78ad; report docs/planning/mvp/quality-reports/SELLO-011.json sha256 68bc68a1a2a5be4e916ed5643f0ccd520cd54450ae74fb02ac7094295cfcc18b
+- **Device / Artifact:** the debug app was installed fresh on the API 30 emulator and started: `sello.db` was created at version 1 with the seven tables and one profile row, `America/Bogota`, generation 1, revision 0. The app was then force-stopped, the emulator's zone changed to `Asia/Tokyo`, and the app cold-started again: the row was unchanged and still single. The emulator's zone was restored. `bmgr backupnow` for the app answered "Backup is not allowed". `aapt2` shows `allowBackup=false` with both rule files in the debug and release APKs. Hosted run 38008531479 on the pull request's merge commit passed the `quality` check with the ticket in Review.
+- **Review:** executor self-review of the diff, exported schema, reports and logs. Project owner reviewed pull request 9 and approved on 2026-10-09, including the listed choices. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it.
 
 ## SELLO-012 — Save expenses with atomic receipts and uncertain-outcome recovery
 

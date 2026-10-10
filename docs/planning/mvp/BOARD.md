@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 10/36 · **Epics Done:** 2/8
 
-Backlog: 25 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 10
+Backlog: 25 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 10
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,13 +27,13 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata) | Create Room v1, integrity constraints and recovery metadata | SELLO-E03 | P0 | G2 | None |
+No tickets.
 
 ## Review
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-011](epics/E03-financial-core.md#sello-011--create-room-v1-integrity-constraints-and-recovery-metadata) | Create Room v1, integrity constraints and recovery metadata | SELLO-E03 | P0 | G2 | None |
 
 ## Blocked
 

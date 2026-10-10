@@ -1,6 +1,6 @@
 # SELLO-E03 — Financial truth and persistence
 
-- **Status:** In Progress
+- **Status:** Done
 - **Goal:** Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them.
 - **Exit:** Tested exact policies, Room contracts/migrations, durable command receipts and same-revision snapshots; no dormant post-MVP schema.
 
@@ -493,7 +493,7 @@ limit, which no screen needs yet; the sandbox scenarios (SELLO-024).
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-001, SELLO-012, SELLO-013, SELLO-004
 - **Gate:** G2
 
@@ -600,3 +600,15 @@ tests did, and the constant was replaced.
 
 Left for later: the screens that show this (SELLO-017, SELLO-018, SELLO-022); income
 figures and chart series; the sandbox scenarios that step through days (SELLO-024).
+
+This is the last ticket of the epic: with it, all five are proposed Done and so is
+the epic.
+
+### Delivery evidence
+- **Revision:** branch `sello-014-budget-snapshots`; tested snapshot is commit `2d34c88`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** host `MonthlyBudgetPolicyTest` holds the approved examples with the figures written in the examples document. Unlimited spending counts and no limits yields Sin límite → `spendingInAnUnlimitedCategoryStillCountsAgainstTheMonth` (B01), `withNoFiniteLimitThereIsNoBudgetAllowanceOrVerdict` (B02, F08). Past months use historical limits and actuals without allowance → `aPastMonthShowsActualsOnlyWithNoForecastOrAllowance` (H01) and, on a real database, `MonthlySnapshotConsistencyTest.pastMonthsKeepTheirOwnLimitsAndShowActualsOnly` (September 80.000 and November 90.000 remaining, H04). Today counts as an available day → `onTheLastDayTheAllowanceIsWhatRemainsForToday` (B03). B08 → `oneCategoryOverItsLimitDoesNotZeroTheOverallAllowance`: Food −10.000 and over, overall 190.000 remaining and 19.000 a day. Actual overspending wins and the 95% and 100% boundaries → `theVerdictBoundariesAreExactlyNinetyFiveAndOneHundredPercent` (V01 to V04) and `theVerdictUsesTheExactForecastNotTheRoundedOneShown` (V05). Forecast day counts including both Februaries → `theForecastAndAllowanceFollowTheApprovedDayCounts` (F01, F02, F04, F05), with F03, F06 and F07 in their own tests. COP 50 rounding → `theAllowanceRoundsDownToFiftyPesosAndNeverBelowZero` (A01 to A08). Zero budget → `aZeroBudgetIsOnTrackUntilAnythingIsSpent` (B05). Read failures are explicit failed or last-good states, never zero → `aDamagedRowIsAFailedReadNeverAnEmptyOrZeroMonth`, `aFailureOnTheVeryFirstReadHasNoLastGoodData`, `aFailedRefreshKeepsTheLastGoodSnapshotAndRecoversWhenTheDataReadsAgain`, each with a really damaged row, and `aLimitWithNoExpensesIsZeroSpentAndOnTrack` for the opposite case (B06). Future entries excluded → `expensesDatedAfterTheFinancialDayAreLeftOutAndCounted`. Concurrent writes cannot produce mixed snapshots → `aSnapshotNeverMixesTheSpendingOfOneRevisionWithTheLimitOfAnother`: 40 rounds of an expense then a limit change while another coroutine reads, every snapshot checked against what its revision must contain. Recompute on commits and date changes → `observersGetAFreshSnapshotAfterEveryCommitAndEveryChangeOfDay`, including the rollover that turns October into a finished month. Large sums and unrepresentable totals → `largeAndManyAmountsAreSummedExactly` (three maximum expenses plus 1.200 rows across pages) and `aTotalThatDoesNotFitIsAFailureNotAClippedAmount`. Exact values, no formatted labels or floats → the snapshot types hold `Money` and an exact fraction; the policy has no floating-point number.
+- **Red / Green:** the 19 policy tests first ran against a naive policy (floating-point pace, verdict on the rounded forecast, allowance to the nearest 50, no past-month or future-date handling, unlimited spending ignored): 16 failed, then all passed with the exact policy. The first device run of the 14 snapshot tests failed all of them on a real defect, a Java constant missing on Android 11 that the policy used; it was replaced. They then ran against a naive read (no transaction, a failed read returned as an empty month, no refresh on commit): the 5 tests of those behaviours failed and 9 passed, then all 14 passed. Twenty-nine mutations followed. Twenty-eight failed the expected tests: 21 in the policy (forecast rounded down, today counted as a future day, actual overspend ignored, both verdict boundaries, verdict on the rounded forecast, past month equal treated as over, allowance to the nearest 50, down to 100, not clamped, today excluded, allowance or forecast in a past month, future expenses counted, unlimited spending ignored, zero limit as no limit, archived always hidden, always shown, its limit dropped, future month allowed, overflow turned into no limit) and 7 in the read (no transaction, failure shown as empty, no refresh on commit, none on day change, last good forgotten, no loading state, only the first page of expenses). One survived: reading one extra month of expenses changes nothing, because the policy counts only the month asked for; it affects how many rows are read, not any figure.
+- **Gate results:** local `./scripts/verify-ticket SELLO-014 --gate G2` passed: 151 host tests (79 domain, 35 app, 30 design-system, 4 data, 3 catalog), 161 device tests on an isolated API 30 emulator (88 data, 15 app, 48 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 24 warnings, all in `:app` and present before this ticket. No dependency, lock file or schema changed.
+- **Quality run:** run 20261010T110415Z-dc2e9bdb; SELLO-014 G2 passed; HEAD 2d34c88, inputs sha256 f27be587eada; report docs/planning/mvp/quality-reports/SELLO-014.json sha256 592316759d17b68d4eb4351b88a8c45793845044b1db6963efd3427726cd28a2
+- **Device / Artifact:** no visible change; no screen shows the snapshot yet. The app's device tests confirm a new installation reads and observes an empty current month, in the stored zone, through the real graph.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.

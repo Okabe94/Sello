@@ -4,8 +4,10 @@
 
 How a change to financial data is made so that its result is always knowable. The
 first command is creating an expense (`ExpenseCommands` in `:domain`,
-`RoomExpenseCommands` in `:data`). Later commands follow the same steps; there is
-deliberately no generic "repository" that does everything.
+`RoomExpenseCommands` in `:data`); [category and limit commands](categories-and-limits.md)
+follow the same steps. The shared steps are functions in
+`data/repository/CommandProtocol.kt`; each workflow keeps its own typed command,
+checks and outcome. There is deliberately no generic "repository" that does everything.
 
 ## What a caller does
 
@@ -28,8 +30,9 @@ deliberately no generic "repository" that does everything.
 
 1. Read the profile. A different `generation` is `StaleGeneration`: the history was
    replaced, so even an operation that once committed is refused.
-2. Look for a receipt with this operation identifier. Same input: return the
-   original result. Different input: `OperationConflict`.
+2. Look for a receipt with this operation identifier. Same kind and input: return
+   the original result. Anything else, including the identifier of a different kind
+   of command: `OperationConflict`.
 3. Validate against stored state: the category exists and is not archived, and the
    date is not after the financial day.
 4. Advance the revision by one, insert the record, insert the receipt.
@@ -64,5 +67,5 @@ commit itself is `OutcomeUnknown`.
   beyond the 100.000-record backup bound. Totals are checked where they are
   computed (SELLO-014).
 - `Committed` has no follow-up state because nothing follows a save yet.
-- Editing, deleting and undo (SELLO-019) and category and limit commands
-  (SELLO-013) reuse these steps with their own typed commands and receipts.
+- Editing, deleting and undo (SELLO-019) reuse these steps with their own typed
+  commands and receipts.

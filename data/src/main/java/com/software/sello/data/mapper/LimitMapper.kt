@@ -3,6 +3,7 @@ package com.software.sello.data.mapper
 import com.software.sello.data.local.entity.DefaultLimitEntity
 import com.software.sello.data.local.entity.LimitKind
 import com.software.sello.data.local.entity.MonthLimitEntity
+import com.software.sello.domain.model.AutomaticBudget
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.Currency
@@ -43,13 +44,23 @@ private fun RowDecoder.limit(kind: String, minor: Long?, currencyCode: String): 
     }
 }
 
-internal fun DefaultLimit.toEntity() = DefaultLimitEntity(
-    categoryId = categoryId.value,
-    effectiveMonth = effectiveMonth.toString(),
-    kind = limit.kind,
-    limitMinor = limit.minor,
-    currency = limit.currencyCode
-)
+internal fun DefaultLimit.toEntity(): DefaultLimitEntity = when (val budget = budget) {
+    is AutomaticBudget.Limit -> DefaultLimitEntity(
+        categoryId = categoryId.value,
+        effectiveMonth = effectiveMonth.toString(),
+        kind = budget.limit.kind,
+        limitMinor = budget.limit.minor,
+        currency = budget.limit.currencyCode
+    )
+
+    AutomaticBudget.Paused -> DefaultLimitEntity(
+        categoryId = categoryId.value,
+        effectiveMonth = effectiveMonth.toString(),
+        kind = LimitKind.PAUSED,
+        limitMinor = null,
+        currency = Currency.COP.code
+    )
+}
 
 internal fun MonthLimit.toEntity() = MonthLimitEntity(
     categoryId = categoryId.value,
@@ -64,7 +75,13 @@ internal fun DefaultLimitEntity.toDomain(): Outcome<DefaultLimit, StorageFailure
         DefaultLimit(
             categoryId = valid("category_id", CategoryId.of(categoryId)),
             effectiveMonth = valid("effective_month", EffectiveDates.parseMonth(effectiveMonth)),
-            limit = limit(kind, limitMinor, currency)
+            budget = if (kind == LimitKind.PAUSED) {
+                check("limit_minor", limitMinor == null)
+                check("currency", currency("currency", currency).isMvpEntryCurrency)
+                AutomaticBudget.Paused
+            } else {
+                AutomaticBudget.Limit(limit(kind, limitMinor, currency))
+            }
         )
     }
 

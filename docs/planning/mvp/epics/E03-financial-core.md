@@ -368,7 +368,7 @@ for a squash merge.
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-011, SELLO-012, SELLO-004
 - **Gate:** G2
 
@@ -440,6 +440,54 @@ Read architecture §§4/5; user workflows consume these ports in SELLO-016/020.
 Create/run `CategoryCommandContractTest` and `MonthlyBudgetHistoryTest` on real Room,
 plus pure budget-policy tests and G2. Test current/past month commands, concurrent
 edit/archive and rollback with exact retained IDs/amounts.
+
+### Execution progress
+2026-10-10: started on branch `sello-013-category-budget-commands` after SELLO-012
+merged. No product decision or dependency was needed and the schema did not change:
+the tables are those of SELLO-011, with one new stored kind, `paused`, for a default.
+
+Delivered. `:domain`: the seven category commands and their typed outcomes,
+`CategoryReads` with `MonthBudget`, and `CategoryBudgetPolicy`, the one rule for
+what a month's limit is. `:data`: `RoomCategoryCommands`, `RoomCategoryReads`, and
+the steps shared by every command moved into `CommandProtocol.kt`, which the expense
+workflow now uses too. `:app`: both ports bound in the graph; no screen calls them
+yet. `docs/development/categories-and-limits.md` states the contract.
+
+Choices made during the work, for owner review:
+- No row is created per month. A month's limit is worked out from the history of
+  defaults and that month's own limit whenever it is read, so it cannot depend on
+  when the app was open. D04 allows this: materialization is "an implementation
+  mechanism, not a requirement".
+- Archiving records a pause that starts the following month. Unarchiving in the
+  same month removes it; unarchiving later restores the last default from that
+  month and leaves the gap paused.
+- A category and its limits share one version. Changing a limit and renaming at the
+  same time from two places is a conflict for the second.
+- A default cannot be changed while the category is archived; unarchive first. A
+  specific month's limit can still be corrected, and the category renamed.
+- A month's own limit can be set for the current or any past month, including one
+  before the category existed, because that is an explicit correction. It cannot be
+  set for a month that has not started.
+- Renaming to the same name with different capitals or accents is allowed.
+- Archiving an archived category, or unarchiving one that is not, is refused with
+  its own reason instead of counted as success.
+- An operation identifier belongs to one kind of command. Reusing an expense's
+  identifier for a category change, or the reverse, is a conflict.
+- The month read returns archived categories too. Hiding one that has neither a
+  limit nor spending in a month needs spending, so it belongs to SELLO-014.
+
+Left for later: observing changes and combining limits with spending (SELLO-014);
+the first-run and editing screens (SELLO-016, SELLO-020); removing a month's own
+limit, which no screen needs yet; the sandbox scenarios (SELLO-024).
+
+### Delivery evidence
+- **Revision:** branch `sello-013-category-budget-commands`; tested snapshot is commit `fc7ad53`, the implementation commit `c67247a` with `main` merged in, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** device tests run the real commands and read on a real database file and inspect stored rows, receipts and the revision. Identity survives rename; archival stops new expenses without deleting history → `CategoryCommandContractTest.renamingKeepsTheIdentityExpensesAndLimits` and `archivingStopsNewExpensesAndKeepsEverythingAlreadyRecorded`. No colour column, no name used as identity → the schema is unchanged from SELLO-011 and `ExportedSchemaTest` still passes. A limit change targets its month and defaults never rewrite earlier periods → `MonthlyBudgetHistoryTest.changingThisMonthsDefaultDoesNotRewriteLastMonth` (H01), `correctingAPastMonthChangesThatMonthOnly` (H02), `aSecondDefaultInTheSameMonthReplacesTheFirstAndAffectsNoEarlierMonth`, `aLimitCannotBeSetForAMonthThatHasNotStarted`. Unlimited and zero are distinct → `zeroUnlimitedAndUnconfiguredStayDistinctThroughStorage`, and a replay that swaps zero for unlimited is a conflict. Unopened and skipped months, no backward extrapolation, idempotent and independent of app-open timing → `aMonthNobodyOpenedUsesTheDefaultOfThatTimeHoweverLateItIsRead` (H03 and H04: November reads 100.000 after December's 120.000, the backdated 10.000 is stored in November, the answers are identical after reopening the file and moving the day to March, and reading created no rows) and `monthsBeforeTheCategoryWasConfiguredAreUnconfiguredNotBackfilled`. D07 → `anArchivedCategoryKeepsItsMonthAndGetsNoBudgetWhileArchived` (AR01, AR02), `unarchivingInTheSameMonthLeavesTheLimitAndTheFutureAsTheyWere` (AR03), `unarchivingMonthsLaterRestoresTheLastDefaultWithoutABudgetForTheGap` (AR04), `unarchivingKeepsALimitAlreadySetForThatMonth` (AR05), `renamingAnArchivedCategoryChangesItsLabelInEveryMonthAndNothingElse` (AR06), and T01 and T02 in `aNameAlreadyHeldIgnoringCaseAndAccentsIsRefusedEvenWhenItsHolderIsArchived`. Stale versions and missing rows conflict, failed edits mutate nothing → `anEditAgainstAnOlderVersionIsAConflictForEveryKindOfEdit`, `anEditOfACategoryThatDoesNotExistIsRejectedForEveryKindOfEdit`, `twoEditorsOfTheSameVersionAtOnceOneWinsAndTheOtherConflicts` (16 at once), `manyCreationsOfTheSameNameAtOnceCreateOneCategory`, and `aFailureAfterTheLimitWasWrittenLeavesNoLimitVersionRevisionOrReceipt`, where the database itself refuses the second write of the transaction. First category needs no sample data → app `aNewInstallationHasNoCategoriesAndTheCategoryWorkflowIsWired`. Repeating an archive follows its receipt; an unrelated stale editor is a conflict → covered in the archive test. Pure policy → host `CategoryBudgetPolicyTest`, eleven worked cases.
+- **Red / Green:** the 31 new device tests first ran against a naive command workflow (no transaction, no generation, replay, version or name checks, archive and unarchive only flipping a flag, a new default replacing the whole default history, any month accepted): 21 failed for those reasons and 10 passed. With the real workflow one still failed, a mistake in the test: its September expense was dated after that test's financial day, so the command rightly refused it; the date was corrected and all pass. The policy tests were written with the policy. Twenty-eight mutations of the finished code were run and all failed the expected tests: seven in the policy (a later default applied backwards, earliest default, default beating a month's own limit, pause starting the same month, unarchive backfilling the gap, a not-yet-started pause kept, paused read as unconfigured), thirteen in the commands (version unchecked or not raised, taken name ignored, own-name rename refused, no pause written, double archive, pause left or nothing restored on unarchive, default set while archived, future month accepted, current month refused, creation limit a month late, category row not updated), four in the read (default taken from any month, only earlier months, a single page, month limit ignored) and four in identity and decoding (zero equal to unlimited, version left out, replay across kinds, a paused month limit accepted). One first attempt did not compile and was replaced by an equivalent that did.
+- **Gate results:** local `./scripts/verify-ticket SELLO-013 --gate G2` passed: 132 host tests (60 domain, 35 app, 30 design-system, 4 data, 3 catalog), 146 device tests on an isolated API 30 emulator (74 data, 14 app, 48 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 24 warnings, all in `:app` and present before this ticket. No dependency, lock file or schema changed. The expense workflow was moved onto the shared command steps and its 18 contract tests pass unchanged.
+- **Quality run:** run 20261010T103924Z-0c9176c1; SELLO-013 G2 passed; HEAD fc7ad53, inputs sha256 b3114c89fe1b; report docs/planning/mvp/quality-reports/SELLO-013.json sha256 155673af204cdd30f4260b234dafc77197ba0bbc9ed8717f5394fa3d2b57d3b0
+- **Device / Artifact:** no visible change; no screen calls these workflows yet. The app's device tests confirm it starts with both ports bound to its real database and no category or record present.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-014 — Calculate consistent Recibo and Resumen budget snapshots
 

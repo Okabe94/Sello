@@ -5,10 +5,14 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 
-/** Stored spellings of a limit's kind. A finite limit has an amount; an unlimited one has none. */
+/**
+ * Stored spellings of a limit's kind. A finite limit has an amount; the others have
+ * none. Only a default can be paused, which means "no automatic budget from here on".
+ */
 object LimitKind {
     const val FINITE = "finite"
     const val UNLIMITED = "unlimited"
+    const val PAUSED = "paused"
 }
 
 /** One entry in a category's history of default limits, effective from a month onwards. */

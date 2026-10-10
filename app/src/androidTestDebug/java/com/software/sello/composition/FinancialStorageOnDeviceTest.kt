@@ -5,10 +5,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
 import com.software.sello.domain.port.RecordIdSource
+import java.time.YearMonth
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -70,6 +73,19 @@ class FinancialStorageOnDeviceTest {
 
         assertEquals(Outcome.Success(null), found)
         assertEquals(36, koin.get<RecordIdSource>().next().length)
+    }
+
+    @Test
+    fun aNewInstallationHasNoCategoriesAndTheCategoryWorkflowIsWired() = runBlocking {
+        val never = OperationId.of("00000000-0000-4000-8000-000000000000") as Outcome.Success
+        val month = YearMonth.from(koin.get<FinancialClock>().today.value.date)
+
+        val budget = koin.get<CategoryReads>().monthBudget(month) as Outcome.Success
+
+        // No sample categories: the first one is the person's own.
+        assertEquals(emptyList<Any>(), budget.value.categories)
+        assertEquals(month, budget.value.month)
+        assertEquals(Outcome.Success(null), koin.get<CategoryCommands>().find(never.value))
     }
 
     @Test

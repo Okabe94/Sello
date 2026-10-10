@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -48,34 +49,43 @@ class ShellScreenLayoutTest {
         pendingEntry = null
     )
 
-    /**
-     * A window of [width] × [height] dp. With [shrink], one dp is one pixel, so that a
-     * window wider than the test screen still fits on it; otherwise the screen's own density.
-     */
-    private fun show(
-        width: Int,
-        height: Int,
-        pickerOpen: Boolean,
-        shrink: Boolean = false,
-        fontScale: Float = 1f
-    ) {
+    private fun stateWith(pickerOpen: Boolean) = state(pickerOpen)
+
+    /** The frame in the test device's own window, which on a phone is a compact one. */
+    private fun showOnThisScreen(pickerOpen: Boolean, fontScale: Float = 1f) {
         rule.setContent {
-            val density = if (shrink) 1f else LocalDensity.current.density
+            val density = LocalDensity.current.density
             CompositionLocalProvider(LocalDensity provides Density(density, fontScale)) {
+                SelloTheme(reducedMotion = true) { Frame(pickerOpen) }
+            }
+        }
+    }
+
+    /**
+     * The frame in a window of [width] × [height] dp, one dp drawn as one pixel. Such a
+     * window can be larger than the device's screen, so these cases check what exists
+     * and where it is laid out, not whether it is visible on the screen.
+     */
+    private fun showInWindow(width: Int, height: Int, pickerOpen: Boolean) {
+        rule.setContent {
+            CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                 SelloTheme(reducedMotion = true) {
-                    Box(Modifier.requiredSize(width.dp, height.dp)) {
-                        ShellScreen(state(pickerOpen), monthNames(), { actions += it }) { padding ->
-                            Text("contenido", Modifier.padding(padding).testTag("content"))
-                        }
-                    }
+                    Box(Modifier.requiredSize(width.dp, height.dp)) { Frame(pickerOpen) }
                 }
             }
         }
     }
 
+    @Composable
+    private fun Frame(pickerOpen: Boolean) {
+        ShellScreen(stateWith(pickerOpen), monthNames(), { actions += it }) { padding ->
+            Text("contenido", Modifier.padding(padding).testTag("content"))
+        }
+    }
+
     @Test
     fun theTitleIsTheSelectedMonthAndOpensThePicker() {
-        show(360, 700, pickerOpen = false)
+        showOnThisScreen(pickerOpen = false)
 
         rule.onNodeWithText("Agosto 2026").assertIsDisplayed()
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
@@ -86,47 +96,46 @@ class ShellScreenLayoutTest {
 
     @Test
     fun withOneTabThereIsNoTabBarRailOrDockInAnyWindow() {
-        show(900, 700, pickerOpen = false, shrink = true)
+        showInWindow(900, 700, pickerOpen = false)
 
         rule.onNodeWithTag(SCAFFOLD_BAR_TAG).assertDoesNotExist()
         rule.onNodeWithTag(SCAFFOLD_RAIL_TAG).assertDoesNotExist()
         rule.onNodeWithTag(SCAFFOLD_DOCK_TAG).assertDoesNotExist()
-        rule.onNodeWithTag("content").assertIsDisplayed()
+        rule.onNodeWithTag("content").assertExists()
     }
 
     @Test
     fun onAPhoneThePickerIsASheetOverTheContent() {
-        show(360, 700, pickerOpen = true)
+        showOnThisScreen(pickerOpen = true)
 
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
         // A month is one control, announced by its full name.
-        rule.onNodeWithContentDescription("Agosto 2026").performClick()
+        rule.onNodeWithContentDescription("Agosto 2026").performScrollTo().performClick()
 
         assertEquals(listOf<ShellAction>(ShellAction.PickMonth(YearMonth.of(2026, 8))), actions)
     }
 
     @Test
     fun inAnExpandedWindowThePickerIsAPanelBesideTheContentNotOverIt() {
-        show(900, 700, pickerOpen = true, shrink = true)
+        showInWindow(900, 700, pickerOpen = true)
 
-        val content = rule.onNodeWithTag("content").assertIsDisplayed().getUnclippedBoundsInRoot()
-        val picker = rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
-            .getUnclippedBoundsInRoot()
+        val content = rule.onNodeWithTag("content").assertExists().getUnclippedBoundsInRoot()
+        val picker = rule.onNodeWithTag(MONTH_PICKER_TAG).assertExists().getUnclippedBoundsInRoot()
 
         assertTrue("content $content, picker $picker", content.right <= picker.left)
     }
 
     @Test
-    fun inAShortLandscapeWindowThePickerStillFitsAndIsUsable() {
-        show(760, 400, pickerOpen = true, shrink = true)
+    fun inAShortLandscapeWindowEveryMonthOfThePickerCanBeReached() {
+        showInWindow(760, 400, pickerOpen = true)
 
-        rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
-        rule.onNodeWithText("2026").assertIsDisplayed()
+        rule.onNodeWithTag(MONTH_PICKER_TAG).assertExists()
+        rule.onNodeWithContentDescription("Diciembre 2026").performScrollTo().assertExists()
     }
 
     @Test
     fun atTwiceTheFontSizeTheTitleAndPickerAreStillThere() {
-        show(360, 700, pickerOpen = true, fontScale = 2f)
+        showOnThisScreen(pickerOpen = true, fontScale = 2f)
 
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
         // Every month can be reached, scrolling if it has to.

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -44,14 +43,15 @@ class WideWindowBackTest {
             }
         }
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
-        rule.onNodeWithTag(SCAFFOLD_SECONDARY_TAG).assertIsDisplayed()
-        rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
-        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
+        // The window may be wider than the device's screen, so: present, not "on screen".
+        rule.onNodeWithTag(SCAFFOLD_SECONDARY_TAG).assertExists()
+        rule.onNodeWithTag(MONTH_PICKER_TAG).assertExists()
+        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertExists()
 
         Espresso.pressBack()
 
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertDoesNotExist()
-        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertExists()
         assertEquals(Lifecycle.State.RESUMED, rule.activityRule.scenario.state)
     }
 }

@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 11/36 · **Epics Done:** 2/8
 
-Backlog: 24 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 11
+Backlog: 24 · Ready: 0 · In Progress: 0 · Review: 1 · Blocked: 0 · Done: 11
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,13 +27,13 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) | Save expenses with atomic receipts and uncertain-outcome recovery | SELLO-E03 | P0 | G2 | None |
+No tickets.
 
 ## Review
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-012](epics/E03-financial-core.md#sello-012--save-expenses-with-atomic-receipts-and-uncertain-outcome-recovery) | Save expenses with atomic receipts and uncertain-outcome recovery | SELLO-E03 | P0 | G2 | None |
 
 ## Blocked
 

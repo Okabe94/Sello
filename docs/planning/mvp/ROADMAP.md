@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 0/7 · **Epics Done:** 0/1
+**Tickets Done:** 0/8 · **Epics Done:** 0/2
 
-Backlog: 7 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 0
+Backlog: 8 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 0
 
 [Workflow, gates and definition of done](README.md)
 
@@ -13,6 +13,7 @@ Backlog: 7 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 0
 | Epic | Outcome | Status | Done |
 | --- | --- | --- | --- |
 | [SELLO-E09](epics/E09-signed-carryover.md) | Preserve surplus and overspending across enabled budget periods without confusing plans with account balances. | Backlog | 0/7 |
+| [SELLO-E10](epics/E10-legacy-import.md) | Let someone bring their history from the previous app into Sello without weakening Sello's rules. | Backlog | 0/1 |
 
 ## Ready
 
@@ -41,6 +42,7 @@ No tickets.
 | [SELLO-041](epics/E09-signed-carryover.md#sello-041--deliver-accessible-carryover-opt-in-and-availability-explanations) | Deliver accessible carryover opt-in and availability explanations | SELLO-E09 | P1 | G2 | [SELLO-040](epics/E09-signed-carryover.md#sello-040--extend-portable-backup-restore-and-reset-for-carryover), [SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing), [SELLO-022](epics/E05-mvp-workflows.md#sello-022--deliver-basic-resumen-with-exact-actuals-and-history-charts), [SELLO-023](epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings) |
 | [SELLO-042](epics/E09-signed-carryover.md#sello-042--extend-live-sandbox-and-regression-corpus-for-signed-carryover) | Extend live sandbox and regression corpus for signed carryover | SELLO-E09 | P1 | G2 | [SELLO-041](epics/E09-signed-carryover.md#sello-041--deliver-accessible-carryover-opt-in-and-availability-explanations), [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-025](epics/E06-live-testing.md#sello-025--implement-seeded-histories-replay-and-live-graph-growth-scenarios), [SELLO-027](epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite) |
 | [SELLO-043](epics/E09-signed-carryover.md#sello-043--verify-and-release-the-complete-signed-carryover-increment) | Verify and release the complete signed carryover increment | SELLO-E09 | P1 | G3 | [SELLO-042](epics/E09-signed-carryover.md#sello-042--extend-live-sandbox-and-regression-corpus-for-signed-carryover), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety), [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition), [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) |
+| [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path) | Import legacy data through the validated restore path | SELLO-E10 | P2 | G2 | [SELLO-028](epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation), [SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion), [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) |
 
 ## Done
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -28,6 +29,8 @@ import com.software.sello.domain.port.FinancialClock
 import com.software.sello.feature.recibo.RECIBO_ADD_CATEGORY_TAG
 import com.software.sello.feature.recibo.RECIBO_CATEGORIES_TAG
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
+import com.software.sello.hideKeyboard
+import com.software.sello.press
 import java.time.YearMonth
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -57,6 +60,7 @@ class FirstCategoryJourneyTest {
 
     @After
     fun leaveNothingBehind() {
+        scenario?.takeIf { it.state != Lifecycle.State.DESTROYED }?.hideKeyboard()
         scenario?.close()
         TestData.reset()
     }
@@ -79,7 +83,7 @@ class FirstCategoryJourneyTest {
 
     private fun ComposeTestRule.limitField() = onNodeWithContentDescription("Límite en pesos")
 
-    private fun submit() = rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().performClick()
+    private fun submit() = rule.onNodeWithTag(EDITOR_SUBMIT_TAG).press()
 
     /** From Recibo, through the form, back to Recibo with the category listed. */
     private fun create(name: String, limit: String? = null) {

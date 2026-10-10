@@ -57,8 +57,9 @@ in that screen's saved state: an identifier, never a category object. The opener
 reads the category itself.
 
 `forEntry = true` is for "an expense was asked for and there is no category that
-can take one": the form then explains that a category comes first. Today that
-happens when an entry link arrives; SELLO-017's dock uses the same route.
+can take one": the form then explains that a category comes first. The dock and an
+entry link both lead here, and after the category is created the app goes on to
+[Anotar](expense-entry.md) with it chosen.
 
 ## Icons
 

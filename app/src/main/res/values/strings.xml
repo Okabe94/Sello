@@ -91,4 +91,75 @@
     <string name="category_icon_child_care">Hijos</string>
     <string name="recibo_spent">Has gastado</string>
     <string name="recibo_failed">No pudimos leer tus datos de este mes.</string>
+    <string-array name="weekday_names_short">
+        <item>lun</item>
+        <item>mar</item>
+        <item>mié</item>
+        <item>jue</item>
+        <item>vie</item>
+        <item>sáb</item>
+        <item>dom</item>
+    </string-array>
+    <string-array name="month_names_abbreviated">
+        <item>ene</item>
+        <item>feb</item>
+        <item>mar</item>
+        <item>abr</item>
+        <item>may</item>
+        <item>jun</item>
+        <item>jul</item>
+        <item>ago</item>
+        <item>sep</item>
+        <item>oct</item>
+        <item>nov</item>
+        <item>dic</item>
+    </string-array>
+    <string name="date_today">Hoy, %1$s</string>
+    <string name="dock_entry_label">Anotar un gasto</string>
+    <string name="dock_entry_action">Anotar</string>
+    <string name="expense_entry_title">Anotar</string>
+    <string name="expense_entry_close">Cerrar</string>
+    <string name="expense_entry_new_line">%1$s, renglón nuevo</string>
+    <string name="expense_entry_no_category">Elige una categoría</string>
+    <string name="expense_entry_preview">Vista previa, si lo anotas</string>
+    <string name="expense_entry_preview_month_remaining">Te quedarán</string>
+    <string name="expense_entry_preview_month_over">Te pasarás por</string>
+    <string name="expense_entry_preview_month_spent">Habrás gastado</string>
+    <string name="expense_entry_preview_category_remaining">En %1$s quedarán</string>
+    <string name="expense_entry_preview_category_over">En %1$s te pasas por</string>
+    <string name="expense_entry_preview_category_spent">En %1$s habrás gastado</string>
+    <string name="expense_entry_categories">Categoría</string>
+    <string name="expense_entry_date">Fecha: %1$s</string>
+    <string name="expense_entry_note">Nota (opcional)</string>
+    <string name="expense_entry_note_counter">%1$d/%2$d</string>
+    <string name="expense_entry_note_too_long">La nota puede tener hasta 60 caracteres.</string>
+    <string name="expense_entry_note_not_allowed">La nota no puede tener saltos de línea.</string>
+    <string name="expense_entry_amount_not_amount">Eso no es un monto. Escribe solo el número, por ejemplo 48700 o 48.700.</string>
+    <string name="expense_entry_amount_zero">El monto debe ser mayor que cero.</string>
+    <string name="expense_entry_amount_too_large">El monto es mayor que el máximo de 999.999.999.999 pesos.</string>
+    <string name="expense_entry_missing_amount">Escribe un monto.</string>
+    <string name="expense_entry_missing_category">Elige una categoría.</string>
+    <string name="expense_entry_missing_note">Corrige la nota.</string>
+    <string name="expense_entry_submit">Anotar gasto</string>
+    <string name="expense_entry_submit_description">Anotar gasto de %1$s en %2$s</string>
+    <string name="expense_entry_check_again">Comprobar si se guardó</string>
+    <string name="expense_entry_not_saved">No se pudo guardar. No se anotó el gasto; inténtalo de nuevo.</string>
+    <string name="expense_entry_category_gone">Esa categoría ya no acepta gastos. Elige otra; no se anotó nada.</string>
+    <string name="expense_entry_future_date">La fecha no puede ser posterior a hoy. No se anotó nada.</string>
+    <string name="expense_entry_data_changed">Tus datos cambiaron mientras tanto. No se anotó el gasto; inténtalo de nuevo.</string>
+    <string name="expense_entry_unknown">No sabemos todavía si se guardó. Compruébalo antes de volver a intentarlo.</string>
+    <string name="expense_entry_load_failed">No pudimos leer tus categorías.</string>
+    <string name="expense_entry_discard_title">¿Descartar este gasto?</string>
+    <string name="expense_entry_discard_message">Lo que escribiste no se guardará.</string>
+    <string name="expense_entry_discard_confirm">Descartar</string>
+    <string name="expense_entry_discard_keep">Seguir anotando</string>
+    <string name="expense_entry_date_confirm">Aceptar</string>
+    <string name="expense_receipt_stamp">Recibido</string>
+    <string name="expense_receipt_title">Gasto anotado</string>
+    <string name="expense_receipt_category">Categoría</string>
+    <string name="expense_receipt_date">Fecha</string>
+    <string name="expense_receipt_note">Nota</string>
+    <string name="expense_receipt_total">Total</string>
+    <string name="expense_receipt_unreadable">Tu gasto quedó guardado, pero no pudimos leer su detalle ahora.</string>
+    <string name="expense_receipt_done">Listo</string>
 </resources>

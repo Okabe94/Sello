@@ -1,10 +1,16 @@
 package com.software.sello
 
+import android.app.Activity
+import android.view.WindowInsets
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.test.core.app.ActivityScenario
 
 /*
  * The app reads its database off the main thread, which the test framework does not
@@ -27,3 +33,19 @@ fun ComposeTestRule.awaitText(text: String) = await(hasText(text))
 
 fun ComposeTestRule.awaitDescription(description: String) =
     await(hasContentDescription(description))
+
+/**
+ * Presses a control through its accessibility action instead of by screen position.
+ * After typing, the system keyboard may still be sliding in and moving things; a
+ * press aimed at where the control was a moment ago can miss.
+ */
+fun SemanticsNodeInteraction.press(): SemanticsNodeInteraction =
+    performSemanticsAction(SemanticsActions.OnClick)
+
+/**
+ * Puts the system keyboard away before a test ends. A keyboard left up by a test that
+ * typed would otherwise still hold the window's focus when the next test starts.
+ */
+fun ActivityScenario<out Activity>.hideKeyboard() {
+    onActivity { it.window.insetsController?.hide(WindowInsets.Type.ime()) }
+}

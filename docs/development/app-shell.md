@@ -8,11 +8,11 @@ of to one screen. All of it is in `:app`, package `navigation`.
 
 ## What is on screen today
 
-`SelloAppRoot` hosts Recibo and the [category editor](category-editor.md). On Recibo
-the title is the selected month and opens the month picker. There is no tab bar, because one tab is not a choice, and no
-"Anotar" dock, because the entry form does not exist yet. A tab or the dock is added
-when what it opens works: add the tab to `ShellTab` and its route to `Routes.kt`
-(SELLO-022 for Resumen), and give the scaffold a dock when SELLO-017 lands.
+`SelloAppRoot` hosts Recibo, the [category editor](category-editor.md) and
+[Anotar](expense-entry.md). On Recibo the title is the selected month and opens the
+month picker, and the dock records an expense. There is no tab bar, because one tab
+is not a choice: a tab is added when its screen works, by adding it to `ShellTab`
+and its route to `Routes.kt` (SELLO-022 for Resumen).
 
 Recibo shows the shared [monthly snapshot](monthly-snapshot.md): a skeleton while
 loading, the first-run slip when there are no categories, the exact total spent and
@@ -69,13 +69,13 @@ while the system keyboard is open.
 - `EntryLinks` understands `sello://anotar?categoria=<identifier>&monto=<amount>`.
   A link is outside input: anything not exactly that shape is ignored, and each value
   must pass the same rules as typed input or it is dropped, never repaired.
-- A link only becomes `ShellState.pendingEntry`, a request to prefill a draft. It
-  cannot save anything: the shell has no access to a command. The entry form
-  (SELLO-017) takes the request, checks that the category exists and still accepts
-  entries, and reports `EntryTaken`.
-- The manifest does not declare the link yet. Declaring it now would let other apps
-  open Sello on a link that visibly does nothing. SELLO-017 adds the declaration
-  together with the form.
+- The dock and a link both become `ShellState.pendingEntry`, a request to open the
+  entry form. The shell cannot save anything: it has no access to a command. It
+  checks whether a category can take an expense and sets `entryReady` or
+  `entryNeedsCategory`; the root navigates and reports `EntryTaken`. The form checks
+  the prefilled category and amount itself.
+- The manifest declares the link for apps on the device. It is not `BROWSABLE`, so
+  a web page cannot open it.
 
 ## View models
 

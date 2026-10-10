@@ -146,8 +146,9 @@ class DeepLinkDraftTest {
 
         shell.onAction(ShellAction.OpenLink("sello://anotar?categoria=$id&monto=48700"))
 
+        // A category exists, so the entry form may open with this request; nothing else changed.
         assertEquals(
-            before.copy(pendingEntry = EntryRequest(category, pesos(48_700))),
+            before.copy(pendingEntry = EntryRequest(category, pesos(48_700)), entryReady = true),
             shell.state.value
         )
     }

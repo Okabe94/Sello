@@ -110,9 +110,9 @@ class ShellOnDeviceTest {
         rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
         rule.onNodeWithText(title(current)).assertIsDisplayed()
         rule.onNodeWithText(context.getString(R.string.recibo_first_run_title)).assertIsDisplayed()
-        // One tab is no tab bar, and there is no entry action until entries exist.
+        // One tab is no tab bar. The dock to record an expense is always there.
         rule.onNodeWithTag(SCAFFOLD_BAR_TAG).assertDoesNotExist()
-        rule.onNodeWithTag(SCAFFOLD_DOCK_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(SCAFFOLD_DOCK_TAG).assertIsDisplayed()
         assertEquals(0, financialRows())
     }
 

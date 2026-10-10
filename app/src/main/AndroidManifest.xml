@@ -15,6 +15,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.Sello"
             android:windowSoftInputMode="adjustResize">
@@ -22,6 +23,20 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!--
+                sello://anotar opens the entry form, optionally prefilled. A link can only
+                suggest a draft: nothing is recorded until the person confirms it. Not
+                BROWSABLE: web pages cannot open it, only apps on the device.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="anotar"
+                    android:scheme="sello" />
             </intent-filter>
         </activity>
     </application>

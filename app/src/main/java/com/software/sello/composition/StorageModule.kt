@@ -11,6 +11,7 @@ import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.ExpenseCommands
+import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialProfileStore
 import com.software.sello.domain.port.MonthlySnapshots
 import java.time.ZoneId
@@ -59,4 +60,5 @@ fun storageModule(storage: FinancialStorage): Module = module {
     single<CategoryCommands> { storage.categoryCommands(get(), get(), get()) }
     single<CategoryReads> { storage.categoryReads }
     single<MonthlySnapshots> { storage.monthlySnapshots(get()) }
+    single<ExpenseReads> { storage.expenseReads }
 }

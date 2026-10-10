@@ -14,11 +14,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.software.sello.TestData
+import com.software.sello.awaitTag
 import com.software.sello.composition.SelloApplication
 import com.software.sello.designsystem.component.SCAFFOLD_SECONDARY_TAG
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,6 +32,9 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class WideWindowBackTest {
+    @Before
+    fun newInstallation() = TestData.reset()
+
     @get:Rule
     val rule = createAndroidComposeRule<ComponentActivity>()
 
@@ -42,7 +48,9 @@ class WideWindowBackTest {
                 }
             }
         }
+        rule.awaitTag(RECIBO_FIRST_RUN_TAG)
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
+        rule.awaitTag(MONTH_PICKER_TAG)
         // The window may be wider than the device's screen, so: present, not "on screen".
         rule.onNodeWithTag(SCAFFOLD_SECONDARY_TAG).assertExists()
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertExists()

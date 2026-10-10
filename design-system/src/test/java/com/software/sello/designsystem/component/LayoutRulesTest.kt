@@ -105,4 +105,16 @@ class LayoutRulesTest {
         assertEquals(1f, fillLevel(0.4f, over = true), 1e-6f)
         assertEquals(1f, fillLevel(null, over = true), 1e-6f)
     }
+
+    @Test
+    fun iconsFillUpToSevenColumnsAndNeverShrinkBelowTheTouchSize() {
+        // Cells of 48dp with 6dp between them: seven need 372dp.
+        assertEquals(7, iconColumns(372.dp, 48.dp, 7))
+        assertEquals(6, iconColumns(371.dp, 48.dp, 7))
+        assertEquals(7, iconColumns(900.dp, 48.dp, 7))
+        assertEquals(5, iconColumns(288.dp, 48.dp, 7))
+        assertEquals(1, iconColumns(48.dp, 48.dp, 7))
+        assertEquals(1, iconColumns(10.dp, 48.dp, 7))
+        assertEquals(3, iconColumns(372.dp, 48.dp, 3))
+    }
 }

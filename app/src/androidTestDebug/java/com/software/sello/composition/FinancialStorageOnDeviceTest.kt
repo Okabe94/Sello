@@ -3,6 +3,7 @@ package com.software.sello.composition
 import android.database.sqlite.SQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.software.sello.TestData
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.OverallBudget
@@ -21,6 +22,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.koin.core.context.GlobalContext
@@ -28,6 +30,9 @@ import org.koin.core.context.GlobalContext
 /** The installed app's own database file, as its startup left it. */
 @RunWith(AndroidJUnit4::class)
 class FinancialStorageOnDeviceTest {
+    @Before
+    fun newInstallation() = TestData.reset()
+
     private val koin get() = GlobalContext.get()
     private val file
         get() = InstrumentationRegistry.getInstrumentation().targetContext

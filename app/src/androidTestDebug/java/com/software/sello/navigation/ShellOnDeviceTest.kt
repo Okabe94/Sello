@@ -20,18 +20,22 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.MainActivity
 import com.software.sello.R
+import com.software.sello.TestData
+import com.software.sello.awaitTag
 import com.software.sello.designsystem.component.SCAFFOLD_BAR_TAG
 import com.software.sello.designsystem.component.SCAFFOLD_DOCK_TAG
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.TransactionAmount
 import com.software.sello.domain.port.FinancialClock
+import com.software.sello.feature.category.EDITOR_PREREQUISITE_TAG
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
 import java.time.YearMonth
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,6 +70,10 @@ class ShellOnDeviceTest {
         return ActivityScenario.launch<MainActivity>(intent).also { scenario = it }
     }
 
+    /** Starts the app and waits until Recibo has read the month. */
+    private fun launchToRecibo(link: String? = null): ActivityScenario<MainActivity> =
+        launch(link).also { rule.awaitTag(RECIBO_FIRST_RUN_TAG) }
+
     private fun shell(): ShellViewModel {
         lateinit var viewModel: ShellViewModel
         scenario!!.onActivity { viewModel = ViewModelProvider(it)[ShellViewModel::class.java] }
@@ -85,6 +93,9 @@ class ShellOnDeviceTest {
         }
     }
 
+    @Before
+    fun newInstallation() = TestData.reset()
+
     @After
     fun leaveTheSessionAsANewInstallationHasIt() {
         scenario?.close()
@@ -94,7 +105,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun aNewInstallationOpensOnAnHonestEmptyReciboForTheCurrentMonth() {
-        launch()
+        launchToRecibo()
 
         rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
         rule.onNodeWithText(title(current)).assertIsDisplayed()
@@ -107,7 +118,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun backClosesTheMonthPickerBeforeItLeavesTheApp() {
-        val app = launch()
+        val app = launchToRecibo()
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
 
@@ -120,7 +131,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun anEarlierMonthCanBePickedAndALaterOneCannot() {
-        launch()
+        launchToRecibo()
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
 
         for (number in 1..12) {
@@ -141,7 +152,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun theSelectedMonthAndTheOpenPickerSurviveTheScreenBeingRecreated() {
-        val app = launch()
+        val app = launchToRecibo()
         val march = YearMonth.of(current.year - 1, 3)
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
         rule.onNodeWithContentDescription(context.getString(R.string.month_picker_previous_year))
@@ -151,6 +162,7 @@ class ShellOnDeviceTest {
 
         app.recreate()
 
+        rule.awaitTag(MONTH_PICKER_TAG)
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
         Espresso.pressBack()
         rule.onNodeWithText(title(march)).assertIsDisplayed()
@@ -158,7 +170,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun leavingAndReturningAreReportedToTheMonthSession() {
-        val app = launch()
+        val app = launchToRecibo()
         val session = koin.get<MonthSession>()
         assertNull(session.save().backgroundedAtMillis)
 
@@ -174,18 +186,25 @@ class ShellOnDeviceTest {
     }
 
     @Test
-    fun anEntryLinkOnlyLeavesARequestWaitingAndCreatesNoMoney() {
+    fun anEntryLinkWithNoCategoryOpensTheCategoryFormWithTheReasonAndCreatesNoMoney() {
         launch("sello://anotar?categoria=3f2c1a9e-7b4d-4c61-9a0e-5d8f2b6c7e10&monto=48700")
+        rule.awaitTag(EDITOR_PREREQUISITE_TAG)
 
-        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
+        // There is nowhere to record an expense yet, so the person is told what to do first.
+        rule.onNodeWithTag(EDITOR_PREREQUISITE_TAG).assertIsDisplayed()
         val waiting = shell().state.value.pendingEntry
-        shell().onAction(ShellAction.EntryTaken)
+        Espresso.pressBack()
 
+        rule.awaitTag(RECIBO_FIRST_RUN_TAG)
+        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
         assertEquals(
             (TransactionAmount.of(Money.cop(48_700)) as Outcome.Success).value,
             waiting?.amount
         )
         assertEquals("3f2c1a9e-7b4d-4c61-9a0e-5d8f2b6c7e10", waiting?.categoryId?.value)
+        // The request is still waiting for the entry form, and nothing was written.
+        assertEquals(waiting, shell().state.value.pendingEntry)
+        shell().onAction(ShellAction.EntryTaken)
         assertEquals(0, financialRows())
     }
 
@@ -199,7 +218,7 @@ class ShellOnDeviceTest {
         )
 
         for (link in links) {
-            launch(link)
+            launchToRecibo(link)
 
             rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
             assertNull(link, shell().state.value.pendingEntry)

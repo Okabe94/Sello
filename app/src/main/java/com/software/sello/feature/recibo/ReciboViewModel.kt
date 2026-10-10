@@ -2,6 +2,9 @@ package com.software.sello.feature.recibo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.software.sello.domain.model.BudgetLimit
+import com.software.sello.domain.model.CategoryMonth
+import com.software.sello.domain.policy.MonthBudgetState
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.SnapshotState
 import com.software.sello.navigation.MonthSession
@@ -42,6 +45,9 @@ class ReciboViewModel(
         when (action) {
             // A new attempt starts a new observation of the same month.
             ReciboAction.Retry -> attempt.update { it + 1 }
+
+            // Handled by the root, which owns navigation.
+            ReciboAction.CreateCategory -> Unit
         }
     }
 
@@ -53,9 +59,29 @@ class ReciboViewModel(
         is SnapshotState.Ready -> if (state.snapshot.categories.isEmpty()) {
             ReciboState.FirstRun
         } else {
-            ReciboState.Spending(money.format(state.snapshot.spent))
+            ReciboState.Spending(
+                spent = money.format(state.snapshot.spent),
+                categories = state.snapshot.categories.map(::category)
+            )
         }
     }
+
+    private fun category(line: CategoryMonth) = ReciboCategory(
+        id = line.category.id.value,
+        name = line.category.name.value,
+        iconKey = line.category.icon.value,
+        archived = line.category.archived,
+        limit = when (val budget = line.state) {
+            is MonthBudgetState.Limited -> when (val limit = budget.limit) {
+                is BudgetLimit.Finite -> ReciboLimit.Amount(money.format(limit.amount))
+                BudgetLimit.Unlimited -> ReciboLimit.Unlimited
+            }
+
+            MonthBudgetState.Paused -> ReciboLimit.Paused
+
+            MonthBudgetState.Unconfigured -> ReciboLimit.NotSet
+        }
+    )
 
     private companion object {
         /** Long enough to outlast a rotation without reading again. */

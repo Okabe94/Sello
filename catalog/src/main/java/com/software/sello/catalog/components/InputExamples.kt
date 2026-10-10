@@ -24,6 +24,8 @@ import com.software.sello.designsystem.component.FieldMessage
 import com.software.sello.designsystem.component.FieldMessageText
 import com.software.sello.designsystem.component.FieldPill
 import com.software.sello.designsystem.component.FormField
+import com.software.sello.designsystem.component.IconChoice
+import com.software.sello.designsystem.component.IconChoiceGrid
 import com.software.sello.designsystem.component.SegmentedSwitch
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
@@ -200,6 +202,44 @@ fun SwitchExample() {
             )
             SwitchRow("Deshabilitado", checked = true, onCheckedChange = {}, enabled = false)
             SegmentedSwitch(listOf("Sistema", "Claro", "Oscuro"), mode, { mode = it })
+        }
+    }
+}
+
+/** One icon chosen, one tapped changes it, and a disabled copy that ignores taps. */
+@Composable
+fun IconChoiceExample() {
+    var picked by rememberSaveable { mutableStateOf("home") }
+    val choices = remember {
+        listOf(
+            IconChoice("restaurant", SelloIcon.Restaurant, "Comida"),
+            IconChoice("home", SelloIcon.Home, "Hogar"),
+            IconChoice("directions_bus", SelloIcon.DirectionsBus, "Transporte"),
+            IconChoice("theaters", SelloIcon.Theaters, "Entretenimiento"),
+            IconChoice("medical_services", SelloIcon.MedicalServices, "Salud"),
+            IconChoice("checkroom", SelloIcon.Checkroom, "Ropa"),
+            IconChoice("local_cafe", SelloIcon.LocalCafe, "Café"),
+            IconChoice("school", SelloIcon.School, "Educación"),
+            IconChoice("pets", SelloIcon.Pets, "Mascotas"),
+            IconChoice("fitness_center", SelloIcon.FitnessCenter, "Gimnasio"),
+            IconChoice("shopping_cart", SelloIcon.ShoppingCart, "Mercado"),
+            IconChoice("flight", SelloIcon.Flight, "Viajes"),
+            IconChoice("phone_iphone", SelloIcon.PhoneIphone, "Celular"),
+            IconChoice("child_care", SelloIcon.ChildCare, "Hijos")
+        )
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md)) {
+        Slip(modifier = Modifier.fillMaxWidth(), pinked = false) {
+            IconChoiceGrid(choices, picked, { picked = it }, Modifier.testTag("icons:grid"))
+        }
+        Text(
+            "Elegido: $picked",
+            style = MaterialTheme.typography.bodyLarge,
+            color = SelloTheme.colors.ink,
+            modifier = Modifier.testTag("icons:picked")
+        )
+        Slip(modifier = Modifier.fillMaxWidth(), pinked = false) {
+            IconChoiceGrid(choices.take(4), "home", { picked = it }, enabled = false)
         }
     }
 }

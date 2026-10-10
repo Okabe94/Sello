@@ -3203,7 +3203,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-013, SELLO-015, SELLO-008, SELLO-004
 - **Gate:** G2
 
@@ -3258,6 +3258,57 @@ approved D04/D05; use those accepted rules for field bounds and month limits.
 Create/run `*CategoryEditorViewModelTest` and device `FirstCategoryJourneyTest`; G2.
 On an empty **debug** profile create a category, restart, and verify its actual ID,
 limit and selected state. Include raw-input/error and restored-operation assertions.
+
+### Execution progress
+2026-10-10: started on branch `sello-016-first-run-category` after SELLO-015 merged. No
+dependency was added and the schema did not change.
+
+Delivered. `:app`: the category editor (state, actions, view model, root and screen)
+on the real `CreateCategory` command, with its draft, the identifier of a save in
+flight and its result kept across rotation and process death; the first-run Recibo
+with ""Crear categorías""; Recibo listing categories with their limits and ""Agregar
+categoría""; the editor route with its returned identifier; and the ""an entry needs a
+category first"" path. `:design-system`: `IconChoiceGrid` and nine more category
+icons, with a catalog example `inputs.icon-choice`.
+`docs/development/category-editor.md` states the form's rules and contracts.
+
+Choices made during the work, for owner review:
+- A new category is ""Sin límite"" unless the switch is turned off and an amount is
+  typed. Turning it off and leaving the amount empty is an error, never zero.
+- Fourteen icons, the ones the reference names. It shows twenty-eight without
+  naming the other fourteen, so those need choosing. Each icon has a spoken name
+  (Comida, Hogar, Transporte and so on).
+- Recibo gained an ""Agregar categoría"" button under the list. The reference does
+  not place one there, but without it only one category could ever be created
+  until the editing ticket.
+- The form is a full screen in every window. The reference makes editors a side
+  panel on wide windows; that is left for later.
+- Left out of the form for now: the preview of the category cell, the line saying
+  what the month's total limit would become, and suggestions drawn from the
+  person's own limits. The three fixed suggestions are shown.
+- The explanation ""to record an expense you first need a category"" is delivered
+  and tested, but today only an entry link triggers it, and the link is not yet
+  registered with Android. The ""Anotar"" dock that will normally trigger it arrives
+  with the entry form in SELLO-017, because a dock that opens nothing once a
+  category exists would be a fake.
+- Back while saving does nothing. Back with a draft asks before discarding.
+- When the name is refused, the form scrolls back up to it.
+
+Found on the way: on a small screen the ""name already used"" message appeared above
+the visible area, because the button is at the bottom and the name at the top. The
+form now scrolls to the name when it has an error.
+
+Left for later: editing, archiving and limit changes (SELLO-020); the dock and the
+entry form (SELLO-017); the real Recibo content (SELLO-018).
+
+### Delivery evidence
+- **Revision:** branch `sello-016-first-run-category`; tested snapshot is commit `c1bc912`, with only this ticket's status and evidence text, the retained report, the captures and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** Anotar without an eligible category directs to the editor and explains the prerequisite → `NavigationStateTest.anEntryWithNoCategoryToRecordItInAsksForOneOnceAndKeepsTheRequest`, `onlyACategoryThatIsNotArchivedCountsForAnEntry`, and on the installed app `ShellOnDeviceTest.anEntryLinkWithNoCategoryOpensTheCategoryFormWithTheReasonAndCreatesNoMoney`; the trigger today is the entry link, as the progress notes say. Save commits a real category and current-month limit and returns it selected → `FirstCategoryJourneyTest.aNewInstallationCreatesItsFirstCategoryAndStillHasItAfterTheScreenIsRebuilt`, which reads the category row, the default limit for the current month, the receipt and the revision from the app's database, and the result contract `CREATED_CATEGORY_RESULT` carrying only the identifier. Invalid and duplicate submission handled explicitly; archived identities cannot reappear → `aNameAlreadyInUseIsRefusedOnTheFieldAndTheDraftCanBeDiscarded`, `aLimitThatIsNotAnAmountIsExplainedKeptAsTypedAndCreatesNothing`, and in `CategoryEditorViewModelTest` the name, limit and rejection cases; the archived-name rule itself is the command's, proven in SELLO-013. Empty financial state is not an error fallback → `ReciboScreenTest.theFirstRunOffersToCreateCategoriesAndNothingThatDoesNotExistYet` against a separate failed state. Draft survives rotation and process reconstruction → `aDraftSurvivesTheScreenBeingRebuilt`, `theDraftComesBackAfterTheProcessIsKilled`, and the real kill under Device. Creation requires a receipt → `whileSavingTheFormIsBusyLockedAndASecondTapSendsNothing` (no result until the answer arrives), `anUnknownOutcomeThatTurnsOutNotSavedReturnsToTheFormWithNothingCreated`, `whileTheOutcomeCannotBeReadTheFormStaysLockedAndRetryOnlyAsksAgain`. Double submit and restart during save produce one category → `tappingCreateTwiceCreatesOneCategory` on the real database, `aSaveInterruptedByTheProcessDyingIsRecoveredFromItsReceiptWithoutSendingAgain`, `anInterruptedSaveThatNeverCommittedLeavesTheDraftReadyToSend`. Empty text never becomes zero → `turningTheLimitOffWithNoAmountAsksForOneInsteadOfAssumingZero`, `withoutALimitTheCategoryIsUnlimitedNotZero`, `aTypedZeroIsARealZeroBudget`. No backup action → asserted absent in the first-run test. Editor component states in the catalog → `IconChoiceGrid` with example `inputs.icon-choice`, covered by `IconChoiceGridTest` and the catalog's open-every-example test.
+- **Red / Green:** the tests were written with the code, so the first run was not a red against a naive version. The 28 view-model tests passed on their first run; mutation was used to find out whether they would fail when they should. Of 33 mutations of the finished code, 30 failed the expected tests at once: empty limit read as zero, limit on by default, second tap sending again, editable while saving, operation identifier not saved or kept after a rejection, created before the receipt, unknown outcome treated as created or resubmitted, unreadable outcome treated as not saved, no recovery after restart, taken name shown as a storage error, draft name or limit or result not saved, draft discarded without asking, default icon ignoring used ones, unoffered icon accepted, typing while unlimited, archived category counting for an entry, failed read sending to the editor, prerequisite never cleared, unlimited listed wrongly, icon grid ignoring width, keeping its own selection or picking while disabled, result not returned, first-run button doing nothing, prerequisite not navigated or not explained. Three survived and each got an assertion that now fails them: pressing a disabled button showing an error, a replaced history not being re-read, and Back while saving opening the discard question. The first device run failed seven tests, all on how the tests found or pressed things (a disabled field has no ""set text"" action to search by; a second click after the screen had already changed; Back closing the keyboard first; one test calling its setup three times). One later failure, on a small screen, was a real defect: the ""name already used"" message appeared above the visible area. The form now scrolls to the name. While this ticket was in progress the hosted run on `main` after SELLO-015 (38053383227) failed one of that ticket's on-device tests once: it looked at the screen before Recibo had finished reading the database, which the test framework does not wait for. It had passed on the pull request, so it is a timing fault in the test, not in the app. Every on-device test now waits for what it expects; the app suite was then run three times locally, once on a small screen, without a failure, and the gate repeated.
+- **Gate results:** local `./scripts/verify-ticket SELLO-016 --gate G2` passed, on the final commit: 225 host tests (108 app, 79 domain, 31 design-system, 4 data, 3 catalog), 200 device tests on an isolated API 30 emulator (88 data, 54 design-system, 48 app, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, all in `:app` and present before this ticket. The app, design-system and catalog device tests were also run on a 320×640 screen. No dependency, lock file or schema changed.
+- **Quality run:** run 20261010T154954Z-122c4a7b; SELLO-016 G2 passed; HEAD c1bc912, inputs sha256 fef0e38a7ea1; report docs/planning/mvp/quality-reports/SELLO-016.json sha256 22af205ef9b9e0bd475ae7d7090e94689c439738bef5da7f95acb3210aed6742
+- **Device / Artifact:** the debug app on the API 30 emulator (1080×2340, Cobalto light, font scale 1.0), on cleared data and started from the launcher. ""Crear categorías"" opened the form; a name was typed and the shopping-cart icon chosen; then Home, `am kill` (process 13242 gone) and back through the launcher: a new process (13475) showed the same name and icon. ""Crear categoría"" returned to Recibo listing the category with ""Sin límite"" and ""Has gastado 0"". After `force-stop` and a fresh start it was still listed, and the database held one category with icon `shopping_cart`, one default limit for 2026-10 of kind `unlimited`, one `category.create` receipt and revision 1. The emulator's keyboard completed the typed word to ""Mercador""; that is the keyboard, not the app, and the name stored is exactly what the field showed. Five captures are in `docs/testing/evidence/SELLO-016/`. A finite limit on the installed app is covered by the journey test, not by this manual run.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
 
 Shared definition of done and gates:
 
@@ -3326,7 +3377,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1004,Highest,Backlog,sello-016
+",1004,Highest,Done,sello-016
 17,Story,SELLO-017 — Ship Anotar expense and its durable receipt end-to-end,"Local ID: SELLO-017
 Epic: SELLO-E04
 Increment: MVP

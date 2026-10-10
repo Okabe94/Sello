@@ -21,6 +21,9 @@ class DeepLinkDraftTest {
     private val id = "3f2c1a9e-7b4d-4c61-9a0e-5d8f2b6c7e10"
     private val category = (CategoryId.of(id) as Outcome.Success).value
 
+    /** One category exists, so an entry has somewhere to go and nothing else is asked for. */
+    private val existing = HandCategoryReads().apply { categories = listOf(category(1, "Mercado")) }
+
     private fun pesos(amount: Long) =
         (TransactionAmount.of(Money.cop(amount)) as Outcome.Success).value
 
@@ -138,7 +141,7 @@ class DeepLinkDraftTest {
     @Test
     fun aLinkBecomesAPendingRequestAndNothingElse() {
         val session = MonthSession(HandFinancialClock("2026-10-09"), HandMonotonicClock())
-        val shell = ShellViewModel(SavedStateHandle(), session)
+        val shell = ShellViewModel(SavedStateHandle(), session, existing)
         val before = shell.state.value
 
         shell.onAction(ShellAction.OpenLink("sello://anotar?categoria=$id&monto=48700"))
@@ -152,7 +155,7 @@ class DeepLinkDraftTest {
     @Test
     fun aLaterLinkReplacesTheRequestAndAForeignLinkLeavesItAlone() {
         val session = MonthSession(HandFinancialClock("2026-10-09"), HandMonotonicClock())
-        val shell = ShellViewModel(SavedStateHandle(), session)
+        val shell = ShellViewModel(SavedStateHandle(), session, existing)
         shell.onAction(ShellAction.OpenLink("sello://anotar?monto=100"))
 
         shell.onAction(ShellAction.OpenLink("https://example.com/?monto=999"))

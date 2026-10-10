@@ -54,6 +54,7 @@
     <string name="catalog_example_field_pill">FieldPill</string>
     <string name="catalog_example_form_field">FormField</string>
     <string name="catalog_example_switch">Switches</string>
+    <string name="catalog_example_icon_choice">Elegir ícono</string>
     <string name="catalog_example_expense_entry">Entry controls together</string>
     <string name="catalog_example_category_circle">CategoryCircle</string>
     <string name="catalog_example_category_cell">CategoryCell</string>

@@ -32,6 +32,7 @@ class CatalogExamplesTest {
                 "inputs.field-pill",
                 "inputs.form-field",
                 "inputs.switch",
+                "inputs.icon-choice",
                 "inputs.expense-entry",
                 "navigation.scaffold",
                 "navigation.entry-dock",

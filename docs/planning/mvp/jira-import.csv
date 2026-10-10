@@ -3203,7 +3203,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-013, SELLO-015, SELLO-008, SELLO-004
 - **Gate:** G2
 
@@ -3258,6 +3258,48 @@ approved D04/D05; use those accepted rules for field bounds and month limits.
 Create/run `*CategoryEditorViewModelTest` and device `FirstCategoryJourneyTest`; G2.
 On an empty **debug** profile create a category, restart, and verify its actual ID,
 limit and selected state. Include raw-input/error and restored-operation assertions.
+
+### Execution progress
+2026-10-10: started on branch `sello-016-first-run-category` after SELLO-015 merged. No
+dependency was added and the schema did not change.
+
+Delivered. `:app`: the category editor (state, actions, view model, root and screen)
+on the real `CreateCategory` command, with its draft, the identifier of a save in
+flight and its result kept across rotation and process death; the first-run Recibo
+with ""Crear categorías""; Recibo listing categories with their limits and ""Agregar
+categoría""; the editor route with its returned identifier; and the ""an entry needs a
+category first"" path. `:design-system`: `IconChoiceGrid` and nine more category
+icons, with a catalog example `inputs.icon-choice`.
+`docs/development/category-editor.md` states the form's rules and contracts.
+
+Choices made during the work, for owner review:
+- A new category is ""Sin límite"" unless the switch is turned off and an amount is
+  typed. Turning it off and leaving the amount empty is an error, never zero.
+- Fourteen icons, the ones the reference names. It shows twenty-eight without
+  naming the other fourteen, so those need choosing. Each icon has a spoken name
+  (Comida, Hogar, Transporte and so on).
+- Recibo gained an ""Agregar categoría"" button under the list. The reference does
+  not place one there, but without it only one category could ever be created
+  until the editing ticket.
+- The form is a full screen in every window. The reference makes editors a side
+  panel on wide windows; that is left for later.
+- Left out of the form for now: the preview of the category cell, the line saying
+  what the month's total limit would become, and suggestions drawn from the
+  person's own limits. The three fixed suggestions are shown.
+- The explanation ""to record an expense you first need a category"" is delivered
+  and tested, but today only an entry link triggers it, and the link is not yet
+  registered with Android. The ""Anotar"" dock that will normally trigger it arrives
+  with the entry form in SELLO-017, because a dock that opens nothing once a
+  category exists would be a fake.
+- Back while saving does nothing. Back with a draft asks before discarding.
+- When the name is refused, the form scrolls back up to it.
+
+Found on the way: on a small screen the ""name already used"" message appeared above
+the visible area, because the button is at the bottom and the name at the top. The
+form now scrolls to the name when it has an error.
+
+Left for later: editing, archiving and limit changes (SELLO-020); the dock and the
+entry form (SELLO-017); the real Recibo content (SELLO-018).
 
 Shared definition of done and gates:
 
@@ -3326,7 +3368,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1004,Highest,Backlog,sello-016
+",1004,Highest,In Progress,sello-016
 17,Story,SELLO-017 — Ship Anotar expense and its durable receipt end-to-end,"Local ID: SELLO-017
 Epic: SELLO-E04
 Increment: MVP

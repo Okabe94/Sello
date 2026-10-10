@@ -16,6 +16,7 @@ import com.software.sello.catalog.components.ErrorSlipExample
 import com.software.sello.catalog.components.ExpenseEntryExample
 import com.software.sello.catalog.components.FieldPillExample
 import com.software.sello.catalog.components.FormFieldExample
+import com.software.sello.catalog.components.IconChoiceExample
 import com.software.sello.catalog.components.KeyValueExample
 import com.software.sello.catalog.components.LeaderLineExample
 import com.software.sello.catalog.components.LineChartExample
@@ -173,6 +174,11 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Inputs,
         R.string.catalog_example_switch
     ) { SwitchExample() },
+    CatalogExample(
+        "inputs.icon-choice",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_icon_choice
+    ) { IconChoiceExample() },
     CatalogExample(
         "inputs.expense-entry",
         CatalogGroup.Inputs,

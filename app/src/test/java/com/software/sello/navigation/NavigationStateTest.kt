@@ -3,6 +3,7 @@ package com.software.sello.navigation
 import androidx.lifecycle.SavedStateHandle
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.model.TransactionAmount
 import com.software.sello.presentation.month.MonthNames
 import java.time.YearMonth
@@ -30,8 +31,10 @@ class NavigationStateTest {
     @After
     fun resetDispatcher() = Dispatchers.resetMain()
 
+    private val categories = HandCategoryReads()
+
     private fun shell(saved: SavedStateHandle = SavedStateHandle()) =
-        ShellViewModel(saved, MonthSession(clock, monotonic))
+        ShellViewModel(saved, MonthSession(clock, monotonic), categories)
 
     /** What the system hands a new process: the same keys and values, new objects. */
     private fun SavedStateHandle.afterProcessDeath() =
@@ -171,11 +174,13 @@ class NavigationStateTest {
 
         assertEquals(
             ShellState(
-                october,
-                august,
+                currentMonth = october,
+                selectedMonth = august,
                 monthPickerOpen = true,
                 pickerYear = 2025,
-                before.pendingEntry
+                pendingEntry = before.pendingEntry,
+                // There is still no category, and nobody was sent to create one yet.
+                entryNeedsCategory = true
             ),
             restored.state.value
         )
@@ -214,6 +219,46 @@ class NavigationStateTest {
 
         assertEquals(october, state.selectedMonth)
         assertEquals(EntryRequest(null, null), state.pendingEntry)
+    }
+
+    @Test
+    fun anEntryWithNoCategoryToRecordItInAsksForOneOnceAndKeepsTheRequest() {
+        val shell = shell()
+
+        shell.onAction(ShellAction.OpenLink("sello://anotar?monto=48700"))
+        val asked = shell.state.value
+        shell.onAction(ShellAction.CategoryPrerequisiteShown)
+
+        assertEquals(true, asked.entryNeedsCategory)
+        assertEquals(false, shell.state.value.entryNeedsCategory)
+        assertEquals(asked.pendingEntry, shell.state.value.pendingEntry)
+    }
+
+    @Test
+    fun onlyACategoryThatIsNotArchivedCountsForAnEntry() {
+        categories.categories = listOf(categories.category(1, "Vieja", archived = true))
+        val onlyArchived = shell()
+        onlyArchived.onAction(ShellAction.OpenLink("sello://anotar"))
+
+        categories.categories += categories.category(2, "Mercado")
+        val withOne = shell()
+        withOne.onAction(ShellAction.OpenLink("sello://anotar"))
+
+        assertEquals(true, onlyArchived.state.value.entryNeedsCategory)
+        assertEquals(false, withOne.state.value.entryNeedsCategory)
+    }
+
+    @Test
+    fun aFailedReadOrAForeignLinkSendsNobodyToTheEditor() {
+        val shell = shell()
+        shell.onAction(ShellAction.OpenLink("https://example.com/anotar"))
+        val foreign = shell.state.value.entryNeedsCategory
+        categories.failure = StorageFailure.Unavailable("SQLiteException")
+
+        shell.onAction(ShellAction.OpenLink("sello://anotar"))
+
+        assertEquals(false, foreign)
+        assertEquals(false, shell.state.value.entryNeedsCategory)
     }
 
     @Test

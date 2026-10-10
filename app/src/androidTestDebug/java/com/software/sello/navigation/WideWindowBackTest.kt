@@ -14,11 +14,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.software.sello.TestData
 import com.software.sello.composition.SelloApplication
 import com.software.sello.designsystem.component.SCAFFOLD_SECONDARY_TAG
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,6 +31,9 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class WideWindowBackTest {
+    @Before
+    fun newInstallation() = TestData.reset()
+
     @get:Rule
     val rule = createAndroidComposeRule<ComponentActivity>()
 

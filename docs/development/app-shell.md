@@ -8,15 +8,16 @@ of to one screen. All of it is in `:app`, package `navigation`.
 
 ## What is on screen today
 
-`SelloAppRoot` hosts one destination, Recibo. The title is the selected month and
-opens the month picker. There is no tab bar, because one tab is not a choice, and no
+`SelloAppRoot` hosts Recibo and the [category editor](category-editor.md). On Recibo
+the title is the selected month and opens the month picker. There is no tab bar, because one tab is not a choice, and no
 "Anotar" dock, because the entry form does not exist yet. A tab or the dock is added
 when what it opens works: add the tab to `ShellTab` and its route to `Routes.kt`
 (SELLO-022 for Resumen), and give the scaffold a dock when SELLO-017 lands.
 
 Recibo shows the shared [monthly snapshot](monthly-snapshot.md): a skeleton while
-loading, an explanation when there are no categories, the exact total spent when
-there are, or an error with retry. SELLO-018 replaces that minimal content.
+loading, the first-run slip when there are no categories, the exact total spent and
+the list of categories when there are, or an error with retry. SELLO-018 replaces
+that minimal content.
 
 ## The selected month
 

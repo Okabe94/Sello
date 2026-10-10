@@ -20,18 +20,21 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.MainActivity
 import com.software.sello.R
+import com.software.sello.TestData
 import com.software.sello.designsystem.component.SCAFFOLD_BAR_TAG
 import com.software.sello.designsystem.component.SCAFFOLD_DOCK_TAG
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.TransactionAmount
 import com.software.sello.domain.port.FinancialClock
+import com.software.sello.feature.category.EDITOR_PREREQUISITE_TAG
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
 import java.time.YearMonth
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,6 +87,9 @@ class ShellOnDeviceTest {
             }
         }
     }
+
+    @Before
+    fun newInstallation() = TestData.reset()
 
     @After
     fun leaveTheSessionAsANewInstallationHasIt() {
@@ -174,18 +180,23 @@ class ShellOnDeviceTest {
     }
 
     @Test
-    fun anEntryLinkOnlyLeavesARequestWaitingAndCreatesNoMoney() {
+    fun anEntryLinkWithNoCategoryOpensTheCategoryFormWithTheReasonAndCreatesNoMoney() {
         launch("sello://anotar?categoria=3f2c1a9e-7b4d-4c61-9a0e-5d8f2b6c7e10&monto=48700")
 
-        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
+        // There is nowhere to record an expense yet, so the person is told what to do first.
+        rule.onNodeWithTag(EDITOR_PREREQUISITE_TAG).assertIsDisplayed()
         val waiting = shell().state.value.pendingEntry
-        shell().onAction(ShellAction.EntryTaken)
+        Espresso.pressBack()
 
+        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
         assertEquals(
             (TransactionAmount.of(Money.cop(48_700)) as Outcome.Success).value,
             waiting?.amount
         )
         assertEquals("3f2c1a9e-7b4d-4c61-9a0e-5d8f2b6c7e10", waiting?.categoryId?.value)
+        // The request is still waiting for the entry form, and nothing was written.
+        assertEquals(waiting, shell().state.value.pendingEntry)
+        shell().onAction(ShellAction.EntryTaken)
         assertEquals(0, financialRows())
     }
 

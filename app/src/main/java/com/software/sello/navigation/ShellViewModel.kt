@@ -7,11 +7,15 @@ import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.TransactionAmount
+import com.software.sello.domain.port.CategoryReads
 import java.time.YearMonth
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * What the frame around every screen shows. [pickerYear] is the year the month picker
@@ -23,7 +27,9 @@ data class ShellState(
     val selectedMonth: YearMonth,
     val monthPickerOpen: Boolean,
     val pickerYear: Int,
-    val pendingEntry: EntryRequest?
+    val pendingEntry: EntryRequest?,
+    /** An entry was asked for and there is no category to record it in yet. */
+    val entryNeedsCategory: Boolean = false
 )
 
 sealed interface ShellAction {
@@ -44,16 +50,26 @@ sealed interface ShellAction {
 
     /** The entry form has taken the pending request. */
     data object EntryTaken : ShellAction
+
+    /** The person has been taken to create the category an entry needs. */
+    data object CategoryPrerequisiteShown : ShellAction
 }
 
 /**
  * Owns what must survive rotation and the process being killed for the frame: the
  * month selection (through [MonthSession]), the month picker, and a pending entry
- * request. Only identifiers and plain values are saved, never a record. It has no
- * access to any command: nothing here can create money.
+ * request. Only identifiers and plain values are saved, never a record. It can read
+ * whether a category exists, but has no access to any command: nothing here can
+ * create money.
  */
-class ShellViewModel(private val saved: SavedStateHandle, private val session: MonthSession) :
-    ViewModel() {
+class ShellViewModel(
+    private val saved: SavedStateHandle,
+    private val session: MonthSession,
+    private val categories: CategoryReads
+) : ViewModel() {
+    /** Bumped whenever a saved value changes, so [state] is rebuilt from them. */
+    private val changes = MutableStateFlow(0)
+
     init {
         // Present only when this process is continuing an earlier one.
         if (saved.contains(KEY_SESSION)) {
@@ -62,23 +78,21 @@ class ShellViewModel(private val saved: SavedStateHandle, private val session: M
         saved[KEY_SESSION] = true
     }
 
-    val state: StateFlow<ShellState> = combine(
-        session.currentMonth,
-        session.selectedMonth,
-        saved.getStateFlow(KEY_PICKER, false),
-        saved.getStateFlow<Int?>(KEY_PICKER_YEAR, null),
-        saved.getStateFlow(KEY_ENTRY, NO_ENTRY)
-    ) { current, selected, pickerOpen, pickerYear, _ ->
-        ShellState(current, selected, pickerOpen, pickerYear ?: selected.year, pendingEntry())
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, now())
+    val state: StateFlow<ShellState> =
+        combine(session.currentMonth, session.selectedMonth, changes) { _, _, _ -> now() }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, now())
 
-    private fun now() = ShellState(
-        currentMonth = session.currentMonthNow,
-        selectedMonth = session.selectedMonthNow,
-        monthPickerOpen = saved[KEY_PICKER] ?: false,
-        pickerYear = saved[KEY_PICKER_YEAR] ?: session.selectedMonthNow.year,
-        pendingEntry = pendingEntry()
-    )
+    private fun now(): ShellState {
+        val selected = session.selectedMonthNow
+        return ShellState(
+            currentMonth = session.currentMonthNow,
+            selectedMonth = selected,
+            monthPickerOpen = saved[KEY_PICKER] ?: false,
+            pickerYear = saved[KEY_PICKER_YEAR] ?: selected.year,
+            pendingEntry = pendingEntry(),
+            entryNeedsCategory = saved[KEY_NEEDS_CATEGORY] ?: false
+        )
+    }
 
     fun onAction(action: ShellAction) {
         when (action) {
@@ -102,7 +116,12 @@ class ShellViewModel(private val saved: SavedStateHandle, private val session: M
 
             ShellAction.ReturnedToForeground -> session.returnedToForeground()
 
-            is ShellAction.OpenLink -> EntryLinks.parse(action.link)?.let(::hold)
+            is ShellAction.OpenLink -> EntryLinks.parse(action.link)?.let { request ->
+                hold(request)
+                checkThereIsACategory()
+            }
+
+            ShellAction.CategoryPrerequisiteShown -> saved[KEY_NEEDS_CATEGORY] = false
 
             ShellAction.EntryTaken -> {
                 saved[KEY_ENTRY_CATEGORY] = null
@@ -113,6 +132,22 @@ class ShellViewModel(private val saved: SavedStateHandle, private val session: M
         val session = session.save()
         saved[KEY_MONTH] = session.pinnedMonth
         saved[KEY_BACKGROUNDED] = session.backgroundedAtMillis
+        changes.update { it + 1 }
+    }
+
+    /**
+     * An entry needs a category that can take it. If there is none, the person is sent
+     * to create one. A failed read sends nobody anywhere: the screen underneath
+     * already shows that the data could not be read.
+     */
+    private fun checkThereIsACategory() {
+        viewModelScope.launch {
+            val read = categories.monthBudget(session.currentMonthNow) as? Outcome.Success
+            if (read != null && read.value.categories.none { !it.category.archived }) {
+                saved[KEY_NEEDS_CATEGORY] = true
+                changes.update { it + 1 }
+            }
+        }
     }
 
     private fun hold(request: EntryRequest) {
@@ -147,5 +182,6 @@ class ShellViewModel(private val saved: SavedStateHandle, private val session: M
         private const val KEY_ENTRY = "shell.entry"
         private const val KEY_ENTRY_CATEGORY = "shell.entry.category"
         private const val KEY_ENTRY_AMOUNT = "shell.entry.amount"
+        private const val KEY_NEEDS_CATEGORY = "shell.entry.needsCategory"
     }
 }

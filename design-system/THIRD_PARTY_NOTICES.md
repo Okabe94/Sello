@@ -9,6 +9,9 @@ APK under `res/raw` so it travels with the asset. Reviewed for SELLO-006 on 2026
 | Saira Stencil One | `res/font/saira_stencil_one.ttf` | SIL Open Font License 1.1, `res/raw/license_saira_stencil_one.txt` | `google/fonts` at `51303ca`, `ofl/sairastencilone/SairaStencilOne-Regular.ttf` | `781496fdaf8e04cf6741b31025f6b4ba84f66021b097a8e0d85cbea2180cf223` |
 | Material Symbols Rounded, weight 500 (individual icons) | `res/drawable/ic_sello_*.xml` | Apache License 2.0, `res/raw/license_material_symbols.txt` | `google/material-design-icons` at `49d4db3`, `symbols/android/<name>/materialsymbolsrounded/` | per file, in Git |
 
+Nine category icons were added for SELLO-016 on 2026-10-10 from the same revision and
+path, treated the same way.
+
 The fonts are unmodified. Icons are the upstream `wght500fill1` (filled) and `wght500`
 (outlined) 24px vectors with the AppCompat `android:tint` attribute removed; Compose
 supplies the tint. Sello does not use the fonts' reserved names for any derivative.

@@ -12,6 +12,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -23,6 +24,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -34,6 +36,7 @@ import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.feature.category.CategoryEditorRoot
 import com.software.sello.feature.recibo.ReciboRoot
 import com.software.sello.presentation.month.MonthNames
 import com.software.sello.presentation.month.monthNames
@@ -56,9 +59,33 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
     val entry by navigation.currentBackStackEntryAsState()
     val onDetail = entry != null && navigation.previousBackStackEntry != null
 
-    ShellScreen(state, monthNames(), shell::onAction) { padding ->
-        NavHost(navController = navigation, startDestination = ReciboRoute) {
-            composable<ReciboRoute> { ReciboRoot(viewModels, padding) }
+    NavHost(navController = navigation, startDestination = ReciboRoute) {
+        composable<ReciboRoute> {
+            ShellScreen(state, monthNames(), shell::onAction) { padding ->
+                ReciboRoot(viewModels, padding) { navigation.navigate(CategoryEditorRoute()) }
+            }
+        }
+        composable<CategoryEditorRoute> {
+            CategoryEditorRoot(viewModels) { createdId ->
+                val onEditor =
+                    navigation.currentBackStackEntry?.destination?.hasRoute<CategoryEditorRoute>()
+                if (onEditor == true) {
+                    // Only the identifier goes back; whoever opened the form reads the rest.
+                    if (createdId != null) {
+                        navigation.previousBackStackEntry?.savedStateHandle
+                            ?.set(CREATED_CATEGORY_RESULT, createdId)
+                    }
+                    navigation.popBackStack()
+                }
+            }
+        }
+    }
+    // An entry cannot be recorded without a category, so the form to create one opens
+    // with that explanation instead of an entry form that could not be completed.
+    LaunchedEffect(state.entryNeedsCategory) {
+        if (state.entryNeedsCategory) {
+            shell.onAction(ShellAction.CategoryPrerequisiteShown)
+            navigation.navigate(CategoryEditorRoute(forEntry = true)) { launchSingleTop = true }
         }
     }
     // Declared after the content so that it is asked before the navigation host: an

@@ -79,6 +79,9 @@ an empty database. Showing that failure as a screen is the app shell's job (SELL
 backup and device transfer, so the database never leaves the device through
 Android. The only backup is the file a person saves themselves (SELLO-028).
 
+Changes are made only through [commands](commands.md), which write the record, the
+revision and the receipt in one transaction.
+
 ## Changing the schema
 
 1. Change the entities, raise `version` in `SelloDatabase` and build: KSP writes the
@@ -91,7 +94,6 @@ Android. The only backup is the file a person saves themselves (SELLO-028).
 
 ## Not here yet
 
-- Domain meaning of receipts (operation kinds, input identity, lookup): SELLO-012.
 - Limit commands, and how archiving pauses a default: SELLO-013 with the two limit
   tables above.
 - Deletion and undo records: SELLO-019. Restore and reset: SELLO-030, SELLO-031.

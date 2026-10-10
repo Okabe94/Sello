@@ -2424,7 +2424,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-011, SELLO-004
 - **Gate:** G2
 
@@ -2484,6 +2484,51 @@ Architecture §5 defines the command outcomes; no form UI belongs to this ticket
 Create `ExpenseCommandContractTest` in data/androidTest; use its instrumented class
 selector from the guide, then data connected suite and G2. Record row/receipt/revision
 assertions independently, including actual rollback and reopen—not only returned results.
+
+### Execution progress
+2026-10-09: started on branch `sello-012-expense-commands` after SELLO-011 merged. No
+product decision or dependency was needed, and the schema did not change.
+
+Delivered. `:domain`: `OperationId`, `OperationKind`, `OperationReceipt`,
+`CreateExpense`, the `ExpenseCommands` port with typed `Committed`, `Rejected` and
+`OutcomeUnknown`, and `RecordIdSource`. `:data`: `RoomExpenseCommands`, the input
+digest and the strict receipt mapper. `:app`: a random identifier source and the
+workflow bound in the graph; no screen calls it yet. `docs/development/commands.md`
+states the protocol the next commands reuse.
+
+Choices made during the work, for owner review:
+- The order inside the transaction is generation, replay, validation, write. A
+  command prepared against a replaced history is refused even if it once committed;
+  its original result stays available through lookup.
+- Replaying a committed operation returns its receipt even if the category has been
+  archived since, because nothing new is written.
+- Once the transaction starts it always finishes, and the caller is checked for
+  cancellation before and after. A cancelled caller always gets the cancellation,
+  never a result.
+- A database error before the commit is `Rejected`, because the rollback is certain.
+  Only an error from the commit itself is `OutcomeUnknown`.
+- The store creates the expense's identifier; the caller supplies only the operation's.
+- The input identity is a SHA-256 of the meaningful fields, so a receipt holds no
+  amount or note.
+- No totals are checked when saving: a month would need over nine million maximum
+  records to exceed what a total can hold. Totals are checked where they are computed.
+- `Committed` carries no follow-up state because nothing follows a save yet.
+
+Left for later: the form, drafts and success stamp (SELLO-017); category and limit
+commands (SELLO-013); edit, delete and undo (SELLO-019); the sandbox scenario that
+replays expenses through this workflow (SELLO-024).
+
+2026-10-09: owner approved pull request 11, including the choices above; moved to Done
+for a squash merge.
+
+### Delivery evidence
+- **Revision:** branch `sello-012-expense-commands`; tested snapshot is commit `d6beb36`, which is the implementation commit `aecf2ce` with `main` merged in after the SELLO-044 roadmap ticket landed, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** all in `ExpenseCommandContractTest` on a real database file, each case reading the stored rows, receipt count and revision itself. Identical operation and input creates one expense and returns the original receipt → `submittingTheSameOperationAndInputAgainReturnsTheOriginalAndWritesNothing` and `manyIdenticalSubmissionsAtOnceSaveOneExpense` (32 at once: one written, 31 replays). Changed input under the same operation conflicts → `reusingAnOperationWithAnyDifferentInputIsAConflictAndChangesNothing` (amount 12.000, date, note, no note, category). Stale generation, missing and archived category reject → `aCommandPreparedAgainstAReplacedHistoryIsRejected`, `aMissingCategoryIsRejectedAndNothingIsWritten`, `aCategoryArchivedAfterItWasChosenIsRejectedInsideTheTransaction`. A failed transaction leaves row and receipt absent → `aRealConstraintFailureLeavesNeitherExpenseNorReceiptNorRevision`, a real primary-key failure after the revision was already advanced inside the transaction. A failure at commit is not reported as ""not saved"" → `aFailureAtTheCommitItselfIsReportedAsUnknownAndRecoveredByLookup`, a real refusal by the database at commit. Cancellation propagates and the result is recoverable with the same operation → `aCallerCancelledBeforeSubmittingWritesNothing` and `aCallerCancelledWhileSavingGetsTheCancellationAndCanRecoverTheSavedExpense`. Receipt time is audit time, not sandbox time → `theDateLimitIsTheFinancialDayNotTheRealClock`, with the financial day in December and the receipt stamped in October. Survives reopening → `theReceiptAndReplaySurviveClosingAndReopeningTheFile`. Canonical identity → two digests worked out outside the app are asserted exactly. Strict receipt and row decoding → `aDamagedReceiptIsAFailureForBothSubmissionAndLookup` (8 damaged values) and `aDamagedProfileOrCategoryRejectsTheCommandWithoutWriting`. No network, file, DataStore or notification work in the transaction → the transaction body calls only DAOs, the two clocks and the identifier source. Workflow bound in the app → `FinancialStorageOnDeviceTest.theExpenseWorkflowIsWiredToTheRealDatabaseAndAnswersWithoutWriting`.
+- **Red / Green:** the 18 contract tests first ran against a naive version (no transaction, no replay check, no validation, every exception including cancellation turned into a rejection): 14 failed for those reasons and 4 passed (first save, save without a note, second operation's sequence, and the constraint case, which a naive insert also refuses). With the workflow implemented all 18 pass. Twenty-one mutations of the finished code followed. Twenty failed the expected tests: no transaction, cancellable transaction, result handed to a cancelled caller, no check before starting, commit failure reported as rejected, every failure reported as unknown, generation unchecked, replay ignoring input, replay never recognised, archived accepted, date limit off by one, revision not advanced, constant sequence, digest without amount, note flag, date, category or field lengths, receipt kind unchecked, receipt digest unchecked. One survived: not truncating timestamps to milliseconds changed nothing, because storing already does; that line was redundant and was removed.
+- **Gate results:** local `./scripts/verify-ticket SELLO-012 --gate G2` passed, and passed again with the same counts after `main` was merged in (the earlier run 20261010T035429Z-e7842566 on `aecf2ce` became stale when the roadmap ticket changed tracked inputs): 121 host tests (49 domain, 35 app, 30 design-system, 4 data, 3 catalog), 114 device tests on an isolated API 30 emulator (43 data, 13 app, 48 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 24 warnings, all in `:app` and present before this ticket. No dependency, lock file or schema changed.
+- **Quality run:** run 20261010T043327Z-dc3bce9e; SELLO-012 G2 passed; HEAD d6beb36, inputs sha256 d6f2a229a17b; report docs/planning/mvp/quality-reports/SELLO-012.json sha256 41f2bc23fcba4fd3bd6d0209ea9597564646bb6277d1adb0a997abcb27a8052c
+- **Device / Artifact:** no visible change; no screen calls the workflow yet. The app's device tests confirm it starts with the workflow bound to its real database and no record written. Hosted run 38022319554 on the pull request's merge commit passed the `quality` check with the ticket in Review.
+- **Review:** executor self-review of the diff, reports and logs. Project owner reviewed pull request 11 and approved on 2026-10-09, including the listed choices. This is owner acceptance, not an independent technical review; GitHub does not let the account that opened a pull request approve it.
 
 Shared definition of done and gates:
 
@@ -2552,7 +2597,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1003,Highest,Backlog,sello-012
+",1003,Highest,Done,sello-012
 13,Story,SELLO-013 — Implement category commands and historical monthly budget storage,"Local ID: SELLO-013
 Epic: SELLO-E03
 Increment: MVP

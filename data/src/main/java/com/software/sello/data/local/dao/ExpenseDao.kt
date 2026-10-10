@@ -10,6 +10,10 @@ interface ExpenseDao {
     @Insert
     suspend fun insert(expense: ExpenseEntity)
 
+    /** The highest sequence in use, or null when there is no expense. */
+    @Query("SELECT MAX(sequence) FROM expense")
+    suspend fun highestSequence(): Long?
+
     @Query("SELECT * FROM expense WHERE id = :id")
     suspend fun byId(id: String): ExpenseEntity?
 

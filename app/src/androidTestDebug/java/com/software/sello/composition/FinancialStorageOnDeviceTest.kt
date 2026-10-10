@@ -3,9 +3,12 @@ package com.software.sello.composition
 import android.database.sqlite.SQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.RecordIdSource
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -57,6 +60,16 @@ class FinancialStorageOnDeviceTest {
 
         assertEquals(running, (profile as Outcome.Success).value.zone)
         assertEquals(1, stored { it.count("profile") })
+    }
+
+    @Test
+    fun theExpenseWorkflowIsWiredToTheRealDatabaseAndAnswersWithoutWriting() = runBlocking {
+        val never = OperationId.of("00000000-0000-4000-8000-000000000000") as Outcome.Success
+
+        val found = koin.get<ExpenseCommands>().find(never.value)
+
+        assertEquals(Outcome.Success(null), found)
+        assertEquals(36, koin.get<RecordIdSource>().next().length)
     }
 
     @Test

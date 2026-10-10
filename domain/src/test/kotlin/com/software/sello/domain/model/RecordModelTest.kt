@@ -13,6 +13,7 @@ class RecordModelTest {
         assertEquals(canonical, CategoryId.of(canonical).valueOrFail().value)
         assertEquals(canonical, ExpenseId.of(canonical).valueOrFail().value)
         assertEquals(canonical, IncomeId.of(canonical).valueOrFail().value)
+        assertEquals(canonical, OperationId.of(canonical).valueOrFail().value)
     }
 
     @Test
@@ -40,6 +41,7 @@ class RecordModelTest {
             assertEquals(raw, RecordIdError.Malformed(raw), CategoryId.of(raw).errorOrFail())
             assertEquals(raw, RecordIdError.Malformed(raw), ExpenseId.of(raw).errorOrFail())
             assertEquals(raw, RecordIdError.Malformed(raw), IncomeId.of(raw).errorOrFail())
+            assertEquals(raw, RecordIdError.Malformed(raw), OperationId.of(raw).errorOrFail())
         }
     }
 

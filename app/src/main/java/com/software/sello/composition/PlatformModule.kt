@@ -6,9 +6,11 @@ import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.MonotonicClock
+import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.platform.AndroidTimeSignals
 import com.software.sello.platform.ApplicationScope
 import com.software.sello.platform.ProcessFinancialZone
+import com.software.sello.platform.RandomRecordIds
 import com.software.sello.platform.SystemAuditClock
 import com.software.sello.platform.SystemDispatcherProvider
 import com.software.sello.platform.SystemFinancialClock
@@ -39,6 +41,7 @@ fun platformModule(financialZone: ProcessFinancialZone): Module = module {
     }
     singleOf(::SystemAuditClock) { bind<AuditClock>() }
     singleOf(::SystemMonotonicClock) { bind<MonotonicClock>() }
+    singleOf(::RandomRecordIds) { bind<RecordIdSource>() }
     // Bound by its contract only, so a debug override replaces the whole definition
     // and the production observer is never started alongside a simulated clock.
     single<FinancialClock>(createdAtStart = true) {

@@ -3,9 +3,13 @@ package com.software.sello.data
 import android.content.Context
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
+import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomFinancialProfileStore
 import com.software.sello.domain.port.AuditClock
+import com.software.sello.domain.port.ExpenseCommands
+import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.RecordIdSource
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -17,6 +21,16 @@ class FinancialStorage internal constructor(
     private val database: SelloDatabase,
     val profiles: FinancialProfileStore
 ) : AutoCloseable {
+    /**
+     * The expense workflow. It takes its clocks and identifier source here because the
+     * financial clock can only exist once the stored zone has been read from this storage.
+     */
+    fun expenseCommands(
+        audit: AuditClock,
+        clock: FinancialClock,
+        ids: RecordIdSource
+    ): ExpenseCommands = RoomExpenseCommands(database, audit, clock, ids)
+
     override fun close() = database.close()
 }
 

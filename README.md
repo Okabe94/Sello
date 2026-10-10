@@ -8,8 +8,8 @@ a deliberately smaller, tested MVP and the Sello visual language.
 - [Architecture and guardrails](ARCHITECTURE.md): ownership, financial/recovery
   contracts, technologies, MVP scope and developer tooling requirements.
 - [MVP Kanban board](docs/planning/mvp/BOARD.md): eight epics and 36 scoped tickets.
-- [Post-MVP roadmap board](docs/planning/mvp/ROADMAP.md): signed carryover epic and
-  seven dependency-linked tasks, separate from MVP release acceptance.
+- [Post-MVP roadmap board](docs/planning/mvp/ROADMAP.md): signed carryover (seven
+  dependency-linked tasks) and legacy data import (one), separate from MVP release acceptance.
 - [Delivery workflow and gates](docs/planning/mvp/README.md): dependencies,
   definition of done, evidence and Jira handoff.
 - [Independent executor guide](docs/planning/mvp/EXECUTION_GUIDE.md): prerequisites,

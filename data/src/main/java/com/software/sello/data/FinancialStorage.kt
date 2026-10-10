@@ -7,12 +7,14 @@ import com.software.sello.data.repository.RoomCategoryCommands
 import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomFinancialProfileStore
+import com.software.sello.data.repository.RoomMonthlySnapshots
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
 import kotlin.coroutines.CoroutineContext
 
@@ -42,6 +44,10 @@ class FinancialStorage internal constructor(
     ): CategoryCommands = RoomCategoryCommands(database, audit, clock, ids)
 
     val categoryReads: CategoryReads = RoomCategoryReads(database)
+
+    /** Takes the financial clock for the same reason the commands do. */
+    fun monthlySnapshots(clock: FinancialClock): MonthlySnapshots =
+        RoomMonthlySnapshots(database, clock)
 
     override fun close() = database.close()
 }

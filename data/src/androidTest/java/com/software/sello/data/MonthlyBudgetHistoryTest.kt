@@ -289,8 +289,8 @@ class MonthlyBudgetHistoryTest {
     @Test
     fun theMonthReadCarriesTheRevisionItWasReadAtAndEveryCategoryInOrder() = runBlocking {
         ledger.categories.submit(ledger.createCategory("Mercado", finite(100_000)))
-        // More categories than one page of the read, written directly for speed.
-        for (number in 200 until 650) {
+        // More categories than two pages of the read, written directly for speed.
+        for (number in 200 until 1300) {
             ledger.database.categoryDao().insert(category(number, "Categoría $number").toEntity())
         }
 
@@ -299,11 +299,11 @@ class MonthlyBudgetHistoryTest {
         assertEquals(october, read.month)
         assertEquals(1L to 1L, read.generation to read.revision)
         assertEquals(
-            listOf(uuid(100)) + (200 until 650).map { uuid(it) },
+            listOf(uuid(100)) + (200 until 1300).map { uuid(it) },
             read.categories.map { it.category.id.value }
         )
         assertEquals(derived(100_000), read.categories.first().state)
-        assertEquals(List(450) { Unconfigured }, read.categories.drop(1).map { it.state })
+        assertEquals(List(1100) { Unconfigured }, read.categories.drop(1).map { it.state })
     }
 
     @Test

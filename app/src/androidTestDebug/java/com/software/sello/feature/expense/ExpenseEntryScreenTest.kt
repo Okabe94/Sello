@@ -115,7 +115,6 @@ class ExpenseEntryScreenTest {
         show(complete)
 
         rule.onNodeWithContentDescription("48.700 pesos").assertIsDisplayed()
-        rule.onNodeWithText("Alimentación", useUnmergedTree = false)
         rule.onNode(hasText("Alimentación") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))
             .performScrollTo().assertIsSelected()
         rule.onNode(hasText("Café") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))

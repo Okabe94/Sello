@@ -21,6 +21,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.MainActivity
 import com.software.sello.TestData
+import com.software.sello.awaitDescription
+import com.software.sello.awaitTag
+import com.software.sello.awaitText
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.feature.recibo.RECIBO_ADD_CATEGORY_TAG
 import com.software.sello.feature.recibo.RECIBO_CATEGORIES_TAG
@@ -58,9 +61,19 @@ class FirstCategoryJourneyTest {
         TestData.reset()
     }
 
+    /** Starts the app and waits until Recibo has read the month. */
     private fun launch() =
         ActivityScenario.launch<MainActivity>(Intent(context, MainActivity::class.java))
-            .also { scenario = it }
+            .also {
+                scenario = it
+                rule.awaitTag(RECIBO_FIRST_RUN_TAG)
+            }
+
+    /** Opens the form from the empty Recibo and waits until it is ready to type in. */
+    private fun openFirstForm() {
+        rule.onNodeWithText("Crear categorías").performClick()
+        rule.awaitDescription("Nombre")
+    }
 
     private fun ComposeTestRule.nameField() = onNodeWithContentDescription("Nombre")
 
@@ -76,6 +89,7 @@ class FirstCategoryJourneyTest {
             rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo()
         }
         open.performClick()
+        rule.awaitDescription("Nombre")
         rule.nameField().performTextInput(name)
         if (limit != null) {
             rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
@@ -89,7 +103,7 @@ class FirstCategoryJourneyTest {
     fun aNewInstallationCreatesItsFirstCategoryAndStillHasItAfterTheScreenIsRebuilt() {
         val app = launch()
         rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
-        rule.onNodeWithText("Crear categorías").performClick()
+        openFirstForm()
         rule.onNodeWithText("Nueva categoría").assertIsDisplayed()
         // Nothing can be created without a name.
         rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
@@ -125,6 +139,7 @@ class FirstCategoryJourneyTest {
 
         app.recreate()
 
+        rule.awaitText("Mercado de plaza")
         rule.onNodeWithText("Mercado de plaza").assertIsDisplayed()
         rule.onNodeWithContentDescription("300.000 pesos").assertIsDisplayed()
     }
@@ -155,9 +170,11 @@ class FirstCategoryJourneyTest {
         create("Café")
 
         rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().performClick()
+        rule.awaitDescription("Nombre")
         rule.nameField().performTextInput("CAFE")
         submit()
 
+        rule.awaitText("Ya tienes una categoría con ese nombre.")
         rule.onNodeWithText("Ya tienes una categoría con ese nombre.").assertIsDisplayed()
         rule.nameField().assertTextContains("CAFE")
         assertEquals(1, TestData.count("category"))
@@ -174,7 +191,7 @@ class FirstCategoryJourneyTest {
     @Test
     fun aLimitThatIsNotAnAmountIsExplainedKeptAsTypedAndCreatesNothing() {
         launch()
-        rule.onNodeWithText("Crear categorías").performClick()
+        openFirstForm()
         rule.nameField().performTextInput("Mercado")
         rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
 
@@ -194,7 +211,7 @@ class FirstCategoryJourneyTest {
     @Test
     fun tappingCreateTwiceCreatesOneCategory() {
         launch()
-        rule.onNodeWithText("Crear categorías").performClick()
+        openFirstForm()
         rule.nameField().performTextInput("Mercado")
 
         // Two presses with nothing in between, faster than a finger could manage.
@@ -213,7 +230,7 @@ class FirstCategoryJourneyTest {
     @Test
     fun aDraftSurvivesTheScreenBeingRebuilt() {
         val app = launch()
-        rule.onNodeWithText("Crear categorías").performClick()
+        openFirstForm()
         rule.nameField().performTextInput("Mercado de pla")
         rule.onNodeWithContentDescription("Mascotas").performScrollTo().performClick()
         rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
@@ -221,6 +238,7 @@ class FirstCategoryJourneyTest {
 
         app.recreate()
 
+        rule.awaitDescription("Nombre")
         rule.nameField().performScrollTo().assertTextContains("Mercado de pla")
         rule.limitField().performScrollTo().assertTextContains("12.34")
         assertEquals(0, TestData.financialRows())

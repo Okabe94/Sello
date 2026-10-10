@@ -21,6 +21,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.MainActivity
 import com.software.sello.R
 import com.software.sello.TestData
+import com.software.sello.awaitTag
 import com.software.sello.designsystem.component.SCAFFOLD_BAR_TAG
 import com.software.sello.designsystem.component.SCAFFOLD_DOCK_TAG
 import com.software.sello.domain.model.Money
@@ -69,6 +70,10 @@ class ShellOnDeviceTest {
         return ActivityScenario.launch<MainActivity>(intent).also { scenario = it }
     }
 
+    /** Starts the app and waits until Recibo has read the month. */
+    private fun launchToRecibo(link: String? = null): ActivityScenario<MainActivity> =
+        launch(link).also { rule.awaitTag(RECIBO_FIRST_RUN_TAG) }
+
     private fun shell(): ShellViewModel {
         lateinit var viewModel: ShellViewModel
         scenario!!.onActivity { viewModel = ViewModelProvider(it)[ShellViewModel::class.java] }
@@ -100,7 +105,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun aNewInstallationOpensOnAnHonestEmptyReciboForTheCurrentMonth() {
-        launch()
+        launchToRecibo()
 
         rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
         rule.onNodeWithText(title(current)).assertIsDisplayed()
@@ -113,7 +118,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun backClosesTheMonthPickerBeforeItLeavesTheApp() {
-        val app = launch()
+        val app = launchToRecibo()
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
 
@@ -126,7 +131,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun anEarlierMonthCanBePickedAndALaterOneCannot() {
-        launch()
+        launchToRecibo()
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
 
         for (number in 1..12) {
@@ -147,7 +152,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun theSelectedMonthAndTheOpenPickerSurviveTheScreenBeingRecreated() {
-        val app = launch()
+        val app = launchToRecibo()
         val march = YearMonth.of(current.year - 1, 3)
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
         rule.onNodeWithContentDescription(context.getString(R.string.month_picker_previous_year))
@@ -157,6 +162,7 @@ class ShellOnDeviceTest {
 
         app.recreate()
 
+        rule.awaitTag(MONTH_PICKER_TAG)
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
         Espresso.pressBack()
         rule.onNodeWithText(title(march)).assertIsDisplayed()
@@ -164,7 +170,7 @@ class ShellOnDeviceTest {
 
     @Test
     fun leavingAndReturningAreReportedToTheMonthSession() {
-        val app = launch()
+        val app = launchToRecibo()
         val session = koin.get<MonthSession>()
         assertNull(session.save().backgroundedAtMillis)
 
@@ -182,12 +188,14 @@ class ShellOnDeviceTest {
     @Test
     fun anEntryLinkWithNoCategoryOpensTheCategoryFormWithTheReasonAndCreatesNoMoney() {
         launch("sello://anotar?categoria=3f2c1a9e-7b4d-4c61-9a0e-5d8f2b6c7e10&monto=48700")
+        rule.awaitTag(EDITOR_PREREQUISITE_TAG)
 
         // There is nowhere to record an expense yet, so the person is told what to do first.
         rule.onNodeWithTag(EDITOR_PREREQUISITE_TAG).assertIsDisplayed()
         val waiting = shell().state.value.pendingEntry
         Espresso.pressBack()
 
+        rule.awaitTag(RECIBO_FIRST_RUN_TAG)
         rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
         assertEquals(
             (TransactionAmount.of(Money.cop(48_700)) as Outcome.Success).value,
@@ -210,7 +218,7 @@ class ShellOnDeviceTest {
         )
 
         for (link in links) {
-            launch(link)
+            launchToRecibo(link)
 
             rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
             assertNull(link, shell().state.value.pendingEntry)

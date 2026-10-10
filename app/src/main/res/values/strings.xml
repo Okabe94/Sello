@@ -40,7 +40,6 @@
     <string name="month_picker_previous_year">Año anterior</string>
     <string name="month_picker_next_year">Año siguiente</string>
     <string name="month_picker_title">Elige un mes</string>
-    <string name="month_picker_close">Cerrar</string>
     <string name="recibo_first_run_title">Tu recibo está en blanco</string>
     <string name="recibo_first_run_body">Aún no hay categorías. Cuando crees la primera, aquí verás cuánto llevas gastado y cuánto te queda este mes.</string>
     <string name="recibo_spent">Has gastado</string>

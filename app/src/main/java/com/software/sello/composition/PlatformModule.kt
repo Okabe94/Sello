@@ -1,6 +1,7 @@
 package com.software.sello.composition
 
 import android.content.Context
+import com.software.sello.data.FinancialStorage
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.FinancialClock
@@ -25,8 +26,8 @@ import org.koin.dsl.module
  * parameter and the financial clock is created with the graph, so a missing
  * binding fails at startup, not at first use.
  *
- * [financialZone] must already be initialized by the caller: that is the explicit
- * initialization path until the zone is persisted. [TimeSignals] comes from
+ * [financialZone] must already be initialized by the caller with the zone stored in
+ * the database (see [openStorage]). [TimeSignals] comes from
  * [androidModule] in the app and from a substitute in host tests.
  */
 fun platformModule(financialZone: ProcessFinancialZone): Module = module {
@@ -51,5 +52,9 @@ fun androidModule(context: Context): Module = module {
     singleOf(::AndroidTimeSignals) { bind<TimeSignals>() }
 }
 
-fun productionModules(context: Context, financialZone: ProcessFinancialZone): List<Module> =
-    listOf(androidModule(context), platformModule(financialZone))
+fun productionModules(
+    context: Context,
+    financialZone: ProcessFinancialZone,
+    storage: FinancialStorage
+): List<Module> =
+    listOf(androidModule(context), platformModule(financialZone), storageModule(storage))

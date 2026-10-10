@@ -1,0 +1,119 @@
+package com.software.sello.data
+
+import android.content.ContentValues
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import androidx.test.platform.app.InstrumentationRegistry
+import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.openSelloDatabase
+import com.software.sello.domain.model.BudgetLimit
+import com.software.sello.domain.model.Category
+import com.software.sello.domain.model.CategoryId
+import com.software.sello.domain.model.CategoryName
+import com.software.sello.domain.model.Expense
+import com.software.sello.domain.model.ExpenseId
+import com.software.sello.domain.model.IconKey
+import com.software.sello.domain.model.Income
+import com.software.sello.domain.model.IncomeId
+import com.software.sello.domain.model.IncomeSource
+import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.Note
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.TransactionAmount
+import java.io.File
+import java.time.Instant
+import java.time.LocalDate
+import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import org.junit.rules.ExternalResource
+
+/** Real database files in the test app's private storage, closed and removed afterwards. */
+class DatabaseFiles : ExternalResource() {
+    val context: Context get() = InstrumentationRegistry.getInstrumentation().targetContext
+    val name = "test-${UUID.randomUUID()}.db"
+    val file: File get() = context.getDatabasePath(name)
+    private val opened = mutableListOf<SelloDatabase>()
+
+    /** Each call is a fresh handle on the same file, as after a process restart. */
+    fun open(): SelloDatabase =
+        openSelloDatabase(context, Dispatchers.IO, name).also { opened += it }
+
+    override fun after() {
+        opened.forEach { if (it.isOpen) it.close() }
+        context.deleteDatabase(name)
+    }
+}
+
+fun <T> Outcome<T, *>.valueOrFail(): T = when (this) {
+    is Outcome.Success -> value
+    is Outcome.Failure -> throw AssertionError("expected a value, got failure $error")
+}
+
+/** Writes a row exactly as given, bypassing every mapper, the way damage or a bug would. */
+fun SelloDatabase.insertRaw(table: String, vararg columns: Pair<String, Any?>) {
+    val values = ContentValues()
+    for ((column, value) in columns) {
+        when (value) {
+            null -> values.putNull(column)
+            is String -> values.put(column, value)
+            is Long -> values.put(column, value)
+            is Int -> values.put(column, value.toLong())
+            else -> error("unsupported raw value for $column")
+        }
+    }
+    openHelper.writableDatabase.insert(table, SQLiteDatabase.CONFLICT_ABORT, values)
+}
+
+fun SelloDatabase.count(table: String): Long =
+    openHelper.readableDatabase.query("SELECT COUNT(*) FROM $table").use {
+        it.moveToFirst()
+        it.getLong(0)
+    }
+
+/** Synthetic identifiers: readable in a failure and canonical. */
+fun uuid(number: Int): String = "00000000-0000-4000-8000-%012d".format(number)
+
+val recordedAt: Instant = Instant.parse("2026-10-09T15:04:05.678Z")
+
+fun category(number: Int, name: String, archived: Boolean = false) = Category(
+    id = CategoryId.of(uuid(number)).valueOrFail(),
+    name = CategoryName.of(name).valueOrFail(),
+    icon = IconKey.of("shopping_cart").valueOrFail(),
+    archived = archived,
+    version = 1,
+    createdAt = recordedAt,
+    updatedAt = recordedAt
+)
+
+fun expense(
+    number: Int,
+    categoryNumber: Int,
+    date: String,
+    sequence: Long,
+    pesos: Long,
+    note: String? = null
+) = Expense(
+    id = ExpenseId.of(uuid(number)).valueOrFail(),
+    categoryId = CategoryId.of(uuid(categoryNumber)).valueOrFail(),
+    date = LocalDate.parse(date),
+    sequence = sequence,
+    amount = TransactionAmount.of(Money.cop(pesos)).valueOrFail(),
+    note = Note.of(note).valueOrFail(),
+    version = 1,
+    createdAt = recordedAt,
+    updatedAt = recordedAt
+)
+
+fun income(number: Int, date: String, sequence: Long, pesos: Long, source: IncomeSource) = Income(
+    id = IncomeId.of(uuid(number)).valueOrFail(),
+    date = LocalDate.parse(date),
+    sequence = sequence,
+    amount = TransactionAmount.of(Money.cop(pesos)).valueOrFail(),
+    source = source,
+    note = null,
+    version = 1,
+    createdAt = recordedAt,
+    updatedAt = recordedAt
+)
+
+fun finite(pesos: Long): BudgetLimit = BudgetLimit.finite(Money.cop(pesos)).valueOrFail()

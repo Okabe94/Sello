@@ -2221,7 +2221,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-010, SELLO-005, SELLO-004
 - **Gate:** G2
 
@@ -2284,6 +2284,56 @@ Use `data/local` for schema ownership; app sees it only through composition.
 Create `DatabaseIntegrityTest`/`ProfileInitializationTest` in data/androidTest and
 run `./gradlew :data:connectedDebugAndroidTest`, followed by G2. Inspect exported
 schema, merged backup rules and reopened-file results; mocked DAOs are insufficient.
+
+### Execution progress
+2026-10-09: started on branch `sello-011-room-v1` after SELLO-009 merged and E02 closed.
+No product decision was needed: D04, D05, D07 and D09 are approved and say the schema
+is this ticket's choice.
+
+Delivered. `:data`: Room schema version 1 exported to `data/schemas`, with tables
+`profile`, `category`, `default_limit`, `month_limit`, `expense`, `income` and
+`operation_receipt`; entities, DAOs with bounded ordered reads, strict mappers, the
+profile store, and `openFinancialStorage` as the one entry point. `:domain`: record
+identifiers, `Category`, `IconKey`, `BudgetLimit`, `DefaultLimit`, `MonthLimit`,
+`Expense`, `Income`, `FinancialProfile`, `StorageFailure` and the
+`FinancialProfileStore` port. `:app`: startup reads the financial zone from the
+database, and system backup and device transfer are switched off.
+`docs/development/storage.md` describes the tables, formats and how to change them.
+
+One dependency was added, for tests only: `androidx.room:room-testing` at the Room
+version already pinned, which provides the migration harness this ticket requires.
+
+Choices made during the work, for owner review:
+- Identifiers are lower-case hyphenated UUID text. Any other spelling is rejected,
+  not normalized.
+- Limits use two tables: a category's default limit from a month onwards, and the
+  limit set for one month, which wins. A month with neither is unconfigured. This
+  answers H01 to H04 without creating a row for every month. SELLO-013 owns the
+  commands and how archiving pauses a default.
+- A category and its limits share the category's version; limit rows have none.
+- Each expense and income has a sequence that is unique in its table and decides the
+  order of records on the same day.
+- A receipt stores a digest of the submitted input, not the input, and has no link
+  to the record it describes, so it can outlive a replacement without keeping erased
+  amounts, names or notes. SELLO-012 defines the operation kinds and the digest.
+- Room cannot declare value checks, so ranges are enforced by the domain types on
+  the way in and the mappers on the way out. No hand-written triggers.
+- Android deletes a damaged database file and starts an empty one by default. That
+  is removed: the damaged file is kept and the open fails.
+- If the database cannot be read at startup the app stops instead of continuing on
+  the device zone or an empty database. Showing that as a screen belongs to the app
+  shell (SELLO-015); today it is a crash with a clear cause.
+- Startup waits for one small read of the profile row, because the financial zone
+  must be known before any date is computed.
+- An icon key is any well-formed lower-case key; which keys have a drawing is the
+  app's concern, so a file from a newer version stays readable.
+
+Left for later, each with its owner: the meaning of receipts and their lookup
+(SELLO-012); limit and category commands (SELLO-013); deletion and undo records
+(SELLO-019), which will add their own schema version; restore and reset, which
+advance the generation and remove old receipts (SELLO-030, SELLO-031). The first
+later schema change adds the first real migration and its upgrade test; none was
+invented here.
 
 Shared definition of done and gates:
 
@@ -2352,7 +2402,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1003,Highest,Backlog,sello-011
+",1003,Highest,In Progress,sello-011
 12,Story,SELLO-012 — Save expenses with atomic receipts and uncertain-outcome recovery,"Local ID: SELLO-012
 Epic: SELLO-E03
 Increment: MVP

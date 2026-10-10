@@ -17,11 +17,11 @@ global `Dispatchers` and Koin outside the composition root.
 
 ## Financial zone
 
-`ProcessFinancialZone` is initialized once, explicitly, in `SelloApplication`
-from the device zone. A later device zone does not replace it. Nothing is
-persisted yet: each process start initializes it again, which is harmless while
-no financial record exists. SELLO-011 stores the zone in Room and passes the
-stored value to the same `initialize` call; do not add a preference or file for it.
+The financial zone is stored in the database's profile row ([storage](storage.md)).
+At startup `openStorage` establishes that row: the first start of an installation
+stores the device zone, and every later start reads the stored zone and ignores the
+device's. `SelloApplication` passes the stored zone to `ProcessFinancialZone`, which
+holds it for the process. Do not add a preference or file for it.
 
 ## When financial "today" is recomputed
 
@@ -46,7 +46,8 @@ zone change triggers a recompute but cannot change the financial zone.
 
 ## Composition
 
-`composition/PlatformModule.kt` is the only place that knows the adapters. Every
+`composition/PlatformModule.kt` is the only place that knows the adapters, and
+`composition/StorageModule.kt` the only place that knows `:data`. Every
 collaborator is a required constructor parameter and the financial clock is
 created with the graph, so a missing binding or an uninitialized zone fails at
 startup. New workflows are bound when they exist; do not register a placeholder

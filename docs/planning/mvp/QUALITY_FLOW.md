@@ -20,10 +20,41 @@ gates; do not invent a ticket ID to run checks.
    No downgrade/skip-as-success flag is allowed. Higher verification is permitted.
 4. Record `Quality run` in the canonical ticket's Delivery evidence: run ID,
    ticket/profile, tested snapshot, outcome and retained artifact reference.
-   Validate evidence and regenerate/check the board before requesting Review.
-5. A designated reviewer verifies acceptance, report freshness and actual results.
-   Only approved acceptance plus passing required checks permits Done. Self-review
-   is not independent approval. Re-run after relevant edits or reopen on regression.
+   Validate evidence and regenerate/check the board before opening the pull request.
+5. Open the pull request with the ticket already marked Done, as described in
+   [Done is proposed, merging approves](#done-is-proposed-merging-approves).
+   A designated reviewer verifies acceptance, report freshness and actual results.
+   Only approved acceptance plus passing required checks permits the merge, and so
+   Done on `main`. Self-review is not independent approval. Re-run after relevant
+   edits or reopen on regression.
+
+## Done is proposed, merging approves
+
+Adopted 2026-10-10 by the project owner, from SELLO-013 onward.
+
+A pull request describes what `main` will say once it is merged. The ticket's pull
+request therefore carries the ticket as **Done**, with its complete Delivery
+evidence, from the moment it is opened. Nothing reaches `main` without the
+designated reviewer's go-ahead, so `main` never says Done for work that was not
+approved.
+
+- **The approval is the merge.** The `Review` evidence field names the pull request
+  and says that its merge is the reviewer's acceptance. It must not claim an
+  approval, a date or a hosted run that has not happened; the pull request and its
+  checks on the hosting service are that record.
+- **On the branch, Done means "proposed".** Until merged it is a request, not a
+  fact. Do not start work that depends on the ticket from an unmerged branch.
+- **Changes requested** are pushed to the same pull request. If they touch
+  fingerprinted inputs, run the ticket gate again and update `Quality run`; the
+  board check rejects a stale report.
+- **Not approved or abandoned:** close the pull request. `main` still shows the
+  ticket as it was, so there is nothing to revert.
+- **Why:** writing Done in a second commit after approval re-ran the whole hosted
+  gate on unchanged code. One pull request now needs one hosted run.
+- The `Review` status remains for work that is waiting on something other than
+  this merge, for example a device or person that is not available yet.
+- After merging, the executor may start the next ticket while the hosted run on
+  `main` finishes, and must report and fix a failure there before anything else merges.
 
 ## Runner and evidence contract — implementation owed by 004
 
@@ -68,6 +99,8 @@ gates; do not invent a ticket ID to run checks.
 - **Validator:** `board.py --check` opens the retained report of every Review/Done
   ticket from SELLO-004 onward and rejects a missing, malformed, failed,
   wrong-ticket, lower-gate, edited or stale one. Bootstrap tickets are exempt.
+  A ticket that becomes Done in a pull request is checked against that pull
+  request's own inputs, exactly as one entering Review was.
 - **CI:** the `quality` check runs the same entrypoint on the merge commit of every
   pull request and on `main`, then validates completion evidence against the base.
   `main` requires that check to pass.

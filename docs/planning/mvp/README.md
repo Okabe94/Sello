@@ -85,11 +85,14 @@ verifiable artifact and leaves the existing app launchable.
 
 Every ticket after SELLO-004 explicitly depends on it and MUST follow
 [QUALITY_FLOW.md](QUALITY_FLOW.md): focused tests → mandatory ticket-derived gate
-→ validated evidence → Review → approved Done. The runner/report validator are
+→ validated evidence → pull request proposing Done → approved by merging. The runner/report validator are
 004 deliverables, not installed tooling. Current board validation enforces the
 dependency and non-placeholder evidence field only; hosted enforcement is not active.
 
-`Backlog → Ready → In Progress → Review → Done`; `Blocked` is an explicit detour.
+`Backlog → Ready → In Progress → Done`; `Blocked` is an explicit detour. A ticket's
+pull request already marks it Done and merging that pull request is the approval;
+see [QUALITY_FLOW.md](QUALITY_FLOW.md#done-is-proposed-merging-approves). `Review`
+is for work waiting on something other than that merge.
 
 - **Backlog:** scoped, but dependencies/decisions are not yet satisfied. This is
   not a failed task. **Ready:** dependencies Done, acceptance understood, required

@@ -158,11 +158,12 @@ Add `### Delivery evidence` to the canonical ticket after verification. Required
 - **Gate results:** actual assigned gate command, counts, reports, warnings/failures
 - **Quality run:** for SELLO-004 onward, run ID, ticket/profile, tested snapshot, outcome and retained artifact
 - **Device / Artifact:** device/API/config/build and executed journey, or justified inapplicability
-- **Review:** reviewer and result; distinguish self-review and outstanding approval
+- **Review:** self-review, and the pull request whose merge is the reviewer's approval
 ```
 
-This is a template, not completed evidence. Do not mark Done while device/approval/
-signing acceptance remains missing. Regenerate board/CSV after ticket/shared-workflow
+This is a template, not completed evidence. Do not mark Done while device or signing
+acceptance remains missing. Approval is given by merging the ticket's pull request,
+which already proposes Done ([quality flow](QUALITY_FLOW.md#done-is-proposed-merging-approves)). Regenerate board/CSV after ticket/shared-workflow
 edits, then check the generated output and board unit tests. Do not commit/publish
 unless the current user request authorizes it.
 

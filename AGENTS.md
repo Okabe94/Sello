@@ -106,6 +106,8 @@ COULD have the meanings defined in `ARCHITECTURE.md`.
   `BOARD.md` or CSV exports, invent completed work, or alter acceptance to fit output.
   Record the required delivery evidence before Done; satisfy gates and obtain the
   designated review. Clearly distinguish self-review from independent review/approval.
+  A ticket's pull request proposes Done and its merge is that review's approval
+  (`QUALITY_FLOW.md`); never record an approval, date or hosted run that has not happened.
 - **MUST** regenerate/check board views after ticket or shared workflow changes:
 
   ```bash

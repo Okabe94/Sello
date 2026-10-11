@@ -239,7 +239,15 @@ fun ShellScreen(
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
-    val openPicker = stringResource(R.string.month_picker_open, title)
+    // "Mes actual" is said only of the month the financial day is in.
+    val openPicker = stringResource(
+        if (state.selectedMonth == state.currentMonth) {
+            R.string.month_picker_open_current
+        } else {
+            R.string.month_picker_open_selected
+        },
+        title
+    )
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val layout = selloWindowLayout(maxWidth, maxHeight)
         val sidePanel = layout.sidePanelWidth != null

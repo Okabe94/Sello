@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.entity.ExpenseEntity
 import com.software.sello.data.local.entity.OperationReceiptEntity
+import com.software.sello.data.mapper.toDomain
 import com.software.sello.data.mapper.toEntity
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomFinancialProfileStore
@@ -299,6 +300,46 @@ class ExpenseCommandContractTest {
         assertEquals(listOf("2026-12-31"), expenses().map { it.effectiveDate })
         assertEquals(1, database.count("operation_receipt"))
         assertEquals(1, revision())
+    }
+
+    @Test
+    fun aDateTheStoredTextCannotHoldIsRefusedBeforeAnythingIsWritten() = runBlocking {
+        start()
+
+        // Year -1 would be stored as "-0001-01-01" and never read back.
+        val before = commands.create(command(50, date = "-0001-01-01"))
+        val longBefore = commands.create(command(51, date = "-2026-10-03"))
+
+        assertEquals(Rejected(ExpenseRejection.InvalidDate), before)
+        assertEquals(Rejected(ExpenseRejection.InvalidDate), longBefore)
+        assertNothingWritten()
+        assertNull(commands.find(command(50).operationId).valueOrFail())
+    }
+
+    @Test
+    fun onADayPastYear9999TodayItselfCannotBeStoredAndIsRefused() = runBlocking {
+        start()
+        financialToday.value = FinancialDay(LocalDate.of(10000, 1, 1), bogota)
+
+        val outcome = commands.create(command(50, date = "+10000-01-01"))
+
+        assertEquals(Rejected(ExpenseRejection.InvalidDate), outcome)
+        assertNothingWritten()
+    }
+
+    @Test
+    fun theOldestAndOrdinaryOldDatesAreStillSavedAndReadBackAsThemselves() = runBlocking {
+        start()
+
+        val first = commands.create(command(50, date = "0000-01-01"))
+        val leap = commands.create(command(51, date = "1904-02-29"))
+
+        assertEquals(Committed(committed(50, 100, 1), replayed = false), first)
+        assertEquals(Committed(committed(51, 101, 2), replayed = false), leap)
+        assertEquals(
+            listOf(LocalDate.of(0, 1, 1), LocalDate.of(1904, 2, 29)),
+            expenses().map { it.toDomain().valueOrFail().date }
+        )
     }
 
     @Test

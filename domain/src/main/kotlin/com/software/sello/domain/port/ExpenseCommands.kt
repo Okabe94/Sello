@@ -36,6 +36,9 @@ sealed interface ExpenseRejection {
     /** The date is after the financial current date. */
     data class FutureDate(val today: LocalDate) : ExpenseRejection
 
+    /** The date cannot be stored and read back; see `EffectiveDateError.OutOfRange`. */
+    data object InvalidDate : ExpenseRejection
+
     /** This operation already committed with different input. The original is unchanged. */
     data object OperationConflict : ExpenseRejection
 

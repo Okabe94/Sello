@@ -16,6 +16,7 @@ import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.policy.CategoryBudgetPolicy
+import com.software.sello.domain.policy.EffectiveDates
 import com.software.sello.domain.port.ArchiveCategory
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CategoryCommand
@@ -177,6 +178,10 @@ class RoomCategoryCommands(
 
             is SetMonthLimit -> {
                 if (command.month > month) return refused(CategoryRejection.FutureMonth(month))
+                // Refused before the write: once stored it could not be read back.
+                if (!EffectiveDates.isStorable(command.month)) {
+                    return refused(CategoryRejection.InvalidMonth)
+                }
                 limits.put(MonthLimit(id, command.month, command.limit).toEntity())
                 next
             }

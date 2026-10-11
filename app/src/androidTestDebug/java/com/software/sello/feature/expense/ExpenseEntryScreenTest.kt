@@ -176,6 +176,15 @@ class ExpenseEntryScreenTest {
     }
 
     @Test
+    fun aDateThatCannotBeStoredIsSaidAsItsOwnReasonNotAsTheFuture() {
+        show(complete.copy(error = EntryError.InvalidDate))
+
+        rule.onNodeWithText("Esa fecha no es válida. No se anotó nada.").assertIsDisplayed()
+        rule.onNodeWithText("La fecha no puede ser posterior a hoy. No se anotó nada.")
+            .assertDoesNotExist()
+    }
+
+    @Test
     fun anUnknownOutcomeOffersToCheckNotToRecordAgain() {
         show(complete.copy(error = EntryError.Unknown))
 

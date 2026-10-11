@@ -33,7 +33,7 @@ private fun RowDecoder.note(stored: String?): Note? {
 internal fun Expense.toEntity() = ExpenseEntity(
     id = id.value,
     categoryId = categoryId.value,
-    effectiveDate = date.toString(),
+    effectiveDate = EffectiveDates.storedText(date),
     sequence = sequence,
     amountMinor = amount.money.minorUnits,
     currency = amount.money.currency.code,
@@ -62,7 +62,7 @@ internal fun ExpenseEntity.toDomain(): Outcome<Expense, StorageFailure.Integrity
 
 internal fun Income.toEntity() = IncomeEntity(
     id = id.value,
-    effectiveDate = date.toString(),
+    effectiveDate = EffectiveDates.storedText(date),
     sequence = sequence,
     amountMinor = amount.money.minorUnits,
     currency = amount.money.currency.code,

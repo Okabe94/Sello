@@ -47,7 +47,7 @@ private fun RowDecoder.limit(kind: String, minor: Long?, currencyCode: String): 
 internal fun DefaultLimit.toEntity(): DefaultLimitEntity = when (val budget = budget) {
     is AutomaticBudget.Limit -> DefaultLimitEntity(
         categoryId = categoryId.value,
-        effectiveMonth = effectiveMonth.toString(),
+        effectiveMonth = EffectiveDates.storedText(effectiveMonth),
         kind = budget.limit.kind,
         limitMinor = budget.limit.minor,
         currency = budget.limit.currencyCode
@@ -55,7 +55,7 @@ internal fun DefaultLimit.toEntity(): DefaultLimitEntity = when (val budget = bu
 
     AutomaticBudget.Paused -> DefaultLimitEntity(
         categoryId = categoryId.value,
-        effectiveMonth = effectiveMonth.toString(),
+        effectiveMonth = EffectiveDates.storedText(effectiveMonth),
         kind = LimitKind.PAUSED,
         limitMinor = null,
         currency = Currency.COP.code
@@ -64,7 +64,7 @@ internal fun DefaultLimit.toEntity(): DefaultLimitEntity = when (val budget = bu
 
 internal fun MonthLimit.toEntity() = MonthLimitEntity(
     categoryId = categoryId.value,
-    month = month.toString(),
+    month = EffectiveDates.storedText(month),
     kind = limit.kind,
     limitMinor = limit.minor,
     currency = limit.currencyCode

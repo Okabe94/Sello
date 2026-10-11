@@ -303,7 +303,7 @@ says. The system-keyboard case (keypad steps aside for the note) was not changed
 - **Type:** Task
 - **Source classification:** Bug
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Confidence:** 99%, conditional on a negative-year `LocalDate` reaching a command.
 - **Depends on:** SELLO-004, SELLO-010, SELLO-012, SELLO-018
 - **Gate:** G2
@@ -381,6 +381,48 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-047 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-11: started on branch `sello-047-reject-unreadable-dates` after SELLO-046
+merged. The claim was verified first against real Room on the API 30 emulator, which
+the assessment had not done: an expense dated year -1 was `Committed` with a
+receipt, stored as `-0001-01-01`, and then failed to decode and failed the read of
+its own month with `Integrity(expense, effective_date)`. The first red run showed
+the same for a month limit in year -1.
+
+Owner decisions taken before the fix (2026-10-11): work on it now; state the range
+as what the format can hold, not a product limit; check it as a round trip through
+the writing and reading functions; leave the December 9999 read bound alone; and
+the form's text "Esa fecha no es válida. No se anotó nada."
+
+Delivered. `:domain`: `EffectiveDates.storedText` and `isStorable`,
+`EffectiveDateError.OutOfRange`, and both `forManualEntry` and `forSelection` refuse
+what would not read back; `ExpenseRejection.InvalidDate` and
+`CategoryRejection.InvalidMonth`. `:data`: the expense and month-limit commands
+refuse before writing, and the mappers write dates and months through `storedText`.
+`:app`: `EntryError.InvalidDate` and its text. No schema, stored format, dependency
+or design-system component changed; the stored text of every date that was already
+storable is byte for byte what it was, so backups are unaffected.
+
+Choices made during the work, for owner review:
+- A date after today is still reported as the future, even when it also could not be
+  stored (year 10000 seen from 2026). "Invalid" is for a date that is not the future.
+- Selecting a month uses the same rule, so a month before year 0000 cannot be selected.
+- The category editor has no text for an invalid month: no screen sets a month limit yet.
+
+Left for later: the December 9999 read bound, recorded in
+`docs/development/money-dates-text.md`. The financial clock's own month is not
+checked when a category is created; a clock outside years 0000–9999 belongs to the
+sandbox's time controls (SELLO-024).
+
+### Delivery evidence
+- **Revision:** branch `sello-047-reject-unreadable-dates`; tested snapshot is commit `f4fcd62`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** every accepted date/month parses back to the identical value → `DatePolicyTest.everyDateAcceptedForAnEntryReadsBackAsItself`, `aMonthTheStoredTextCannotHoldCannotBeSelectedOrGivenALimit` and `aDateIsStoredAsFourDigitYearMonthAndDay` (expected texts written by hand), and on real Room `ExpenseCommandContractTest.theOldestAndOrdinaryOldDatesAreStillSavedAndReadBackAsThemselves`. Negative years and other noncanonical periods rejected before writes → `DatePolicyTest.aDateTheStoredTextCannotHoldIsNotAcceptedForAnEntry`, `ExpenseCommandContractTest.aDateTheStoredTextCannotHoldIsRefusedBeforeAnythingIsWritten` and `onADayPastYear9999TodayItselfCannotBeStoredAndIsRefused`, `CategoryCommandContractTest.aLimitCannotBeSetForAMonthTheStoredTextCannotHold`. A rejected command leaves expense, receipt, category configuration and revision unchanged → the same real-Room tests assert no expense row, no receipt, revision 0 and no receipt found by operation for the expense, and for the month limit that only the accepted year-0000 limit added a row, a receipt and a revision. Valid older dates, leap days and the financial-day cutoff keep their behaviour → the unchanged `DatePolicyTest` cases and `theDateLimitIsTheFinancialDayNotTheRealClock`, plus 0000-01-01 and 1904-02-29 saved and read back. Invalid and future stay distinguishable with accurate UI mapping → `DatePolicyTest.aDateAfterTodayIsTheFutureEvenWhenItAlsoCouldNotBeStored`, `ExpenseFormViewModelTest.everyOtherRejectionKeepsTheDraftAndSaysNothingWasSaved` (`InvalidDate` → `EntryError.InvalidDate`) and `ExpenseEntryScreenTest.aDateThatCannotBeStoredIsSaidAsItsOwnReasonNotAsTheFuture`.
+- **Red / Green:** red first, with only the new types and `storedText` added and no behaviour changed. `./gradlew :domain:test --tests '*DatePolicyTest'`: 3 of 11 failed (a year -1 date and month were accepted; today in year 10000 was accepted). `./gradlew :app:testDebugUnitTest --tests '*ExpenseFormViewModelTest'`: 1 of 39 failed (the new rejection was shown as "not saved"). On the emulator, the two contract classes: 3 of 39 failed, each expecting `Rejected(reason=InvalidDate)` or `Rejected(reason=InvalidMonth)` and getting `Committed`. All pass after the change. `aDateIsStoredAsFourDigitYearMonthAndDay`, `everyDateAcceptedForAnEntryReadsBackAsItself`, the old-dates Room test and the screen-text test passed on their first run; they pin behaviour that already held and were not checked by mutation.
+- **Gate results:** local `./scripts/verify-ticket SELLO-047 --gate G2 --retain` passed on the tested commit: 336 host tests (196 app, 98 domain, 31 design-system, 8 data, 3 catalog), 282 device tests on the API 30 emulator (115 app, 101 data, 56 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T210541Z-eb0e7d60; SELLO-047 G2 passed; HEAD f4fcd62, inputs sha256 edb6a52175e5; report docs/planning/mvp/quality-reports/SELLO-047.json sha256 52f9e8691bd4c95745aa8546c7367bf490d9572cf4a567557a00a17568fad968
+- **Device / Artifact:** real Room on the API 30 emulator, 2026-10-11. Before the fix a throwaway probe (not kept) created an expense dated year -1: `OUTCOME=Committed STORED=[-0001-01-01] RECEIPTS=1`, decoding the row and reading its month both `Failure(Integrity(record=expense, field=effective_date))`. After it, the contract tests above return `Rejected(InvalidDate)` and `Rejected(InvalidMonth)` with nothing written. No journey was run by hand in the app: no screen can produce such a date, so there is nothing a person can do to see this; the unchanged create → receipt → Recibo journeys ran in the gate.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-048 — Move expensive monthly computation off the main thread
 

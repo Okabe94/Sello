@@ -22,6 +22,9 @@ enum class EntryError {
     /** The date is after the current day. */
     FutureDate,
 
+    /** The date cannot be stored. No screen offers such a date; a caller could send one. */
+    InvalidDate,
+
     /** The data was replaced meanwhile (restore or reset). */
     DataChanged,
 

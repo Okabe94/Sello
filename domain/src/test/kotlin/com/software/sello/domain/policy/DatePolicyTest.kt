@@ -110,4 +110,94 @@ class DatePolicyTest {
             EffectiveDates.forSelection(YearMonth.of(2026, 11), lastDay).errorOrFail()
         )
     }
+
+    @Test
+    fun aDateIsStoredAsFourDigitYearMonthAndDay() {
+        assertEquals("2026-10-03", EffectiveDates.storedText(LocalDate.of(2026, 10, 3)))
+        assertEquals("0000-01-01", EffectiveDates.storedText(LocalDate.of(0, 1, 1)))
+        assertEquals("0987-06-05", EffectiveDates.storedText(LocalDate.of(987, 6, 5)))
+        assertEquals("9999-12-31", EffectiveDates.storedText(LocalDate.of(9999, 12, 31)))
+        assertEquals("2026-10", EffectiveDates.storedText(YearMonth.of(2026, 10)))
+        assertEquals("0000-01", EffectiveDates.storedText(YearMonth.of(0, 1)))
+        assertEquals("9999-12", EffectiveDates.storedText(YearMonth.of(9999, 12)))
+    }
+
+    @Test
+    fun aDateTheStoredTextCannotHoldIsNotAcceptedForAnEntry() {
+        // Stored, year -1 would be "-0001-01-01", which is never read back.
+        for (date in listOf(
+            LocalDate.of(-1, 1, 1),
+            LocalDate.of(-1, 12, 31),
+            LocalDate.of(-2026, 10, 9),
+            LocalDate.MIN
+        )) {
+            assertEquals(
+                "$date",
+                EffectiveDateError.OutOfRange,
+                EffectiveDates.forManualEntry(date, today).errorOrFail()
+            )
+        }
+    }
+
+    @Test
+    fun everyDateAcceptedForAnEntryReadsBackAsItself() {
+        val accepted = listOf(
+            LocalDate.of(0, 1, 1), // the first day four digits can write
+            LocalDate.of(1, 1, 1),
+            LocalDate.of(999, 12, 31),
+            LocalDate.of(1900, 2, 28),
+            LocalDate.of(2024, 2, 29),
+            today
+        )
+        for (date in accepted) {
+            val entered = EffectiveDates.forManualEntry(date, today).valueOrFail()
+            assertEquals(
+                "$date",
+                date,
+                EffectiveDates.parseDate(EffectiveDates.storedText(entered)).valueOrFail()
+            )
+        }
+        // The last day four digits can write, on a day when it is not the future.
+        val last = LocalDate.of(9999, 12, 31)
+        assertEquals(last, EffectiveDates.forManualEntry(last, last).valueOrFail())
+        assertEquals(last, EffectiveDates.parseDate(EffectiveDates.storedText(last)).valueOrFail())
+    }
+
+    @Test
+    fun aDateAfterTodayIsTheFutureEvenWhenItAlsoCouldNotBeStored() {
+        assertEquals(
+            EffectiveDateError.InFuture(today),
+            EffectiveDates.forManualEntry(LocalDate.of(10000, 1, 1), today).errorOrFail()
+        )
+        // With the day itself past year 9999, "today" is not the future and cannot be stored.
+        val beyond = LocalDate.of(10000, 1, 1)
+        assertEquals(
+            EffectiveDateError.OutOfRange,
+            EffectiveDates.forManualEntry(beyond, beyond).errorOrFail()
+        )
+    }
+
+    @Test
+    fun aMonthTheStoredTextCannotHoldCannotBeSelectedOrGivenALimit() {
+        for (month in listOf(YearMonth.of(-1, 1), YearMonth.of(-1, 12), YearMonth.of(-2026, 10))) {
+            assertEquals(
+                "$month",
+                EffectiveDateError.OutOfRange,
+                EffectiveDates.forSelection(month, today).errorOrFail()
+            )
+        }
+        for (month in listOf(YearMonth.of(0, 1), YearMonth.of(1, 1), YearMonth.of(2026, 10))) {
+            val selected = EffectiveDates.forSelection(month, today).valueOrFail()
+            assertEquals(
+                "$month",
+                month,
+                EffectiveDates.parseMonth(EffectiveDates.storedText(selected)).valueOrFail()
+            )
+        }
+        val beyond = LocalDate.of(10000, 1, 15)
+        assertEquals(
+            EffectiveDateError.OutOfRange,
+            EffectiveDates.forSelection(YearMonth.of(10000, 1), beyond).errorOrFail()
+        )
+    }
 }

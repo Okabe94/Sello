@@ -11,6 +11,12 @@ sealed interface EffectiveDateError {
 
     /** A real date or month, but after the financial current date. */
     data class InFuture(val today: LocalDate) : EffectiveDateError
+
+    /**
+     * A real date or month that the stored text cannot hold: its year is not four plain
+     * digits (before year 0000 or after 9999), so it would be written but never read back.
+     */
+    data object OutOfRange : EffectiveDateError
 }
 
 /**
@@ -43,19 +49,37 @@ object EffectiveDates {
         }
     }
 
-    /** A manually entered record cannot be dated after [today]. */
+    /** The text a date is stored and exchanged as; [parseDate] reads it back. */
+    fun storedText(date: LocalDate): String = date.toString()
+
+    /** The text a month is stored and exchanged as; [parseMonth] reads it back. */
+    fun storedText(month: YearMonth): String = month.toString()
+
+    /**
+     * Whether the stored text of [date] reads back as [date]. It is asked of the very
+     * functions that write and read, so the two cannot come to disagree.
+     */
+    fun isStorable(date: LocalDate): Boolean = parseDate(storedText(date)) == Outcome.Success(date)
+
+    fun isStorable(month: YearMonth): Boolean =
+        parseMonth(storedText(month)) == Outcome.Success(month)
+
+    /** A manually entered record cannot be dated after [today], and must be storable. */
     fun forManualEntry(date: LocalDate, today: LocalDate): Outcome<LocalDate, EffectiveDateError> =
-        if (date.isAfter(today)) {
-            Outcome.Failure(EffectiveDateError.InFuture(today))
-        } else {
-            Outcome.Success(date)
+        when {
+            date.isAfter(today) -> Outcome.Failure(EffectiveDateError.InFuture(today))
+            !isStorable(date) -> Outcome.Failure(EffectiveDateError.OutOfRange)
+            else -> Outcome.Success(date)
         }
 
-    /** A month can be selected up to the month of [today], never beyond it. */
+    /** A storable month can be selected up to the month of [today], never beyond it. */
     fun forSelection(month: YearMonth, today: LocalDate): Outcome<YearMonth, EffectiveDateError> =
-        if (month.isAfter(YearMonth.from(today))) {
-            Outcome.Failure(EffectiveDateError.InFuture(today))
-        } else {
-            Outcome.Success(month)
+        when {
+            month.isAfter(YearMonth.from(today)) ->
+                Outcome.Failure(EffectiveDateError.InFuture(today))
+
+            !isStorable(month) -> Outcome.Failure(EffectiveDateError.OutOfRange)
+
+            else -> Outcome.Success(month)
         }
 }

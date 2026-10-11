@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 20/52 · **Epics Done:** 4/9
+**Tickets Done:** 21/52 · **Epics Done:** 4/9
 
-Backlog: 31 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 20
+Backlog: 31 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 21
 
 [Workflow, gates and definition of done](README.md)
 
@@ -20,7 +20,7 @@ Backlog: 31 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 20
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Backlog | 0/4 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Backlog | 0/5 |
 | [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | Backlog | 0/4 |
-| [SELLO-E11](epics/E11-bug-stabilization.md) | Address the collected first-slice correctness, availability, accessibility and measured scaling findings without weakening financial contracts. | In Progress | 2/16 |
+| [SELLO-E11](epics/E11-bug-stabilization.md) | Address the collected first-slice correctness, availability, accessibility and measured scaling findings without weakening financial contracts. | In Progress | 3/16 |
 
 ## Ready
 
@@ -28,9 +28,7 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-047](epics/E11-bug-stabilization.md#sello-047--reject-effective-dates-that-the-storage-codec-cannot-read) | Reject effective dates that the storage codec cannot read | SELLO-E11 | P1 | G2 | None |
+No tickets.
 
 ## Review
 
@@ -100,6 +98,7 @@ No tickets.
 | [SELLO-018](epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history) | Deliver Recibo, category detail and expense history | SELLO-E04 | P0 | G2 | None |
 | [SELLO-045](epics/E11-bug-stabilization.md#sello-045--reach-a-safe-recovery-screen-when-storage-startup-fails) | Reach a safe recovery screen when storage startup fails | SELLO-E11 | P1 | G2 | None |
 | [SELLO-046](epics/E11-bug-stabilization.md#sello-046--stabilize-expense-keypad-geometry-and-separate-financial-submission) | Stabilize expense keypad geometry and separate financial submission | SELLO-E11 | P1 | G2 | None |
+| [SELLO-047](epics/E11-bug-stabilization.md#sello-047--reject-effective-dates-that-the-storage-codec-cannot-read) | Reject effective dates that the storage codec cannot read | SELLO-E11 | P1 | G2 | None |
 
 ## Ready promotion candidates
 

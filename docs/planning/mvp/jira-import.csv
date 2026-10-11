@@ -2996,7 +2996,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 1004,Epic,SELLO-E04 — First complete financial walking slice,"Local ID: SELLO-E04
 Increment: MVP
 Goal: Turn the greeting into a usable category → expense → receipt → Recibo journey.
-Exit: Users can start empty, create a category, save an expense once, and see truthful persisted budget/detail data after restart.",,Highest,In Progress,sello-e04
+Exit: Users can start empty, create a category, save an expense once, and see truthful persisted budget/detail data after restart.",,Highest,Done,sello-e04
 15,Story,"SELLO-015 — Introduce the app shell, month session and restored navigation","Local ID: SELLO-015
 Epic: SELLO-E04
 Increment: MVP

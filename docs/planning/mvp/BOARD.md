@@ -2,7 +2,7 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 18/36 · **Epics Done:** 3/8
+**Tickets Done:** 18/36 · **Epics Done:** 4/8
 
 Backlog: 18 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 18
 
@@ -15,7 +15,7 @@ Backlog: 18 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 18
 | [SELLO-E01](epics/E01-foundation.md) | Make decisions explicit and build/test the app reproducibly before financial work. | Done | 5/5 |
 | [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | Done | 4/4 |
 | [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | Done | 5/5 |
-| [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | In Progress | 4/4 |
+| [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | Done | 4/4 |
 | [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | Backlog | 0/5 |
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Backlog | 0/4 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Backlog | 0/5 |

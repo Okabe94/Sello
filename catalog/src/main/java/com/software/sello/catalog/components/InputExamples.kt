@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +17,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.KeyboardType
 import com.software.sello.designsystem.component.AmountField
 import com.software.sello.designsystem.component.AmountKeypad
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ChipFlow
+import com.software.sello.designsystem.component.DigitGrouping
 import com.software.sello.designsystem.component.FieldMessage
 import com.software.sello.designsystem.component.FieldMessageText
 import com.software.sello.designsystem.component.FieldPill
@@ -155,8 +158,19 @@ private fun count(text: String) = text.trim().let { it.codePointCount(0, it.leng
 fun FormFieldExample() {
     var name by rememberSaveable { mutableStateOf("Mercado de plaza") }
     var note by rememberSaveable { mutableStateOf("") }
+    var limit by rememberSaveable { mutableStateOf("500000") }
     Slip(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.lg)) {
+            // Drawn in groups; the value stays as typed, shown here in the message.
+            FormField(
+                label = "Límite en pesos",
+                value = limit,
+                onValueChange = { limit = it },
+                message = FieldMessage("Escrito: $limit", isError = false),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = DigitGrouping(),
+                modifier = Modifier.testTag("field:limit")
+            )
             FormField(
                 label = "Nombre",
                 value = name,

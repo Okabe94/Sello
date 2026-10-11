@@ -3,6 +3,8 @@ package com.software.sello.feature.category
 import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -16,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -169,6 +172,35 @@ class FirstCategoryJourneyTest {
             )
         )
         assertEquals(2, TestData.long("SELECT revision FROM profile"))
+    }
+
+    @Test
+    fun aSuggestedLimitReadsGroupedWhileEditingAndIsSavedAsTheExactAmount() {
+        launch()
+        openFirstForm()
+        rule.nameField().performTextInput("Mercado")
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
+
+        rule.onNodeWithText("500.000").performScrollTo().performClick()
+        val suggested = rule.limitField().fetchSemanticsNode().config
+            .getOrNull(SemanticsProperties.EditableText)?.text
+        // Replaced by hand with another amount, typed as plain digits.
+        rule.limitField().performScrollTo().performTextReplacement("400000")
+        val typed = rule.limitField().fetchSemanticsNode().config
+            .getOrNull(SemanticsProperties.EditableText)?.text
+        submit()
+
+        rule.waitUntilExactlyOneExists(hasTestTag(RECIBO_CATEGORIES_TAG), 10_000)
+        assertEquals("500.000", suggested)
+        assertEquals("400.000", typed)
+        rule.onNodeWithContentDescription(
+            "Mercado. Te quedan 400.000 pesos de 400.000 pesos. Al día."
+        )
+            .performScrollTo().assertIsDisplayed()
+        assertEquals(
+            listOf("finite|400000|COP"),
+            TestData.rows("SELECT kind, limit_minor, currency FROM default_limit")
+        )
     }
 
     @Test

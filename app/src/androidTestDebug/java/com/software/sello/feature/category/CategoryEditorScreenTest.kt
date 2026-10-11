@@ -2,6 +2,8 @@ package com.software.sello.feature.category
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -9,6 +11,8 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -189,5 +193,52 @@ class CategoryEditorScreenTest {
         rule.onNodeWithTag(
             EDITOR_SUBMIT_TAG
         ).performScrollTo().assertIsDisplayed().assertIsEnabled()
+    }
+
+    private fun drawnLimit(): String? = limit.fetchSemanticsNode().config
+        .getOrNull(SemanticsProperties.EditableText)?.text
+
+    @Test
+    fun aLimitIsDrawnInGroupsSoItsSizeCanBeRead() {
+        show(ready.copy(unlimited = false, limitText = "400000"))
+
+        limit.performScrollTo()
+
+        assertEquals("400.000", drawnLimit())
+    }
+
+    @Test
+    fun aSuggestedLimitIsDrawnTheWayItsChipReads() {
+        show(ready.copy(unlimited = false, limitText = "500000"))
+
+        limit.performScrollTo()
+
+        assertEquals("500.000", drawnLimit())
+        // The field and the chip now read the same; the chip is the one that is not typed in.
+        rule.onNode(hasText("500.000") and !hasSetTextAction()).performScrollTo().assertIsSelected()
+    }
+
+    @Test
+    fun whatIsTypedIntoAGroupedLimitIsReportedWithoutTheSeparators() {
+        show(ready.copy(unlimited = false, limitText = "400000"))
+
+        limit.performScrollTo().performTextInput("7")
+
+        // One digit more than the six there were, and nothing the person did not type.
+        val reported = (actions.single() as CategoryEditorAction.LimitChanged).text
+        assertEquals(7, reported.length)
+        assertEquals(true, reported.all { it in '0'..'9' })
+        assertEquals("400000", reported.replaceFirst("7", ""))
+    }
+
+    @Test
+    fun aLimitThatIsNotAnAmountIsDrawnAsTypedBesideItsError() {
+        show(ready.copy(unlimited = false, limitText = "1e3", limitError = LimitError.NotAnAmount))
+
+        limit.performScrollTo()
+
+        assertEquals("1e3", drawnLimit())
+        rule.onNodeWithText("Escribe solo el número, por ejemplo 300000 o 300.000.")
+            .performScrollTo().assertIsDisplayed()
     }
 }

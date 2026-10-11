@@ -72,5 +72,10 @@ Formatting and drawing have different owners (SELLO-007):
   `AmountField` shows the amount, an empty draft or refused text, and `FormField` returns
   exactly what was typed. A feature maps its typed error to a `FieldMessage`; the
   control shows it and never changes the value instead.
+- `DigitGrouping` is a display-only transformation for `FormField`: plain ASCII digits
+  with no leading zero are drawn in groups of three, and anything else is drawn as
+  typed, so text that is not an amount never looks like one. The value given back has
+  no separators. The cursor sits between digits; either side of a separator is the
+  position after the digit before it, so a deletion always removes a digit.
 - A loading `SelloButton` ignores presses, which prevents an accidental double tap. It
   does not make a command idempotent; operation IDs do (SELLO-013).

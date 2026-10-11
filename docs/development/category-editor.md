@@ -23,7 +23,11 @@ and the [app shell](app-shell.md).
 
 The limit applies to the current financial month and is the default afterwards, as
 `CreateCategory` defines. Text that fails a rule stays exactly as typed next to the
-message; nothing is trimmed or corrected in the field. An error on the name scrolls
+message; nothing is trimmed or corrected in the field.
+
+The limit is **drawn** in groups (`500000` as `500.000`) through `DigitGrouping`, so
+its size can be read while typing and a suggestion reads the way its chip does. The
+draft, what is validated and what is saved stay the typed text, without the dots. An error on the name scrolls
 the name into view.
 
 ## Saving once

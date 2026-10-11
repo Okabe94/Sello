@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.software.sello.R
 import com.software.sello.designsystem.component.ChipFlow
 import com.software.sello.designsystem.component.ConfirmSlip
+import com.software.sello.designsystem.component.DigitGrouping
 import com.software.sello.designsystem.component.ErrorSlip
 import com.software.sello.designsystem.component.FieldMessage
 import com.software.sello.designsystem.component.FieldMessageText
@@ -187,7 +188,9 @@ private fun Form(state: CategoryEditorState, onAction: (CategoryEditorAction) ->
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done
-                )
+                ),
+                // Drawn 500.000 so its size can be read; limitText stays as typed.
+                visualTransformation = DigitGrouping()
             )
             ChipFlow {
                 state.suggestions.forEach { suggestion ->

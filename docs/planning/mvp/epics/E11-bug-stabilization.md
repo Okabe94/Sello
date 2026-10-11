@@ -764,7 +764,7 @@ description many tests look for and is more than this defect needs.
 - **Source classification:** Task
 - **Classification:** Amount-entry readability issue; original report 4
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-016, SELLO-008, SELLO-007, SELLO-004
 - **Gate:** G2
 - **Source alias:** SELLO-BUG-004
@@ -808,6 +808,33 @@ Do not reformat malformed input into a valid amount, strip arbitrary characters,
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-051 --retain` for the final G2 gate.
 Focused formatter/editor tests, connected typing/paste/suggestion/restoration checks, exact Room-backed creation result, then G2 with fresh retained evidence. Coordinate write order with SELLO-058.
+
+### Execution progress
+2026-10-11: started on branch `sello-051-grouped-limit-display` after SELLO-050 merged.
+The claim was verified first in the installed app on the API 30 emulator: with "Sin
+límite" off, choosing the 500.000 suggestion left the field reading `500000` above a
+chip reading `500.000`.
+
+Owner decision (2026-10-11): group the digits in the field itself, for display only,
+not a separate line under it.
+
+Delivered. `:design-system`: `DigitGrouping`, a display-only transformation, and a
+`visualTransformation` parameter on `FormField`. `:app`: the limit field uses it; the
+view model, the draft, validation and the command are untouched. `:catalog`: the form
+field example has a grouped "Límite en pesos" that also shows the typed text.
+
+Choices made during the work, for owner review:
+- Only plain digits with no leading zero are grouped. `1e3`, `1.23`, `0500000`, text
+  with a space or a sign, and dots the person typed themselves are drawn as typed.
+- Digits beyond any real amount (twenty of them) are still grouped: it is what makes
+  their size plain, and validation refuses them as before.
+- Nothing extra is said for accessibility: a screen reader reads the field's text as
+  drawn, `500.000`, under the label "Límite en pesos". No spoken "pesos" was added to
+  the value itself.
+- The separator is a dot, as `MoneyFormatter` writes pesos.
+
+Not touched: the "Sin límite" default and what happens to the draft when it is
+switched (SELLO-058), and the expense amount, which has its own keypad and field.
 
 ## SELLO-052 — Keep short narrow expense windows usable with one shared width policy
 

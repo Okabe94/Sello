@@ -429,7 +429,7 @@ sandbox's time controls (SELLO-024).
 - **Type:** Task
 - **Source classification:** Performance risk
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Confidence:** 90%, conditional on a sufficiently large month refreshing on a constrained device.
 - **Depends on:** SELLO-004, SELLO-005, SELLO-014, SELLO-018
 - **Gate:** G2
@@ -505,6 +505,45 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-048 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-11: started on branch `sello-048-snapshot-off-main-thread` after SELLO-047
+merged. The claim was verified and, for the first time, measured, with a throwaway
+probe on the API 30 emulator (debug build, real Room, 20 categories, every expense in
+one month): called from the main thread, the code after the transaction resumed on
+the main thread; working out the figures took a median of 1.4 ms for 100 expenses,
+2.8 ms for 1,000 and 19 ms (worst 28 ms) for 10,000, while reading the rows, already
+off the main thread, took 7, 20 and 131 ms.
+
+Owner decision (2026-10-11): do the placement change now, to follow architecture §5,
+and **drop the criterion "Device measurements meet targets approved before the run"
+for this ticket**. No targets exist and SELLO-035 has not started; the numbers above
+are kept as information and performance targets stay with SELLO-035. The acceptance
+text above is left as written; that one criterion is not met and not claimed.
+
+Delivered. `:data`: `RoomMonthlySnapshots` takes a computation context and works the
+figures out on it; `FinancialStorage.monthlySnapshots` passes it through. `:app`
+composition gives it `DispatcherProvider.default`. The policy, its results and the
+read transaction are unchanged. No dependency, permission or schema changed.
+
+Choices made during the work, for owner review:
+- The change is in the storage adapter, so every consumer gets it, not in each
+  screen's view model.
+- Only the calculation moved. The screens still format the snapshot on the main
+  thread; that was not measured and not changed.
+- Streaming aggregation was not adopted: nothing measured calls for it.
+
+Left for later: targets, a real device and allocation measurements (SELLO-035);
+sharing one observation between screens (SELLO-055).
+
+### Delivery evidence
+- **Revision:** branch `sello-048-snapshot-off-main-thread`; tested snapshot is commit `26c999c`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** a controlled-dispatcher test proves the calculation does not run on the caller → `MonthlySnapshotPlacementTest.theFiguresAreWorkedOutOnTheComputationDispatcherNotOnTheCaller`: with a computation dispatcher that runs nothing until told, no snapshot appears while it is held, and releasing it yields 15.000 spent at revision 3. Worked examples unchanged, overflow included → the policy is untouched; `MonthlyBudgetPolicyTest` and `MonthlySnapshotConsistencyTest` pass unchanged. Cancellation and month switching keep obsolete results out → `anObservationCancelledWhileItsFiguresAreWorkedOutNeverDeliversThem` (only `Loading` was ever delivered, and no further work was started), with the view models' unchanged `flatMapLatest` tests for switching. One consistent revision from captured data → `theFiguresAreOfTheRowsThatWereReadEvenIfMoreIsSavedBeforeTheyAreWorkedOut`: 70.000 saved between the read and the calculation leaves the first snapshot at 15.000, two expenses, revision 3, and the next at 85.000, revision 4. **Not met, by owner decision of 2026-10-11:** "Device measurements meet targets approved before the run". No targets exist; the criterion is dropped for this ticket and stays with SELLO-035.
+- **Red / Green:** red first, on the emulator, with the new constructor parameter added and not yet used: `./gradlew :data:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.data.MonthlySnapshotPlacementTest` failed 3 of 3, the first with "nothing was handed to the computation dispatcher". All 3 pass after the change, with the other 101 data device tests.
+- **Gate results:** local `./scripts/verify-ticket SELLO-048 --gate G2 --retain` passed on the tested commit: 336 host tests (196 app, 98 domain, 31 design-system, 8 data, 3 catalog), 285 device tests on the API 30 emulator (115 app, 104 data, 56 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T214016Z-f57a1a14; SELLO-048 G2 passed; HEAD 26c999c, inputs sha256 50f3531c4e10; report docs/planning/mvp/quality-reports/SELLO-048.json sha256 489b20c0c6e02956cfd33aaa160e07eb0ed31c08fd5e436a1d1d1e5fb442e1ae
+- **Device / Artifact:** API 30 emulator, debug build, real Room, 2026-10-11. Measured before the change with a throwaway probe (not kept): 20 categories, every expense in one month, median of 12 runs; reading the rows 7 / 20 / 131 ms and working out the figures 1.4 / 2.8 / 19 ms (worst 28 ms) for 100 / 1,000 / 10,000 expenses; called from the main thread, the code after the transaction resumed on the main thread. Not measured: the same figures after the change, a real phone, allocations, the screens' formatting step, and jank in the running app. These numbers are information, not a met target. The ordinary create, receipt, Recibo and restart journeys ran in the gate on the wired app.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the dropped criterion and the listed choices; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-049 — Bound history refresh work and identify retained rows as refreshing
 

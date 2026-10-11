@@ -60,6 +60,8 @@ fun storageModule(storage: FinancialStorage): Module = module {
     single<ExpenseCommands> { storage.expenseCommands(get(), get(), get()) }
     single<CategoryCommands> { storage.categoryCommands(get(), get(), get()) }
     single<CategoryReads> { storage.categoryReads }
-    single<MonthlySnapshots> { storage.monthlySnapshots(get()) }
+    single<MonthlySnapshots> {
+        storage.monthlySnapshots(get(), get<DispatcherProvider>().default)
+    }
     single<ExpenseReads> { storage.expenseReads }
 }

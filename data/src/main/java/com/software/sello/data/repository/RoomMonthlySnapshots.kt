@@ -16,19 +16,24 @@ import com.software.sello.domain.port.MonthBudget
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.SnapshotState
 import java.time.YearMonth
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 
 /**
  * Reads a month's rows in one transaction and hands them to [MonthlyBudgetPolicy].
  * Nothing is calculated here or in SQL: the database returns rows and the policy
- * does every sum exactly.
+ * does every sum exactly, on [computation] and never on the caller's thread.
  */
-class RoomMonthlySnapshots(private val database: SelloDatabase, private val clock: FinancialClock) :
-    MonthlySnapshots {
+class RoomMonthlySnapshots(
+    private val database: SelloDatabase,
+    private val clock: FinancialClock,
+    private val computation: CoroutineContext
+) : MonthlySnapshots {
     private class Rows(val budget: MonthBudget, val expenses: List<Expense>)
 
     override suspend fun read(month: YearMonth): Outcome<MonthlySnapshot, SnapshotFailure> =
@@ -42,14 +47,19 @@ class RoomMonthlySnapshots(private val database: SelloDatabase, private val cloc
             is Outcome.Success -> read.value
             is Outcome.Failure -> return Outcome.Failure(SnapshotFailure.Storage(read.error))
         }
-        return MonthlyBudgetPolicy.snapshot(
-            month = month,
-            today = today,
-            generation = rows.budget.generation,
-            revision = rows.budget.revision,
-            categories = rows.budget.categories.map { CategoryInMonth(it.category, it.state) },
-            expenses = rows.expenses
-        )
+        // Off the caller's thread: a view model calls this from the main thread and the
+        // work grows with the month's expenses. The rows are already out of the database,
+        // so the figures are of one revision whatever is saved meanwhile.
+        return withContext(computation) {
+            MonthlyBudgetPolicy.snapshot(
+                month = month,
+                today = today,
+                generation = rows.budget.generation,
+                revision = rows.budget.revision,
+                categories = rows.budget.categories.map { CategoryInMonth(it.category, it.state) },
+                expenses = rows.expenses
+            )
+        }
     }
 
     private suspend fun rows(month: YearMonth): Outcome<Rows, StorageFailure> {

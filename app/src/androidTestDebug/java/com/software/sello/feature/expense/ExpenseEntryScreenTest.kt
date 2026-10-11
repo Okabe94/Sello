@@ -75,12 +75,15 @@ class ExpenseEntryScreenTest {
         rule.onNode(hasText(label) and hasAnyAncestor(hasTestTag(ENTRY_KEYPAD_TAG)))
 
     @Test
-    fun anEmptyFormSaysWhatIsMissingAndCannotBeSubmitted() {
+    fun anEmptyFormSaysTheAmountIsMissingOnTheSlipOnlyAndCannotBeSubmitted() {
         show(empty)
 
         rule.onNodeWithText("Hoy, vie 9 oct, renglón nuevo").assertIsDisplayed()
         rule.onNodeWithText("Elige una categoría").assertIsDisplayed()
-        rule.onNodeWithText("Escribe un monto.").performScrollTo().assertIsDisplayed()
+        // The slip already says there is no amount; no second line repeats it by the keypad.
+        rule.onNodeWithContentDescription("Sin monto").assertIsDisplayed()
+        rule.onNodeWithText("Escribe un monto.").assertDoesNotExist()
+        rule.onNodeWithTag(ENTRY_MISSING_TAG).assertDoesNotExist()
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
         rule.onNodeWithTag(ENTRY_PREVIEW_TAG).assertDoesNotExist()
         rule.onNodeWithTag(ENTRY_RECEIPT_TAG).assertDoesNotExist()
@@ -166,8 +169,9 @@ class ExpenseEntryScreenTest {
             )
         )
 
+        // Said above the keys and outside anything that scrolls: it cannot be out of sight.
         rule.onNodeWithText("Esa categoría ya no acepta gastos. Elige otra; no se anotó nada.")
-            .performScrollTo().assertIsDisplayed()
+            .assertIsDisplayed()
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
     }
 

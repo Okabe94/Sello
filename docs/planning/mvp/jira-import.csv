@@ -6562,7 +6562,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Source classification:** Task
 - **Classification:** Bug + related submission-separation UX risk; original reports 5 and 7
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-017, SELLO-008, SELLO-009, SELLO-004
 - **Gate:** G2
 - **Decision needed:** approve increased keypad-to-submit separation using existing Sello spacing tokens
@@ -6612,6 +6612,47 @@ Increasing the gap alone does not fix the 65px movement. Conversely, merely remo
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-046 --retain` for the final G2 gate.
 Focused entry state tests and connected geometry/intent assertions first; run the original coordinate sequence and empty/valid/clear/error cases at agreed configurations; reconcile one real save to stored expense/receipt; G2 with retained report and before/after captures.
+
+### Execution progress
+2026-10-11: started on branch `sello-046-keypad-geometry-submit-separation` after
+SELLO-045 merged. The claim was verified first on the API 30 emulator: after the
+first digit every key dropped 65 px, and 1 followed by a tap on the upper part of
+where 7 had been gave 14. The keypad ended 22 px (8dp) above the button. Nothing was
+saved.
+
+Owner decisions taken before the fix (2026-10-11): work on it; **16dp**
+(`spacing.lg`) between the keypad and the button, which is the decision this ticket
+needed; and what the form says goes **above the keypad** instead of in a reserved
+area between the keypad and the button.
+
+Delivered, in `ExpenseEntryScreen` only. What is missing or went wrong is laid out
+above the keypad and outside its scroll; the keypad and the button are one group,
+16dp apart, held from the bottom in both layouts. ""Escribe un monto."" is gone, as
+the acceptance asks; the slip still says ""Sin monto"" and the button stays off. No
+view model, command, design-system component or string other than that one changed,
+so the catalog is unchanged.
+
+Choices made during the work, for owner review:
+- Sideways or wide, the keypad and button now sit at the bottom of the right column
+  and messages at its top. Before, they started at the top and a message pushed the
+  button down.
+- In a window too short for a message and the keys together (360dp high, sideways),
+  the top row of keys is partly covered while the message shows; the keys do not move.
+- At twice the font size ""Comprobar si se guardó"" takes two lines and lifts the
+  keys by the extra line. The keys are off in that state.
+- A failed save's message is now always in view; before it could need scrolling.
+
+Not done: no confirmation step and no change to what Enter does, as the acceptance
+says. The system-keyboard case (keypad steps aside for the note) was not changed.
+
+### Delivery evidence
+- **Revision:** branch `sello-046-keypad-geometry-submit-separation`; tested snapshot is commit `72c08f1`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** digit targets do not move through empty → valid → empty or when helper/error text changes → `ExpenseEntryGeometryTest.onAPhoneNoKeyAndNoButtonMovesWhateverTheFormSays`, `sidewaysNoKeyAndNoButtonMovesWhateverTheFormSays` and `atTwiceTheFontSizeNoKeyAndNoButtonMovesWhateverTheFormSays`, which compare where keys 1, 7, 0, 000 and the button are laid out across an amount typed, no category, a note to correct, a failed save, a category gone, an unknown outcome and empty again. Initial text removed, accessible description and feedback kept → `ExpenseEntryScreenTest.anEmptyFormSaysTheAmountIsMissingOnTheSlipOnlyAndCannotBeSubmitted` (""Sin monto"" present, ""Escribe un monto."" absent, button off) and the unchanged error and unknown-outcome tests. No overlap and the approved 16dp gap → `theButtonIsSixteenDpBelowTheKeypadInEveryLayout`, `sidewaysTheButtonIsSixteenDpBelowTheKeypadToo`. The old-coordinate reproduction yields 17 and no digit submits → `aFingerGoingBackToWhereSevenWasStillTypesSeven`, `noKeyEverRecordsTheExpense` (every key and the keypad's lowest pixels). Submit reachable with large fonts, short landscape and the keyboard → `atTwiceTheFontSizeEveryControlCanStillBeReached` (existing) and the sideways cases above; the keyboard path is unchanged code. Busy, duplicate-submit, operation-ID and receipt recovery intact → no view model or command changed; `ExpenseFormViewModelTest`, `ExpenseEntryJourneyTest` and `WalkingSliceJourneyTest` pass unchanged in the gate.
+- **Red / Green:** red first, on the emulator against the unchanged screen: `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.feature.expense.ExpenseEntryGeometryTest,com.software.sello.feature.expense.ExpenseEntryScreenTest` failed 7 of 20: the returning finger typed `Digit(4)` instead of `Digit(7)`; keys moved on a phone and at twice the font size; sideways the button moved; the gap was 8dp on a phone and 12dp sideways; and ""Escribe un monto."" was present. `noKeyEverRecordsTheExpense` passed before the change and is a guard, not a red test. After the change all 20 pass. Two expectations of mine were corrected on the way: positions are now compared as laid out, not as clipped by a scroll, and the two-line ""Comprobar si se guardó"" case at twice the font size is excluded because the keys are off then. One older test stopped scrolling to a message that is now always in view.
+- **Gate results:** local `./scripts/verify-ticket SELLO-046 --gate G2 --retain` passed on the tested commit: 331 host tests (196 app, 93 domain, 31 design-system, 8 data, 3 catalog), 277 device tests on the API 30 emulator (114 app, 97 data, 56 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T201801Z-54dac6f7; SELLO-046 G2 passed; HEAD 72c08f1, inputs sha256 e4d0e80776cd; report docs/planning/mvp/quality-reports/SELLO-046.json sha256 2121d6aa9c66b9b740e14832a0a340475e56c7546bbe9a065749513de44c4a84
+- **Device / Artifact:** the debug app on the API 30 emulator (1080×2340, density 440, Cobalto light, font scale 1.0), 2026-10-11, synthetic category ""Exploracion"". Before: key 1's label at y=1384 [empty](../../../testing/evidence/SELLO-046/01-before-empty.png) and y=1449 [after one digit](../../../testing/evidence/SELLO-046/02-before-keys-moved.png); 1 then a tap at (196,1690) gave 14; keypad to button 22 px. After, on a build of the working tree before the commit: key 1 at y=1427 and key 7 at y=1725 [empty](../../../testing/evidence/SELLO-046/03-after-empty.png), after one digit and after clearing; 1 then a tap on the upper part of 7 gave [17](../../../testing/evidence/SELLO-046/04-after-same-place.png); keypad to button 44 px (16dp). No expense was saved in either run. Not executed by hand: sideways and wide windows, twice the font size and the system keyboard (covered by the tests above, except the keyboard), TalkBack, and a real save after the change (covered by the journey tests in the gate).
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
 
 Shared definition of done and gates:
 
@@ -6680,7 +6721,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,High,Backlog,sello-046
+",1011,High,Done,sello-046
 47,Task,SELLO-047 — Reject effective dates that the storage codec cannot read,"Local ID: SELLO-047
 Epic: SELLO-E11
 Increment: MVP

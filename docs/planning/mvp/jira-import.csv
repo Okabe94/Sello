@@ -7332,7 +7332,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Source classification:** Task
 - **Classification:** Bug discovered during exploration; not in original seven reports
 - **Priority:** P2
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-015, SELLO-004
 - **Gate:** G2
 - **Source alias:** SELLO-BUG-007
@@ -7396,6 +7396,15 @@ the picker or the selection changed.
 Not done: making the description just the month with ""cambiar de mes"" as the
 button's action, which is the usual pattern for a screen reader; it would change the
 description many tests look for and is more than this defect needs.
+
+### Delivery evidence
+- **Revision:** branch `sello-050-selected-month-label`; tested snapshot is commit `fc56964`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** a historical selected period is announced as selected, never as current → `MonthSwitcherLabelTest.anEarlierMonthIsCalledTheSelectedMonthNeverTheCurrentOne` and `itHoldsAcrossAYearBoundaryAndForAMonthYearsBack` (December 2026 seen from January 2027, February 2024). The current-period case stays accurate under rollover and restoration → `theMonthTheDayIsInIsCalledTheCurrentMonth` and `whenTheMonthTurnsTheMonthStillSelectedStopsBeingCalledCurrent`; a restored selection reaches the screen as the same state these tests give it. Spanish resources and exact localized values, no ad hoc clock read → two string resources filled with the existing month title; the screen only compares the two months already in `ShellState`. Visual heading, spoken period and session agree, with no change to data → `whatIsSpokenAndWhatIsShownNameTheSameMonth`; nothing but the description changed.
+- **Red / Green:** red first, on the emulator against the unchanged screen: `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.navigation.MonthSwitcherLabelTest` failed 3 of 5, each getting ""Cambiar de mes. Mes actual:"" with a month that was not the current one (Septiembre 2026, Diciembre 2026, and Octubre 2026 after the month had turned). The current-month case and the shown-equals-spoken case passed before the change and are guards. All 5 pass after it.
+- **Gate results:** local `./scripts/verify-ticket SELLO-050 --gate G2 --retain` passed on the tested commit: 345 host tests (205 app, 98 domain, 31 design-system, 8 data, 3 catalog), 291 device tests on the API 30 emulator (121 app, 104 data, 56 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T224048Z-720336bf; SELLO-050 G2 passed; HEAD fc56964, inputs sha256 65aeb3e80109; report docs/planning/mvp/quality-reports/SELLO-050.json sha256 ff94d6ec881a1ecbcfd8f74f3535b3e5fa555b365a9dcf81630162ef92170db5
+- **Device / Artifact:** the debug app on the API 30 emulator, 2026-10-11, financial day in October 2026, read from the accessibility hierarchy with `uiautomator dump`. Before: choosing September gave ""Cambiar de mes. Mes actual: Septiembre 2026"". After, on a build of the working tree before the commit: October gave ""Cambiar de mes. Mes actual: Octubre 2026"" and September gave ""Cambiar de mes. Mes seleccionado: Septiembre 2026"", with ""Septiembre 2026"" shown. **Not executed: a walkthrough with TalkBack on, and keyboard focus.** The ticket asks for a screen-reader check before acceptance; what was verified is the text the app gives the screen reader, not how it is spoken.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the wording and the TalkBack walkthrough that was not done; the pull request and its checks are that record. No independent technical review.
 
 Shared definition of done and gates:
 
@@ -7464,7 +7473,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,In Progress,sello-050
+",1011,Medium,Done,sello-050
 51,Task,SELLO-051 — Show readable grouped COP category limits without changing input meaning,"Local ID: SELLO-051
 Epic: SELLO-E11
 Increment: MVP

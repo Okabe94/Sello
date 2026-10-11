@@ -34,8 +34,8 @@ day `asOf` it was worked out for, including when it is kept as `lastGood`.
   Sin límite"; not a zero budget), otherwise `Limited` with the sum of finite limits,
   `spent`, `remaining` (negative when overspent, never clamped), the standing, and
   the daily allowance in the current month.
-- `categories`: each with its limit state, its `spent` and, when it has a finite
-  limit, its own budget and standing. An archived category is listed only in months
+- `categories`: each with its limit state, its `spent`, how many expenses make that
+  up (`expenseCount`) and, when it has a finite limit, its own budget and standing. An archived category is listed only in months
   where it has a limit or spending.
 
 A category over its limit does not reduce the overall allowance by more than what

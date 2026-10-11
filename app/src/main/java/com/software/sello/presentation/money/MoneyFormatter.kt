@@ -43,6 +43,22 @@ class MoneyFormatter(private val labels: MoneyLabels) {
         return MoneyTextValue(sign, symbol(currency), digits, spoken)
     }
 
+    /**
+     * The size of [money] without its sign, for a sentence that already says which way
+     * it goes, such as "Te pasaste por 21.500".
+     */
+    fun magnitude(money: Money): MoneyTextValue {
+        val digits = money.minorUnits.toString().removePrefix("-")
+        val grouped = group(digits, money.currency.scale)
+        val isOne = digits == "1" + "0".repeat(money.currency.scale)
+        return MoneyTextValue(
+            MoneySign.None,
+            symbol(money.currency),
+            grouped,
+            labels.amount(money.currency, grouped, isOne)
+        )
+    }
+
     /** Pesos carry no mark (ADR 0007); any other currency is named by its code. */
     private fun symbol(currency: Currency) = if (currency == Currency.COP) "" else currency.code
 

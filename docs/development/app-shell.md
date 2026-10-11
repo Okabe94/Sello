@@ -14,10 +14,10 @@ month picker, and the dock records an expense. There is no tab bar, because one 
 is not a choice: a tab is added when its screen works, by adding it to `ShellTab`
 and its route to `Routes.kt` (SELLO-022 for Resumen).
 
-Recibo shows the shared [monthly snapshot](monthly-snapshot.md): a skeleton while
-loading, the first-run slip when there are no categories, the exact total spent and
-the list of categories when there are, or an error with retry. SELLO-018 replaces
-that minimal content.
+Recibo and the detail of one of its categories are described in
+[Recibo and category detail](recibo-and-detail.md). Which category is open is the
+frame's own saved state (`ShellState.detailCategoryId`), next to the month and the
+picker, so it survives rotation and the process being killed.
 
 ## The selected month
 

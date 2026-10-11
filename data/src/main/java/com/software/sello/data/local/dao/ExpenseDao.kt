@@ -14,6 +14,27 @@ interface ExpenseDao {
     @Query("SELECT MAX(sequence) FROM expense")
     suspend fun highestSequence(): Long?
 
+    /**
+     * A category's expenses dated from [from] up to but not including [until], newest
+     * day first and within a day the highest sequence first, starting before the
+     * position ([beforeDate], [beforeSequence]) and returning at most [limit].
+     */
+    @Query(
+        "SELECT * FROM expense WHERE category_id = :categoryId " +
+            "AND effective_date >= :from AND effective_date < :until " +
+            "AND (effective_date < :beforeDate " +
+            "OR (effective_date = :beforeDate AND sequence < :beforeSequence)) " +
+            "ORDER BY effective_date DESC, sequence DESC LIMIT :limit"
+    )
+    suspend fun newestInCategory(
+        categoryId: String,
+        from: String,
+        until: String,
+        beforeDate: String,
+        beforeSequence: Long,
+        limit: Int
+    ): List<ExpenseEntity>
+
     /** The category of the expense added last, or null when there is no expense. */
     @Query("SELECT category_id FROM expense ORDER BY sequence DESC LIMIT 1")
     suspend fun lastAddedCategory(): String?

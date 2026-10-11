@@ -2,7 +2,6 @@ package com.software.sello.feature.recibo
 
 import com.software.sello.designsystem.component.MoneySign
 import com.software.sello.designsystem.component.MoneyTextValue
-import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.Category
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryMonth
@@ -112,7 +111,8 @@ class ReciboViewModelTest {
                 ),
                 MonthBudgetState.Unconfigured,
                 Money.cop(0),
-                budget = null
+                budget = null,
+                expenseCount = 0
             )
         },
         spent = Money.cop(spent),
@@ -138,60 +138,35 @@ class ReciboViewModelTest {
     }
 
     @Test
-    fun spendingIsShownWithTheExactFullAmount() = runTest {
+    fun aMonthIsShownThroughTheSharedRenderModelWithItsExactTotal() = runTest {
         val (viewModel) = started()
+        val read = SnapshotState.Ready(snapshot(october, 3_000_001_199_997, categories = 2))
 
-        snapshots.of(october).value =
-            SnapshotState.Ready(snapshot(october, 3_000_001_199_997, categories = 2))
+        snapshots.of(october).value = read
 
+        val state = viewModel.state.value as ReciboState.Month
+        assertEquals(ReciboRenderModel(MoneyFormatter(labels)).recibo(read), state)
         assertEquals(
             MoneyTextValue(MoneySign.None, "", "3.000.001.199.997", "3.000.001.199.997 pesos"),
-            (viewModel.state.value as ReciboState.Spending).spent
+            state.summary.figure.amount
+        )
+        assertEquals(
+            listOf("00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"),
+            state.categories.map { it.id }
         )
     }
 
     @Test
-    fun eachCategoryIsListedWithItsOwnLimitForTheMonth() = runTest {
-        val (viewModel) = started()
-        val base = snapshot(october, 0, categories = 4)
-        val states = listOf(
-            MonthBudgetState.Limited(
-                (BudgetLimit.finite(Money.cop(300_000)) as Outcome.Success).value,
-                explicit = false
-            ),
-            MonthBudgetState.Limited(BudgetLimit.Unlimited, explicit = false),
-            MonthBudgetState.Paused,
-            MonthBudgetState.Unconfigured
-        )
-        val lines = base.categories.zip(states) { line, state -> line.copy(state = state) }
-
-        snapshots.of(october).value = SnapshotState.Ready(base.copy(categories = lines))
-
-        val listed = (viewModel.state.value as ReciboState.Spending).categories
-        assertEquals(
-            listOf(
-                ReciboLimit.Amount(MoneyTextValue(MoneySign.None, "", "300.000", "300.000 pesos")),
-                ReciboLimit.Unlimited,
-                ReciboLimit.Paused,
-                ReciboLimit.NotSet
-            ),
-            listed.map { it.limit }
-        )
-        assertEquals(
-            listOf("Categoría 0" to "home", "Categoría 1" to "home"),
-            listed.take(2).map { it.name to it.iconKey }
-        )
-        assertEquals("00000000-0000-4000-8000-000000000000", listed.first().id)
-    }
-
-    @Test
-    fun aFailedReadIsShownAsFailedEvenWhenOlderFiguresExist() = runTest {
+    fun aFailedReadKeepsOlderFiguresOnlyAsOlderAndIsFailedWithoutThem() = runTest {
         val (viewModel) = started()
         val failure = SnapshotFailure.Storage(StorageFailure.Unavailable("SQLiteException"))
 
         snapshots.of(october).value =
             SnapshotState.Failed(failure, lastGood = snapshot(october, 5_000, categories = 1))
+        val withOlder = viewModel.state.value
+        snapshots.of(october).value = SnapshotState.Failed(failure, lastGood = null)
 
+        assertEquals(true, (withOlder as ReciboState.Month).stale)
         assertEquals(ReciboState.Failed, viewModel.state.value)
     }
 
@@ -231,7 +206,7 @@ class ReciboViewModelTest {
         assertEquals(listOf(october, november), snapshots.observed)
         assertEquals(
             MoneyTextValue(MoneySign.None, "", "1", "1 pesos"),
-            (viewModel.state.value as ReciboState.Spending).spent
+            (viewModel.state.value as ReciboState.Month).summary.figure.amount
         )
     }
 }

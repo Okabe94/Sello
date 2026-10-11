@@ -53,7 +53,13 @@ class AdaptiveScaffoldTest {
     private var docked = 0
     private var selected = "recibo"
 
-    private fun show(width: Int, height: Int, withSecondPane: Boolean = true) {
+    private fun show(
+        width: Int,
+        height: Int,
+        withSecondPane: Boolean = true,
+        insets: WindowInsets = WindowInsets(top = topInset, bottom = bottomInset),
+        withTabs: Boolean = true
+    ) {
         rule.setContent {
             CompositionLocalProvider(LocalDensity provides Density(scale, 1f)) {
                 SelloTheme(reducedMotion = true) {
@@ -66,9 +72,9 @@ class AdaptiveScaffoldTest {
                                     SelloDestination("resumen", "Resumen", SelloIcon.Insights)
                                 ),
                                 selected
-                            ) { selections += it },
+                            ) { selections += it }.takeIf { withTabs },
                             dock = SelloDock("Anotar un gasto", "Anotar", { docked++ }),
-                            windowInsets = WindowInsets(top = topInset, bottom = bottomInset),
+                            windowInsets = insets,
                             secondaryPane = if (withSecondPane) {
                                 { padding -> Pane("second", padding) }
                             } else {
@@ -176,6 +182,29 @@ class AdaptiveScaffoldTest {
                 last.bottom <= bounds("window").bottom - bottomInset
             )
         }
+    }
+
+    @Test
+    fun aSystemBarOrCutoutAtTheSideCoversNeitherPaneNorTheDock() {
+        // A phone on its side: a cutout at one edge, the system's buttons at the other.
+        show(760, 400, insets = WindowInsets(left = 20, top = 24, right = 48), withTabs = false)
+
+        val window = bounds("window")
+        assertTrue(!exists(SCAFFOLD_RAIL_TAG) && exists(SCAFFOLD_DOCK_TAG))
+        for (tag in listOf(SCAFFOLD_PRIMARY_TAG, SCAFFOLD_SECONDARY_TAG, SCAFFOLD_DOCK_TAG)) {
+            val part = bounds(tag)
+            assertTrue("$tag starts at ${part.left}", part.left >= window.left + 20f)
+            assertTrue("$tag ends at ${part.right}", part.right <= window.right - 48f)
+        }
+    }
+
+    @Test
+    fun besideARailTheFarEdgeIsStillKeptClearOfTheSystemBar() {
+        show(760, 400, insets = WindowInsets(left = 20, top = 24, right = 48))
+
+        val window = bounds("window")
+        assertTrue(bounds(SCAFFOLD_RAIL_TAG).left >= window.left)
+        assertTrue(bounds(SCAFFOLD_SECONDARY_TAG).right <= window.right - 48f)
     }
 
     @Test

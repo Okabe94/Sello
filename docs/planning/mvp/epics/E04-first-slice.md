@@ -1,6 +1,6 @@
 # SELLO-E04 — First complete financial walking slice
 
-- **Status:** In Progress
+- **Status:** Done
 - **Goal:** Turn the greeting into a usable category → expense → receipt → Recibo journey.
 - **Exit:** Users can start empty, create a category, save an expense once, and see truthful persisted budget/detail data after restart.
 
@@ -357,7 +357,7 @@ Recibo content and expense history (SELLO-018); the sandbox scenarios (SELLO-024
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-014, SELLO-017, SELLO-009, SELLO-004
 - **Gate:** G2
 
@@ -414,3 +414,54 @@ MVP detail is budget/actuals/history, not all deferred comparison/record charts.
 Create/run `*ReciboRenderModelTest`, `*CategoryDetailViewModelTest` and the device
 WalkingSliceJourneyTest; G2. Save then browse detail/month/history/restart; record
 receipt-to-list-to-total reconciliation and a deliberately injected read-failure state.
+
+### Execution progress
+2026-10-10: started on branch `sello-018-recibo-detail-history` after SELLO-017
+merged. No dependency was added and the schema did not change.
+
+Delivered. `:domain`: `CategoryMonth.expenseCount`, `CategoryOrderPolicy` and a paged
+`ExpenseReads.inCategory`. `:data`: its query and `RoomExpenseReads`. `:app`: the real
+Recibo, the category detail with its expense list, `ReciboRenderModel` shared by
+both, the open category kept in the frame's saved state, and the list/detail layout.
+`:design-system`: the scaffold keeps content clear of a system bar at the side.
+`docs/development/recibo-and-detail.md` states the rules and contracts.
+
+Choices made during the work, for owner review:
+- A finished month over its limit is stamped "Sobre el límite", as the stamps table
+  says. The Recibo text of the reference says "Pasado" for the same case.
+- The detail is the header, spent, limit and the list. The per-category daily amount,
+  the comparison with last month, the weekly and six-month charts and "En números"
+  are not there: the snapshot has no such figures and the ticket leaves them out.
+- The list shows 20 expenses at a time with "Ver más" and "Se muestran 20 de 45",
+  on the same screen. The reference shows four and opens a separate screen with
+  sort and search.
+- An expense without a note is listed as "Sin nota" with its day underneath.
+- "Anotar aquí" is offered only in the month in progress and for a category that is
+  not archived, because a new expense is dated today.
+- Side by side needs a two-column window at least 600dp wide. A short, narrow
+  window (half a phone's screen) shows one screen at a time, although the layout
+  rules class it as two-column. The entry form still splits in such a window.
+- Beside Recibo, the first category is shown until one is chosen, and Back does
+  what it does on Recibo.
+- Long-press on a category, swiping between months, the gear, and the count-up and
+  stamp motion are absent.
+
+Found on the way: on a phone on its side the second column and the dock ran under
+the system's buttons and cut amounts off. `SelloScaffold` applied side insets to
+the top bar only; it now applies them to the panes and the dock, with a test that
+failed first. Two older journeys asserted the previous Recibo's text and now assert
+the new sentences. The month selection lasts as long as the process, so device
+tests that change it put it back.
+
+Left for later: undo, edit and delete (SELLO-019, SELLO-020); choosing the order
+(SELLO-023); sandbox scenarios (SELLO-024); a screen for a database that cannot be
+opened at start, which still has no ticket.
+
+### Delivery evidence
+- **Revision:** branch `sello-018-recibo-detail-history`; tested snapshot is commit `3119832`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** a saved expense updates total and category consistently and detail and list reconcile to the receipt → `WalkingSliceJourneyTest.aSavedExpenseReachesReciboItsCategoryAndItsListAndIsThereAfterStartingAgain` (300.000 limit, 48.700 then 1.300: Recibo, the cell, the detail header, both rows and the database's rows and sum all say the same, after a rebuild and after starting again) and `CategoryDetailViewModelTest.aSavedExpenseAppearsWithNewFiguresAndTheSameNumberOfPagesListed`. No duplicate rule engine → both screens go through `ReciboRenderModel`, which only formats the snapshot; `ReciboRenderModelTest` (11 cases with hand-worked figures). A prior month hides the daily amount and uses its own budget → `aFinishedMonthUsesItsOwnBudgetShowsNoDailyAmountAndListsOnlyItsOwnExpenses` and `aFinishedMonthSaysWhatWasLeftOrByHowMuchItWentOverAndNothingPerDay`. Unlimited last and the default order → `CategoryOrderPolicyTest` on the approved ordering fixture (O01, O02, O07) and `categoriesComeMostUsedFirstWithUnlimitedLastAndEachOwnExactFigures`. Paging never truncates totals or the date range → `ExpenseReadsTest` (four cases on a real database), `aLongListIsShownInPartsWhileTheFiguresCountAllOfIt` and `aLongListComesAPageAtATimeAndSaysThereIsMoreWhileTheFiguresCountEverything`. First and later read failures are visible, retryable and never an empty success → `aReadThatFailsIsShownAsAFailureWithOlderFiguresMarkedAndNeverAsAnEmptyMonth`, `noExpensesIsEmptyAndAListThatCouldNotBeReadIsFailedNeverEmpty`, `aLaterPageThatFailsKeepsWhatWasListedAndAsksForThatSamePageAgain`. Large values and font scales do not clip, status is not colour alone → the `atTwiceTheFontSizeWithVeryLargeAmounts...` cases of `ReciboScreenTest` and `CategoryDetailScreenTest`, `everyCategoryIsOneButtonThatSaysItsExactAmountsAndItsVerdictInWords`, and `AdaptiveScaffoldTest.aSystemBarOrCutoutAtTheSideCoversNeitherPaneNorTheDock`. Adaptive list and detail → `ReciboListDetailWideTest`, five new cases in `ShellScreenLayoutTest`, `aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth`, and restoration in `anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed`.
+- **Red / Green:** most tests were written with the code and passed on their first run, so they were checked by mutation instead: 46 deliberate faults in the finished code (ordering, headline and verdict choice, signs, paging cursor and bounds, failed-versus-empty, stale marking, restoration, Back, selection, the side-by-side rule) each failed at least one test, 33 on the host and 13 on the emulator, and none survived. One expectation of mine was wrong (which expense ends the first page of 45) and was corrected by working it out by hand. The scaffold fix was red first: both new inset cases failed with "primary starts at 0.0" before the change. A defect that the first full device run exposed, the month selection leaking from one test into the next, was fixed in the tests.
+- **Gate results:** local `./scripts/verify-ticket SELLO-018 --gate G2` passed on the tested commit: 309 host tests (178 app, 93 domain, 31 design-system, 4 data, 3 catalog), 260 device tests on an isolated API 30 emulator (99 app, 95 data, 56 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, all in `:app` and the same number as before this ticket. The 99 app device tests also passed with the screen set to 320×640 at density 160. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T164039Z-ac9f825d; SELLO-018 G2 passed; HEAD 3119832, inputs sha256 da355b9e7230; report docs/planning/mvp/quality-reports/SELLO-018.json sha256 d7b3cd3efd73685242ff4b4cde5fefede108782b7cb23403a728e9de54764635
+- **Device / Artifact:** the debug app on the API 30 emulator (1080×2340, Cobalto light, font scale 1.0), from the launcher on a clean install on 2026-10-10. A category with a 300.000 limit and an unlimited one were created and 48.700 recorded: Recibo showed "Te quedan 251.300", "Al día", "Para 22 días" and 11.400 a day; the category's detail showed 251.300 left, 48.700 spent, 300.000 limit and the one expense. With the detail open, Home and `am kill` (process 10555 gone), back through the launcher: a new process (11668) showed the same detail. On its side the phone showed Recibo and the detail side by side; that view first ran under the system's buttons, which is the scaffold defect fixed here, and was captured again after the fix. Three captures are in `docs/testing/evidence/SELLO-018/`. Not run on a physical device or a tablet image; the tablet layout is covered by tests in a 900×700 window.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.

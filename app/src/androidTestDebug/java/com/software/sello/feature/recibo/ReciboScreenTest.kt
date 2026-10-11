@@ -1,13 +1,18 @@
 package com.software.sello.feature.recibo
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.designsystem.component.MoneySign
@@ -25,20 +30,122 @@ class ReciboScreenTest {
 
     private val actions = mutableListOf<ReciboAction>()
 
-    private fun show(state: ReciboState) {
+    private fun show(state: ReciboState, fontScale: Float = 1f, selected: String? = null) {
         rule.setContent {
-            SelloTheme(reducedMotion = true) {
-                ReciboScreen(state, { actions += it }, PaddingValues(12.dp))
+            val density = LocalDensity.current.density
+            CompositionLocalProvider(LocalDensity provides Density(density, fontScale)) {
+                SelloTheme(reducedMotion = true) {
+                    ReciboScreen(
+                        state,
+                        { actions += it },
+                        PaddingValues(12.dp),
+                        selectedCategoryId = selected
+                    )
+                }
             }
         }
     }
 
+    private fun plain(digits: String) = MoneyTextValue(MoneySign.None, "", digits, "$digits pesos")
+
+    private fun limited(
+        id: String,
+        name: String,
+        headline: ReciboHeadline,
+        amount: String,
+        stamp: ReciboStamp,
+        limit: String,
+        over: Boolean = false
+    ) = ReciboCategory(
+        id = id,
+        name = name,
+        iconKey = "restaurant",
+        archived = false,
+        figure = BudgetFigure(headline, plain(amount), stamp),
+        cellAmount = if (over) {
+            MoneyTextValue(MoneySign.Minus, "", amount, "menos $amount pesos")
+        } else {
+            plain(amount)
+        },
+        spent = plain("1"),
+        limit = plain(limit),
+        fraction = 0.5f,
+        over = over,
+        expenseCount = 1
+    )
+
+    private fun open(id: String, name: String, stamp: ReciboStamp, archived: Boolean = false) =
+        ReciboCategory(
+            id = id,
+            name = name,
+            iconKey = "una_clave_nueva",
+            archived = archived,
+            figure = BudgetFigure(ReciboHeadline.Spent, plain("80.000"), stamp),
+            cellAmount = plain("80.000"),
+            spent = plain("80.000"),
+            limit = null,
+            fraction = null,
+            over = false,
+            expenseCount = 8
+        )
+
+    private val categories = listOf(
+        limited(
+            "a",
+            "Alimentación",
+            ReciboHeadline.Remaining,
+            "287.600",
+            ReciboStamp.OnTrack,
+            "900.000"
+        ),
+        limited(
+            "b",
+            "Transporte",
+            ReciboHeadline.Remaining,
+            "55.000",
+            ReciboStamp.Tight,
+            "200.000"
+        ),
+        limited(
+            "c",
+            "Entretenimiento",
+            ReciboHeadline.Overspent,
+            "21.500",
+            ReciboStamp.Over,
+            "100.000",
+            over = true
+        ),
+        open("d", "Arte", ReciboStamp.NoLimit),
+        open("e", "Vieja", ReciboStamp.Paused, archived = true),
+        open("f", "Nueva", ReciboStamp.NotSet)
+    )
+
+    private fun month(
+        headline: ReciboHeadline,
+        amount: String,
+        stamp: ReciboStamp,
+        days: Int? = null,
+        perDay: String? = null,
+        exhausted: Boolean = false,
+        stale: Boolean = false
+    ) = ReciboState.Month(
+        ReciboSummary(
+            BudgetFigure(headline, plain(amount), stamp),
+            days,
+            perDay?.let(::plain),
+            exhausted
+        ),
+        categories,
+        stale
+    )
+
     @Test
-    fun loadingShowsASkeletonAndNoFigure() {
+    fun loadingShowsSkeletonsAndNoFigure() {
         show(ReciboState.Loading)
 
         rule.onNodeWithTag(RECIBO_LOADING_TAG).assertIsDisplayed()
-        rule.onNodeWithText("0").assertDoesNotExist()
+        rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).assertDoesNotExist()
     }
 
     @Test
@@ -51,42 +158,127 @@ class ReciboScreenTest {
         assertEquals(listOf<ReciboAction>(ReciboAction.CreateCategory), actions)
         // No backup or entry action before those exist.
         rule.onNodeWithText("Traer mis datos de un respaldo").assertDoesNotExist()
-        rule.onNodeWithTag(RECIBO_SPENDING_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
     }
 
     @Test
-    fun spendingIsReadAloudAsTheFullExactAmountAndCategoriesShowTheirLimit() {
+    fun theMonthInProgressIsReadAsOneSentenceWithItsVerdictDaysAndDailyAmount() {
+        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+
+        rule.onNodeWithContentDescription("Te quedan 937.200 pesos. Al día.").assertIsDisplayed()
+        rule.onNodeWithText("Para 9 días").assertIsDisplayed()
+        rule.onNodeWithText("Puedes gastar al día").assertIsDisplayed()
+        rule.onNodeWithContentDescription("99.100 pesos").assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_STALE_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun theLastDaySaysTodayAndAnOverspentMonthSaysByHowMuch() {
+        show(month(ReciboHeadline.Overspent, "50.000", ReciboStamp.Over, 1, "0", exhausted = true))
+
+        rule.onNodeWithContentDescription(
+            "Te pasaste por 50.000 pesos. Pasado."
+        ).assertIsDisplayed()
+        rule.onNodeWithText("Para hoy").assertIsDisplayed()
+        rule.onNodeWithContentDescription("0 pesos").assertIsDisplayed()
+    }
+
+    @Test
+    fun aFinishedMonthAndAMonthWithoutLimitsShowNoDailyAmount() {
+        show(month(ReciboHeadline.LeftOver, "500.000", ReciboStamp.WithinLimit))
+
+        rule.onNodeWithContentDescription("Te sobraron 500.000 pesos. Bajo el límite.")
+            .assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
+        rule.onNodeWithText("Puedes gastar al día").assertDoesNotExist()
+    }
+
+    @Test
+    fun aFinishedMonthOverItsLimitAndAMonthWithNoLimitSayItInWords() {
+        show(month(ReciboHeadline.Spent, "80.000", ReciboStamp.NoLimit))
+
+        rule.onNodeWithContentDescription("Has gastado 80.000 pesos. Sin límite.")
+            .assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun everyCategoryIsOneButtonThatSaysItsExactAmountsAndItsVerdictInWords() {
+        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+
+        listOf(
+            "Alimentación. Te quedan 287.600 pesos de 900.000 pesos. Al día.",
+            "Transporte. Te quedan 55.000 pesos de 200.000 pesos. Justo.",
+            "Entretenimiento. Te pasaste por 21.500 pesos de 100.000 pesos. Pasado.",
+            "Arte. Has gastado 80.000 pesos. Sin límite.",
+            "Vieja. Has gastado 80.000 pesos. En pausa. Archivada.",
+            "Nueva. Has gastado 80.000 pesos. Sin configurar."
+        ).forEach { rule.onNodeWithContentDescription(it).performScrollTo().assertIsDisplayed() }
+        rule.onNodeWithTag(reciboCategoryTag("c")).performScrollTo().performClick()
+        rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().performClick()
+
+        assertEquals(
+            listOf(ReciboAction.OpenCategory("c"), ReciboAction.CreateCategory),
+            actions
+        )
+    }
+
+    @Test
+    fun olderFiguresCarryANoticeAndAWayToReadAgain() {
         show(
-            ReciboState.Spending(
-                MoneyTextValue(MoneySign.None, "", "1.234.567", "1.234.567 pesos"),
-                listOf(
-                    ReciboCategory(
-                        "a",
-                        "Mercado",
-                        "shopping_cart",
-                        archived = false,
-                        ReciboLimit.Amount(
-                            MoneyTextValue(MoneySign.None, "", "300.000", "300.000 pesos")
-                        )
-                    ),
-                    ReciboCategory("b", "Café", "local_cafe", false, ReciboLimit.Unlimited),
-                    ReciboCategory("c", "Vieja", "una_clave_nueva", true, ReciboLimit.Paused),
-                    ReciboCategory("d", "Nueva", "home", false, ReciboLimit.NotSet)
+            month(
+                ReciboHeadline.Remaining,
+                "937.200",
+                ReciboStamp.OnTrack,
+                9,
+                "99.100",
+                stale = true
+            )
+        )
+
+        rule.onNodeWithTag(RECIBO_STALE_TAG).assertIsDisplayed()
+        rule.onNodeWithText(
+            "No pudimos actualizar. Esto es lo último que se leyó y puede no estar al día."
+        ).assertIsDisplayed()
+        rule.onNodeWithContentDescription("Te quedan 937.200 pesos. Al día.").assertIsDisplayed()
+        rule.onNodeWithText("Reintentar").performClick()
+
+        assertEquals(listOf<ReciboAction>(ReciboAction.Retry), actions)
+    }
+
+    @Test
+    fun theCategoryShownBesideReciboIsMarkedAsSelectedAndNoOtherIs() {
+        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack), selected = "b")
+
+        rule.onNodeWithTag(reciboCategoryTag("b")).assertIsSelected()
+        rule.onNodeWithTag(reciboCategoryTag("a")).assertIsNotSelected()
+    }
+
+    @Test
+    fun atTwiceTheFontSizeWithVeryLargeAmountsEverythingCanStillBeReached() {
+        val huge = "8.998.000.000.000.001"
+        val state = month(ReciboHeadline.Remaining, huge, ReciboStamp.OnTrack, 31, huge).copy(
+            categories = listOf(
+                limited(
+                    "a",
+                    "Un nombre de categoría largo",
+                    ReciboHeadline.Overspent,
+                    huge,
+                    ReciboStamp.Over,
+                    huge,
+                    over = true
                 )
             )
         )
 
-        rule.onNodeWithText("Has gastado").assertIsDisplayed()
-        rule.onNodeWithContentDescription("1.234.567 pesos").assertIsDisplayed()
-        rule.onNodeWithText("Mercado").assertIsDisplayed()
-        rule.onNodeWithContentDescription("300.000 pesos").assertIsDisplayed()
-        rule.onNodeWithText("Sin límite").assertIsDisplayed()
-        rule.onNodeWithText("En pausa").assertIsDisplayed()
-        rule.onNodeWithText("Archivada").assertIsDisplayed()
-        rule.onNodeWithText("Sin configurar").assertIsDisplayed()
-        rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().performClick()
+        show(state, fontScale = 2f)
 
-        assertEquals(listOf<ReciboAction>(ReciboAction.CreateCategory), actions)
+        rule.onNodeWithContentDescription("Te quedan $huge pesos. Al día.").assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithContentDescription(
+            "Un nombre de categoría largo. Te pasaste por $huge pesos de $huge pesos. Pasado."
+        ).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -98,6 +290,7 @@ class ReciboScreenTest {
         rule.onNodeWithText("Reintentar").performClick()
 
         assertEquals(listOf<ReciboAction>(ReciboAction.Retry), actions)
-        rule.onNodeWithTag(RECIBO_SPENDING_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).assertDoesNotExist()
     }
 }

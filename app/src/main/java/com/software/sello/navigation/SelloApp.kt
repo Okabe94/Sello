@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -19,6 +21,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -37,10 +41,20 @@ import com.software.sello.designsystem.component.SelloDock
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.category.CategoryEditorRoot
 import com.software.sello.feature.expense.ExpenseEntryRoot
-import com.software.sello.feature.recibo.ReciboRoot
+import com.software.sello.feature.recibo.CategoryDetailAction
+import com.software.sello.feature.recibo.CategoryDetailScreen
+import com.software.sello.feature.recibo.CategoryDetailState
+import com.software.sello.feature.recibo.CategoryDetailViewModel
+import com.software.sello.feature.recibo.ReciboAction
+import com.software.sello.feature.recibo.ReciboScreen
+import com.software.sello.feature.recibo.ReciboState
+import com.software.sello.feature.recibo.ReciboViewModel
+import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.month.MonthNames
 import com.software.sello.presentation.month.monthNames
 
@@ -64,8 +78,8 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
 
     NavHost(navController = navigation, startDestination = ReciboRoute) {
         composable<ReciboRoute> {
-            ShellScreen(state, monthNames(), shell::onAction) { padding ->
-                ReciboRoot(viewModels, padding) { navigation.navigate(CategoryEditorRoute()) }
+            ReciboDestination(state, viewModels, shell::onAction) {
+                navigation.navigate(CategoryEditorRoute())
             }
         }
         composable<CategoryEditorRoute> { entry ->
@@ -127,7 +141,90 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
 }
 
 /**
- * The frame: the month in the title, the content, and the month picker. The picker is
+ * Recibo and the detail of one of its categories: one screen at a time where there is
+ * room for one, side by side where there is room for two. Which category is open is
+ * the frame's saved state, so it is the same category after a rotation, a resize or
+ * the process being killed. With room for two and none opened, the first one is shown.
+ */
+@Composable
+private fun ReciboDestination(
+    state: ShellState,
+    viewModels: ViewModelProvider.Factory,
+    onShell: (ShellAction) -> Unit,
+    onCreateCategory: () -> Unit
+) {
+    val recibo: ReciboViewModel = viewModel(factory = viewModels)
+    val detail: CategoryDetailViewModel = viewModel(factory = viewModels)
+    val reciboState by recibo.state.collectAsStateWithLifecycle()
+    val detailState by detail.state.collectAsStateWithLifecycle()
+    val names = monthNames()
+    val dates = dateLabels()
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val twoPane = showsDetailBeside(maxWidth, maxHeight)
+        val first = (reciboState as? ReciboState.Month)?.categories?.firstOrNull()?.id
+        val shownId = state.detailCategoryId ?: first.takeIf { twoPane }
+        LaunchedEffect(shownId) { detail.onAction(CategoryDetailAction.Show(shownId)) }
+        val title = (detailState as? CategoryDetailState.Ready)?.category?.name
+            ?: stringResource(R.string.category_detail_title_fallback)
+        ShellScreen(
+            state = state,
+            names = names,
+            onAction = onShell,
+            detail = shownId?.let { id ->
+                ShellDetail(title) { padding ->
+                    CategoryDetailScreen(
+                        state = detailState,
+                        months = names,
+                        dates = dates,
+                        showName = twoPane,
+                        onAction = detail::onAction,
+                        onRecordHere = { onShell(ShellAction.StartEntryIn(id)) },
+                        contentPadding = padding
+                    )
+                }
+            }
+        ) { padding ->
+            ReciboScreen(
+                state = reciboState,
+                onAction = { action ->
+                    when (action) {
+                        ReciboAction.CreateCategory -> onCreateCategory()
+                        is ReciboAction.OpenCategory -> onShell(ShellAction.OpenCategory(action.id))
+                        ReciboAction.Retry -> Unit
+                    }
+                    recibo.onAction(action)
+                },
+                contentPadding = padding,
+                selectedCategoryId = shownId.takeIf { twoPane }
+            )
+        }
+        // Beside Recibo the detail is not a screen to leave: Back does what it does on Recibo.
+        val onDetail = state.detailCategoryId != null && !twoPane
+        val target = backTarget(state.monthPickerOpen, onDetail, ShellTab.Recibo)
+        BackHandler(enabled = target == BackTarget.LeaveDetail) {
+            onShell(ShellAction.CloseCategory)
+        }
+    }
+}
+
+/**
+ * Whether a detail fits beside what it is the detail of: a window laid out in two
+ * columns that is also wide enough for both to be read. A window that is short and
+ * narrow, such as half a phone's screen, shows one at a time like any phone.
+ */
+fun showsDetailBeside(width: Dp, height: Dp): Boolean =
+    selloWindowLayout(width, height).twoPane && width >= SideBySideWidth
+
+private val SideBySideWidth = 600.dp
+
+/** The detail of what the content lists: its [title] and how to draw it. */
+class ShellDetail(val title: String, val content: @Composable (PaddingValues) -> Unit)
+
+/**
+ * The frame: the month in the title, the content, and the month picker. With a
+ * [detail], a window with room for two columns shows it beside the content; any other
+ * window shows it instead of the content once it has been opened, under its own title
+ * and with a way back. The picker is
  * a bottom sheet, or a side panel beside the content in a window wide enough for one.
  * There is no tab bar while there is one tab. The dock asks to record an expense.
  */
@@ -138,44 +235,74 @@ fun ShellScreen(
     names: MonthNames,
     onAction: (ShellAction) -> Unit,
     modifier: Modifier = Modifier,
+    detail: ShellDetail? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
     val openPicker = stringResource(R.string.month_picker_open, title)
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val sidePanel = selloWindowLayout(maxWidth, maxHeight).sidePanelWidth != null
-        SelloScaffold(
-            title = title,
-            titleContent = {
-                MonthSwitcher(
-                    label = title,
-                    onClick = { onAction(ShellAction.OpenMonthPicker) },
-                    modifier = Modifier
-                        .testTag(MONTH_SWITCHER_TAG)
-                        .semantics { contentDescription = openPicker }
-                )
-            },
-            blotter = Blotter.Short,
-            dock = SelloDock(
-                label = stringResource(R.string.dock_entry_label),
-                actionLabel = stringResource(R.string.dock_entry_action),
-                onClick = { onAction(ShellAction.StartEntry) }
-            ),
-            secondaryPane = if (state.monthPickerOpen && sidePanel) {
-                { padding ->
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(
-                            rememberScrollState()
-                        ).padding(padding)
+        val layout = selloWindowLayout(maxWidth, maxHeight)
+        val sidePanel = layout.sidePanelWidth != null
+        val beside = showsDetailBeside(maxWidth, maxHeight)
+        val openedId = state.detailCategoryId.takeIf { detail != null && !beside }
+        if (openedId != null && detail != null) {
+            SelloScaffold(
+                title = detail.title,
+                subtitle = title,
+                blotter = Blotter.Short,
+                navigationIcon = {
+                    IconButton(
+                        onClick = { onAction(ShellAction.CloseCategory) },
+                        modifier = Modifier.testTag(DETAIL_BACK_TAG)
                     ) {
-                        Slip(pinked = false) { MonthPicker(state, names, onAction) }
+                        Icon(
+                            SelloIcon.ArrowBack.painter(),
+                            stringResource(R.string.category_detail_back)
+                        )
                     }
-                }
-            } else {
-                null
-            },
-            content = content
-        )
+                },
+                // From a category's own screen, an expense starts in that category.
+                dock = SelloDock(
+                    label = stringResource(R.string.dock_entry_label),
+                    actionLabel = stringResource(R.string.dock_entry_action),
+                    onClick = { onAction(ShellAction.StartEntryIn(openedId)) }
+                ),
+                content = detail.content
+            )
+        } else {
+            SelloScaffold(
+                title = title,
+                titleContent = {
+                    MonthSwitcher(
+                        label = title,
+                        onClick = { onAction(ShellAction.OpenMonthPicker) },
+                        modifier = Modifier
+                            .testTag(MONTH_SWITCHER_TAG)
+                            .semantics { contentDescription = openPicker }
+                    )
+                },
+                blotter = Blotter.Short,
+                dock = SelloDock(
+                    label = stringResource(R.string.dock_entry_label),
+                    actionLabel = stringResource(R.string.dock_entry_action),
+                    onClick = { onAction(ShellAction.StartEntry) }
+                ),
+                secondaryPane = if (state.monthPickerOpen && sidePanel) {
+                    { padding ->
+                        Column(
+                            Modifier.fillMaxSize().verticalScroll(
+                                rememberScrollState()
+                            ).padding(padding)
+                        ) {
+                            Slip(pinked = false) { MonthPicker(state, names, onAction) }
+                        }
+                    }
+                } else {
+                    detail?.content.takeIf { beside }
+                },
+                content = content
+            )
+        }
         if (state.monthPickerOpen && !sidePanel) {
             ModalBottomSheet(
                 onDismissRequest = { onAction(ShellAction.CloseMonthPicker) },
@@ -194,3 +321,4 @@ fun ShellScreen(
 }
 
 const val MONTH_SWITCHER_TAG = "shell:month-switcher"
+const val DETAIL_BACK_TAG = "shell:detail-back"

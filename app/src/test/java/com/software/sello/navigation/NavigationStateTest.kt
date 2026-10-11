@@ -1,5 +1,6 @@
 package com.software.sello.navigation
 
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.Outcome
@@ -48,6 +49,21 @@ class NavigationStateTest {
         assertEquals(BackTarget.ClosePanel, backTarget(panelOpen = true, onDetail = false, recibo))
         assertEquals(BackTarget.LeaveDetail, backTarget(panelOpen = false, onDetail = true, recibo))
         assertEquals(BackTarget.Exit, backTarget(panelOpen = false, onDetail = false, recibo))
+    }
+
+    @Test
+    fun aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth() {
+        val beside = listOf(760 to 360, 640 to 400, 900 to 700, 1280 to 800, 600 to 479)
+        // An upright phone, a medium window, and half a phone's screen: short but narrow.
+        val alone = listOf(360 to 760, 700 to 1000, 320 to 372, 599 to 400, 360 to 330)
+
+        assertEquals(beside, beside.filter { (w, h) -> showsDetailBeside(w.dp, h.dp) })
+        assertEquals(
+            emptyList<Pair<Int, Int>>(),
+            alone.filter { (w, h) ->
+                showsDetailBeside(w.dp, h.dp)
+            }
+        )
     }
 
     @Test
@@ -219,6 +235,51 @@ class NavigationStateTest {
 
         assertEquals(october, state.selectedMonth)
         assertEquals(EntryRequest(null, null), state.pendingEntry)
+    }
+
+    @Test
+    fun anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed() {
+        val saved = SavedStateHandle()
+        val shell = shell(saved)
+        val id = "00000000-0000-4000-8000-000000000007"
+
+        shell.onAction(ShellAction.OpenCategory(id))
+        val restored = shell(saved.afterProcessDeath())
+        val reopened = restored.state.value.detailCategoryId
+        restored.onAction(ShellAction.CloseCategory)
+
+        assertEquals(id, shell.state.value.detailCategoryId)
+        assertEquals(id, reopened)
+        assertEquals(null, restored.state.value.detailCategoryId)
+    }
+
+    @Test
+    fun somethingThatIsNotACategoryIdentifierOpensNothing() {
+        val tampered = shell(SavedStateHandle(mapOf("shell.detail" to "' OR 1=1 --")))
+        val asked = shell()
+
+        asked.onAction(ShellAction.OpenCategory("../../etc"))
+
+        assertEquals(null, tampered.state.value.detailCategoryId)
+        assertEquals(null, asked.state.value.detailCategoryId)
+    }
+
+    @Test
+    fun anotarFromACategoryStartsTheEntryInThatCategoryAndLeavesItOpen() {
+        categories.categories = listOf(categories.category(7, "Mercado"))
+        val shell = shell()
+        val id = "00000000-0000-4000-8000-000000000007"
+        shell.onAction(ShellAction.OpenCategory(id))
+
+        shell.onAction(ShellAction.StartEntryIn(id))
+        val asked = shell.state.value
+        shell.onAction(ShellAction.EntryTaken)
+
+        assertEquals(true, asked.entryReady)
+        assertEquals(id, asked.pendingEntry?.categoryId?.value)
+        assertEquals(null, asked.pendingEntry?.amount)
+        assertEquals(id, shell.state.value.detailCategoryId)
+        assertEquals(null, shell.state.value.pendingEntry)
     }
 
     @Test

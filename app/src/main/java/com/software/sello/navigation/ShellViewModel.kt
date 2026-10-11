@@ -20,7 +20,8 @@ import kotlinx.coroutines.launch
 /**
  * What the frame around every screen shows. [pickerYear] is the year the month picker
  * is displaying, which is not necessarily the selected month's. [pendingEntry] is an
- * entry request waiting for the entry form to take it.
+ * entry request waiting for the entry form to take it. [detailCategoryId] is the category
+ * whose detail was opened, if any.
  */
 data class ShellState(
     val currentMonth: YearMonth,
@@ -28,6 +29,7 @@ data class ShellState(
     val monthPickerOpen: Boolean,
     val pickerYear: Int,
     val pendingEntry: EntryRequest?,
+    val detailCategoryId: String? = null,
     /** An entry was asked for and there is no category to record it in yet. */
     val entryNeedsCategory: Boolean = false,
     /** An entry was asked for and can be recorded: the form should open. */
@@ -50,6 +52,15 @@ sealed interface ShellAction {
     /** The "Anotar" action: record an expense, with nothing filled in. */
     data object StartEntry : ShellAction
 
+    /** Record an expense in the category whose detail is open. */
+    data class StartEntryIn(val categoryId: String) : ShellAction
+
+    /** Show one category's detail. */
+    data class OpenCategory(val categoryId: String) : ShellAction
+
+    /** Leave the category detail. */
+    data object CloseCategory : ShellAction
+
     /** A link that opened the app. Anything that is not an entry link is ignored. */
     data class OpenLink(val link: String?) : ShellAction
 
@@ -62,8 +73,8 @@ sealed interface ShellAction {
 
 /**
  * Owns what must survive rotation and the process being killed for the frame: the
- * month selection (through [MonthSession]), the month picker, and a pending entry
- * request. Only identifiers and plain values are saved, never a record. It can read
+ * month selection (through [MonthSession]), the month picker, the category whose detail
+ * is open, and a pending entry request. Only identifiers and plain values are saved, never a record. It can read
  * whether a category exists, but has no access to any command: nothing here can
  * create money.
  */
@@ -95,6 +106,9 @@ class ShellViewModel(
             monthPickerOpen = saved[KEY_PICKER] ?: false,
             pickerYear = saved[KEY_PICKER_YEAR] ?: selected.year,
             pendingEntry = pendingEntry(),
+            // Checked again on the way out, so a tampered state cannot name anything else.
+            detailCategoryId = saved.get<String>(KEY_DETAIL)
+                ?.let { (CategoryId.of(it) as? Outcome.Success)?.value?.value },
             entryNeedsCategory = saved[KEY_NEEDS_CATEGORY] ?: false,
             entryReady = saved[KEY_ENTRY_READY] ?: false
         )
@@ -126,6 +140,16 @@ class ShellViewModel(
                 hold(EntryRequest(categoryId = null, amount = null))
                 routeEntry()
             }
+
+            is ShellAction.StartEntryIn -> {
+                val category = (CategoryId.of(action.categoryId) as? Outcome.Success)?.value
+                hold(EntryRequest(categoryId = category, amount = null))
+                routeEntry()
+            }
+
+            is ShellAction.OpenCategory -> saved[KEY_DETAIL] = action.categoryId
+
+            ShellAction.CloseCategory -> saved[KEY_DETAIL] = null
 
             is ShellAction.OpenLink -> EntryLinks.parse(action.link)?.let { request ->
                 hold(request)
@@ -192,6 +216,7 @@ class ShellViewModel(
         private const val KEY_BACKGROUNDED = "shell.backgroundedAt"
         private const val KEY_PICKER = "shell.picker"
         private const val KEY_PICKER_YEAR = "shell.pickerYear"
+        private const val KEY_DETAIL = "shell.detail"
         private const val KEY_ENTRY = "shell.entry"
         private const val KEY_ENTRY_CATEGORY = "shell.entry.category"
         private const val KEY_ENTRY_AMOUNT = "shell.entry.amount"

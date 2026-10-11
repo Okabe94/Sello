@@ -119,9 +119,10 @@ class FirstCategoryJourneyTest {
         submit()
 
         rule.waitUntilExactlyOneExists(hasTestTag(RECIBO_CATEGORIES_TAG), 10_000)
-        rule.onNodeWithText("Mercado de plaza").assertIsDisplayed()
-        rule.onNodeWithContentDescription("300.000 pesos").assertIsDisplayed()
-        rule.onNodeWithText("Has gastado").assertIsDisplayed()
+        rule.onNodeWithContentDescription(
+            "Mercado de plaza. Te quedan 300.000 pesos de 300.000 pesos. Al día."
+        ).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithContentDescription("Te quedan 300.000 pesos. Al día.").assertExists()
         assertEquals(
             listOf("Mercado de plaza|mercado de plaza|shopping_cart|0|1"),
             TestData.rows("SELECT name, name_key, icon, archived, version FROM category")
@@ -143,9 +144,10 @@ class FirstCategoryJourneyTest {
 
         app.recreate()
 
-        rule.awaitText("Mercado de plaza")
-        rule.onNodeWithText("Mercado de plaza").assertIsDisplayed()
-        rule.onNodeWithContentDescription("300.000 pesos").assertIsDisplayed()
+        rule.awaitDescription(
+            "Mercado de plaza. Te quedan 300.000 pesos de 300.000 pesos. Al día."
+        )
+        rule.onNodeWithContentDescription("Te quedan 300.000 pesos. Al día.").assertExists()
     }
 
     @Test
@@ -155,9 +157,10 @@ class FirstCategoryJourneyTest {
         create("Café")
         create("Transporte", limit = "0")
 
-        rule.onNodeWithText("Café").assertIsDisplayed()
-        rule.onNodeWithText("Sin límite").assertIsDisplayed()
-        rule.onNodeWithText("Transporte").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Café. Has gastado 0 pesos. Sin límite.")
+            .performScrollTo().assertIsDisplayed()
+        rule.onNodeWithContentDescription("Transporte. Te quedan 0 pesos de 0 pesos. Al día.")
+            .performScrollTo().assertIsDisplayed()
         assertEquals(
             listOf("Café|unlimited|null", "Transporte|finite|0"),
             TestData.rows(

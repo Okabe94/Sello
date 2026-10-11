@@ -541,6 +541,7 @@ private fun EntryError.text() = when (this) {
     EntryError.NotSaved -> R.string.expense_entry_not_saved
     EntryError.CategoryGone -> R.string.expense_entry_category_gone
     EntryError.FutureDate -> R.string.expense_entry_future_date
+    EntryError.InvalidDate -> R.string.expense_entry_invalid_date
     EntryError.DataChanged -> R.string.expense_entry_data_changed
     EntryError.Unknown -> R.string.expense_entry_unknown
 }

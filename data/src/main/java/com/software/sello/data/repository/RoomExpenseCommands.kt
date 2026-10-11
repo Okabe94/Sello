@@ -11,6 +11,7 @@ import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.OperationKind
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.policy.EffectiveDateError
 import com.software.sello.domain.policy.EffectiveDates
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CommittedExpense
@@ -78,8 +79,18 @@ class RoomExpenseCommands(
             }
         }
         val today = clock.today.value.date
-        if (EffectiveDates.forManualEntry(command.date, today) is Outcome.Failure) {
-            return Rejected(ExpenseRejection.FutureDate(today))
+        when (val date = EffectiveDates.forManualEntry(command.date, today)) {
+            is Outcome.Success -> Unit
+
+            is Outcome.Failure -> return Rejected(
+                when (date.error) {
+                    is EffectiveDateError.InFuture -> ExpenseRejection.FutureDate(today)
+
+                    // Refused here, before the write: once stored it could not be read back.
+                    EffectiveDateError.OutOfRange,
+                    is EffectiveDateError.Malformed -> ExpenseRejection.InvalidDate
+                }
+            )
         }
 
         val now = audit.now()

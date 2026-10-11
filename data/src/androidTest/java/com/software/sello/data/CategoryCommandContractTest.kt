@@ -286,6 +286,28 @@ class CategoryCommandContractTest {
     }
 
     @Test
+    fun aLimitCannotBeSetForAMonthTheStoredTextCannotHold() = runBlocking {
+        mercado()
+        val id = ledger.categoryId(100)
+        val receiptsBefore = receipts()
+        val revisionBefore = ledger.revision()
+
+        // Year -1 would be stored as "-0001-01" and make the category's limits unreadable.
+        val before = ledger.categories.submit(
+            SetMonthLimit(ledger.operation(), 1, id, 1, YearMonth.of(-1, 1), finite(1))
+        )
+        val oldest = ledger.categories.submit(
+            SetMonthLimit(ledger.operation(), 1, id, 1, YearMonth.of(0, 1), finite(7))
+        )
+
+        assertEquals(Rejected(CategoryRejection.InvalidMonth), before)
+        assertTrue("$oldest", oldest is Committed)
+        assertEquals(listOf("${uuid(100)}|0000-01|finite|7"), monthRows())
+        assertEquals(receiptsBefore + 1, receipts())
+        assertEquals(revisionBefore + 1, ledger.revision())
+    }
+
+    @Test
     fun aLimitCannotBeSetForAMonthThatHasNotStarted() = runBlocking {
         mercado()
         val id = ledger.categoryId(100)

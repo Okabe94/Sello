@@ -115,6 +115,9 @@ sealed interface CategoryRejection {
     /** Limits are not set ahead of time. */
     data class FutureMonth(val currentMonth: YearMonth) : CategoryRejection
 
+    /** The month cannot be stored and read back; see `EffectiveDateError.OutOfRange`. */
+    data object InvalidMonth : CategoryRejection
+
     data class StorageFailed(val failure: StorageFailure) : CategoryRejection
 }
 

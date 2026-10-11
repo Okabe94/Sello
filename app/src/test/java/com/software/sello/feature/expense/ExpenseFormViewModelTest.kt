@@ -523,6 +523,7 @@ class ExpenseFormViewModelTest {
         val cases = listOf(
             ExpenseRejection.CategoryMissing to EntryError.CategoryGone,
             ExpenseRejection.FutureDate(LocalDate.of(2026, 10, 21)) to EntryError.FutureDate,
+            ExpenseRejection.InvalidDate to EntryError.InvalidDate,
             ExpenseRejection.StaleGeneration(current = 2) to EntryError.DataChanged,
             ExpenseRejection.OperationConflict to EntryError.NotSaved,
             ExpenseRejection.StorageFailed(StorageFailure.Unavailable("SQLiteException")) to

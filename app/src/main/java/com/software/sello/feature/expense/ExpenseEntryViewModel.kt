@@ -296,6 +296,8 @@ class ExpenseEntryViewModel(
 
                     is ExpenseRejection.FutureDate -> EntryError.FutureDate
 
+                    ExpenseRejection.InvalidDate -> EntryError.InvalidDate
+
                     is ExpenseRejection.StaleGeneration -> EntryError.DataChanged
 
                     else -> EntryError.NotSaved

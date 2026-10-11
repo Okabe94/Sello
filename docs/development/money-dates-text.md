@@ -12,8 +12,19 @@ never substitutes zero, empty or a "repaired" value.
 | One expense or income amount | `TransactionAmount.of(money)` | 1 to 999.999.999.999 COP, positive, COP only. Apply it at entry, commands, row decoding and backup validation (ADR 0003). Not a bound on totals or category limits. |
 | Typed or pasted COP text | `CopAmountInput.parse(text)` | Plain ASCII digits or correctly grouped dots. Zero parses; the caller decides whether zero is allowed. Errors carry the original text. |
 | A stored or exchanged date or month | `EffectiveDates.parseDate`, `parseMonth` | Strict `yyyy-MM-dd` and `yyyy-MM`, real calendar values only. |
-| A manual entry's date | `EffectiveDates.forManualEntry(date, today)` | `today` comes from `FinancialClock`; later dates are `InFuture`. |
-| A selectable month | `EffectiveDates.forSelection(month, today)` | Up to the current month. |
+| Writing a date or month | `EffectiveDates.storedText` | The only way a date or month becomes stored text; the mappers use it. |
+| A manual entry's date | `EffectiveDates.forManualEntry(date, today)` | `today` comes from `FinancialClock`; later dates are `InFuture`; one the stored text cannot hold is `OutOfRange`. |
+| A selectable month | `EffectiveDates.forSelection(month, today)` | Up to the current month, and storable. |
+| A month given a limit | `EffectiveDates.isStorable(month)` | The command refuses a month that would not read back. |
+
+**Storable** means the stored text reads back as the same value, asked of the same
+two functions that write and read. In practice that is years 0000 to 9999: four plain
+digits, no sign. It is what the format can hold, not a product rule about which years
+make sense. A command refuses anything else before writing (`ExpenseRejection.InvalidDate`,
+`CategoryRejection.InvalidMonth`), because a stored `-0001-01-01` commits with a
+receipt and then fails every read that meets it. Known and left alone: reading the
+month of December 9999 computes its upper bound as January 10000, which the text
+order does not handle; it needs the financial clock to be in year 9999.
 | A category name | `CategoryName.of(raw)` | Trimmed, composed (NFC), 1–24 code points. Compare `uniquenessKey` for duplicates, including archived categories; never display or store the key as the name. |
 | A note | `Note.of(raw)` | Null or blank means no note; otherwise up to 60 code points. |
 | An income source | `IncomeSource.of(key, otherName)` | Stable keys `salary`, `freelance`, `passive_income`, `transfer`, `other`. Labels are resources in presentation. |

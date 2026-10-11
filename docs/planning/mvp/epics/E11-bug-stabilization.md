@@ -303,7 +303,7 @@ says. The system-keyboard case (keypad steps aside for the note) was not changed
 - **Type:** Task
 - **Source classification:** Bug
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Confidence:** 99%, conditional on a negative-year `LocalDate` reaching a command.
 - **Depends on:** SELLO-004, SELLO-010, SELLO-012, SELLO-018
 - **Gate:** G2
@@ -381,6 +381,39 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-047 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-11: started on branch `sello-047-reject-unreadable-dates` after SELLO-046
+merged. The claim was verified first against real Room on the API 30 emulator, which
+the assessment had not done: an expense dated year -1 was `Committed` with a
+receipt, stored as `-0001-01-01`, and then failed to decode and failed the read of
+its own month with `Integrity(expense, effective_date)`. The first red run showed
+the same for a month limit in year -1.
+
+Owner decisions taken before the fix (2026-10-11): work on it now; state the range
+as what the format can hold, not a product limit; check it as a round trip through
+the writing and reading functions; leave the December 9999 read bound alone; and
+the form's text "Esa fecha no es válida. No se anotó nada."
+
+Delivered. `:domain`: `EffectiveDates.storedText` and `isStorable`,
+`EffectiveDateError.OutOfRange`, and both `forManualEntry` and `forSelection` refuse
+what would not read back; `ExpenseRejection.InvalidDate` and
+`CategoryRejection.InvalidMonth`. `:data`: the expense and month-limit commands
+refuse before writing, and the mappers write dates and months through `storedText`.
+`:app`: `EntryError.InvalidDate` and its text. No schema, stored format, dependency
+or design-system component changed; the stored text of every date that was already
+storable is byte for byte what it was, so backups are unaffected.
+
+Choices made during the work, for owner review:
+- A date after today is still reported as the future, even when it also could not be
+  stored (year 10000 seen from 2026). "Invalid" is for a date that is not the future.
+- Selecting a month uses the same rule, so a month before year 0000 cannot be selected.
+- The category editor has no text for an invalid month: no screen sets a month limit yet.
+
+Left for later: the December 9999 read bound, recorded in
+`docs/development/money-dates-text.md`. The financial clock's own month is not
+checked when a category is created; a clock outside years 0000–9999 belongs to the
+sandbox's time controls (SELLO-024).
 
 ## SELLO-048 — Move expensive monthly computation off the main thread
 

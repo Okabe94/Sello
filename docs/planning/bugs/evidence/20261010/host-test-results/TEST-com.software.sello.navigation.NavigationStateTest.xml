@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.software.sello.navigation.NavigationStateTest" tests="21" skipped="0" failures="0" errors="0" timestamp="2026-10-11T00:47:45.541Z" hostname="Arishem" time="0.04">
+  <properties/>
+  <testcase name="onlyReciboIsExposedAsATab" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="theMonthPickerAndPendingEntryComeBackAfterTheProcessIsKilled" classname="com.software.sello.navigation.NavigationStateTest" time="0.008"/>
+  <testcase name="anotarOpensTheEntryFormWhenThereIsACategoryAndAsksForOneWhenThereIsNot" classname="com.software.sello.navigation.NavigationStateTest" time="0.003"/>
+  <testcase name="reopeningThePickerStartsAgainOnTheSelectedMonthsYear" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="aFutureMonthIsNotSelectedAndThePickerStaysOpen" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="pickingAMonthSelectsItAndClosesThePicker" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="anEntryWithNoCategoryToRecordItInAsksForOneOnceAndKeepsTheRequest" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="anotarFromACategoryStartsTheEntryInThatCategoryAndLeavesItOpen" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="theMonthGridDisablesMonthsAfterTheCurrentOne" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="somethingThatIsNotACategoryIdentifierOpensNothing" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="theFrameStartsOnTheCurrentMonthWithNothingOpenOrPending" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="aFailedReadOrAForeignLinkSendsNobodyToTheEditor" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="backClosesAPanelThenADetailThenReturnsToReciboThenLeaves" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="theMonthChangeReachesTheFrameWhileItIsOpen" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="aProcessRestoredAfterALongAbsenceResetsTheMonthOnly" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="onlyACategoryThatIsNotArchivedCountsForAnEntry" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="aLongAbsenceResetsTheMonthAndLeavesThePendingEntryAlone" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <testcase name="thePickerOpensOnTheSelectedMonthsYearAndNeverShowsAFutureYear" classname="com.software.sello.navigation.NavigationStateTest" time="0.002"/>
+  <testcase name="savedValuesThatWereTamperedWithDoNotBecomeARequest" classname="com.software.sello.navigation.NavigationStateTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,41 @@
+ M app/src/androidTestDebug/java/com/software/sello/TestData.kt
+ M app/src/androidTestDebug/java/com/software/sello/feature/category/FirstCategoryJourneyTest.kt
+ M app/src/androidTestDebug/java/com/software/sello/feature/expense/ExpenseEntryJourneyTest.kt
+ M app/src/androidTestDebug/java/com/software/sello/feature/recibo/ReciboScreenTest.kt
+ M app/src/androidTestDebug/java/com/software/sello/navigation/ShellScreenLayoutTest.kt
+ M app/src/main/java/com/software/sello/composition/PresentationModule.kt
+ M app/src/main/java/com/software/sello/feature/recibo/ReciboScreen.kt
+ M app/src/main/java/com/software/sello/feature/recibo/ReciboState.kt
+ M app/src/main/java/com/software/sello/feature/recibo/ReciboViewModel.kt
+ M app/src/main/java/com/software/sello/navigation/SelloApp.kt
+ M app/src/main/java/com/software/sello/navigation/ShellViewModel.kt
+ M app/src/main/java/com/software/sello/presentation/money/MoneyFormatter.kt
+ M app/src/main/java/com/software/sello/presentation/month/MonthNames.kt
+ M app/src/main/res/values/strings.xml
+ M app/src/test/java/com/software/sello/feature/expense/ExpenseFakes.kt
+ M app/src/test/java/com/software/sello/feature/recibo/ReciboViewModelTest.kt
+ M app/src/test/java/com/software/sello/navigation/NavigationStateTest.kt
+ M app/src/test/java/com/software/sello/presentation/money/MoneyFormatterTest.kt
+ M data/src/androidTest/java/com/software/sello/data/ExpenseReadsTest.kt
+ M data/src/main/java/com/software/sello/data/local/dao/ExpenseDao.kt
+ M data/src/main/java/com/software/sello/data/repository/RoomExpenseReads.kt
+ M design-system/src/androidTest/java/com/software/sello/designsystem/component/AdaptiveScaffoldTest.kt
+ M design-system/src/main/java/com/software/sello/designsystem/component/SelloScaffold.kt
+ M docs/development/app-shell.md
+ M domain/src/main/kotlin/com/software/sello/domain/model/MonthlySnapshot.kt
+ M domain/src/main/kotlin/com/software/sello/domain/policy/MonthlyBudgetPolicy.kt
+ M domain/src/main/kotlin/com/software/sello/domain/port/ExpenseReads.kt
+?? app/src/androidTestDebug/java/com/software/sello/TestCommands.kt
+?? app/src/androidTestDebug/java/com/software/sello/feature/recibo/CategoryDetailScreenTest.kt
+?? app/src/androidTestDebug/java/com/software/sello/feature/recibo/WalkingSliceJourneyTest.kt
+?? app/src/androidTestDebug/java/com/software/sello/navigation/ReciboListDetailWideTest.kt
+?? app/src/main/java/com/software/sello/feature/recibo/CategoryDetailScreen.kt
+?? app/src/main/java/com/software/sello/feature/recibo/CategoryDetailState.kt
+?? app/src/main/java/com/software/sello/feature/recibo/CategoryDetailViewModel.kt
+?? app/src/main/java/com/software/sello/feature/recibo/ReciboRenderModel.kt
+?? app/src/test/java/com/software/sello/feature/recibo/CategoryDetailViewModelTest.kt
+?? app/src/test/java/com/software/sello/feature/recibo/ReciboRenderModelTest.kt
+?? docs/development/recibo-and-detail.md
+?? docs/testing/evidence/SELLO-018/
+?? domain/src/main/kotlin/com/software/sello/domain/policy/CategoryOrderPolicy.kt
+?? domain/src/test/kotlin/com/software/sello/domain/policy/CategoryOrderPolicyTest.kt

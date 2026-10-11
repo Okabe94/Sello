@@ -5,6 +5,11 @@ This is a starting-state guide, not a second architecture or permission to bypas
 ticket dependencies. Verify current HEAD, Git status, code and ticket status first;
 where this file and the code disagree, the code and the canonical tickets win.
 
+**Bug backlog (2026-10-11):** [SELLO-E11](../planning/mvp/epics/E11-bug-stabilization.md)
+consolidates the UX reports, technical assessment and the two layout/motion defects
+below, with severity order and original-ID mappings. All fixes remain Backlog;
+[preserved source reports and evidence](../planning/bugs/README.md) are historical.
+
 ## Read before editing
 
 1. Root [AGENTS.md](../../AGENTS.md) and [ARCHITECTURE.md](../../ARCHITECTURE.md).
@@ -68,9 +73,9 @@ Things earlier tickets left for these:
   `financialTimeOverride`) with real sandbox control. Device journeys cannot move
   the financial day today, which is why they assert verdicts only where the day does
   not matter.
-- **No owner yet:** a database that cannot be opened at start crashes the app with a
+- **SELLO-045 (E11):** a database that cannot be opened at start crashes the app with a
   clear cause instead of showing a screen (noted in SELLO-011, 015 and 018). It
-  needs a ticket or an explicit home before release.
+  now has a canonical recovery ticket; implementation remains Backlog.
 
 ## How the work is done
 
@@ -202,8 +207,9 @@ ticket's Execution progress.
 
 - A window that is short **and** narrow (half a phone's screen) is classed as
   two-column by `selloWindowLayout`. Recibo's detail guards against it; Anotar's
-  form still splits there. Decide the rule once, in the design system.
-- The reduced-motion setting is read when the theme is composed, not observed.
+  form still splits there. SELLO-052 owns deciding the rule once in the design system.
+- The reduced-motion setting is read when the theme is composed, not observed;
+  SELLO-053 owns observing runtime changes safely.
 - Lint reports 29 warnings in `:app`, unchanged since SELLO-017. The number must not
   grow unexplained.
 - Not done anywhere yet: a physical-device run by the owner since SELLO-006, a

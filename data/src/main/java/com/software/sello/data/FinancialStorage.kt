@@ -52,9 +52,12 @@ class FinancialStorage internal constructor(
 
     val expenseReads: ExpenseReads = RoomExpenseReads(database)
 
-    /** Takes the financial clock for the same reason the commands do. */
-    fun monthlySnapshots(clock: FinancialClock): MonthlySnapshots =
-        RoomMonthlySnapshots(database, clock)
+    /**
+     * Takes the financial clock for the same reason the commands do. [computation] must
+     * carry the dispatcher the month's figures are worked out on; it is never the caller's.
+     */
+    fun monthlySnapshots(clock: FinancialClock, computation: CoroutineContext): MonthlySnapshots =
+        RoomMonthlySnapshots(database, clock, computation)
 
     override fun close() = database.close()
 }

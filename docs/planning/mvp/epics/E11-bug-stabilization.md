@@ -429,7 +429,7 @@ sandbox's time controls (SELLO-024).
 - **Type:** Task
 - **Source classification:** Performance risk
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Confidence:** 90%, conditional on a sufficiently large month refreshing on a constrained device.
 - **Depends on:** SELLO-004, SELLO-005, SELLO-014, SELLO-018
 - **Gate:** G2
@@ -505,6 +505,36 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-048 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-11: started on branch `sello-048-snapshot-off-main-thread` after SELLO-047
+merged. The claim was verified and, for the first time, measured, with a throwaway
+probe on the API 30 emulator (debug build, real Room, 20 categories, every expense in
+one month): called from the main thread, the code after the transaction resumed on
+the main thread; working out the figures took a median of 1.4 ms for 100 expenses,
+2.8 ms for 1,000 and 19 ms (worst 28 ms) for 10,000, while reading the rows, already
+off the main thread, took 7, 20 and 131 ms.
+
+Owner decision (2026-10-11): do the placement change now, to follow architecture §5,
+and **drop the criterion "Device measurements meet targets approved before the run"
+for this ticket**. No targets exist and SELLO-035 has not started; the numbers above
+are kept as information and performance targets stay with SELLO-035. The acceptance
+text above is left as written; that one criterion is not met and not claimed.
+
+Delivered. `:data`: `RoomMonthlySnapshots` takes a computation context and works the
+figures out on it; `FinancialStorage.monthlySnapshots` passes it through. `:app`
+composition gives it `DispatcherProvider.default`. The policy, its results and the
+read transaction are unchanged. No dependency, permission or schema changed.
+
+Choices made during the work, for owner review:
+- The change is in the storage adapter, so every consumer gets it, not in each
+  screen's view model.
+- Only the calculation moved. The screens still format the snapshot on the main
+  thread; that was not measured and not changed.
+- Streaming aggregation was not adopted: nothing measured calls for it.
+
+Left for later: targets, a real device and allocation measurements (SELLO-035);
+sharing one observation between screens (SELLO-055).
 
 ## SELLO-049 — Bound history refresh work and identify retained rows as refreshing
 

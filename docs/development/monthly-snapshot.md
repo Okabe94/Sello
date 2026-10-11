@@ -69,6 +69,20 @@ snapshot never pairs the spending of one revision with the limits of another.
 Observation watches the profile row, which every command changes; bursts are
 conflated, so a slow screen gets the latest state instead of a backlog.
 
+## Where it is worked out
+
+The rows are read inside Room's transaction, on its own threads. The figures are then
+worked out on the computation dispatcher given to `FinancialStorage.monthlySnapshots`
+(`DispatcherProvider.default` in the app), never on the caller, which for a view
+model is the main thread. The rows are already out of the database by then, so a save
+that lands meanwhile cannot mix into the figures; it produces the next snapshot. An
+observation cancelled while its figures are being worked out delivers nothing.
+
+Measured on the API 30 emulator, debug build, 20 categories, one month (2026-10-11,
+informational, not a target): reading 7 / 20 / 131 ms and working out 1.4 / 2.8 /
+19 ms for 100 / 1,000 / 10,000 expenses. Targets and a real device belong to
+SELLO-035. The screens still format the result on the main thread.
+
 ## Not here yet
 
 - Income, net flow and "por asignar": added with income (SELLO-021, SELLO-022).

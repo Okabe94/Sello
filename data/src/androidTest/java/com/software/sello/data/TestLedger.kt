@@ -31,6 +31,8 @@ import com.software.sello.domain.port.RecordIdSource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 
@@ -39,7 +41,11 @@ import kotlinx.coroutines.runBlocking
  * to control: the financial day, the real time stamped on rows, and new identifiers.
  * New records are numbered from 100 and operations from 1000.
  */
-class TestLedger(private val files: DatabaseFiles) {
+class TestLedger(
+    private val files: DatabaseFiles,
+    /** Where month figures are worked out; a test that cares passes its own. */
+    private val computation: CoroutineContext = Dispatchers.Default
+) {
     val zone: ZoneId = ZoneId.of("America/Bogota")
     val auditMillis: Instant = Instant.parse("2026-10-09T15:04:05.678Z")
     private val audit = Instant.parse("2026-10-09T15:04:05.678912Z")
@@ -69,7 +75,7 @@ class TestLedger(private val files: DatabaseFiles) {
         categories = RoomCategoryCommands(database, { audit }, clock, ids)
         expenses = RoomExpenseCommands(database, { audit }, clock, ids)
         reads = RoomCategoryReads(database)
-        snapshots = RoomMonthlySnapshots(database, clock)
+        snapshots = RoomMonthlySnapshots(database, clock, computation)
         expenseReads = RoomExpenseReads(database)
     }
 

@@ -684,7 +684,7 @@ lazy rendering of the rows (SELLO-056), sharing one observation (SELLO-055).
 - **Source classification:** Task
 - **Classification:** Bug discovered during exploration; not in original seven reports
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-015, SELLO-004
 - **Gate:** G2
 - **Source alias:** SELLO-BUG-007
@@ -729,6 +729,25 @@ Do not fix this by announcing October while the selected data is September witho
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-050 --retain` for the final G2 gate.
 Focused shell/month semantics tests, connected current/past selection plus manual TalkBack walkthrough, then G2 with a fresh retained report. Existing XML evidence establishes the defect but does not replace the future screen-reader acceptance.
+
+### Execution progress
+2026-10-11: started on branch `sello-050-selected-month-label` after SELLO-049 merged.
+The claim was verified first in the installed app on the API 30 emulator: with the
+financial day in October 2026, choosing September made the month switcher's
+description "Cambiar de mes. Mes actual: Septiembre 2026".
+
+Owner decision (2026-10-11): on the current month the description stays "Cambiar de
+mes. Mes actual: Octubre 2026"; on any other month it is "Cambiar de mes. Mes
+seleccionado: Septiembre 2026", without also naming the current month.
+
+Delivered, in the shell only: two string resources in place of one, and `ShellScreen`
+picks between them by comparing the state's selected and current months, which it
+already had. No month is worked out anew, no clock is read, and nothing financial,
+the picker or the selection changed.
+
+Not done: making the description just the month with "cambiar de mes" as the
+button's action, which is the usual pattern for a screen reader; it would change the
+description many tests look for and is more than this defect needs.
 
 ## SELLO-051 — Show readable grouped COP category limits without changing input meaning
 

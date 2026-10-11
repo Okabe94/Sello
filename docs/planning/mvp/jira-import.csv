@@ -7485,7 +7485,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Source classification:** Task
 - **Classification:** Amount-entry readability issue; original report 4
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-016, SELLO-008, SELLO-007, SELLO-004
 - **Gate:** G2
 - **Source alias:** SELLO-BUG-004
@@ -7529,6 +7529,42 @@ Do not reformat malformed input into a valid amount, strip arbitrary characters,
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-051 --retain` for the final G2 gate.
 Focused formatter/editor tests, connected typing/paste/suggestion/restoration checks, exact Room-backed creation result, then G2 with fresh retained evidence. Coordinate write order with SELLO-058.
+
+### Execution progress
+2026-10-11: started on branch `sello-051-grouped-limit-display` after SELLO-050 merged.
+The claim was verified first in the installed app on the API 30 emulator: with ""Sin
+límite"" off, choosing the 500.000 suggestion left the field reading `500000` above a
+chip reading `500.000`.
+
+Owner decision (2026-10-11): group the digits in the field itself, for display only,
+not a separate line under it.
+
+Delivered. `:design-system`: `DigitGrouping`, a display-only transformation, and a
+`visualTransformation` parameter on `FormField`. `:app`: the limit field uses it; the
+view model, the draft, validation and the command are untouched. `:catalog`: the form
+field example has a grouped ""Límite en pesos"" that also shows the typed text.
+
+Choices made during the work, for owner review:
+- Only plain digits with no leading zero are grouped. `1e3`, `1.23`, `0500000`, text
+  with a space or a sign, and dots the person typed themselves are drawn as typed.
+- Digits beyond any real amount (twenty of them) are still grouped: it is what makes
+  their size plain, and validation refuses them as before.
+- Nothing extra is said for accessibility: a screen reader reads the field's text as
+  drawn, `500.000`, under the label ""Límite en pesos"". No spoken ""pesos"" was added to
+  the value itself.
+- The separator is a dot, as `MoneyFormatter` writes pesos.
+
+Not touched: the ""Sin límite"" default and what happens to the draft when it is
+switched (SELLO-058), and the expense amount, which has its own keypad and field.
+
+### Delivery evidence
+- **Revision:** branch `sello-051-grouped-limit-display`; tested snapshot is commit `38cf770`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** 400000 and a suggested 500000 read as 400.000 and 500.000 while editing → `DigitGroupingTest.plainDigitsAreDrawnInGroupsOfThreeFromTheRight` (expected texts written by hand), `CategoryEditorScreenTest.aLimitIsDrawnInGroupsSoItsSizeCanBeRead` and `aSuggestedLimitIsDrawnTheWayItsChipReads`; for a screen reader the field's text is the drawn one under the label ""Límite en pesos"", and no further spoken value was added. Grouping is presentation only, with selection, cursor, insert, delete, paste and restoration correct → `GroupedFormFieldTest` (typed digits given as typed; a digit inserted in the middle; deletion beside a separator; deleting all seven digits one by one; replacement text) with the cursor mapping in `DigitGroupingTest` for every position of every length up to 24; the draft and its restoration are untouched code, covered by the unchanged `CategoryEditorViewModelTest`. Malformed input is not repaired → `DigitGroupingTest.anythingThatIsNotPlainDigitsIsDrawnExactlyAsTyped` (`1e3`, `1.23`, commas, signs, spaces, leading zeros, other scripts' digits), `GroupedFormFieldTest.textThatIsNotAnAmountIsGivenAndDrawnExactlyAsItArrived`, `CategoryEditorScreenTest.aLimitThatIsNotAnAmountIsDrawnAsTypedBesideItsError`; correctly grouped dots typed by hand are kept (`dotsTheWriterTypedThemselvesAreKeptAsTyped`) and still accepted by the unchanged `CopAmountInput`. No floating point, no new range, exact value persisted → no rule changed; `FirstCategoryJourneyTest.aSuggestedLimitReadsGroupedWhileEditingAndIsSavedAsTheExactAmount` stores `finite|400000|COP` and Recibo shows 400.000. Unlimited mode → unchanged; the field is still off while ""Sin límite"" is on (existing test).
+- **Red / Green:** red first for the grouping rules: `./gradlew :design-system:testDebugUnitTest --tests '*DigitGroupingTest'` against a transformation that changed nothing failed 5 of 6. Red first for the form: with the transformation written and not yet used by the editor, the two editor classes on the emulator failed 3 of 20, each expecting 400.000 or 500.000 and getting 400000 or 500000. All pass after wiring. `GroupedFormFieldTest` (6) was written after the transformation and passed on its first run; it was not checked by mutation. One finder in a new test was corrected because the field and the chip now carry the same text.
+- **Gate results:** local `./scripts/verify-ticket SELLO-051 --gate G2 --retain` passed on the tested commit: 351 host tests (205 app, 98 domain, 37 design-system, 8 data, 3 catalog), 302 device tests on the API 30 emulator (126 app, 104 data, 62 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T233501Z-77418e01; SELLO-051 G2 passed; HEAD 38cf770, inputs sha256 e3391785c2c2; report docs/planning/mvp/quality-reports/SELLO-051.json sha256 637a51e884052cade7957fdb15915eb489c6efd56ec4a7cad88a1f3ecd450b9b
+- **Device / Artifact:** the debug app on the API 30 emulator (1080×2340, Cobalto light, font scale 1.0), 2026-10-11. Before: ""Sin límite"" off, the 500.000 suggestion chosen, the field read [500000](../../../testing/evidence/SELLO-051/01-before-ungrouped.png). After, on a build of the working tree before the commit, the same steps read [500.000](../../../testing/evidence/SELLO-051/02-after-grouped.png). The save and its stored amount were checked by the journey test on the real database, not by hand. Not executed by hand: typing and deleting in the middle with the system keyboard, pasting from the clipboard, rotation mid-draft, twice the font size, TalkBack, and the catalog example on screen (it compiles and the catalog's own device tests pass).
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
 
 Shared definition of done and gates:
 
@@ -7597,7 +7633,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,Backlog,sello-051
+",1011,Medium,Done,sello-051
 52,Task,SELLO-052 — Keep short narrow expense windows usable with one shared width policy,"Local ID: SELLO-052
 Epic: SELLO-E11
 Increment: MVP

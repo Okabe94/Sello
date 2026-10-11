@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.software.sello.designsystem.theme.SelloTheme
 
@@ -32,7 +33,8 @@ import com.software.sello.designsystem.theme.SelloTheme
  * A labelled text input. It shows exactly what was typed: it does not trim, cut at a
  * limit or remove characters. The caller validates and passes back a [message]; an
  * error message also marks the field invalid for screen readers. [counter] is a
- * ready-made count such as `25/24`.
+ * ready-made count such as `25/24`. [visualTransformation] changes only how the
+ * value is drawn, never the value: see [DigitGrouping].
  */
 @Composable
 fun FormField(
@@ -46,6 +48,7 @@ fun FormField(
     singleLine: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     trailing: (@Composable () -> Unit)? = null
 ) {
     val colors = SelloTheme.colors
@@ -67,6 +70,7 @@ fun FormField(
             cursorBrush = SolidColor(colors.brand),
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
+            visualTransformation = visualTransformation,
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { focused = it.isFocused }

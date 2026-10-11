@@ -1,0 +1,2214 @@
+diff --git a/app/src/androidTestDebug/java/com/software/sello/TestData.kt b/app/src/androidTestDebug/java/com/software/sello/TestData.kt
+index dd1b745..8f3a850 100644
+--- a/app/src/androidTestDebug/java/com/software/sello/TestData.kt
++++ b/app/src/androidTestDebug/java/com/software/sello/TestData.kt
+@@ -31,6 +31,9 @@ object TestData {
+         }
+     }
+ 
++    /** Changes rows behind the app's back, to damage or repair what it will read. */
++    fun execute(sql: String) = database(SQLiteDatabase.OPEN_READWRITE) { it.execSQL(sql) }
++
+     fun count(table: String): Long = long("SELECT COUNT(*) FROM $table")
+ 
+     fun financialRows(): Long = tables.sumOf(::count)
+diff --git a/app/src/androidTestDebug/java/com/software/sello/feature/category/FirstCategoryJourneyTest.kt b/app/src/androidTestDebug/java/com/software/sello/feature/category/FirstCategoryJourneyTest.kt
+index c644c0b..df09b6d 100644
+--- a/app/src/androidTestDebug/java/com/software/sello/feature/category/FirstCategoryJourneyTest.kt
++++ b/app/src/androidTestDebug/java/com/software/sello/feature/category/FirstCategoryJourneyTest.kt
+@@ -119,9 +119,10 @@ class FirstCategoryJourneyTest {
+         submit()
+ 
+         rule.waitUntilExactlyOneExists(hasTestTag(RECIBO_CATEGORIES_TAG), 10_000)
+-        rule.onNodeWithText("Mercado de plaza").assertIsDisplayed()
+-        rule.onNodeWithContentDescription("300.000 pesos").assertIsDisplayed()
+-        rule.onNodeWithText("Has gastado").assertIsDisplayed()
++        rule.onNodeWithContentDescription(
++            "Mercado de plaza. Te quedan 300.000 pesos de 300.000 pesos. Al día."
++        ).performScrollTo().assertIsDisplayed()
++        rule.onNodeWithContentDescription("Te quedan 300.000 pesos. Al día.").assertExists()
+         assertEquals(
+             listOf("Mercado de plaza|mercado de plaza|shopping_cart|0|1"),
+             TestData.rows("SELECT name, name_key, icon, archived, version FROM category")
+@@ -143,9 +144,10 @@ class FirstCategoryJourneyTest {
+ 
+         app.recreate()
+ 
+-        rule.awaitText("Mercado de plaza")
+-        rule.onNodeWithText("Mercado de plaza").assertIsDisplayed()
+-        rule.onNodeWithContentDescription("300.000 pesos").assertIsDisplayed()
++        rule.awaitDescription(
++            "Mercado de plaza. Te quedan 300.000 pesos de 300.000 pesos. Al día."
++        )
++        rule.onNodeWithContentDescription("Te quedan 300.000 pesos. Al día.").assertExists()
+     }
+ 
+     @Test
+@@ -155,9 +157,10 @@ class FirstCategoryJourneyTest {
+         create("Café")
+         create("Transporte", limit = "0")
+ 
+-        rule.onNodeWithText("Café").assertIsDisplayed()
+-        rule.onNodeWithText("Sin límite").assertIsDisplayed()
+-        rule.onNodeWithText("Transporte").assertIsDisplayed()
++        rule.onNodeWithContentDescription("Café. Has gastado 0 pesos. Sin límite.")
++            .performScrollTo().assertIsDisplayed()
++        rule.onNodeWithContentDescription("Transporte. Te quedan 0 pesos de 0 pesos. Al día.")
++            .performScrollTo().assertIsDisplayed()
+         assertEquals(
+             listOf("Café|unlimited|null", "Transporte|finite|0"),
+             TestData.rows(
+diff --git a/app/src/androidTestDebug/java/com/software/sello/feature/expense/ExpenseEntryJourneyTest.kt b/app/src/androidTestDebug/java/com/software/sello/feature/expense/ExpenseEntryJourneyTest.kt
+index a4b48fd..1c87233 100644
+--- a/app/src/androidTestDebug/java/com/software/sello/feature/expense/ExpenseEntryJourneyTest.kt
++++ b/app/src/androidTestDebug/java/com/software/sello/feature/expense/ExpenseEntryJourneyTest.kt
+@@ -139,8 +139,10 @@ class ExpenseEntryJourneyTest {
+         rule.onNodeWithTag(ENTRY_DONE_TAG).performScrollTo().performClick()
+ 
+         rule.awaitTag(RECIBO_CATEGORIES_TAG)
+-        rule.onNodeWithText("Has gastado").assertIsDisplayed()
+-        rule.onNodeWithContentDescription("10.000 pesos").assertIsDisplayed()
++        rule.onNodeWithContentDescription("Has gastado 10.000 pesos. Sin límite.")
++            .assertIsDisplayed()
++        rule.onNodeWithContentDescription("Mercado. Has gastado 10.000 pesos. Sin límite.")
++            .performScrollTo().assertIsDisplayed()
+     }
+ 
+     @Test
+diff --git a/app/src/androidTestDebug/java/com/software/sello/feature/recibo/ReciboScreenTest.kt b/app/src/androidTestDebug/java/com/software/sello/feature/recibo/ReciboScreenTest.kt
+index f01845d..b25d1f7 100644
+--- a/app/src/androidTestDebug/java/com/software/sello/feature/recibo/ReciboScreenTest.kt
++++ b/app/src/androidTestDebug/java/com/software/sello/feature/recibo/ReciboScreenTest.kt
+@@ -1,13 +1,18 @@
+ package com.software.sello.feature.recibo
+ 
+ import androidx.compose.foundation.layout.PaddingValues
++import androidx.compose.runtime.CompositionLocalProvider
++import androidx.compose.ui.platform.LocalDensity
+ import androidx.compose.ui.test.assertIsDisplayed
++import androidx.compose.ui.test.assertIsNotSelected
++import androidx.compose.ui.test.assertIsSelected
+ import androidx.compose.ui.test.junit4.createComposeRule
+ import androidx.compose.ui.test.onNodeWithContentDescription
+ import androidx.compose.ui.test.onNodeWithTag
+ import androidx.compose.ui.test.onNodeWithText
+ import androidx.compose.ui.test.performClick
+ import androidx.compose.ui.test.performScrollTo
++import androidx.compose.ui.unit.Density
+ import androidx.compose.ui.unit.dp
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import com.software.sello.designsystem.component.MoneySign
+@@ -25,20 +30,122 @@ class ReciboScreenTest {
+ 
+     private val actions = mutableListOf<ReciboAction>()
+ 
+-    private fun show(state: ReciboState) {
++    private fun show(state: ReciboState, fontScale: Float = 1f, selected: String? = null) {
+         rule.setContent {
+-            SelloTheme(reducedMotion = true) {
+-                ReciboScreen(state, { actions += it }, PaddingValues(12.dp))
++            val density = LocalDensity.current.density
++            CompositionLocalProvider(LocalDensity provides Density(density, fontScale)) {
++                SelloTheme(reducedMotion = true) {
++                    ReciboScreen(
++                        state,
++                        { actions += it },
++                        PaddingValues(12.dp),
++                        selectedCategoryId = selected
++                    )
++                }
+             }
+         }
+     }
+ 
++    private fun plain(digits: String) = MoneyTextValue(MoneySign.None, "", digits, "$digits pesos")
++
++    private fun limited(
++        id: String,
++        name: String,
++        headline: ReciboHeadline,
++        amount: String,
++        stamp: ReciboStamp,
++        limit: String,
++        over: Boolean = false
++    ) = ReciboCategory(
++        id = id,
++        name = name,
++        iconKey = "restaurant",
++        archived = false,
++        figure = BudgetFigure(headline, plain(amount), stamp),
++        cellAmount = if (over) {
++            MoneyTextValue(MoneySign.Minus, "", amount, "menos $amount pesos")
++        } else {
++            plain(amount)
++        },
++        spent = plain("1"),
++        limit = plain(limit),
++        fraction = 0.5f,
++        over = over,
++        expenseCount = 1
++    )
++
++    private fun open(id: String, name: String, stamp: ReciboStamp, archived: Boolean = false) =
++        ReciboCategory(
++            id = id,
++            name = name,
++            iconKey = "una_clave_nueva",
++            archived = archived,
++            figure = BudgetFigure(ReciboHeadline.Spent, plain("80.000"), stamp),
++            cellAmount = plain("80.000"),
++            spent = plain("80.000"),
++            limit = null,
++            fraction = null,
++            over = false,
++            expenseCount = 8
++        )
++
++    private val categories = listOf(
++        limited(
++            "a",
++            "Alimentación",
++            ReciboHeadline.Remaining,
++            "287.600",
++            ReciboStamp.OnTrack,
++            "900.000"
++        ),
++        limited(
++            "b",
++            "Transporte",
++            ReciboHeadline.Remaining,
++            "55.000",
++            ReciboStamp.Tight,
++            "200.000"
++        ),
++        limited(
++            "c",
++            "Entretenimiento",
++            ReciboHeadline.Overspent,
++            "21.500",
++            ReciboStamp.Over,
++            "100.000",
++            over = true
++        ),
++        open("d", "Arte", ReciboStamp.NoLimit),
++        open("e", "Vieja", ReciboStamp.Paused, archived = true),
++        open("f", "Nueva", ReciboStamp.NotSet)
++    )
++
++    private fun month(
++        headline: ReciboHeadline,
++        amount: String,
++        stamp: ReciboStamp,
++        days: Int? = null,
++        perDay: String? = null,
++        exhausted: Boolean = false,
++        stale: Boolean = false
++    ) = ReciboState.Month(
++        ReciboSummary(
++            BudgetFigure(headline, plain(amount), stamp),
++            days,
++            perDay?.let(::plain),
++            exhausted
++        ),
++        categories,
++        stale
++    )
++
+     @Test
+-    fun loadingShowsASkeletonAndNoFigure() {
++    fun loadingShowsSkeletonsAndNoFigure() {
+         show(ReciboState.Loading)
+ 
+         rule.onNodeWithTag(RECIBO_LOADING_TAG).assertIsDisplayed()
+-        rule.onNodeWithText("0").assertDoesNotExist()
++        rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
++        rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).assertDoesNotExist()
+     }
+ 
+     @Test
+@@ -51,42 +158,127 @@ class ReciboScreenTest {
+         assertEquals(listOf<ReciboAction>(ReciboAction.CreateCategory), actions)
+         // No backup or entry action before those exist.
+         rule.onNodeWithText("Traer mis datos de un respaldo").assertDoesNotExist()
+-        rule.onNodeWithTag(RECIBO_SPENDING_TAG).assertDoesNotExist()
++        rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
++    }
++
++    @Test
++    fun theMonthInProgressIsReadAsOneSentenceWithItsVerdictDaysAndDailyAmount() {
++        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
++
++        rule.onNodeWithContentDescription("Te quedan 937.200 pesos. Al día.").assertIsDisplayed()
++        rule.onNodeWithText("Para 9 días").assertIsDisplayed()
++        rule.onNodeWithText("Puedes gastar al día").assertIsDisplayed()
++        rule.onNodeWithContentDescription("99.100 pesos").assertIsDisplayed()
++        rule.onNodeWithTag(RECIBO_STALE_TAG).assertDoesNotExist()
++    }
++
++    @Test
++    fun theLastDaySaysTodayAndAnOverspentMonthSaysByHowMuch() {
++        show(month(ReciboHeadline.Overspent, "50.000", ReciboStamp.Over, 1, "0", exhausted = true))
++
++        rule.onNodeWithContentDescription(
++            "Te pasaste por 50.000 pesos. Pasado."
++        ).assertIsDisplayed()
++        rule.onNodeWithText("Para hoy").assertIsDisplayed()
++        rule.onNodeWithContentDescription("0 pesos").assertIsDisplayed()
++    }
++
++    @Test
++    fun aFinishedMonthAndAMonthWithoutLimitsShowNoDailyAmount() {
++        show(month(ReciboHeadline.LeftOver, "500.000", ReciboStamp.WithinLimit))
++
++        rule.onNodeWithContentDescription("Te sobraron 500.000 pesos. Bajo el límite.")
++            .assertIsDisplayed()
++        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
++        rule.onNodeWithText("Puedes gastar al día").assertDoesNotExist()
++    }
++
++    @Test
++    fun aFinishedMonthOverItsLimitAndAMonthWithNoLimitSayItInWords() {
++        show(month(ReciboHeadline.Spent, "80.000", ReciboStamp.NoLimit))
++
++        rule.onNodeWithContentDescription("Has gastado 80.000 pesos. Sin límite.")
++            .assertIsDisplayed()
++        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
+     }
+ 
+     @Test
+-    fun spendingIsReadAloudAsTheFullExactAmountAndCategoriesShowTheirLimit() {
++    fun everyCategoryIsOneButtonThatSaysItsExactAmountsAndItsVerdictInWords() {
++        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
++
++        listOf(
++            "Alimentación. Te quedan 287.600 pesos de 900.000 pesos. Al día.",
++            "Transporte. Te quedan 55.000 pesos de 200.000 pesos. Justo.",
++            "Entretenimiento. Te pasaste por 21.500 pesos de 100.000 pesos. Pasado.",
++            "Arte. Has gastado 80.000 pesos. Sin límite.",
++            "Vieja. Has gastado 80.000 pesos. En pausa. Archivada.",
++            "Nueva. Has gastado 80.000 pesos. Sin configurar."
++        ).forEach { rule.onNodeWithContentDescription(it).performScrollTo().assertIsDisplayed() }
++        rule.onNodeWithTag(reciboCategoryTag("c")).performScrollTo().performClick()
++        rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().performClick()
++
++        assertEquals(
++            listOf(ReciboAction.OpenCategory("c"), ReciboAction.CreateCategory),
++            actions
++        )
++    }
++
++    @Test
++    fun olderFiguresCarryANoticeAndAWayToReadAgain() {
+         show(
+-            ReciboState.Spending(
+-                MoneyTextValue(MoneySign.None, "", "1.234.567", "1.234.567 pesos"),
+-                listOf(
+-                    ReciboCategory(
+-                        "a",
+-                        "Mercado",
+-                        "shopping_cart",
+-                        archived = false,
+-                        ReciboLimit.Amount(
+-                            MoneyTextValue(MoneySign.None, "", "300.000", "300.000 pesos")
+-                        )
+-                    ),
+-                    ReciboCategory("b", "Café", "local_cafe", false, ReciboLimit.Unlimited),
+-                    ReciboCategory("c", "Vieja", "una_clave_nueva", true, ReciboLimit.Paused),
+-                    ReciboCategory("d", "Nueva", "home", false, ReciboLimit.NotSet)
++            month(
++                ReciboHeadline.Remaining,
++                "937.200",
++                ReciboStamp.OnTrack,
++                9,
++                "99.100",
++                stale = true
++            )
++        )
++
++        rule.onNodeWithTag(RECIBO_STALE_TAG).assertIsDisplayed()
++        rule.onNodeWithText(
++            "No pudimos actualizar. Esto es lo último que se leyó y puede no estar al día."
++        ).assertIsDisplayed()
++        rule.onNodeWithContentDescription("Te quedan 937.200 pesos. Al día.").assertIsDisplayed()
++        rule.onNodeWithText("Reintentar").performClick()
++
++        assertEquals(listOf<ReciboAction>(ReciboAction.Retry), actions)
++    }
++
++    @Test
++    fun theCategoryShownBesideReciboIsMarkedAsSelectedAndNoOtherIs() {
++        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack), selected = "b")
++
++        rule.onNodeWithTag(reciboCategoryTag("b")).assertIsSelected()
++        rule.onNodeWithTag(reciboCategoryTag("a")).assertIsNotSelected()
++    }
++
++    @Test
++    fun atTwiceTheFontSizeWithVeryLargeAmountsEverythingCanStillBeReached() {
++        val huge = "8.998.000.000.000.001"
++        val state = month(ReciboHeadline.Remaining, huge, ReciboStamp.OnTrack, 31, huge).copy(
++            categories = listOf(
++                limited(
++                    "a",
++                    "Un nombre de categoría largo",
++                    ReciboHeadline.Overspent,
++                    huge,
++                    ReciboStamp.Over,
++                    huge,
++                    over = true
+                 )
+             )
+         )
+ 
+-        rule.onNodeWithText("Has gastado").assertIsDisplayed()
+-        rule.onNodeWithContentDescription("1.234.567 pesos").assertIsDisplayed()
+-        rule.onNodeWithText("Mercado").assertIsDisplayed()
+-        rule.onNodeWithContentDescription("300.000 pesos").assertIsDisplayed()
+-        rule.onNodeWithText("Sin límite").assertIsDisplayed()
+-        rule.onNodeWithText("En pausa").assertIsDisplayed()
+-        rule.onNodeWithText("Archivada").assertIsDisplayed()
+-        rule.onNodeWithText("Sin configurar").assertIsDisplayed()
+-        rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().performClick()
++        show(state, fontScale = 2f)
+ 
+-        assertEquals(listOf<ReciboAction>(ReciboAction.CreateCategory), actions)
++        rule.onNodeWithContentDescription("Te quedan $huge pesos. Al día.").assertIsDisplayed()
++        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).performScrollTo().assertIsDisplayed()
++        rule.onNodeWithContentDescription(
++            "Un nombre de categoría largo. Te pasaste por $huge pesos de $huge pesos. Pasado."
++        ).performScrollTo().assertIsDisplayed()
++        rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().assertIsDisplayed()
+     }
+ 
+     @Test
+@@ -98,6 +290,7 @@ class ReciboScreenTest {
+         rule.onNodeWithText("Reintentar").performClick()
+ 
+         assertEquals(listOf<ReciboAction>(ReciboAction.Retry), actions)
+-        rule.onNodeWithTag(RECIBO_SPENDING_TAG).assertDoesNotExist()
++        rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
++        rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).assertDoesNotExist()
+     }
+ }
+diff --git a/app/src/androidTestDebug/java/com/software/sello/navigation/ShellScreenLayoutTest.kt b/app/src/androidTestDebug/java/com/software/sello/navigation/ShellScreenLayoutTest.kt
+index f2ad018..8cea807 100644
+--- a/app/src/androidTestDebug/java/com/software/sello/navigation/ShellScreenLayoutTest.kt
++++ b/app/src/androidTestDebug/java/com/software/sello/navigation/ShellScreenLayoutTest.kt
+@@ -77,13 +77,94 @@ class ShellScreenLayoutTest {
+         }
+     }
+ 
++    /** Set by a test that gives the frame a detail, and that opens it. */
++    private var withDetail = false
++    private var opened: String? = null
++
+     @Composable
+     private fun Frame(pickerOpen: Boolean) {
+-        ShellScreen(stateWith(pickerOpen), monthNames(), { actions += it }) { padding ->
++        val detail = ShellDetail("Alimentación") { padding ->
++            Text("detalle", Modifier.padding(padding).testTag("detail"))
++        }
++        ShellScreen(
++            stateWith(pickerOpen).copy(detailCategoryId = opened),
++            monthNames(),
++            { actions += it },
++            detail = detail.takeIf { withDetail }
++        ) { padding ->
+             Text("contenido", Modifier.padding(padding).testTag("content"))
+         }
+     }
+ 
++    @Test
++    fun onAPhoneAnOpenedDetailTakesTheScreenUnderItsOwnTitleWithAWayBack() {
++        withDetail = true
++        opened = "a"
++        showOnThisScreen(pickerOpen = false)
++
++        rule.onNodeWithTag("detail").assertIsDisplayed()
++        rule.onNodeWithTag("content").assertDoesNotExist()
++        rule.onNodeWithText("Alimentación").assertIsDisplayed()
++        rule.onNodeWithText("Agosto 2026").assertIsDisplayed()
++        rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertDoesNotExist()
++        rule.onNodeWithContentDescription("Anotar un gasto").performClick()
++        rule.onNodeWithContentDescription("Volver al recibo").performClick()
++
++        assertEquals(
++            listOf(ShellAction.StartEntryIn("a"), ShellAction.CloseCategory),
++            actions
++        )
++    }
++
++    @Test
++    fun onAPhoneADetailThatWasNotOpenedIsNotShown() {
++        withDetail = true
++        showOnThisScreen(pickerOpen = false)
++
++        rule.onNodeWithTag("content").assertIsDisplayed()
++        rule.onNodeWithTag("detail").assertDoesNotExist()
++        rule.onNodeWithTag(DETAIL_BACK_TAG).assertDoesNotExist()
++    }
++
++    @Test
++    fun withRoomForTwoColumnsTheDetailIsBesideTheContentOpenedOrNot() {
++        withDetail = true
++        showInWindow(900, 700, pickerOpen = false)
++
++        val content = rule.onNodeWithTag("content").assertExists().getUnclippedBoundsInRoot()
++        val detail = rule.onNodeWithTag("detail").assertExists().getUnclippedBoundsInRoot()
++
++        assertTrue("content $content, detail $detail", content.right <= detail.left)
++        rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertExists()
++        rule.onNodeWithTag(DETAIL_BACK_TAG).assertDoesNotExist()
++        rule.onNodeWithContentDescription("Anotar un gasto")
++            .performSemanticsAction(SemanticsActions.OnClick)
++        assertEquals(listOf<ShellAction>(ShellAction.StartEntry), actions)
++    }
++
++    @Test
++    fun inAShortLandscapeWindowAnOpenedDetailIsBesideTheContentToo() {
++        withDetail = true
++        opened = "a"
++        showInWindow(760, 400, pickerOpen = false)
++
++        val content = rule.onNodeWithTag("content").assertExists().getUnclippedBoundsInRoot()
++        val detail = rule.onNodeWithTag("detail").assertExists().getUnclippedBoundsInRoot()
++
++        assertTrue("content $content, detail $detail", content.right <= detail.left)
++        rule.onNodeWithTag(DETAIL_BACK_TAG).assertDoesNotExist()
++    }
++
++    @Test
++    fun inAnExpandedWindowTheMonthPanelTakesTheDetailsPlaceWhileItIsOpen() {
++        withDetail = true
++        showInWindow(900, 700, pickerOpen = true)
++
++        rule.onNodeWithTag(MONTH_PICKER_TAG).assertExists()
++        rule.onNodeWithTag("content").assertExists()
++        rule.onNodeWithTag("detail").assertDoesNotExist()
++    }
++
+     @Test
+     fun theTitleIsTheSelectedMonthAndOpensThePicker() {
+         showOnThisScreen(pickerOpen = false)
+diff --git a/app/src/main/java/com/software/sello/composition/PresentationModule.kt b/app/src/main/java/com/software/sello/composition/PresentationModule.kt
+index ab98b57..c3e0523 100644
+--- a/app/src/main/java/com/software/sello/composition/PresentationModule.kt
++++ b/app/src/main/java/com/software/sello/composition/PresentationModule.kt
+@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
+ import androidx.lifecycle.viewmodel.viewModelFactory
+ import com.software.sello.feature.category.CategoryEditorViewModel
+ import com.software.sello.feature.expense.ExpenseEntryViewModel
++import com.software.sello.feature.recibo.CategoryDetailViewModel
+ import com.software.sello.feature.recibo.ReciboViewModel
+ import com.software.sello.navigation.MonthSession
+ import com.software.sello.navigation.ShellViewModel
+@@ -30,6 +31,7 @@ fun presentationModule(): Module = module {
+ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
+     initializer { ShellViewModel(createSavedStateHandle(), koin.get(), koin.get()) }
+     initializer { ReciboViewModel(koin.get(), koin.get(), koin.get()) }
++    initializer { CategoryDetailViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
+     initializer {
+         ExpenseEntryViewModel(
+             createSavedStateHandle(),
+diff --git a/app/src/main/java/com/software/sello/feature/recibo/ReciboScreen.kt b/app/src/main/java/com/software/sello/feature/recibo/ReciboScreen.kt
+index 52d3453..a71fb28 100644
+--- a/app/src/main/java/com/software/sello/feature/recibo/ReciboScreen.kt
++++ b/app/src/main/java/com/software/sello/feature/recibo/ReciboScreen.kt
+@@ -1,22 +1,37 @@
+ package com.software.sello.feature.recibo
+ 
++import androidx.compose.foundation.background
+ import androidx.compose.foundation.layout.Arrangement
+ import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.PaddingValues
++import androidx.compose.foundation.layout.Row
++import androidx.compose.foundation.layout.Spacer
+ import androidx.compose.foundation.layout.fillMaxSize
++import androidx.compose.foundation.layout.fillMaxWidth
++import androidx.compose.foundation.layout.height
+ import androidx.compose.foundation.layout.padding
+ import androidx.compose.foundation.rememberScrollState
+ import androidx.compose.foundation.verticalScroll
++import androidx.compose.material3.MaterialTheme
++import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.getValue
++import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
+ import androidx.compose.ui.platform.testTag
++import androidx.compose.ui.res.pluralStringResource
+ import androidx.compose.ui.res.stringResource
+-import androidx.lifecycle.ViewModelProvider
+-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+-import androidx.lifecycle.viewmodel.compose.viewModel
++import androidx.compose.ui.semantics.LiveRegionMode
++import androidx.compose.ui.semantics.clearAndSetSemantics
++import androidx.compose.ui.semantics.contentDescription
++import androidx.compose.ui.semantics.heading
++import androidx.compose.ui.semantics.liveRegion
++import androidx.compose.ui.semantics.selected
++import androidx.compose.ui.semantics.semantics
++import androidx.compose.ui.unit.dp
+ import com.software.sello.R
+ import com.software.sello.designsystem.component.ButtonKind
++import com.software.sello.designsystem.component.CategoryCell
++import com.software.sello.designsystem.component.CategoryGrid
+ import com.software.sello.designsystem.component.EmptySlip
+ import com.software.sello.designsystem.component.ErrorSlip
+ import com.software.sello.designsystem.component.LeaderLine
+@@ -25,36 +40,23 @@ import com.software.sello.designsystem.component.MoneyText
+ import com.software.sello.designsystem.component.SelloButton
+ import com.software.sello.designsystem.component.Slip
+ import com.software.sello.designsystem.component.SlipSkeleton
+-import com.software.sello.designsystem.component.TotalLine
++import com.software.sello.designsystem.component.Stamp
++import com.software.sello.designsystem.component.StampInk
+ import com.software.sello.designsystem.icon.SelloIcon
+ import com.software.sello.designsystem.theme.SelloTheme
+ import com.software.sello.presentation.category.CategoryIcons
+ 
+-/** Owns the view model and its lifecycle; [ReciboScreen] only draws. */
+-@Composable
+-fun ReciboRoot(
+-    viewModels: ViewModelProvider.Factory,
+-    contentPadding: PaddingValues,
+-    onCreateCategory: () -> Unit
+-) {
+-    val viewModel: ReciboViewModel = viewModel(factory = viewModels)
+-    val state by viewModel.state.collectAsStateWithLifecycle()
+-    ReciboScreen(
+-        state = state,
+-        onAction = { action ->
+-            if (action == ReciboAction.CreateCategory) onCreateCategory()
+-            viewModel.onAction(action)
+-        },
+-        contentPadding = contentPadding
+-    )
+-}
+-
++/**
++ * Recibo: what is left this month and where it is going. [selectedCategoryId] marks
++ * the category whose detail is shown beside it, when there is room for both.
++ */
+ @Composable
+ fun ReciboScreen(
+     state: ReciboState,
+     onAction: (ReciboAction) -> Unit,
+     contentPadding: PaddingValues,
+-    modifier: Modifier = Modifier
++    modifier: Modifier = Modifier,
++    selectedCategoryId: String? = null
+ ) {
+     Column(
+         verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
+@@ -64,7 +66,13 @@ fun ReciboScreen(
+             .padding(contentPadding)
+     ) {
+         when (state) {
+-            ReciboState.Loading -> SlipSkeleton(Modifier.testTag(RECIBO_LOADING_TAG))
++            ReciboState.Loading -> Column(
++                verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
++                modifier = Modifier.testTag(RECIBO_LOADING_TAG)
++            ) {
++                SlipSkeleton()
++                SlipSkeleton()
++            }
+ 
+             ReciboState.FirstRun -> EmptySlip(
+                 title = stringResource(R.string.recibo_first_run_title),
+@@ -74,22 +82,12 @@ fun ReciboScreen(
+                 onAction = { onAction(ReciboAction.CreateCategory) }
+             )
+ 
+-            is ReciboState.Spending -> {
+-                Slip(Modifier.testTag(RECIBO_SPENDING_TAG)) {
+-                    TotalLine(stringResource(R.string.recibo_spent)) {
+-                        MoneyText(state.spent, style = MoneyStyle.Total)
+-                    }
+-                }
+-                Slip(Modifier.testTag(RECIBO_CATEGORIES_TAG), pinked = false) {
+-                    state.categories.forEach { category -> CategoryLine(category) }
+-                    SelloButton(
+-                        text = stringResource(R.string.recibo_add_category),
+-                        onClick = { onAction(ReciboAction.CreateCategory) },
+-                        modifier = Modifier.testTag(RECIBO_ADD_CATEGORY_TAG),
+-                        kind = ButtonKind.Text,
+-                        icon = SelloIcon.Add
+-                    )
++            is ReciboState.Month -> {
++                if (state.stale) {
++                    StaleSlip({ onAction(ReciboAction.Retry) }, Modifier.testTag(RECIBO_STALE_TAG))
+                 }
++                SummarySlip(state.summary)
++                CategoriesSlip(state.categories, selectedCategoryId, onAction)
+             }
+ 
+             ReciboState.Failed -> ErrorSlip(
+@@ -101,42 +99,220 @@ fun ReciboScreen(
+     }
+ }
+ 
+-/** A category with its limit that month. The whole line is read as one sentence. */
++/** Says that what follows is older data, and offers to read again. */
+ @Composable
+-private fun CategoryLine(category: ReciboCategory) {
+-    val caption = if (category.archived) stringResource(R.string.recibo_category_archived) else null
+-    val icon = CategoryIcons.iconFor(category.iconKey)
+-    when (val limit = category.limit) {
+-        is ReciboLimit.Amount -> LeaderLine(category.name, icon = icon, caption = caption) {
+-            MoneyText(limit.value)
++internal fun StaleSlip(onRetry: () -> Unit, modifier: Modifier = Modifier) {
++    Slip(modifier = modifier.fillMaxWidth(), pinked = false) {
++        Text(
++            text = stringResource(R.string.recibo_stale),
++            style = MaterialTheme.typography.bodyLarge,
++            color = SelloTheme.colors.semantic.loss,
++            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
++        )
++        SelloButton(
++            text = stringResource(R.string.recibo_stale_retry),
++            onClick = onRetry,
++            kind = ButtonKind.Text
++        )
++    }
++}
++
++@Composable
++private fun SummarySlip(summary: ReciboSummary) {
++    Slip(Modifier.testTag(RECIBO_SUMMARY_TAG)) {
++        FigureHeader(
++            headline = reciboHeadline(summary.figure.headline),
++            figure = summary.figure,
++            style = MoneyStyle.Hero,
++            showStamp = true
++        )
++        if (summary.days != null && summary.perDay != null) {
++            Spacer(Modifier.height(SelloTheme.spacing.xs))
++            LeaderLine(
++                label = stringResource(R.string.recibo_per_day),
++                caption = pluralStringResource(R.plurals.recibo_days, summary.days, summary.days),
++                modifier = Modifier.testTag(RECIBO_PER_DAY_TAG)
++            ) {
++                MoneyText(
++                    summary.perDay,
++                    color = if (summary.perDayExhausted) {
++                        SelloTheme.colors.semantic.loss
++                    } else {
++                        SelloTheme.colors.ink
++                    }
++                )
++            }
+         }
++    }
++}
+ 
+-        ReciboLimit.Unlimited -> LeaderLine(
+-            category.name,
+-            stringResource(R.string.recibo_limit_unlimited),
+-            icon = icon,
+-            caption = caption
++/**
++ * A sentence, its amount and its verdict, read as one: "Te quedan 937.200 pesos. Al
++ * día." The verdict is a word on the screen and in the description, not a colour alone.
++ */
++@Composable
++internal fun FigureHeader(
++    headline: String,
++    figure: BudgetFigure,
++    style: MoneyStyle,
++    showStamp: Boolean,
++    modifier: Modifier = Modifier
++) {
++    val stamp = stampText(figure.stamp)
++    val spoken =
++        stringResource(R.string.recibo_summary_description, headline, figure.amount.spoken, stamp)
++    Column(
++        modifier = modifier.fillMaxWidth().clearAndSetSemantics {
++            contentDescription = spoken
++        }
++    ) {
++        Row(
++            verticalAlignment = Alignment.CenterVertically,
++            horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm)
++        ) {
++            Text(
++                text = headline,
++                style = MaterialTheme.typography.bodyLarge,
++                color = SelloTheme.colors.inkSoft,
++                modifier = Modifier.weight(1f)
++            )
++            if (showStamp) {
++                // Room for the corners of a rotated stamp.
++                Stamp(stamp, stampInk(figure.stamp), Modifier.padding(vertical = 6.dp))
++            }
++        }
++        MoneyText(
++            figure.amount,
++            style = style,
++            color = if (figure.headline == ReciboHeadline.Overspent) {
++                SelloTheme.colors.semantic.loss
++            } else {
++                SelloTheme.colors.ink
++            }
+         )
++    }
++}
+ 
+-        ReciboLimit.Paused -> LeaderLine(
+-            category.name,
+-            stringResource(R.string.recibo_limit_paused),
+-            icon = icon,
+-            caption = caption
++@Composable
++private fun CategoriesSlip(
++    categories: List<ReciboCategory>,
++    selectedCategoryId: String?,
++    onAction: (ReciboAction) -> Unit
++) {
++    Slip(Modifier.testTag(RECIBO_CATEGORIES_TAG), pinked = false) {
++        Text(
++            text = stringResource(R.string.recibo_categories_title),
++            style = MaterialTheme.typography.titleMedium,
++            modifier = Modifier.semantics { heading() }
++        )
++        Text(
++            text = stringResource(R.string.recibo_categories_caption),
++            style = MaterialTheme.typography.bodyMedium,
++            color = SelloTheme.colors.inkSoft
+         )
++        Spacer(Modifier.height(SelloTheme.spacing.sm))
++        CategoryGrid(categories) { index, category ->
++            val isSelected = category.id == selectedCategoryId
++            CategoryCell(
++                name = category.name,
++                icon = CategoryIcons.iconFor(category.iconKey),
++                amount = category.cellAmount,
++                fraction = category.fraction,
++                description = categoryDescription(category),
++                onClick = { onAction(ReciboAction.OpenCategory(category.id)) },
++                modifier = Modifier
++                    .testTag(reciboCategoryTag(category.id))
++                    .fillMaxWidth()
++                    .background(
++                        if (isSelected) SelloTheme.colors.brandSoft else SelloTheme.colors.paper,
++                        MaterialTheme.shapes.small
++                    )
++                    .semantics { selected = isSelected },
++                over = category.over,
++                amountPrefix = if (category.limit == null) {
++                    stringResource(R.string.recibo_cell_spent_prefix)
++                } else {
++                    null
++                },
++                staggerIndex = index
++            )
++        }
++        Spacer(Modifier.height(SelloTheme.spacing.sm))
++        SelloButton(
++            text = stringResource(R.string.recibo_add_category),
++            onClick = { onAction(ReciboAction.CreateCategory) },
++            modifier = Modifier.testTag(RECIBO_ADD_CATEGORY_TAG),
++            kind = ButtonKind.Text,
++            icon = SelloIcon.Add
++        )
++    }
++}
+ 
+-        ReciboLimit.NotSet -> LeaderLine(
++/** The whole cell in words, with both exact amounts and the verdict. */
++@Composable
++internal fun categoryDescription(category: ReciboCategory): String {
++    val headline = reciboHeadline(category.figure.headline)
++    val stamp = stampText(category.figure.stamp)
++    val amount = category.figure.amount.spoken
++    val sentence = if (category.limit != null) {
++        stringResource(
++            R.string.recibo_cell_limited,
+             category.name,
+-            stringResource(R.string.recibo_limit_not_set),
+-            icon = icon,
+-            caption = caption
++            headline,
++            amount,
++            category.limit.spoken,
++            stamp
+         )
++    } else {
++        stringResource(R.string.recibo_cell_open, category.name, headline, amount, stamp)
++    }
++    return if (category.archived) {
++        stringResource(R.string.recibo_cell_archived, sentence)
++    } else {
++        sentence
++    }
++}
++
++@Composable
++internal fun reciboHeadline(headline: ReciboHeadline): String = stringResource(
++    when (headline) {
++        ReciboHeadline.Remaining -> R.string.recibo_headline_remaining
++        ReciboHeadline.Overspent -> R.string.recibo_headline_overspent
++        ReciboHeadline.LeftOver -> R.string.recibo_headline_left_over
++        ReciboHeadline.Spent -> R.string.recibo_headline_spent
+     }
++)
++
++@Composable
++internal fun stampText(stamp: ReciboStamp): String = stringResource(
++    when (stamp) {
++        ReciboStamp.OnTrack -> R.string.recibo_stamp_on_track
++        ReciboStamp.Tight -> R.string.recibo_stamp_tight
++        ReciboStamp.Over -> R.string.recibo_stamp_over
++        ReciboStamp.WithinLimit -> R.string.recibo_stamp_within_limit
++        ReciboStamp.OverLimit -> R.string.recibo_stamp_over_limit
++        ReciboStamp.NoLimit -> R.string.recibo_stamp_no_limit
++        ReciboStamp.Paused -> R.string.recibo_stamp_paused
++        ReciboStamp.NotSet -> R.string.recibo_stamp_not_set
++    }
++)
++
++internal fun stampInk(stamp: ReciboStamp): StampInk = when (stamp) {
++    ReciboStamp.OnTrack, ReciboStamp.WithinLimit -> StampInk.Good
++
++    ReciboStamp.Over, ReciboStamp.OverLimit -> StampInk.Over
++
++    ReciboStamp.Tight, ReciboStamp.NoLimit, ReciboStamp.Paused, ReciboStamp.NotSet ->
++        StampInk.Neutral
+ }
+ 
++fun reciboCategoryTag(id: String) = "recibo:category:$id"
++
++const val RECIBO_SUMMARY_TAG = "recibo:summary"
++const val RECIBO_PER_DAY_TAG = "recibo:per-day"
+ const val RECIBO_CATEGORIES_TAG = "recibo:categories"
+ const val RECIBO_ADD_CATEGORY_TAG = "recibo:add-category"
+ const val RECIBO_LOADING_TAG = "recibo:loading"
+ const val RECIBO_FIRST_RUN_TAG = "recibo:first-run"
+-const val RECIBO_SPENDING_TAG = "recibo:spending"
++const val RECIBO_STALE_TAG = "recibo:stale"
+ const val RECIBO_FAILED_TAG = "recibo:failed"
+diff --git a/app/src/main/java/com/software/sello/feature/recibo/ReciboState.kt b/app/src/main/java/com/software/sello/feature/recibo/ReciboState.kt
+index 0a7cb1d..6a5b242 100644
+--- a/app/src/main/java/com/software/sello/feature/recibo/ReciboState.kt
++++ b/app/src/main/java/com/software/sello/feature/recibo/ReciboState.kt
+@@ -9,37 +9,98 @@ sealed interface ReciboState {
+     /** Read successfully and there are no categories yet. */
+     data object FirstRun : ReciboState
+ 
+-    /** Read successfully. [spent] is the month's exact total. */
+-    data class Spending(val spent: MoneyTextValue, val categories: List<ReciboCategory>) :
+-        ReciboState
++    /**
++     * A month that was read. With [stale] the latest read failed and this is the last
++     * one that worked, shown as older data and never as current.
++     */
++    data class Month(
++        val summary: ReciboSummary,
++        val categories: List<ReciboCategory>,
++        val stale: Boolean
++    ) : ReciboState
+ 
++    /** The read failed and there is nothing earlier to show. */
+     data object Failed : ReciboState
+ }
+ 
+-/** One category as Recibo lists it. [iconKey] is the stored key; the screen picks the drawing. */
+-data class ReciboCategory(
+-    val id: String,
+-    val name: String,
+-    val iconKey: String,
+-    val archived: Boolean,
+-    val limit: ReciboLimit
+-)
++/** Which sentence an amount completes. */
++enum class ReciboHeadline {
++    /** "Te quedan": what is left of the limit in the month in progress. */
++    Remaining,
+ 
+-sealed interface ReciboLimit {
+-    data class Amount(val value: MoneyTextValue) : ReciboLimit
++    /** "Te pasaste por": how far over the limit, in any month. */
++    Overspent,
+ 
+-    data object Unlimited : ReciboLimit
++    /** "Te sobraron": what was left of the limit in a finished month. */
++    LeftOver,
++
++    /** "Has gastado": there is no limit to compare with. */
++    Spent
++}
++
++/** The verdict, in words on the screen and in what a screen reader says. */
++enum class ReciboStamp {
++    OnTrack,
++    Tight,
++    Over,
++
++    /** A finished month that stayed within its limit. */
++    WithinLimit,
++
++    /** A finished month that went over its limit. */
++    OverLimit,
++    NoLimit,
+ 
+     /** Archived that month: no budget. */
+-    data object Paused : ReciboLimit
++    Paused,
+ 
+     /** Nothing was configured for the category that month. */
+-    data object NotSet : ReciboLimit
++    NotSet
+ }
+ 
++/** An amount with the sentence it completes and its verdict. [amount] carries no sign. */
++data class BudgetFigure(
++    val headline: ReciboHeadline,
++    val amount: MoneyTextValue,
++    val stamp: ReciboStamp
++)
++
++/**
++ * The month as a whole. [days] and [perDay] exist only in the month in progress with a
++ * limit; [perDayExhausted] says the limit is already passed, so nothing is left per day.
++ */
++data class ReciboSummary(
++    val figure: BudgetFigure,
++    val days: Int?,
++    val perDay: MoneyTextValue?,
++    val perDayExhausted: Boolean
++)
++
++/**
++ * One category in the month. [cellAmount] is what its cell shows: what is left, with a
++ * minus when overspent, or what was spent when it has no limit. [fraction] is how full
++ * to draw its circle and nothing else; every amount here is exact.
++ */
++data class ReciboCategory(
++    val id: String,
++    val name: String,
++    val iconKey: String,
++    val archived: Boolean,
++    val figure: BudgetFigure,
++    val cellAmount: MoneyTextValue,
++    val spent: MoneyTextValue,
++    val limit: MoneyTextValue?,
++    val fraction: Float?,
++    val over: Boolean,
++    val expenseCount: Int
++)
++
+ sealed interface ReciboAction {
+     data object Retry : ReciboAction
+ 
+     /** Open the new-category form. Navigation is the root's, not the view model's. */
+     data object CreateCategory : ReciboAction
++
++    /** Show one category's detail. Which one is shown is the frame's to remember. */
++    data class OpenCategory(val id: String) : ReciboAction
+ }
+diff --git a/app/src/main/java/com/software/sello/feature/recibo/ReciboViewModel.kt b/app/src/main/java/com/software/sello/feature/recibo/ReciboViewModel.kt
+index 7320427..3daf0db 100644
+--- a/app/src/main/java/com/software/sello/feature/recibo/ReciboViewModel.kt
++++ b/app/src/main/java/com/software/sello/feature/recibo/ReciboViewModel.kt
+@@ -2,11 +2,7 @@ package com.software.sello.feature.recibo
+ 
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.viewModelScope
+-import com.software.sello.domain.model.BudgetLimit
+-import com.software.sello.domain.model.CategoryMonth
+-import com.software.sello.domain.policy.MonthBudgetState
+ import com.software.sello.domain.port.MonthlySnapshots
+-import com.software.sello.domain.port.SnapshotState
+ import com.software.sello.navigation.MonthSession
+ import com.software.sello.presentation.money.MoneyFormatter
+ import kotlinx.coroutines.ExperimentalCoroutinesApi
+@@ -20,21 +16,22 @@ import kotlinx.coroutines.flow.stateIn
+ import kotlinx.coroutines.flow.update
+ 
+ /**
+- * Shows the selected month from the shared snapshot. It only formats what the
+- * snapshot says: no amount is added, compared or defaulted here.
++ * Shows the selected month from the shared snapshot, through [ReciboRenderModel]:
++ * no amount is added, compared or defaulted here.
+  */
+ @OptIn(ExperimentalCoroutinesApi::class)
+ class ReciboViewModel(
+     session: MonthSession,
+     private val snapshots: MonthlySnapshots,
+-    private val money: MoneyFormatter
++    money: MoneyFormatter
+ ) : ViewModel() {
++    private val render = ReciboRenderModel(money)
+     private val attempt = MutableStateFlow(0)
+ 
+     val state: StateFlow<ReciboState> =
+         combine(session.selectedMonth, attempt) { month, _ -> month }
+             .flatMapLatest(snapshots::observe)
+-            .map(::render)
++            .map(render::recibo)
+             .stateIn(
+                 viewModelScope,
+                 SharingStarted.WhileSubscribed(STOP_AFTER_MILLIS),
+@@ -46,43 +43,11 @@ class ReciboViewModel(
+             // A new attempt starts a new observation of the same month.
+             ReciboAction.Retry -> attempt.update { it + 1 }
+ 
+-            // Handled by the root, which owns navigation.
+-            ReciboAction.CreateCategory -> Unit
++            // Handled by the root, which owns navigation and the selection.
++            ReciboAction.CreateCategory, is ReciboAction.OpenCategory -> Unit
+         }
+     }
+ 
+-    private fun render(state: SnapshotState): ReciboState = when (state) {
+-        SnapshotState.Loading -> ReciboState.Loading
+-
+-        is SnapshotState.Failed -> ReciboState.Failed
+-
+-        is SnapshotState.Ready -> if (state.snapshot.categories.isEmpty()) {
+-            ReciboState.FirstRun
+-        } else {
+-            ReciboState.Spending(
+-                spent = money.format(state.snapshot.spent),
+-                categories = state.snapshot.categories.map(::category)
+-            )
+-        }
+-    }
+-
+-    private fun category(line: CategoryMonth) = ReciboCategory(
+-        id = line.category.id.value,
+-        name = line.category.name.value,
+-        iconKey = line.category.icon.value,
+-        archived = line.category.archived,
+-        limit = when (val budget = line.state) {
+-            is MonthBudgetState.Limited -> when (val limit = budget.limit) {
+-                is BudgetLimit.Finite -> ReciboLimit.Amount(money.format(limit.amount))
+-                BudgetLimit.Unlimited -> ReciboLimit.Unlimited
+-            }
+-
+-            MonthBudgetState.Paused -> ReciboLimit.Paused
+-
+-            MonthBudgetState.Unconfigured -> ReciboLimit.NotSet
+-        }
+-    )
+-
+     private companion object {
+         /** Long enough to outlast a rotation without reading again. */
+         const val STOP_AFTER_MILLIS = 5_000L
+diff --git a/app/src/main/java/com/software/sello/navigation/SelloApp.kt b/app/src/main/java/com/software/sello/navigation/SelloApp.kt
+index 528eb3a..5ddd68b 100644
+--- a/app/src/main/java/com/software/sello/navigation/SelloApp.kt
++++ b/app/src/main/java/com/software/sello/navigation/SelloApp.kt
+@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
+ import androidx.compose.foundation.rememberScrollState
+ import androidx.compose.foundation.verticalScroll
+ import androidx.compose.material3.ExperimentalMaterial3Api
++import androidx.compose.material3.Icon
++import androidx.compose.material3.IconButton
+ import androidx.compose.material3.ModalBottomSheet
+ import androidx.compose.material3.rememberModalBottomSheetState
+ import androidx.compose.runtime.Composable
+@@ -19,6 +21,8 @@ import androidx.compose.ui.platform.testTag
+ import androidx.compose.ui.res.stringResource
+ import androidx.compose.ui.semantics.contentDescription
+ import androidx.compose.ui.semantics.semantics
++import androidx.compose.ui.unit.Dp
++import androidx.compose.ui.unit.dp
+ import androidx.lifecycle.Lifecycle
+ import androidx.lifecycle.ViewModelProvider
+ import androidx.lifecycle.compose.LifecycleEventEffect
+@@ -37,10 +41,20 @@ import com.software.sello.designsystem.component.SelloDock
+ import com.software.sello.designsystem.component.SelloScaffold
+ import com.software.sello.designsystem.component.Slip
+ import com.software.sello.designsystem.component.selloWindowLayout
++import com.software.sello.designsystem.icon.SelloIcon
++import com.software.sello.designsystem.icon.painter
+ import com.software.sello.designsystem.theme.SelloTheme
+ import com.software.sello.feature.category.CategoryEditorRoot
+ import com.software.sello.feature.expense.ExpenseEntryRoot
+-import com.software.sello.feature.recibo.ReciboRoot
++import com.software.sello.feature.recibo.CategoryDetailAction
++import com.software.sello.feature.recibo.CategoryDetailScreen
++import com.software.sello.feature.recibo.CategoryDetailState
++import com.software.sello.feature.recibo.CategoryDetailViewModel
++import com.software.sello.feature.recibo.ReciboAction
++import com.software.sello.feature.recibo.ReciboScreen
++import com.software.sello.feature.recibo.ReciboState
++import com.software.sello.feature.recibo.ReciboViewModel
++import com.software.sello.presentation.date.dateLabels
+ import com.software.sello.presentation.month.MonthNames
+ import com.software.sello.presentation.month.monthNames
+ 
+@@ -64,8 +78,8 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
+ 
+     NavHost(navController = navigation, startDestination = ReciboRoute) {
+         composable<ReciboRoute> {
+-            ShellScreen(state, monthNames(), shell::onAction) { padding ->
+-                ReciboRoot(viewModels, padding) { navigation.navigate(CategoryEditorRoute()) }
++            ReciboDestination(state, viewModels, shell::onAction) {
++                navigation.navigate(CategoryEditorRoute())
+             }
+         }
+         composable<CategoryEditorRoute> { entry ->
+@@ -127,7 +141,90 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
+ }
+ 
+ /**
+- * The frame: the month in the title, the content, and the month picker. The picker is
++ * Recibo and the detail of one of its categories: one screen at a time where there is
++ * room for one, side by side where there is room for two. Which category is open is
++ * the frame's saved state, so it is the same category after a rotation, a resize or
++ * the process being killed. With room for two and none opened, the first one is shown.
++ */
++@Composable
++private fun ReciboDestination(
++    state: ShellState,
++    viewModels: ViewModelProvider.Factory,
++    onShell: (ShellAction) -> Unit,
++    onCreateCategory: () -> Unit
++) {
++    val recibo: ReciboViewModel = viewModel(factory = viewModels)
++    val detail: CategoryDetailViewModel = viewModel(factory = viewModels)
++    val reciboState by recibo.state.collectAsStateWithLifecycle()
++    val detailState by detail.state.collectAsStateWithLifecycle()
++    val names = monthNames()
++    val dates = dateLabels()
++    BoxWithConstraints(Modifier.fillMaxSize()) {
++        val twoPane = showsDetailBeside(maxWidth, maxHeight)
++        val first = (reciboState as? ReciboState.Month)?.categories?.firstOrNull()?.id
++        val shownId = state.detailCategoryId ?: first.takeIf { twoPane }
++        LaunchedEffect(shownId) { detail.onAction(CategoryDetailAction.Show(shownId)) }
++        val title = (detailState as? CategoryDetailState.Ready)?.category?.name
++            ?: stringResource(R.string.category_detail_title_fallback)
++        ShellScreen(
++            state = state,
++            names = names,
++            onAction = onShell,
++            detail = shownId?.let { id ->
++                ShellDetail(title) { padding ->
++                    CategoryDetailScreen(
++                        state = detailState,
++                        months = names,
++                        dates = dates,
++                        showName = twoPane,
++                        onAction = detail::onAction,
++                        onRecordHere = { onShell(ShellAction.StartEntryIn(id)) },
++                        contentPadding = padding
++                    )
++                }
++            }
++        ) { padding ->
++            ReciboScreen(
++                state = reciboState,
++                onAction = { action ->
++                    when (action) {
++                        ReciboAction.CreateCategory -> onCreateCategory()
++                        is ReciboAction.OpenCategory -> onShell(ShellAction.OpenCategory(action.id))
++                        ReciboAction.Retry -> Unit
++                    }
++                    recibo.onAction(action)
++                },
++                contentPadding = padding,
++                selectedCategoryId = shownId.takeIf { twoPane }
++            )
++        }
++        // Beside Recibo the detail is not a screen to leave: Back does what it does on Recibo.
++        val onDetail = state.detailCategoryId != null && !twoPane
++        val target = backTarget(state.monthPickerOpen, onDetail, ShellTab.Recibo)
++        BackHandler(enabled = target == BackTarget.LeaveDetail) {
++            onShell(ShellAction.CloseCategory)
++        }
++    }
++}
++
++/**
++ * Whether a detail fits beside what it is the detail of: a window laid out in two
++ * columns that is also wide enough for both to be read. A window that is short and
++ * narrow, such as half a phone's screen, shows one at a time like any phone.
++ */
++fun showsDetailBeside(width: Dp, height: Dp): Boolean =
++    selloWindowLayout(width, height).twoPane && width >= SideBySideWidth
++
++private val SideBySideWidth = 600.dp
++
++/** The detail of what the content lists: its [title] and how to draw it. */
++class ShellDetail(val title: String, val content: @Composable (PaddingValues) -> Unit)
++
++/**
++ * The frame: the month in the title, the content, and the month picker. With a
++ * [detail], a window with room for two columns shows it beside the content; any other
++ * window shows it instead of the content once it has been opened, under its own title
++ * and with a way back. The picker is
+  * a bottom sheet, or a side panel beside the content in a window wide enough for one.
+  * There is no tab bar while there is one tab. The dock asks to record an expense.
+  */
+@@ -138,44 +235,74 @@ fun ShellScreen(
+     names: MonthNames,
+     onAction: (ShellAction) -> Unit,
+     modifier: Modifier = Modifier,
++    detail: ShellDetail? = null,
+     content: @Composable (PaddingValues) -> Unit
+ ) {
+     val title = names.title(state.selectedMonth)
+     val openPicker = stringResource(R.string.month_picker_open, title)
+     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+-        val sidePanel = selloWindowLayout(maxWidth, maxHeight).sidePanelWidth != null
+-        SelloScaffold(
+-            title = title,
+-            titleContent = {
+-                MonthSwitcher(
+-                    label = title,
+-                    onClick = { onAction(ShellAction.OpenMonthPicker) },
+-                    modifier = Modifier
+-                        .testTag(MONTH_SWITCHER_TAG)
+-                        .semantics { contentDescription = openPicker }
+-                )
+-            },
+-            blotter = Blotter.Short,
+-            dock = SelloDock(
+-                label = stringResource(R.string.dock_entry_label),
+-                actionLabel = stringResource(R.string.dock_entry_action),
+-                onClick = { onAction(ShellAction.StartEntry) }
+-            ),
+-            secondaryPane = if (state.monthPickerOpen && sidePanel) {
+-                { padding ->
+-                    Column(
+-                        Modifier.fillMaxSize().verticalScroll(
+-                            rememberScrollState()
+-                        ).padding(padding)
++        val layout = selloWindowLayout(maxWidth, maxHeight)
++        val sidePanel = layout.sidePanelWidth != null
++        val beside = showsDetailBeside(maxWidth, maxHeight)
++        val openedId = state.detailCategoryId.takeIf { detail != null && !beside }
++        if (openedId != null && detail != null) {
++            SelloScaffold(
++                title = detail.title,
++                subtitle = title,
++                blotter = Blotter.Short,
++                navigationIcon = {
++                    IconButton(
++                        onClick = { onAction(ShellAction.CloseCategory) },
++                        modifier = Modifier.testTag(DETAIL_BACK_TAG)
+                     ) {
+-                        Slip(pinked = false) { MonthPicker(state, names, onAction) }
++                        Icon(
++                            SelloIcon.ArrowBack.painter(),
++                            stringResource(R.string.category_detail_back)
++                        )
+                     }
+-                }
+-            } else {
+-                null
+-            },
+-            content = content
+-        )
++                },
++                // From a category's own screen, an expense starts in that category.
++                dock = SelloDock(
++                    label = stringResource(R.string.dock_entry_label),
++                    actionLabel = stringResource(R.string.dock_entry_action),
++                    onClick = { onAction(ShellAction.StartEntryIn(openedId)) }
++                ),
++                content = detail.content
++            )
++        } else {
++            SelloScaffold(
++                title = title,
++                titleContent = {
++                    MonthSwitcher(
++                        label = title,
++                        onClick = { onAction(ShellAction.OpenMonthPicker) },
++                        modifier = Modifier
++                            .testTag(MONTH_SWITCHER_TAG)
++                            .semantics { contentDescription = openPicker }
++                    )
++                },
++                blotter = Blotter.Short,
++                dock = SelloDock(
++                    label = stringResource(R.string.dock_entry_label),
++                    actionLabel = stringResource(R.string.dock_entry_action),
++                    onClick = { onAction(ShellAction.StartEntry) }
++                ),
++                secondaryPane = if (state.monthPickerOpen && sidePanel) {
++                    { padding ->
++                        Column(
++                            Modifier.fillMaxSize().verticalScroll(
++                                rememberScrollState()
++                            ).padding(padding)
++                        ) {
++                            Slip(pinked = false) { MonthPicker(state, names, onAction) }
++                        }
++                    }
++                } else {
++                    detail?.content.takeIf { beside }
++                },
++                content = content
++            )
++        }
+         if (state.monthPickerOpen && !sidePanel) {
+             ModalBottomSheet(
+                 onDismissRequest = { onAction(ShellAction.CloseMonthPicker) },
+@@ -194,3 +321,4 @@ fun ShellScreen(
+ }
+ 
+ const val MONTH_SWITCHER_TAG = "shell:month-switcher"
++const val DETAIL_BACK_TAG = "shell:detail-back"
+diff --git a/app/src/main/java/com/software/sello/navigation/ShellViewModel.kt b/app/src/main/java/com/software/sello/navigation/ShellViewModel.kt
+index e26a83a..84e1323 100644
+--- a/app/src/main/java/com/software/sello/navigation/ShellViewModel.kt
++++ b/app/src/main/java/com/software/sello/navigation/ShellViewModel.kt
+@@ -20,7 +20,8 @@ import kotlinx.coroutines.launch
+ /**
+  * What the frame around every screen shows. [pickerYear] is the year the month picker
+  * is displaying, which is not necessarily the selected month's. [pendingEntry] is an
+- * entry request waiting for the entry form to take it.
++ * entry request waiting for the entry form to take it. [detailCategoryId] is the category
++ * whose detail was opened, if any.
+  */
+ data class ShellState(
+     val currentMonth: YearMonth,
+@@ -28,6 +29,7 @@ data class ShellState(
+     val monthPickerOpen: Boolean,
+     val pickerYear: Int,
+     val pendingEntry: EntryRequest?,
++    val detailCategoryId: String? = null,
+     /** An entry was asked for and there is no category to record it in yet. */
+     val entryNeedsCategory: Boolean = false,
+     /** An entry was asked for and can be recorded: the form should open. */
+@@ -50,6 +52,15 @@ sealed interface ShellAction {
+     /** The "Anotar" action: record an expense, with nothing filled in. */
+     data object StartEntry : ShellAction
+ 
++    /** Record an expense in the category whose detail is open. */
++    data class StartEntryIn(val categoryId: String) : ShellAction
++
++    /** Show one category's detail. */
++    data class OpenCategory(val categoryId: String) : ShellAction
++
++    /** Leave the category detail. */
++    data object CloseCategory : ShellAction
++
+     /** A link that opened the app. Anything that is not an entry link is ignored. */
+     data class OpenLink(val link: String?) : ShellAction
+ 
+@@ -62,8 +73,8 @@ sealed interface ShellAction {
+ 
+ /**
+  * Owns what must survive rotation and the process being killed for the frame: the
+- * month selection (through [MonthSession]), the month picker, and a pending entry
+- * request. Only identifiers and plain values are saved, never a record. It can read
++ * month selection (through [MonthSession]), the month picker, the category whose detail
++ * is open, and a pending entry request. Only identifiers and plain values are saved, never a record. It can read
+  * whether a category exists, but has no access to any command: nothing here can
+  * create money.
+  */
+@@ -95,6 +106,9 @@ class ShellViewModel(
+             monthPickerOpen = saved[KEY_PICKER] ?: false,
+             pickerYear = saved[KEY_PICKER_YEAR] ?: selected.year,
+             pendingEntry = pendingEntry(),
++            // Checked again on the way out, so a tampered state cannot name anything else.
++            detailCategoryId = saved.get<String>(KEY_DETAIL)
++                ?.let { (CategoryId.of(it) as? Outcome.Success)?.value?.value },
+             entryNeedsCategory = saved[KEY_NEEDS_CATEGORY] ?: false,
+             entryReady = saved[KEY_ENTRY_READY] ?: false
+         )
+@@ -127,6 +141,16 @@ class ShellViewModel(
+                 routeEntry()
+             }
+ 
++            is ShellAction.StartEntryIn -> {
++                val category = (CategoryId.of(action.categoryId) as? Outcome.Success)?.value
++                hold(EntryRequest(categoryId = category, amount = null))
++                routeEntry()
++            }
++
++            is ShellAction.OpenCategory -> saved[KEY_DETAIL] = action.categoryId
++
++            ShellAction.CloseCategory -> saved[KEY_DETAIL] = null
++
+             is ShellAction.OpenLink -> EntryLinks.parse(action.link)?.let { request ->
+                 hold(request)
+                 routeEntry()
+@@ -192,6 +216,7 @@ class ShellViewModel(
+         private const val KEY_BACKGROUNDED = "shell.backgroundedAt"
+         private const val KEY_PICKER = "shell.picker"
+         private const val KEY_PICKER_YEAR = "shell.pickerYear"
++        private const val KEY_DETAIL = "shell.detail"
+         private const val KEY_ENTRY = "shell.entry"
+         private const val KEY_ENTRY_CATEGORY = "shell.entry.category"
+         private const val KEY_ENTRY_AMOUNT = "shell.entry.amount"
+diff --git a/app/src/main/java/com/software/sello/presentation/money/MoneyFormatter.kt b/app/src/main/java/com/software/sello/presentation/money/MoneyFormatter.kt
+index b92f918..ad7e4c5 100644
+--- a/app/src/main/java/com/software/sello/presentation/money/MoneyFormatter.kt
++++ b/app/src/main/java/com/software/sello/presentation/money/MoneyFormatter.kt
+@@ -43,6 +43,22 @@ class MoneyFormatter(private val labels: MoneyLabels) {
+         return MoneyTextValue(sign, symbol(currency), digits, spoken)
+     }
+ 
++    /**
++     * The size of [money] without its sign, for a sentence that already says which way
++     * it goes, such as "Te pasaste por 21.500".
++     */
++    fun magnitude(money: Money): MoneyTextValue {
++        val digits = money.minorUnits.toString().removePrefix("-")
++        val grouped = group(digits, money.currency.scale)
++        val isOne = digits == "1" + "0".repeat(money.currency.scale)
++        return MoneyTextValue(
++            MoneySign.None,
++            symbol(money.currency),
++            grouped,
++            labels.amount(money.currency, grouped, isOne)
++        )
++    }
++
+     /** Pesos carry no mark (ADR 0007); any other currency is named by its code. */
+     private fun symbol(currency: Currency) = if (currency == Currency.COP) "" else currency.code
+ 
+diff --git a/app/src/main/java/com/software/sello/presentation/month/MonthNames.kt b/app/src/main/java/com/software/sello/presentation/month/MonthNames.kt
+index bb9d71d..e555697 100644
+--- a/app/src/main/java/com/software/sello/presentation/month/MonthNames.kt
++++ b/app/src/main/java/com/software/sello/presentation/month/MonthNames.kt
+@@ -17,6 +17,9 @@ class MonthNames(
+     /** "Octubre 2026". */
+     fun title(month: YearMonth): String = titleFormat.format(full[month.monthValue - 1], month.year)
+ 
++    /** "octubre", as inside a sentence. */
++    fun inSentence(month: YearMonth): String = full[month.monthValue - 1].lowercase()
++
+     fun short(month: YearMonth): String = short[month.monthValue - 1]
+ }
+ 
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index b527e5f..96b723a 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -44,9 +44,6 @@
+     <string name="recibo_first_run_body">Tres pasos y queda listo: crea tus categorías, ponle un límite a cada una y anota tu primer gasto.</string>
+     <string name="recibo_create_categories">Crear categorías</string>
+     <string name="recibo_add_category">Agregar categoría</string>
+-    <string name="recibo_limit_unlimited">Sin límite</string>
+-    <string name="recibo_limit_paused">En pausa</string>
+-    <string name="recibo_limit_not_set">Sin configurar</string>
+     <string name="recibo_category_archived">Archivada</string>
+     <string name="category_editor_title">Nueva categoría</string>
+     <string name="category_editor_back">Volver</string>
+@@ -89,7 +86,57 @@
+     <string name="category_icon_flight">Viajes</string>
+     <string name="category_icon_phone_iphone">Celular</string>
+     <string name="category_icon_child_care">Hijos</string>
+-    <string name="recibo_spent">Has gastado</string>
++    <string name="recibo_headline_remaining">Te quedan</string>
++    <string name="recibo_headline_overspent">Te pasaste por</string>
++    <string name="recibo_headline_left_over">Te sobraron</string>
++    <string name="recibo_headline_spent">Has gastado</string>
++    <string name="recibo_stamp_on_track">Al día</string>
++    <string name="recibo_stamp_tight">Justo</string>
++    <string name="recibo_stamp_over">Pasado</string>
++    <string name="recibo_stamp_within_limit">Bajo el límite</string>
++    <string name="recibo_stamp_over_limit">Sobre el límite</string>
++    <string name="recibo_stamp_no_limit">Sin límite</string>
++    <string name="recibo_stamp_paused">En pausa</string>
++    <string name="recibo_stamp_not_set">Sin configurar</string>
++    <string name="recibo_summary_description">%1$s %2$s. %3$s.</string>
++    <plurals name="recibo_days">
++        <item quantity="one">Para hoy</item>
++        <item quantity="other">Para %1$d días</item>
++    </plurals>
++    <string name="recibo_per_day">Puedes gastar al día</string>
++    <string name="recibo_categories_title">Tus categorías</string>
++    <string name="recibo_categories_caption">queda en cada una</string>
++    <string name="recibo_cell_limited">%1$s. %2$s %3$s de %4$s. %5$s.</string>
++    <string name="recibo_cell_open">%1$s. %2$s %3$s. %4$s.</string>
++    <string name="recibo_cell_archived">%1$s Archivada.</string>
++    <string name="recibo_cell_spent_prefix">gastado</string>
++    <string name="recibo_stale">No pudimos actualizar. Esto es lo último que se leyó y puede no estar al día.</string>
++    <string name="recibo_stale_retry">Reintentar</string>
++    <string name="category_detail_back">Volver al recibo</string>
++    <string name="category_detail_headline_remaining">Te quedan aquí</string>
++    <string name="category_detail_headline_overspent">Te pasaste aquí por</string>
++    <string name="category_detail_headline_left_over">Te sobraron aquí</string>
++    <string name="category_detail_headline_spent">Has gastado aquí</string>
++    <string name="category_detail_spent">Gastado</string>
++    <string name="category_detail_limit">Límite</string>
++    <string name="category_detail_expenses">Gastos</string>
++    <plurals name="category_detail_expense_count">
++        <item quantity="one">%1$d gasto</item>
++        <item quantity="other">%1$d gastos</item>
++    </plurals>
++    <string name="category_detail_listed">Se muestran %1$d de %2$d</string>
++    <string name="category_detail_more">Ver más</string>
++    <string name="category_detail_more_failed">No pudimos leer más gastos. Inténtalo de nuevo.</string>
++    <string name="category_detail_no_note">Sin nota</string>
++    <string name="category_detail_not_counted">Fecha posterior a hoy: todavía no cuenta</string>
++    <string name="category_detail_empty_title">Sin gastos en %1$s</string>
++    <string name="category_detail_empty_body">Cuando anotes un gasto en esta categoría aparecerá aquí.</string>
++    <string name="category_detail_record_here">Anotar aquí</string>
++    <string name="category_detail_list_failed">No pudimos leer los gastos de esta categoría.</string>
++    <string name="category_detail_failed">No pudimos leer esta categoría.</string>
++    <string name="category_detail_gone_title">Nada aquí este mes</string>
++    <string name="category_detail_gone_body">Esta categoría no tiene límite ni gastos en este mes.</string>
++    <string name="category_detail_title_fallback">Categoría</string>
+     <string name="recibo_failed">No pudimos leer tus datos de este mes.</string>
+     <string-array name="weekday_names_short">
+         <item>lun</item>
+diff --git a/app/src/test/java/com/software/sello/feature/expense/ExpenseFakes.kt b/app/src/test/java/com/software/sello/feature/expense/ExpenseFakes.kt
+index 68b18a9..81ea882 100644
+--- a/app/src/test/java/com/software/sello/feature/expense/ExpenseFakes.kt
++++ b/app/src/test/java/com/software/sello/feature/expense/ExpenseFakes.kt
+@@ -24,6 +24,8 @@ import com.software.sello.domain.port.CommittedExpense
+ import com.software.sello.domain.port.CreateExpense
+ import com.software.sello.domain.port.ExpenseCommandOutcome
+ import com.software.sello.domain.port.ExpenseCommands
++import com.software.sello.domain.port.ExpenseCursor
++import com.software.sello.domain.port.ExpensePage
+ import com.software.sello.domain.port.ExpenseReads
+ import com.software.sello.domain.port.FinancialDay
+ import com.software.sello.domain.port.MonthlySnapshots
+@@ -165,4 +167,32 @@ class HandExpenseReads : ExpenseReads {
+ 
+     override suspend fun lastUsedCategory(): Outcome<CategoryId?, StorageFailure> =
+         failure?.let { Outcome.Failure(it) } ?: Outcome.Success(lastUsed)
++
++    /** Every page asked for, as (cursor, limit). */
++    val pages = mutableListOf<Pair<ExpenseCursor?, Int>>()
++
++    /** Lets a test keep a page read waiting. */
++    var hold: CompletableDeferred<Unit>? = null
++
++    override suspend fun inCategory(
++        categoryId: CategoryId,
++        month: YearMonth,
++        after: ExpenseCursor?,
++        limit: Int
++    ): Outcome<ExpensePage, StorageFailure> {
++        pages += after to limit
++        hold?.await()
++        failure?.let { return Outcome.Failure(it) }
++        val newestFirst = stored.values
++            .filter { it.categoryId == categoryId && YearMonth.from(it.date) == month }
++            .sortedWith(compareByDescending<Expense> { it.date }.thenByDescending { it.sequence })
++            .filter {
++                after == null || it.date < after.date ||
++                    (it.date == after.date && it.sequence < after.sequence)
++            }
++        val page = newestFirst.take(limit)
++        val next = page.lastOrNull()?.takeIf { newestFirst.size > limit }
++            ?.let { ExpenseCursor(it.date, it.sequence) }
++        return Outcome.Success(ExpensePage(page, next))
++    }
+ }
+diff --git a/app/src/test/java/com/software/sello/feature/recibo/ReciboViewModelTest.kt b/app/src/test/java/com/software/sello/feature/recibo/ReciboViewModelTest.kt
+index ff79b80..61cd374 100644
+--- a/app/src/test/java/com/software/sello/feature/recibo/ReciboViewModelTest.kt
++++ b/app/src/test/java/com/software/sello/feature/recibo/ReciboViewModelTest.kt
+@@ -2,7 +2,6 @@ package com.software.sello.feature.recibo
+ 
+ import com.software.sello.designsystem.component.MoneySign
+ import com.software.sello.designsystem.component.MoneyTextValue
+-import com.software.sello.domain.model.BudgetLimit
+ import com.software.sello.domain.model.Category
+ import com.software.sello.domain.model.CategoryId
+ import com.software.sello.domain.model.CategoryMonth
+@@ -112,7 +111,8 @@ class ReciboViewModelTest {
+                 ),
+                 MonthBudgetState.Unconfigured,
+                 Money.cop(0),
+-                budget = null
++                budget = null,
++                expenseCount = 0
+             )
+         },
+         spent = Money.cop(spent),
+@@ -138,60 +138,35 @@ class ReciboViewModelTest {
+     }
+ 
+     @Test
+-    fun spendingIsShownWithTheExactFullAmount() = runTest {
++    fun aMonthIsShownThroughTheSharedRenderModelWithItsExactTotal() = runTest {
+         val (viewModel) = started()
++        val read = SnapshotState.Ready(snapshot(october, 3_000_001_199_997, categories = 2))
+ 
+-        snapshots.of(october).value =
+-            SnapshotState.Ready(snapshot(october, 3_000_001_199_997, categories = 2))
++        snapshots.of(october).value = read
+ 
++        val state = viewModel.state.value as ReciboState.Month
++        assertEquals(ReciboRenderModel(MoneyFormatter(labels)).recibo(read), state)
+         assertEquals(
+             MoneyTextValue(MoneySign.None, "", "3.000.001.199.997", "3.000.001.199.997 pesos"),
+-            (viewModel.state.value as ReciboState.Spending).spent
+-        )
+-    }
+-
+-    @Test
+-    fun eachCategoryIsListedWithItsOwnLimitForTheMonth() = runTest {
+-        val (viewModel) = started()
+-        val base = snapshot(october, 0, categories = 4)
+-        val states = listOf(
+-            MonthBudgetState.Limited(
+-                (BudgetLimit.finite(Money.cop(300_000)) as Outcome.Success).value,
+-                explicit = false
+-            ),
+-            MonthBudgetState.Limited(BudgetLimit.Unlimited, explicit = false),
+-            MonthBudgetState.Paused,
+-            MonthBudgetState.Unconfigured
++            state.summary.figure.amount
+         )
+-        val lines = base.categories.zip(states) { line, state -> line.copy(state = state) }
+-
+-        snapshots.of(october).value = SnapshotState.Ready(base.copy(categories = lines))
+-
+-        val listed = (viewModel.state.value as ReciboState.Spending).categories
+         assertEquals(
+-            listOf(
+-                ReciboLimit.Amount(MoneyTextValue(MoneySign.None, "", "300.000", "300.000 pesos")),
+-                ReciboLimit.Unlimited,
+-                ReciboLimit.Paused,
+-                ReciboLimit.NotSet
+-            ),
+-            listed.map { it.limit }
++            listOf("00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"),
++            state.categories.map { it.id }
+         )
+-        assertEquals(
+-            listOf("Categoría 0" to "home", "Categoría 1" to "home"),
+-            listed.take(2).map { it.name to it.iconKey }
+-        )
+-        assertEquals("00000000-0000-4000-8000-000000000000", listed.first().id)
+     }
+ 
+     @Test
+-    fun aFailedReadIsShownAsFailedEvenWhenOlderFiguresExist() = runTest {
++    fun aFailedReadKeepsOlderFiguresOnlyAsOlderAndIsFailedWithoutThem() = runTest {
+         val (viewModel) = started()
+         val failure = SnapshotFailure.Storage(StorageFailure.Unavailable("SQLiteException"))
+ 
+         snapshots.of(october).value =
+             SnapshotState.Failed(failure, lastGood = snapshot(october, 5_000, categories = 1))
++        val withOlder = viewModel.state.value
++        snapshots.of(october).value = SnapshotState.Failed(failure, lastGood = null)
+ 
++        assertEquals(true, (withOlder as ReciboState.Month).stale)
+         assertEquals(ReciboState.Failed, viewModel.state.value)
+     }
+ 
+@@ -231,7 +206,7 @@ class ReciboViewModelTest {
+         assertEquals(listOf(october, november), snapshots.observed)
+         assertEquals(
+             MoneyTextValue(MoneySign.None, "", "1", "1 pesos"),
+-            (viewModel.state.value as ReciboState.Spending).spent
++            (viewModel.state.value as ReciboState.Month).summary.figure.amount
+         )
+     }
+ }
+diff --git a/app/src/test/java/com/software/sello/navigation/NavigationStateTest.kt b/app/src/test/java/com/software/sello/navigation/NavigationStateTest.kt
+index 28aa517..fed4e52 100644
+--- a/app/src/test/java/com/software/sello/navigation/NavigationStateTest.kt
++++ b/app/src/test/java/com/software/sello/navigation/NavigationStateTest.kt
+@@ -1,5 +1,6 @@
+ package com.software.sello.navigation
+ 
++import androidx.compose.ui.unit.dp
+ import androidx.lifecycle.SavedStateHandle
+ import com.software.sello.domain.model.Money
+ import com.software.sello.domain.model.Outcome
+@@ -50,6 +51,21 @@ class NavigationStateTest {
+         assertEquals(BackTarget.Exit, backTarget(panelOpen = false, onDetail = false, recibo))
+     }
+ 
++    @Test
++    fun aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth() {
++        val beside = listOf(760 to 360, 640 to 400, 900 to 700, 1280 to 800, 600 to 479)
++        // An upright phone, a medium window, and half a phone's screen: short but narrow.
++        val alone = listOf(360 to 760, 700 to 1000, 320 to 372, 599 to 400, 360 to 330)
++
++        assertEquals(beside, beside.filter { (w, h) -> showsDetailBeside(w.dp, h.dp) })
++        assertEquals(
++            emptyList<Pair<Int, Int>>(),
++            alone.filter { (w, h) ->
++                showsDetailBeside(w.dp, h.dp)
++            }
++        )
++    }
++
+     @Test
+     fun onlyReciboIsExposedAsATab() {
+         assertEquals(listOf("recibo"), ShellTab.entries.map { it.id })
+@@ -221,6 +237,51 @@ class NavigationStateTest {
+         assertEquals(EntryRequest(null, null), state.pendingEntry)
+     }
+ 
++    @Test
++    fun anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed() {
++        val saved = SavedStateHandle()
++        val shell = shell(saved)
++        val id = "00000000-0000-4000-8000-000000000007"
++
++        shell.onAction(ShellAction.OpenCategory(id))
++        val restored = shell(saved.afterProcessDeath())
++        val reopened = restored.state.value.detailCategoryId
++        restored.onAction(ShellAction.CloseCategory)
++
++        assertEquals(id, shell.state.value.detailCategoryId)
++        assertEquals(id, reopened)
++        assertEquals(null, restored.state.value.detailCategoryId)
++    }
++
++    @Test
++    fun somethingThatIsNotACategoryIdentifierOpensNothing() {
++        val tampered = shell(SavedStateHandle(mapOf("shell.detail" to "' OR 1=1 --")))
++        val asked = shell()
++
++        asked.onAction(ShellAction.OpenCategory("../../etc"))
++
++        assertEquals(null, tampered.state.value.detailCategoryId)
++        assertEquals(null, asked.state.value.detailCategoryId)
++    }
++
++    @Test
++    fun anotarFromACategoryStartsTheEntryInThatCategoryAndLeavesItOpen() {
++        categories.categories = listOf(categories.category(7, "Mercado"))
++        val shell = shell()
++        val id = "00000000-0000-4000-8000-000000000007"
++        shell.onAction(ShellAction.OpenCategory(id))
++
++        shell.onAction(ShellAction.StartEntryIn(id))
++        val asked = shell.state.value
++        shell.onAction(ShellAction.EntryTaken)
++
++        assertEquals(true, asked.entryReady)
++        assertEquals(id, asked.pendingEntry?.categoryId?.value)
++        assertEquals(null, asked.pendingEntry?.amount)
++        assertEquals(id, shell.state.value.detailCategoryId)
++        assertEquals(null, shell.state.value.pendingEntry)
++    }
++
+     @Test
+     fun anEntryWithNoCategoryToRecordItInAsksForOneOnceAndKeepsTheRequest() {
+         val shell = shell()
+diff --git a/app/src/test/java/com/software/sello/presentation/money/MoneyFormatterTest.kt b/app/src/test/java/com/software/sello/presentation/money/MoneyFormatterTest.kt
+index dce0138..74a734c 100644
+--- a/app/src/test/java/com/software/sello/presentation/money/MoneyFormatterTest.kt
++++ b/app/src/test/java/com/software/sello/presentation/money/MoneyFormatterTest.kt
+@@ -61,6 +61,23 @@ class MoneyFormatterTest {
+         assertEquals("9.223.372.036.854.775.808", lowest.digits)
+     }
+ 
++    @Test
++    fun theMagnitudeIsTheSameFigureWithoutItsSignEvenForTheLowestAmount() {
++        // Typed by hand.
++        val expected = mapOf(
++            -21_500L to "21.500",
++            21_500L to "21.500",
++            0L to "0",
++            -1L to "1",
++            Long.MIN_VALUE to "9.223.372.036.854.775.808"
++        )
++        for ((pesos, digits) in expected) {
++            val value = formatter.magnitude(Money.cop(pesos))
++            assertEquals(MoneyTextValue(MoneySign.None, "", digits, value.spoken), value)
++            assertEquals("$digits COP${if (digits == "1") "/one" else "/other"}", value.spoken)
++        }
++    }
++
+     @Test
+     fun aPlusAppearsOnlyWhenAskedAndNeverOnZero() {
+         assertEquals(MoneySign.None, cop(850_000).sign)
+diff --git a/data/src/androidTest/java/com/software/sello/data/ExpenseReadsTest.kt b/data/src/androidTest/java/com/software/sello/data/ExpenseReadsTest.kt
+index b84968c..054c53c 100644
+--- a/data/src/androidTest/java/com/software/sello/data/ExpenseReadsTest.kt
++++ b/data/src/androidTest/java/com/software/sello/data/ExpenseReadsTest.kt
+@@ -6,8 +6,14 @@ import com.software.sello.domain.model.Outcome
+ import com.software.sello.domain.model.StorageFailure
+ import com.software.sello.domain.port.ArchiveCategory
+ import com.software.sello.domain.port.ExpenseCommandOutcome
++import com.software.sello.domain.port.ExpenseCursor
++import com.software.sello.domain.port.ExpensePage
++import java.time.LocalDate
++import java.time.YearMonth
+ import kotlinx.coroutines.runBlocking
+ import org.junit.Assert.assertEquals
++import org.junit.Assert.assertNull
++import org.junit.Assert.assertThrows
+ import org.junit.Rule
+ import org.junit.Test
+ import org.junit.runner.RunWith
+@@ -60,6 +66,96 @@ class ExpenseReadsTest {
+         )
+     }
+ 
++    private fun page(category: Int, month: String, after: ExpenseCursor?, limit: Int) =
++        runBlocking {
++            ledger.expenseReads
++                .inCategory(ledger.categoryId(category), YearMonth.parse(month), after, limit)
++                .valueOrFail()
++        }
++
++    private fun ExpensePage.shown() = expenses.map { "${it.date} ${it.amount.money.minorUnits}" }
++
++    /** Mercado (100) and Transporte (101) with expenses around the edges of October. */
++    private fun twoCategoriesAcrossMonths() = runBlocking {
++        // Late enough that none of these dates is in the future.
++        ledger.goTo("2026-11-30")
++        ledger.categories.submit(ledger.createCategory("Mercado"))
++        ledger.categories.submit(ledger.createCategory("Transporte"))
++        listOf(
++            Triple(100, "2026-09-30", 1_000L),
++            Triple(100, "2026-10-01", 2_000L),
++            Triple(100, "2026-10-31", 3_000L),
++            Triple(101, "2026-10-15", 4_000L),
++            Triple(100, "2026-11-01", 5_000L),
++            // Added last but dated in the middle, twice on the same day.
++            Triple(100, "2026-10-15", 6_000L),
++            Triple(100, "2026-10-15", 7_000L)
++        ).forEach { (category, date, pesos) ->
++            ledger.expenses.create(ledger.createExpense(category, date, pesos))
++        }
++    }
++
++    @Test
++    fun aCategoryMonthListsOnlyItsOwnExpensesNewestDayFirstThenLastAddedFirst() {
++        twoCategoriesAcrossMonths()
++
++        val october = page(100, "2026-10", after = null, limit = 50)
++
++        assertEquals(
++            listOf("2026-10-31 3000", "2026-10-15 7000", "2026-10-15 6000", "2026-10-01 2000"),
++            october.shown()
++        )
++        assertNull(october.next)
++        assertEquals(listOf("2026-10-15 4000"), page(101, "2026-10", null, 50).shown())
++        assertEquals(listOf("2026-09-30 1000"), page(100, "2026-09", null, 50).shown())
++        assertEquals(listOf("2026-11-01 5000"), page(100, "2026-11", null, 50).shown())
++        assertEquals(emptyList<String>(), page(101, "2026-09", null, 50).shown())
++    }
++
++    @Test
++    fun pagesFollowEachOtherWithoutRepeatingOrSkippingEvenInsideOneDay() {
++        twoCategoriesAcrossMonths()
++
++        val first = page(100, "2026-10", after = null, limit = 2)
++        val second = page(100, "2026-10", after = first.next, limit = 2)
++
++        assertEquals(listOf("2026-10-31 3000", "2026-10-15 7000"), first.shown())
++        assertEquals(ExpenseCursor(LocalDate.parse("2026-10-15"), 7), first.next)
++        assertEquals(listOf("2026-10-15 6000", "2026-10-01 2000"), second.shown())
++        // Exactly full, and still known to be the last.
++        assertNull(second.next)
++        val oneByOne = generateSequence(page(100, "2026-10", null, 1)) { previous ->
++            previous.next?.let { page(100, "2026-10", it, 1) }
++        }.flatMap { it.shown() }.toList()
++        assertEquals(first.shown() + second.shown(), oneByOne)
++    }
++
++    @Test
++    fun aPageWithADamagedExpenseIsAFailureNotAShorterList() = runBlocking {
++        twoCategoriesAcrossMonths()
++        ledger.database.openHelper.writableDatabase
++            .execSQL("UPDATE expense SET amount_minor = 0 WHERE sequence = 2")
++
++        val read = ledger.expenseReads
++            .inCategory(ledger.categoryId(100), YearMonth.of(2026, 10), null, 50)
++
++        assertEquals(
++            Outcome.Failure(StorageFailure.Integrity("expense", uuid(103), "amount_minor")),
++            read
++        )
++        // The damaged row is on the second page, so the first still reads.
++        assertEquals(2, page(100, "2026-10", null, 2).expenses.size)
++    }
++
++    @Test
++    fun aPageSizeOutsideTheAllowedRangeIsRefused() {
++        listOf(0, 201).forEach { limit ->
++            assertThrows(IllegalArgumentException::class.java) {
++                page(100, "2026-10", null, limit)
++            }
++        }
++    }
++
+     @Test
+     fun aDamagedExpenseIsAFailureNotAMissingOne() = runBlocking {
+         ledger.categories.submit(ledger.createCategory("Mercado"))
+diff --git a/data/src/main/java/com/software/sello/data/local/dao/ExpenseDao.kt b/data/src/main/java/com/software/sello/data/local/dao/ExpenseDao.kt
+index 6d084c9..2708919 100644
+--- a/data/src/main/java/com/software/sello/data/local/dao/ExpenseDao.kt
++++ b/data/src/main/java/com/software/sello/data/local/dao/ExpenseDao.kt
+@@ -14,6 +14,27 @@ interface ExpenseDao {
+     @Query("SELECT MAX(sequence) FROM expense")
+     suspend fun highestSequence(): Long?
+ 
++    /**
++     * A category's expenses dated from [from] up to but not including [until], newest
++     * day first and within a day the highest sequence first, starting before the
++     * position ([beforeDate], [beforeSequence]) and returning at most [limit].
++     */
++    @Query(
++        "SELECT * FROM expense WHERE category_id = :categoryId " +
++            "AND effective_date >= :from AND effective_date < :until " +
++            "AND (effective_date < :beforeDate " +
++            "OR (effective_date = :beforeDate AND sequence < :beforeSequence)) " +
++            "ORDER BY effective_date DESC, sequence DESC LIMIT :limit"
++    )
++    suspend fun newestInCategory(
++        categoryId: String,
++        from: String,
++        until: String,
++        beforeDate: String,
++        beforeSequence: Long,
++        limit: Int
++    ): List<ExpenseEntity>
++
+     /** The category of the expense added last, or null when there is no expense. */
+     @Query("SELECT category_id FROM expense ORDER BY sequence DESC LIMIT 1")
+     suspend fun lastAddedCategory(): String?
+diff --git a/data/src/main/java/com/software/sello/data/repository/RoomExpenseReads.kt b/data/src/main/java/com/software/sello/data/repository/RoomExpenseReads.kt
+index eb915f4..1147d67 100644
+--- a/data/src/main/java/com/software/sello/data/repository/RoomExpenseReads.kt
++++ b/data/src/main/java/com/software/sello/data/repository/RoomExpenseReads.kt
+@@ -2,15 +2,23 @@ package com.software.sello.data.repository
+ 
+ import com.software.sello.data.local.SelloDatabase
+ import com.software.sello.data.local.entity.ExpenseEntity
++import com.software.sello.data.mapper.decodeAll
+ import com.software.sello.data.mapper.toDomain
+ import com.software.sello.domain.model.CategoryId
+ import com.software.sello.domain.model.Expense
+ import com.software.sello.domain.model.ExpenseId
+ import com.software.sello.domain.model.Outcome
+ import com.software.sello.domain.model.StorageFailure
++import com.software.sello.domain.port.ExpenseCursor
++import com.software.sello.domain.port.ExpensePage
+ import com.software.sello.domain.port.ExpenseReads
++import java.time.YearMonth
+ 
+ class RoomExpenseReads(private val database: SelloDatabase) : ExpenseReads {
++    private companion object {
++        const val MAX_PAGE = 200
++    }
++
+     override suspend fun byId(id: ExpenseId): Outcome<Expense?, StorageFailure> = reading {
+         when (val row = database.expenseDao().byId(id.value)) {
+             null -> Outcome.Success(null)
+@@ -18,6 +26,35 @@ class RoomExpenseReads(private val database: SelloDatabase) : ExpenseReads {
+         }
+     }
+ 
++    override suspend fun inCategory(
++        categoryId: CategoryId,
++        month: YearMonth,
++        after: ExpenseCursor?,
++        limit: Int
++    ): Outcome<ExpensePage, StorageFailure> = reading {
++        require(limit in 1..MAX_PAGE) { "a page holds 1 to $MAX_PAGE expenses" }
++        val until = month.plusMonths(1).atDay(1).toString()
++        // One more than asked for, only to learn whether another page exists.
++        val rows = database.expenseDao().newestInCategory(
++            categoryId = categoryId.value,
++            from = month.atDay(1).toString(),
++            until = until,
++            beforeDate = after?.date?.toString() ?: until,
++            beforeSequence = after?.sequence ?: Long.MAX_VALUE,
++            limit = limit + 1
++        )
++        when (val expenses = rows.take(limit).decodeAll { it.toDomain() }) {
++            is Outcome.Failure -> expenses
++
++            is Outcome.Success -> {
++                val last = expenses.value.lastOrNull()
++                val next = last?.takeIf { rows.size > limit }
++                    ?.let { ExpenseCursor(it.date, it.sequence) }
++                Outcome.Success(ExpensePage(expenses.value, next))
++            }
++        }
++    }
++
+     /** Sequences only grow, so the highest one is the expense added last. */
+     override suspend fun lastUsedCategory(): Outcome<CategoryId?, StorageFailure> = reading {
+         when (val stored = database.expenseDao().lastAddedCategory()) {
+diff --git a/design-system/src/androidTest/java/com/software/sello/designsystem/component/AdaptiveScaffoldTest.kt b/design-system/src/androidTest/java/com/software/sello/designsystem/component/AdaptiveScaffoldTest.kt
+index fd9dbe4..a9b545c 100644
+--- a/design-system/src/androidTest/java/com/software/sello/designsystem/component/AdaptiveScaffoldTest.kt
++++ b/design-system/src/androidTest/java/com/software/sello/designsystem/component/AdaptiveScaffoldTest.kt
+@@ -53,7 +53,13 @@ class AdaptiveScaffoldTest {
+     private var docked = 0
+     private var selected = "recibo"
+ 
+-    private fun show(width: Int, height: Int, withSecondPane: Boolean = true) {
++    private fun show(
++        width: Int,
++        height: Int,
++        withSecondPane: Boolean = true,
++        insets: WindowInsets = WindowInsets(top = topInset, bottom = bottomInset),
++        withTabs: Boolean = true
++    ) {
+         rule.setContent {
+             CompositionLocalProvider(LocalDensity provides Density(scale, 1f)) {
+                 SelloTheme(reducedMotion = true) {
+@@ -66,9 +72,9 @@ class AdaptiveScaffoldTest {
+                                     SelloDestination("resumen", "Resumen", SelloIcon.Insights)
+                                 ),
+                                 selected
+-                            ) { selections += it },
++                            ) { selections += it }.takeIf { withTabs },
+                             dock = SelloDock("Anotar un gasto", "Anotar", { docked++ }),
+-                            windowInsets = WindowInsets(top = topInset, bottom = bottomInset),
++                            windowInsets = insets,
+                             secondaryPane = if (withSecondPane) {
+                                 { padding -> Pane("second", padding) }
+                             } else {
+@@ -178,6 +184,29 @@ class AdaptiveScaffoldTest {
+         }
+     }
+ 
++    @Test
++    fun aSystemBarOrCutoutAtTheSideCoversNeitherPaneNorTheDock() {
++        // A phone on its side: a cutout at one edge, the system's buttons at the other.
++        show(760, 400, insets = WindowInsets(left = 20, top = 24, right = 48), withTabs = false)
++
++        val window = bounds("window")
++        assertTrue(!exists(SCAFFOLD_RAIL_TAG) && exists(SCAFFOLD_DOCK_TAG))
++        for (tag in listOf(SCAFFOLD_PRIMARY_TAG, SCAFFOLD_SECONDARY_TAG, SCAFFOLD_DOCK_TAG)) {
++            val part = bounds(tag)
++            assertTrue("$tag starts at ${part.left}", part.left >= window.left + 20f)
++            assertTrue("$tag ends at ${part.right}", part.right <= window.right - 48f)
++        }
++    }
++
++    @Test
++    fun besideARailTheFarEdgeIsStillKeptClearOfTheSystemBar() {
++        show(760, 400, insets = WindowInsets(left = 20, top = 24, right = 48))
++
++        val window = bounds("window")
++        assertTrue(bounds(SCAFFOLD_RAIL_TAG).left >= window.left)
++        assertTrue(bounds(SCAFFOLD_SECONDARY_TAG).right <= window.right - 48f)
++    }
++
+     @Test
+     fun aMediumWindowKeepsTheTabBarAndCentresOneColumnOf560() {
+         show(700, 900)
+diff --git a/design-system/src/main/java/com/software/sello/designsystem/component/SelloScaffold.kt b/design-system/src/main/java/com/software/sello/designsystem/component/SelloScaffold.kt
+index 2b4afb4..cd18a84 100644
+--- a/design-system/src/main/java/com/software/sello/designsystem/component/SelloScaffold.kt
++++ b/design-system/src/main/java/com/software/sello/designsystem/component/SelloScaffold.kt
+@@ -108,10 +108,15 @@ fun SelloScaffold(
+                         )
+                 )
+             }
+-            // Beside a rail, the rail already keeps the leading edge clear.
+-            val topBarSides = WindowInsetsSides.Top +
+-                if (rail) WindowInsetsSides.End else WindowInsetsSides.Horizontal
+-            Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
++            // A system bar or cutout at the side covers nothing: not the top bar, the
++            // panes or the dock. Beside a rail, the rail already keeps the leading edge clear.
++            val sides = if (rail) WindowInsetsSides.End else WindowInsetsSides.Horizontal
++            Column(
++                modifier = Modifier
++                    .weight(1f)
++                    .fillMaxHeight()
++                    .windowInsetsPadding(windowInsets.only(sides))
++            ) {
+                 CompositionLocalProvider(
+                     LocalContentColor provides if (onBand) colors.onBand else colors.ink
+                 ) {
+@@ -121,7 +126,8 @@ fun SelloScaffold(
+                         titleContent = titleContent,
+                         navigationIcon = navigationIcon,
+                         actions = actions,
+-                        modifier = Modifier.windowInsetsPadding(windowInsets.only(topBarSides))
++                        modifier = Modifier
++                            .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
+                     )
+                 }
+                 // Without bottom controls the content itself must clear the system bar.
+diff --git a/docs/development/app-shell.md b/docs/development/app-shell.md
+index abad1fb..f5f198f 100644
+--- a/docs/development/app-shell.md
++++ b/docs/development/app-shell.md
+@@ -14,10 +14,10 @@ month picker, and the dock records an expense. There is no tab bar, because one
+ is not a choice: a tab is added when its screen works, by adding it to `ShellTab`
+ and its route to `Routes.kt` (SELLO-022 for Resumen).
+ 
+-Recibo shows the shared [monthly snapshot](monthly-snapshot.md): a skeleton while
+-loading, the first-run slip when there are no categories, the exact total spent and
+-the list of categories when there are, or an error with retry. SELLO-018 replaces
+-that minimal content.
++Recibo and the detail of one of its categories are described in
++[Recibo and category detail](recibo-and-detail.md). Which category is open is the
++frame's own saved state (`ShellState.detailCategoryId`), next to the month and the
++picker, so it survives rotation and the process being killed.
+ 
+ ## The selected month
+ 
+diff --git a/domain/src/main/kotlin/com/software/sello/domain/model/MonthlySnapshot.kt b/domain/src/main/kotlin/com/software/sello/domain/model/MonthlySnapshot.kt
+index f67352a..de93f5b 100644
+--- a/domain/src/main/kotlin/com/software/sello/domain/model/MonthlySnapshot.kt
++++ b/domain/src/main/kotlin/com/software/sello/domain/model/MonthlySnapshot.kt
+@@ -72,12 +72,14 @@ sealed interface OverallBudget {
+ /**
+  * One category in the month. [budget] is present only when the category has a finite
+  * limit that month; its spending counts towards the month's total either way.
++ * [expenseCount] is how many expenses make up [spent].
+  */
+ data class CategoryMonth(
+     val category: Category,
+     val state: MonthBudgetState,
+     val spent: Money,
+-    val budget: LimitedBudget?
++    val budget: LimitedBudget?,
++    val expenseCount: Int
+ )
+ 
+ /**
+diff --git a/domain/src/main/kotlin/com/software/sello/domain/policy/MonthlyBudgetPolicy.kt b/domain/src/main/kotlin/com/software/sello/domain/policy/MonthlyBudgetPolicy.kt
+index 9f61551..3034b56 100644
+--- a/domain/src/main/kotlin/com/software/sello/domain/policy/MonthlyBudgetPolicy.kt
++++ b/domain/src/main/kotlin/com/software/sello/domain/policy/MonthlyBudgetPolicy.kt
+@@ -130,7 +130,7 @@ object MonthlyBudgetPolicy {
+             val shown = !line.category.archived ||
+                 line.state is MonthBudgetState.Limited ||
+                 of.isNotEmpty()
+-            if (shown) lines += CategoryMonth(line.category, line.state, spent, budget)
++            if (shown) lines += CategoryMonth(line.category, line.state, spent, budget, of.size)
+         }
+ 
+         val spent = when (val total = total(counted.map { it.amount.money })) {
+diff --git a/domain/src/main/kotlin/com/software/sello/domain/port/ExpenseReads.kt b/domain/src/main/kotlin/com/software/sello/domain/port/ExpenseReads.kt
+index 6c1e9b1..2958015 100644
+--- a/domain/src/main/kotlin/com/software/sello/domain/port/ExpenseReads.kt
++++ b/domain/src/main/kotlin/com/software/sello/domain/port/ExpenseReads.kt
+@@ -5,11 +5,34 @@ import com.software.sello.domain.model.Expense
+ import com.software.sello.domain.model.ExpenseId
+ import com.software.sello.domain.model.Outcome
+ import com.software.sello.domain.model.StorageFailure
++import java.time.LocalDate
++import java.time.YearMonth
++
++/** Where a page of expenses ended, to ask for the next one. */
++data class ExpenseCursor(val date: LocalDate, val sequence: Long)
++
++/**
++ * Some of a category's expenses, newest first. [next] is null when these are the
++ * last; otherwise it is what to pass to get the following page. A page is never the
++ * whole answer unless [next] is null, and no total is ever worked out from a page.
++ */
++data class ExpensePage(val expenses: List<Expense>, val next: ExpenseCursor?)
+ 
+ interface ExpenseReads {
+     /** The stored expense, exactly as recorded, or null when there is none with that identifier. */
+     suspend fun byId(id: ExpenseId): Outcome<Expense?, StorageFailure>
+ 
++    /**
++     * Up to [limit] expenses of [categoryId] dated in [month], newest day first and,
++     * within a day, the one added last first, starting after [after].
++     */
++    suspend fun inCategory(
++        categoryId: CategoryId,
++        month: YearMonth,
++        after: ExpenseCursor?,
++        limit: Int
++    ): Outcome<ExpensePage, StorageFailure>
++
+     /** The category of the expense added most recently, or null when there are no expenses. */
+     suspend fun lastUsedCategory(): Outcome<CategoryId?, StorageFailure>
+ }

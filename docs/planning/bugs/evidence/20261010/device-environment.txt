@@ -1,0 +1,11 @@
+Exploration date: 2026-10-10T19:51:36-05:00
+30
+google/sdk_gphone_x86_64/generic_x86_64_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys
+Physical size: 1080x2340
+Physical density: 160
+Override density: 440
+1.0
+1.0
+1.0
+1.0
+Sat Oct 10 19:51:36 -05 2026

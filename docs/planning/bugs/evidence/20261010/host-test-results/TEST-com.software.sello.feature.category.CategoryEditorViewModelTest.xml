@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.software.sello.feature.category.CategoryEditorViewModelTest" tests="26" skipped="0" failures="0" errors="0" timestamp="2026-10-11T00:47:45.399Z" hostname="Arishem" time="0.078">
+  <properties/>
+  <testcase name="aSuggestionFillsTheAmountAndTurnsTheLimitOn" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.046"/>
+  <testcase name="whileSavingTheFormIsBusyLockedAndASecondTapSendsNothing" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.005"/>
+  <testcase name="whileTheOutcomeCannotBeReadTheFormStaysLockedAndRetryOnlyAsksAgain" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.002"/>
+  <testcase name="changingOnlyTheIconOrTheLimitAlsoCountsAsADraft" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.0"/>
+  <testcase name="choosingSinLimiteClearsTheAmountAndIgnoresTyping" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="backLeavesAnUntouchedFormAndAsksBeforeDiscardingADraft" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.0"/>
+  <testcase name="theDraftComesBackAfterTheProcessIsKilled" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="withoutALimitTheCategoryIsUnlimitedNotZero" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.0"/>
+  <testcase name="aNameThatBreaksTheRulesIsRefusedBeforeAnythingIsSentAndKeptAsTyped" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.002"/>
+  <testcase name="anInterruptedSaveThatNeverCommittedLeavesTheDraftReadyToSend" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.002"/>
+  <testcase name="aStorageFailureSaysNothingWasSavedAndKeepsTheDraft" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.002"/>
+  <testcase name="aTypedZeroIsARealZeroBudget" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.0"/>
+  <testcase name="aNewFormIsEmptyUnlimitedAndOnTheFirstIconNobodyUses" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="aCreatedResultSurvivesTheScreenBeingRebuilt" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.005"/>
+  <testcase name="aSaveInterruptedByTheProcessDyingIsRecoveredFromItsReceiptWithoutSendingAgain" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="aFormThatCannotBePreparedSaysSoAndCanBeRetried" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="aReplacedHistoryIsExplainedAndTheNextAttemptUsesTheNewGeneration" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="anIconThatIsNotOfferedCannotBeChosen" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.0"/>
+  <testcase name="anUnknownOutcomeThatTurnsOutNotSavedReturnsToTheFormWithNothingCreated" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="twentyFourCharactersOfAnyKindAreAccepted" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.0"/>
+  <testcase name="aLimitThatIsNotAnAmountIsRefusedAndTheTextIsKeptAsTyped" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.002"/>
+  <testcase name="anUnknownOutcomeIsSettledByAskingAboutTheSameOperationNotBySendingAgain" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="aTakenNameIsShownOnTheFieldAndTheNextAttemptIsANewOperation" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="aValidFormSendsOneCommandWithExactlyWhatWasChosen" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <testcase name="turningTheLimitOffWithNoAmountAsksForOneInsteadOfAssumingZero" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.0"/>
+  <testcase name="nothingIsSentWithoutAName" classname="com.software.sello.feature.category.CategoryEditorViewModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

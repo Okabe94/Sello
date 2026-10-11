@@ -47,8 +47,9 @@ MVP renews configured monthly budgets without carryover and retains historical r
 
 ## Post-MVP follow-up
 
-[ROADMAP.md](ROADMAP.md) tracks SELLO-E09/037–043 separately from the eight MVP
-epics/36 tickets. Its seven tickets cover approved policy, exact domain replay,
+[ROADMAP.md](ROADMAP.md) tracks SELLO-E09/037–043 separately from the original eight
+MVP epics/36 tickets and the E11 stabilization backlog. Its seven tickets cover
+approved policy, exact domain replay,
 transactional storage, portable recovery, accessible opt-in UI, live scenarios and
 integrated release. SELLO-037 depends on SELLO-036 Done; every successor inherits
 SELLO-004 quality enforcement and its own gate. This is not a new MVP prerequisite.
@@ -64,6 +65,18 @@ The generator validates both increments together, rejects MVP dependencies on
 post-MVP tickets, and renders separate boards/issue/dependency exports. Future
 epics MUST declare their increment explicitly; do not infer scope from ticket number.
 
+## Consolidated bug backlog
+
+[SELLO-E11](epics/E11-bug-stabilization.md) holds 16 MVP stabilization tickets
+(`SELLO-045`–`SELLO-060`), registered 2026-10-11 at the owner's request. It merges
+seven UX drafts, seven technical findings and two handoff defects, ordered by
+severity and exposure with source aliases preserved. Supported Task/native IDs
+avoid workflow-tool changes. All are Backlog/G2; unresolved product decisions and
+performance measurements remain explicit prerequisites, not implied approvals.
+See [preserved reports and evidence](../bugs/README.md). E01–E08 remain the original
+delivery plan; E09/E10 remain post-MVP, and E11 expands the MVP board to nine epics
+and 52 tickets without changing existing ticket statuses or acceptance.
+
 ## Epics and accountable outcomes
 
 | Epic | Outcome | Tickets |
@@ -76,6 +89,7 @@ epics MUST declare their increment explicitly; do not infer scope from ticket nu
 | [SELLO-E06](epics/E06-live-testing.md) | Isolated time travel, repeatable histories and recovery exploration | SELLO-024–027 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Portable backups, resumable restore, safe reset and privacy boundaries | SELLO-028–032 |
 | [SELLO-E08](epics/E08-release.md) | Executed device, recovery, performance and production-release evidence | SELLO-033–036 |
+| [SELLO-E11](epics/E11-bug-stabilization.md) | Severity-ordered first-slice correctness, accessibility and measured performance stabilization | SELLO-045–060 |
 
 An epic is Done only when all child tickets are Done and its integrated outcome
 works. Foundation tasks do not masquerade as user features; each still has a
@@ -192,7 +206,7 @@ enough to review; split a ticket explicitly if it ceases to be a cohesive delive
 
 ## Board maintenance and Jira handoff
 
-Canonical sources are the eight epic Markdown files. `BOARD.md`, `jira-import.csv`
+Canonical sources are the MVP epic Markdown files. `BOARD.md`, `jira-import.csv`
 and `dependency-links.csv` are generated views; do not edit them independently.
 
 ```bash
@@ -204,8 +218,8 @@ python3 -m unittest discover -s docs/planning/mvp -p test_board.py
 The generator checks IDs, required ticket/executor-brief sections, dependency existence/cycles,
 active/ready status prerequisites, and required completion-evidence fields. CSV includes
 scope in each description. The same commands also regenerate/check `ROADMAP.md`,
-`roadmap-jira-import.csv` and `roadmap-dependency-links.csv`. MVP exports keep eight
-epics/36 tickets; roadmap exports contain only post-MVP issues, while their links
+`roadmap-jira-import.csv` and `roadmap-dependency-links.csv`. MVP exports include nine
+epics/52 tickets; roadmap exports contain only post-MVP issues, while their links
 can reference MVP prerequisites. Import MVP issues first and map both sets' local
 IDs when applying roadmap dependency links; no hosted import has been performed.
 CSV includes

@@ -42,6 +42,10 @@ approved.
   and says that its merge is the reviewer's acceptance. It must not claim an
   approval, a date or a hosted run that has not happened; the pull request and its
   checks on the hosting service are that record.
+- **The last ticket of an epic carries the epic too.** When the ticket is the last
+  one open in its epic, mark the epic Done in the same commit as the ticket's Done
+  and evidence, before the pull request is opened. Doing it afterwards costs a whole
+  hosted run for one status line (it did on SELLO-018; adopted 2026-10-11).
 - **On the branch, Done means "proposed".** Until merged it is a request, not a
   fact. Do not start work that depends on the ticket from an unmerged branch.
 - **Changes requested** are pushed to the same pull request. If they touch

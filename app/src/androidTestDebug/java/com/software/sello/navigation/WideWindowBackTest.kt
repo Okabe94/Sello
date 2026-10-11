@@ -20,6 +20,7 @@ import com.software.sello.composition.SelloApplication
 import com.software.sello.designsystem.component.SCAFFOLD_SECONDARY_TAG
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
+import com.software.sello.readyViewModels
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -40,7 +41,7 @@ class WideWindowBackTest {
 
     @Test
     fun backClosesTheMonthPanelBesideTheContentWithoutLeaving() {
-        val viewModels = (rule.activity.application as SelloApplication).viewModels
+        val viewModels = (rule.activity.application as SelloApplication).readyViewModels()
         rule.setContent {
             CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                 SelloTheme(reducedMotion = true) {

@@ -209,4 +209,16 @@
     <string name="expense_receipt_total">Total</string>
     <string name="expense_receipt_unreadable">Tu gasto quedó guardado, pero no pudimos leer su detalle ahora.</string>
     <string name="expense_receipt_done">Listo</string>
+    <string name="startup_failure_title">No pudimos abrir tus datos</string>
+    <string name="startup_failure_body">Sello no pudo leer lo que tienes guardado. No se borró nada.</string>
+    <string name="startup_failure_newer_hint">Si instalaste una versión anterior de Sello, instala la más reciente antes de empezar de cero.</string>
+    <string name="startup_failure_retry">Intentar de nuevo</string>
+    <string name="startup_failure_still_failing">Todavía no se pueden abrir tus datos.</string>
+    <string name="startup_failure_start_over">Empezar de cero</string>
+    <string name="startup_failure_not_set_aside">No pudimos apartar tus datos. No se cambió nada.</string>
+    <string name="startup_start_over_title">¿Empezar de cero?</string>
+    <string name="startup_start_over_body">Sello se abrirá vacío, sin tus gastos, categorías ni presupuestos. Los datos que no se pudieron abrir no se borran: quedan guardados aparte en este dispositivo, pero Sello todavía no puede recuperarlos.</string>
+    <string name="startup_start_over_word">Escribe BORRAR para confirmar</string>
+    <string name="startup_start_over_confirm">Empezar de cero</string>
+    <string name="startup_start_over_cancel">Cancelar</string>
 </resources>

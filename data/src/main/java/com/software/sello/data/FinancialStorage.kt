@@ -3,12 +3,15 @@ package com.software.sello.data
 import android.content.Context
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
+import com.software.sello.data.local.setAside
 import com.software.sello.data.repository.RoomCategoryCommands
 import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomExpenseReads
 import com.software.sello.data.repository.RoomFinancialProfileStore
 import com.software.sello.data.repository.RoomMonthlySnapshots
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
@@ -69,3 +72,14 @@ fun openFinancialStorage(
     val database = openSelloDatabase(context, queries)
     return FinancialStorage(database, RoomFinancialProfileStore(database, audit))
 }
+
+/**
+ * For a database file that cannot be opened, once its storage is closed: moves it to
+ * `sello-unreadable.db` in the same private folder so the next open starts an empty
+ * one. The file is kept, not deleted, because a file this build cannot read may be
+ * intact: one written by a newer version reads again once the app is updated.
+ */
+fun setAsideFinancialStorage(context: Context): Outcome<Unit, StorageFailure> = setAside(
+    context.getDatabasePath(SelloDatabase.FILE_NAME),
+    context.getDatabasePath(SelloDatabase.SET_ASIDE_FILE_NAME)
+)

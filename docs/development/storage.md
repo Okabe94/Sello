@@ -69,9 +69,16 @@ of Room.
 
 At startup `openStorage` (app `composition`) establishes the profile before the
 graph is built: the first start of an installation stores the device zone, and every
-later start reads the stored zone and ignores the device's. If that fails the app
-stops with `FinancialStorageUnavailable`; it never continues on the device zone or
-an empty database. Showing that failure as a screen is the app shell's job (SELLO-015).
+later start reads the stored zone and ignores the device's. If that fails the
+storage is closed and the failure returned; the app never continues on the device
+zone or an empty database, and shows the failed start instead
+([time and composition](time-and-composition.md#when-the-data-cannot-be-opened)).
+
+`setAsideFinancialStorage` is the only other thing done to the file: for a closed
+database that would not open, it moves `sello.db` and its companion files to
+`sello-unreadable.db` in the same folder, so the next open starts an empty history.
+Nothing is deleted except an earlier kept copy, and a move that cannot finish is
+undone and reported ([ADR 0008](../decisions/0008-unreadable-storage-start-over.md)).
 
 ## Backups by the system are off
 

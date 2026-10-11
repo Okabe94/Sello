@@ -1,6 +1,6 @@
 # SELLO-E11 — First-slice bug stabilization
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Increment:** MVP
 - **Goal:** Address the collected first-slice correctness, availability, accessibility and measured scaling findings without weakening financial contracts.
 - **Exit:** All adopted children have meaningful red→green coverage, their own fresh retained G2 evidence and designated review; deferred or rejected proposals require an explicit owner decision rather than silent acceptance changes.
@@ -68,7 +68,7 @@ the existing SELLO-### runner grammar; original draft IDs remain aliases below.
 - **Type:** Task
 - **Source classification:** Bug
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Confidence:** 99%, conditional on profile establishment returning a failure.
 - **Depends on:** SELLO-004, SELLO-011, SELLO-015, SELLO-018
 - **Gate:** G2
@@ -143,6 +143,53 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-045 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-11: started on branch `sello-045-startup-failure-recovery`. The claim was
+verified first on the API 30 emulator: with `sello.db` replaced by text the debug
+app died in `SelloApplication.onCreate` with `FinancialStorageUnavailable`, on
+every launch, and the file was left byte for byte as it was.
+
+Owner decisions taken before the fix, recorded in
+[ADR 0008](../../../decisions/0008-unreadable-storage-start-over.md):
+- **Startup stays synchronous.** The Deliverables ask for asynchronous
+  initialization with an initializing state. The owner chose the smaller fix: the
+  failure becomes a state and a screen, and the open is not moved off the main
+  thread, because that wait is unmeasured. The acceptance criteria are unchanged and
+  are met without it; the "initializing" presentation is not delivered.
+- **Empezar de cero was added.** The owner did not want a person left on a screen
+  whose only button may never work. It sets the unreadable file aside (kept as
+  `sello-unreadable.db`, not deleted) after a warning and the typed word BORRAR.
+- **Restore from a backup on this screen** is left to SELLO-030, which now says so;
+  SELLO-031 and SELLO-032 carry the matching notes about the kept copy.
+
+Delivered. `:data`: `setAsideFinancialStorage`. `:app`: `Startup` and
+`StartupState` in composition, `openStorage` returning a typed result instead of
+throwing, `feature/startup` (state, view model, screen), and `MainActivity` showing
+the app only on data that opened. No dependency, permission or schema changed, and
+no design-system component was added or changed, so the catalog is unchanged.
+
+Choices made during the work, for owner review:
+- The Spanish wording is mine: "No pudimos abrir tus datos", "Sello no pudo leer lo
+  que tienes guardado. No se borró nada.", "Intentar de nuevo", "Empezar de cero",
+  and a warning that says the data is kept aside on the device but cannot be
+  recovered by Sello yet, with a hint to install the newest version first.
+- One message for every cause; the screen does not say "damaged".
+- The word is accepted with spaces around it and only in capitals.
+- Back closes the warning; with no warning open it leaves the app.
+- A link that opens the app while the data cannot be opened is dropped.
+- After starting from zero the app opens in a new task, so no old selection or
+  draft is restored onto the empty history.
+
+Found on the way: with the keyboard open the word field and its buttons were hidden
+behind it. The scaffold's padding already includes the keyboard, so it has to be
+applied outside the scroll; adding `imePadding` as well doubled it. Fixed on this
+screen and checked by hand. The category editor and the wide expense form apply the
+same two paddings inside their scroll and were not touched.
+
+Left for later: restore from this screen and recovery of the kept copy (SELLO-030),
+erasing it on reset (SELLO-031), a typed cause so the message can differ, and
+opening storage off the main thread once a slow migration can be measured.
 
 ## SELLO-046 — Stabilize expense keypad geometry and separate financial submission
 

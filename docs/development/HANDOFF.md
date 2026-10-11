@@ -18,7 +18,7 @@ below, with severity order and original-ID mappings. All fixes remain Backlog;
    [quality flow](../planning/mvp/QUALITY_FLOW.md), the
    [current board](../planning/mvp/BOARD.md) and the whole brief of the ticket.
 3. The [approved product contract](../decisions/0001-mvp-contract.md) (D01–D10), the
-   [worked examples](../testing/mvp-financial-examples.md) and ADRs 0002–0007.
+   [worked examples](../testing/mvp-financial-examples.md) and ADRs 0002–0008.
 4. The guide for each area the ticket touches (below) and the Delivery evidence and
    "Choices made" of the tickets it depends on.
 5. The [visual reference and its provenance](../design/README.md).
@@ -73,9 +73,11 @@ Things earlier tickets left for these:
   `financialTimeOverride`) with real sandbox control. Device journeys cannot move
   the financial day today, which is why they assert verdicts only where the day does
   not matter.
-- **SELLO-045 (E11):** a database that cannot be opened at start crashes the app with a
-  clear cause instead of showing a screen (noted in SELLO-011, 015 and 018). It
-  now has a canonical recovery ticket; implementation remains Backlog.
+- **SELLO-045 (E11):** a database that cannot be opened at start now shows a screen
+  with retry and a typed-BORRAR "Empezar de cero" that keeps the unreadable file
+  aside ([ADR 0008](../decisions/0008-unreadable-storage-start-over.md)). It leaves
+  three things to E07: restore reachable from that screen (030), reset erasing the
+  kept copy (031) and the kept copy among the private files verified (032).
 
 ## How the work is done
 

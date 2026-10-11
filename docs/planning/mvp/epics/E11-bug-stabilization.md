@@ -550,7 +550,7 @@ sharing one observation between screens (SELLO-055).
 - **Type:** Task
 - **Source classification:** Performance / presentation-consistency risk
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** Done
 - **Confidence:** 80%, conditional on revisions changing after a deep history window is loaded.
 - **Depends on:** SELLO-004, SELLO-014, SELLO-018
 - **Gate:** G2
@@ -630,6 +630,53 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-049 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-11: started on branch `sello-049-history-refresh-identity` after SELLO-048
+merged. The claim was verified with two throwaway host probes on the real view model
+(230 expenses in one category, ten pages listed, then one expense saved): the save
+caused ten page reads; while the first was read the header said 231 and the 200 old
+rows were listed with nothing marking them; while the second was read the list held
+**20 rows**, then grew back to 200. That collapse is not in the ticket.
+
+Owner decisions taken before the fix (2026-10-11): do the smaller version than the
+Deliverables describe. Keep the old rows in view, marked in state, and replace them
+whole when the read finishes; ask nothing for "Ver más" meanwhile; read the listed
+window again in as few reads as storage allows; **no revision in the read contract**;
+and **no visible indicator** while refreshing.
+
+Delivered. `:app`: `ExpenseListState.Rows.refreshing`; `CategoryDetailViewModel` reads
+again everything that was listed in one step and publishes nothing until it is whole,
+reuses kept rows only for the same month, category and generation, and ignores "Ver
+más" while refreshing. `:domain`: `ExpenseReads.MAX_PAGE` states the cap the storage
+adapter already enforced, and the adapter now uses that constant. The screen, the
+queries, the schema and the stored data are unchanged.
+
+Choices made during the work, for owner review:
+- A list that cannot be read again is shown as failed, not as the old rows, and
+  retry reads all of it again. Before, a failure after the first page left a partly
+  rebuilt list.
+- Rows kept from before a restore or reset (another generation) are not reused,
+  although neither command exists yet.
+- The header and the rows remain two reads; a save between them can leave them one
+  revision apart until that save's own snapshot lists the rows again.
+
+Found on the way and reported as it is: I expected the collapse to lose the place in
+the list on a device. A journey written to show that passes on the old code as well,
+so on the emulator the collapse does not reach the screen. That journey is kept as a
+guard of the real path, not as proof of the defect; the proof is the held-read tests.
+
+Left for later: scroll and cursor behaviour for edit, delete and undo (SELLO-019),
+lazy rendering of the rows (SELLO-056), sharing one observation (SELLO-055).
+
+### Delivery evidence
+- **Revision:** branch `sello-049-history-refresh-identity`; tested snapshot is commit `f19f758`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** kept rows are not presented as reconciled with a newer header → `CategoryDetailViewModelTest.whileADeepListIsReadAgainItsOldRowsStayAllThereAndAreMarkedAsBeingRefreshed` (header 231, the 200 old rows, `refreshing` set); by owner decision the mark is in state only and nothing is drawn. A delayed read with an intervening save ends coherent with no duplicates → `aSecondSaveWhileTheFirstIsStillBeingListedEndsWithBothAndNothingTwice` and `aDeepListIsNeverShorterWhileItIsReadAgainAndEndsWholeAndCurrent` (every published list has 200 rows, the last has the new expense first and 200 distinct identifiers). Category, month and generation changes cannot reuse another history's rows → `anotherCategoryOpenedWhileAListIsReadAgainNeverShowsThatListsRows`, `afterTheHistoryIsReplacedNoRowOfTheOldOneIsShownWhileTheNewIsRead` and the unchanged `anotherMonthOrCategoryStartsAgainFromItsFirstPage`. First and later page failures stay explicit and retry the intended page → `aDeepListThatCannotBeReadAgainIsFailedNotOldRowsAndRetryReadsAllOfItAgain` and the unchanged `aLaterPageThatFailsKeepsWhatWasListedAndAsksForThatSamePageAgain`. Work for a deep window is counted and bounds never truncate totals → `readingADeepListAgainAsksForItInAsFewReadsAsStorageAllows` (one read of 200 where there were ten of 20), `aListLongerThanOneReadMayHoldIsReadAgainInTwo` (200 then 40), `askingForMoreWhileTheListIsReadAgainAsksNothing`; the figures still come only from the snapshot. On real Room → `WalkingSliceJourneyTest.anExpenseSavedWhileALongListIsOpenLeavesTheListAsLongAndWhereItWas` (40 of 46 listed, the new expense shown, 47.500 spent, "Ver más" still in view). Not applicable yet: scroll and cursor behaviour for edit, delete and undo, which do not exist. Not done: timing the reads on a device; they were counted, not timed.
+- **Red / Green:** red first, with only the `refreshing` field added: `./gradlew :app:testDebugUnitTest --tests '*CategoryDetailViewModelTest'` failed 6 of 18 (old rows unmarked, the list at 20 rows part-way, ten reads for one save, a page added during the refresh, a failed refresh showing a partial list, and a list longer than one read). The generation case was added later and failed 1 of 20 before kept rows were keyed by generation. All 20 pass after the change. Not red: the other-category test and the two-saves test passed when written, and the device journey passes on the old view model as well, checked three times against each; they are guards of behaviour that already held.
+- **Gate results:** local `./scripts/verify-ticket SELLO-049 --gate G2 --retain` passed on the tested commit: 345 host tests (205 app, 98 domain, 31 design-system, 8 data, 3 catalog), 286 device tests on the API 30 emulator (116 app, 104 data, 56 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T221209Z-6551834c; SELLO-049 G2 passed; HEAD f19f758, inputs sha256 bbce133937ff; report docs/planning/mvp/quality-reports/SELLO-049.json sha256 f3f9a45fd164ff8ca15c5eec0aad55e270a286c0ef5099140436fa4b5e180330
+- **Device / Artifact:** the installed debug app with its real database on the API 30 emulator, 2026-10-11, through the journey test above: 45 expenses of 1.000 in a category with a 300.000 limit, two pages listed, the foot of the list in view, then one expense of 2.500 saved through the real command. The list stayed at 40 rows, showed "Se muestran 40 de 46" and the new expense, the header showed 47.500 spent, and "Ver más" was still in view. The same journey passes on the code before this change, so it does not show the defect on this device; the held-read host tests do. Not executed: a walkthrough by hand, TalkBack, a slow device, and a list deeper than two pages on the device.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the smaller scope and the listed choices; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-050 — Distinguish selected month from current month in accessible labels
 

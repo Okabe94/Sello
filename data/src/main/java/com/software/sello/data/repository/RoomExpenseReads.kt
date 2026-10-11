@@ -15,10 +15,6 @@ import com.software.sello.domain.port.ExpenseReads
 import java.time.YearMonth
 
 class RoomExpenseReads(private val database: SelloDatabase) : ExpenseReads {
-    private companion object {
-        const val MAX_PAGE = 200
-    }
-
     override suspend fun byId(id: ExpenseId): Outcome<Expense?, StorageFailure> = reading {
         when (val row = database.expenseDao().byId(id.value)) {
             null -> Outcome.Success(null)
@@ -32,7 +28,9 @@ class RoomExpenseReads(private val database: SelloDatabase) : ExpenseReads {
         after: ExpenseCursor?,
         limit: Int
     ): Outcome<ExpensePage, StorageFailure> = reading {
-        require(limit in 1..MAX_PAGE) { "a page holds 1 to $MAX_PAGE expenses" }
+        require(limit in 1..ExpenseReads.MAX_PAGE) {
+            "a page holds 1 to ${ExpenseReads.MAX_PAGE} expenses"
+        }
         val until = month.plusMonths(1).atDay(1).toString()
         // One more than asked for, only to learn whether another page exists.
         val rows = database.expenseDao().newestInCategory(

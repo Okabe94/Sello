@@ -24,7 +24,8 @@ interface ExpenseReads {
 
     /**
      * Up to [limit] expenses of [categoryId] dated in [month], newest day first and,
-     * within a day, the one added last first, starting after [after].
+     * within a day, the one added last first, starting after [after]. [limit] is 1 to
+     * [MAX_PAGE].
      */
     suspend fun inCategory(
         categoryId: CategoryId,
@@ -35,4 +36,9 @@ interface ExpenseReads {
 
     /** The category of the expense added most recently, or null when there are no expenses. */
     suspend fun lastUsedCategory(): Outcome<CategoryId?, StorageFailure>
+
+    companion object {
+        /** The most expenses one read may ask for. */
+        const val MAX_PAGE = 200
+    }
 }

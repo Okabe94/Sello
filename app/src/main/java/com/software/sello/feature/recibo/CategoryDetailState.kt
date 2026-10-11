@@ -41,13 +41,15 @@ sealed interface ExpenseListState {
     /**
      * The newest [rows]; with [more] there are older ones not listed yet, so these
      * rows are never the source of a total. [moreFailed] says the last attempt to list
-     * more did not work.
+     * more did not work. With [refreshing] these are the rows listed before the figures
+     * above them changed: they are being read again and may not match those figures yet.
      */
     data class Rows(
         val rows: List<ExpenseRow>,
         val more: Boolean,
         val loadingMore: Boolean = false,
-        val moreFailed: Boolean = false
+        val moreFailed: Boolean = false,
+        val refreshing: Boolean = false
     ) : ExpenseListState
 
     data object Failed : ExpenseListState

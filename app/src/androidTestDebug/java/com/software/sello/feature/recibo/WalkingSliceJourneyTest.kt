@@ -293,6 +293,30 @@ class WalkingSliceJourneyTest {
     }
 
     @Test
+    fun anExpenseSavedWhileALongListIsOpenLeavesTheListAsLongAndWhereItWas() {
+        startWithMercado()
+        repeat(45) { TestCommands.createExpense("Mercado", TestCommands.today, 1_000) }
+        rule.await(saying("Te quedan 255.000 pesos."))
+        openMercado()
+        rule.awaitText("Se muestran 20 de 45")
+        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().performClick()
+        rule.awaitText("Se muestran 40 de 45")
+        // At the foot of the forty, where someone reading down the list would be.
+        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().assertIsDisplayed()
+
+        // 46 expenses of 1.000 and one of 2.500: 47.500 of 300.000.
+        TestCommands.createExpense("Mercado", TestCommands.today, 2_500, "Nuevo")
+
+        rule.awaitText("Se muestran 40 de 46")
+        rule.awaitText("Nuevo")
+        inDetail(CATEGORY_DETAIL_SPENT_TAG, "47.500 pesos").assertExists()
+        assertEquals(40, listed())
+        // The place in the list is kept: a list that had shrunk to its first page on the
+        // way would have left the reader back near the top.
+        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).assertIsDisplayed()
+    }
+
+    @Test
     fun aReadThatFailsIsShownAsAFailureWithOlderFiguresMarkedAndNeverAsAnEmptyMonth() {
         startWithMercado()
         TestCommands.createExpense("Mercado", TestCommands.today, 40_000)

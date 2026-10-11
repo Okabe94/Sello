@@ -363,4 +363,191 @@ class CategoryDetailViewModelTest {
         assertEquals(plain("4.000"), viewModel.ready.category.spent)
         assertEquals(listOf(true, false), viewModel.rows.rows.map { it.notCountedYet })
     }
+
+    /** Ten pages of Alimentación listed out of 230, then one more expense saved. */
+    private fun TestScope.deepListThenASave(
+        hold: CompletableDeferred<Unit>?
+    ): CategoryDetailViewModel {
+        val viewModel = started()
+        commit(many(230))
+        show(viewModel, 1)
+        repeat(9) { viewModel.onAction(CategoryDetailAction.ShowMore) }
+        reads.pages.clear()
+        reads.hold = hold
+        commit(many(230) + storedExpense(900, 1, "2026-10-23", 48_700, "Nuevo"))
+        return viewModel
+    }
+
+    @Test
+    fun whileADeepListIsReadAgainItsOldRowsStayAllThereAndAreMarkedAsBeingRefreshed() = runTest {
+        val hold = CompletableDeferred<Unit>()
+        val viewModel = deepListThenASave(hold)
+
+        val during = viewModel.ready
+        val listed = during.expenses as ExpenseListState.Rows
+
+        // The header is already of the new revision; the rows under it are the old ones.
+        assertEquals(231, during.category.expenseCount)
+        assertEquals(200, listed.rows.size)
+        assertEquals(false, listed.rows.any { it.id == uuid(900) })
+        assertEquals(true, listed.refreshing)
+        assertEquals(false, listed.loadingMore)
+    }
+
+    @Test
+    fun aDeepListIsNeverShorterWhileItIsReadAgainAndEndsWholeAndCurrent() = runTest {
+        val viewModel = started()
+        val sizes = mutableListOf<Int>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.state.collect { state ->
+                val rows = (state as? CategoryDetailState.Ready)?.expenses as? ExpenseListState.Rows
+                if (rows != null) sizes += rows.rows.size
+            }
+        }
+        commit(many(230))
+        show(viewModel, 1)
+        repeat(9) { viewModel.onAction(CategoryDetailAction.ShowMore) }
+        sizes.clear()
+        reads.pages.clear()
+
+        // Every read waits for the test, so each state in between is really published.
+        var hold = CompletableDeferred<Unit>()
+        reads.hold = hold
+        commit(many(230) + storedExpense(900, 1, "2026-10-23", 48_700, "Nuevo"))
+        repeat(12) {
+            val previous = hold
+            hold = CompletableDeferred()
+            reads.hold = hold
+            previous.complete(Unit)
+        }
+        reads.hold = null
+        hold.complete(Unit)
+
+        assertEquals("$sizes", true, sizes.all { it == 200 })
+        val rows = viewModel.rows
+        assertEquals(
+            listOf(200, true, false, false),
+            listOf(rows.rows.size, rows.more, rows.refreshing, rows.loadingMore)
+        )
+        assertEquals(uuid(900), rows.rows.first().id)
+        assertEquals(200, rows.rows.map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun readingADeepListAgainAsksForItInAsFewReadsAsStorageAllows() = runTest {
+        deepListThenASave(hold = null)
+
+        // 200 rows were listed and one read may ask for at most 200.
+        assertEquals(listOf<Pair<ExpenseCursor?, Int>>(null to 200), reads.pages)
+    }
+
+    @Test
+    fun aListLongerThanOneReadMayHoldIsReadAgainInTwo() = runTest {
+        val viewModel = started()
+        commit(many(260))
+        show(viewModel, 1)
+        repeat(11) { viewModel.onAction(CategoryDetailAction.ShowMore) }
+        reads.pages.clear()
+
+        commit(many(260) + storedExpense(900, 1, "2026-10-23", 48_700, "Nuevo"))
+
+        // 240 rows listed: 200, then the 40 after them.
+        assertEquals(listOf(200, 40), reads.pages.map { it.second })
+        assertEquals(null, reads.pages[0].first)
+        assertEquals(240 to true, viewModel.rows.rows.size to viewModel.rows.more)
+        assertEquals(240, viewModel.rows.rows.map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun askingForMoreWhileTheListIsReadAgainAsksNothing() = runTest {
+        val hold = CompletableDeferred<Unit>()
+        val viewModel = deepListThenASave(hold)
+
+        viewModel.onAction(CategoryDetailAction.ShowMore)
+        viewModel.onAction(CategoryDetailAction.ShowMore)
+        hold.complete(Unit)
+
+        assertEquals(200 to true, viewModel.rows.rows.size to viewModel.rows.more)
+        assertEquals(1, reads.pages.size)
+    }
+
+    @Test
+    fun aDeepListThatCannotBeReadAgainIsFailedNotOldRowsAndRetryReadsAllOfItAgain() = runTest {
+        val viewModel = deepListThenASave(hold = null)
+        reads.pages.clear()
+        reads.failure = StorageFailure.Unavailable("SQLiteException")
+
+        commit(
+            many(230) + storedExpense(900, 1, "2026-10-23", 48_700, "Nuevo") +
+                storedExpense(901, 1, "2026-10-23", 1_300, "Otro")
+        )
+        val failed = viewModel.ready
+        reads.failure = null
+        viewModel.onAction(CategoryDetailAction.Retry)
+
+        assertEquals(ExpenseListState.Failed, failed.expenses)
+        assertEquals(232, failed.category.expenseCount)
+        assertEquals(200 to false, viewModel.rows.rows.size to viewModel.rows.refreshing)
+        assertEquals(uuid(901), viewModel.rows.rows.first().id)
+        assertEquals(listOf(200, 200), reads.pages.map { it.second })
+    }
+
+    @Test
+    fun anotherCategoryOpenedWhileAListIsReadAgainNeverShowsThatListsRows() = runTest {
+        val hold = CompletableDeferred<Unit>()
+        val viewModel = started()
+        commit(many(45) + List(3) { storedExpense(500 + it, 2, "2026-10-05", 2_000) })
+        show(viewModel, 1)
+        viewModel.onAction(CategoryDetailAction.ShowMore)
+        reads.hold = hold
+        commit(many(46) + List(3) { storedExpense(500 + it, 2, "2026-10-05", 2_000) })
+
+        show(viewModel, 2)
+        val opening = viewModel.ready
+        hold.complete(Unit)
+
+        assertEquals("Café", opening.category.name)
+        assertEquals(ExpenseListState.Loading, opening.expenses)
+        assertEquals(listOf(uuid(502), uuid(501), uuid(500)), viewModel.rows.rows.map { it.id })
+        assertEquals(false, viewModel.rows.refreshing)
+    }
+
+    @Test
+    fun aSecondSaveWhileTheFirstIsStillBeingListedEndsWithBothAndNothingTwice() = runTest {
+        val hold = CompletableDeferred<Unit>()
+        val viewModel = deepListThenASave(hold)
+        val first = storedExpense(900, 1, "2026-10-23", 48_700, "Nuevo")
+        val second = storedExpense(901, 1, "2026-10-23", 1_300, "Otro")
+
+        commit(many(230) + first + second)
+        hold.complete(Unit)
+
+        assertEquals(232, viewModel.ready.category.expenseCount)
+        assertEquals(listOf(uuid(901), uuid(900)), viewModel.rows.rows.take(2).map { it.id })
+        assertEquals(200 to false, viewModel.rows.rows.size to viewModel.rows.refreshing)
+        assertEquals(200, viewModel.rows.rows.map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun afterTheHistoryIsReplacedNoRowOfTheOldOneIsShownWhileTheNewIsRead() = runTest {
+        val viewModel = started()
+        commit(many(45))
+        show(viewModel, 1)
+        val hold = CompletableDeferred<Unit>()
+        reads.hold = hold
+
+        // What a restore does: the same month and category, another history.
+        val restored = listOf(storedExpense(700, 1, "2026-10-02", 9_000, "Restaurado"))
+        reads.stored.clear()
+        restored.forEach { reads.stored[it.id] = it }
+        snapshots.ready(
+            monthOf("2026-10-23", listOf(food, coffee), restored, october, generation = 2)
+        )
+        val during = viewModel.ready
+        hold.complete(Unit)
+
+        assertEquals(1, during.category.expenseCount)
+        assertEquals(ExpenseListState.Loading, during.expenses)
+        assertEquals(listOf(uuid(700)), viewModel.rows.rows.map { it.id })
+    }
 }

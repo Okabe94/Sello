@@ -3574,7 +3574,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-014, SELLO-017, SELLO-009, SELLO-004
 - **Gate:** G2
 
@@ -3631,6 +3631,48 @@ MVP detail is budget/actuals/history, not all deferred comparison/record charts.
 Create/run `*ReciboRenderModelTest`, `*CategoryDetailViewModelTest` and the device
 WalkingSliceJourneyTest; G2. Save then browse detail/month/history/restart; record
 receipt-to-list-to-total reconciliation and a deliberately injected read-failure state.
+
+### Execution progress
+2026-10-10: started on branch `sello-018-recibo-detail-history` after SELLO-017
+merged. No dependency was added and the schema did not change.
+
+Delivered. `:domain`: `CategoryMonth.expenseCount`, `CategoryOrderPolicy` and a paged
+`ExpenseReads.inCategory`. `:data`: its query and `RoomExpenseReads`. `:app`: the real
+Recibo, the category detail with its expense list, `ReciboRenderModel` shared by
+both, the open category kept in the frame's saved state, and the list/detail layout.
+`:design-system`: the scaffold keeps content clear of a system bar at the side.
+`docs/development/recibo-and-detail.md` states the rules and contracts.
+
+Choices made during the work, for owner review:
+- A finished month over its limit is stamped ""Sobre el límite"", as the stamps table
+  says. The Recibo text of the reference says ""Pasado"" for the same case.
+- The detail is the header, spent, limit and the list. The per-category daily amount,
+  the comparison with last month, the weekly and six-month charts and ""En números""
+  are not there: the snapshot has no such figures and the ticket leaves them out.
+- The list shows 20 expenses at a time with ""Ver más"" and ""Se muestran 20 de 45"",
+  on the same screen. The reference shows four and opens a separate screen with
+  sort and search.
+- An expense without a note is listed as ""Sin nota"" with its day underneath.
+- ""Anotar aquí"" is offered only in the month in progress and for a category that is
+  not archived, because a new expense is dated today.
+- Side by side needs a two-column window at least 600dp wide. A short, narrow
+  window (half a phone's screen) shows one screen at a time, although the layout
+  rules class it as two-column. The entry form still splits in such a window.
+- Beside Recibo, the first category is shown until one is chosen, and Back does
+  what it does on Recibo.
+- Long-press on a category, swiping between months, the gear, and the count-up and
+  stamp motion are absent.
+
+Found on the way: on a phone on its side the second column and the dock ran under
+the system's buttons and cut amounts off. `SelloScaffold` applied side insets to
+the top bar only; it now applies them to the panes and the dock, with a test that
+failed first. Two older journeys asserted the previous Recibo's text and now assert
+the new sentences. The month selection lasts as long as the process, so device
+tests that change it put it back.
+
+Left for later: undo, edit and delete (SELLO-019, SELLO-020); choosing the order
+(SELLO-023); sandbox scenarios (SELLO-024); a screen for a database that cannot be
+opened at start, which still has no ticket.
 
 Shared definition of done and gates:
 
@@ -3699,7 +3741,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1004,Highest,Backlog,sello-018
+",1004,Highest,In Progress,sello-018
 1005,Epic,SELLO-E05 — Complete everyday MVP workflows,"Local ID: SELLO-E05
 Increment: MVP
 Goal: Complete maintainable expense/income history and an honest monthly summary.

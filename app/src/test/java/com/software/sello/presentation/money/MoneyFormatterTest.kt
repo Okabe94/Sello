@@ -62,6 +62,23 @@ class MoneyFormatterTest {
     }
 
     @Test
+    fun theMagnitudeIsTheSameFigureWithoutItsSignEvenForTheLowestAmount() {
+        // Typed by hand.
+        val expected = mapOf(
+            -21_500L to "21.500",
+            21_500L to "21.500",
+            0L to "0",
+            -1L to "1",
+            Long.MIN_VALUE to "9.223.372.036.854.775.808"
+        )
+        for ((pesos, digits) in expected) {
+            val value = formatter.magnitude(Money.cop(pesos))
+            assertEquals(MoneyTextValue(MoneySign.None, "", digits, value.spoken), value)
+            assertEquals("$digits COP${if (digits == "1") "/one" else "/other"}", value.spoken)
+        }
+    }
+
+    @Test
     fun aPlusAppearsOnlyWhenAskedAndNeverOnZero() {
         assertEquals(MoneySign.None, cop(850_000).sign)
         assertEquals(

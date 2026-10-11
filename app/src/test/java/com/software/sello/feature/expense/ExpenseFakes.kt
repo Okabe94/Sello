@@ -24,6 +24,8 @@ import com.software.sello.domain.port.CommittedExpense
 import com.software.sello.domain.port.CreateExpense
 import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
+import com.software.sello.domain.port.ExpenseCursor
+import com.software.sello.domain.port.ExpensePage
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialDay
 import com.software.sello.domain.port.MonthlySnapshots
@@ -165,4 +167,32 @@ class HandExpenseReads : ExpenseReads {
 
     override suspend fun lastUsedCategory(): Outcome<CategoryId?, StorageFailure> =
         failure?.let { Outcome.Failure(it) } ?: Outcome.Success(lastUsed)
+
+    /** Every page asked for, as (cursor, limit). */
+    val pages = mutableListOf<Pair<ExpenseCursor?, Int>>()
+
+    /** Lets a test keep a page read waiting. */
+    var hold: CompletableDeferred<Unit>? = null
+
+    override suspend fun inCategory(
+        categoryId: CategoryId,
+        month: YearMonth,
+        after: ExpenseCursor?,
+        limit: Int
+    ): Outcome<ExpensePage, StorageFailure> {
+        pages += after to limit
+        hold?.await()
+        failure?.let { return Outcome.Failure(it) }
+        val newestFirst = stored.values
+            .filter { it.categoryId == categoryId && YearMonth.from(it.date) == month }
+            .sortedWith(compareByDescending<Expense> { it.date }.thenByDescending { it.sequence })
+            .filter {
+                after == null || it.date < after.date ||
+                    (it.date == after.date && it.sequence < after.sequence)
+            }
+        val page = newestFirst.take(limit)
+        val next = page.lastOrNull()?.takeIf { newestFirst.size > limit }
+            ?.let { ExpenseCursor(it.date, it.sequence) }
+        return Outcome.Success(ExpensePage(page, next))
+    }
 }

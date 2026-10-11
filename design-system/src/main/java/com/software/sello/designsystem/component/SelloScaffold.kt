@@ -108,10 +108,15 @@ fun SelloScaffold(
                         )
                 )
             }
-            // Beside a rail, the rail already keeps the leading edge clear.
-            val topBarSides = WindowInsetsSides.Top +
-                if (rail) WindowInsetsSides.End else WindowInsetsSides.Horizontal
-            Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+            // A system bar or cutout at the side covers nothing: not the top bar, the
+            // panes or the dock. Beside a rail, the rail already keeps the leading edge clear.
+            val sides = if (rail) WindowInsetsSides.End else WindowInsetsSides.Horizontal
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .windowInsetsPadding(windowInsets.only(sides))
+            ) {
                 CompositionLocalProvider(
                     LocalContentColor provides if (onBand) colors.onBand else colors.ink
                 ) {
@@ -121,7 +126,8 @@ fun SelloScaffold(
                         titleContent = titleContent,
                         navigationIcon = navigationIcon,
                         actions = actions,
-                        modifier = Modifier.windowInsetsPadding(windowInsets.only(topBarSides))
+                        modifier = Modifier
+                            .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
                     )
                 }
                 // Without bottom controls the content itself must clear the system bar.

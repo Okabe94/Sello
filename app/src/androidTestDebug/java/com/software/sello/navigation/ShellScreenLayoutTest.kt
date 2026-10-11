@@ -77,11 +77,92 @@ class ShellScreenLayoutTest {
         }
     }
 
+    /** Set by a test that gives the frame a detail, and that opens it. */
+    private var withDetail = false
+    private var opened: String? = null
+
     @Composable
     private fun Frame(pickerOpen: Boolean) {
-        ShellScreen(stateWith(pickerOpen), monthNames(), { actions += it }) { padding ->
+        val detail = ShellDetail("Alimentación") { padding ->
+            Text("detalle", Modifier.padding(padding).testTag("detail"))
+        }
+        ShellScreen(
+            stateWith(pickerOpen).copy(detailCategoryId = opened),
+            monthNames(),
+            { actions += it },
+            detail = detail.takeIf { withDetail }
+        ) { padding ->
             Text("contenido", Modifier.padding(padding).testTag("content"))
         }
+    }
+
+    @Test
+    fun onAPhoneAnOpenedDetailTakesTheScreenUnderItsOwnTitleWithAWayBack() {
+        withDetail = true
+        opened = "a"
+        showOnThisScreen(pickerOpen = false)
+
+        rule.onNodeWithTag("detail").assertIsDisplayed()
+        rule.onNodeWithTag("content").assertDoesNotExist()
+        rule.onNodeWithText("Alimentación").assertIsDisplayed()
+        rule.onNodeWithText("Agosto 2026").assertIsDisplayed()
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertDoesNotExist()
+        rule.onNodeWithContentDescription("Anotar un gasto").performClick()
+        rule.onNodeWithContentDescription("Volver al recibo").performClick()
+
+        assertEquals(
+            listOf(ShellAction.StartEntryIn("a"), ShellAction.CloseCategory),
+            actions
+        )
+    }
+
+    @Test
+    fun onAPhoneADetailThatWasNotOpenedIsNotShown() {
+        withDetail = true
+        showOnThisScreen(pickerOpen = false)
+
+        rule.onNodeWithTag("content").assertIsDisplayed()
+        rule.onNodeWithTag("detail").assertDoesNotExist()
+        rule.onNodeWithTag(DETAIL_BACK_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun withRoomForTwoColumnsTheDetailIsBesideTheContentOpenedOrNot() {
+        withDetail = true
+        showInWindow(900, 700, pickerOpen = false)
+
+        val content = rule.onNodeWithTag("content").assertExists().getUnclippedBoundsInRoot()
+        val detail = rule.onNodeWithTag("detail").assertExists().getUnclippedBoundsInRoot()
+
+        assertTrue("content $content, detail $detail", content.right <= detail.left)
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertExists()
+        rule.onNodeWithTag(DETAIL_BACK_TAG).assertDoesNotExist()
+        rule.onNodeWithContentDescription("Anotar un gasto")
+            .performSemanticsAction(SemanticsActions.OnClick)
+        assertEquals(listOf<ShellAction>(ShellAction.StartEntry), actions)
+    }
+
+    @Test
+    fun inAShortLandscapeWindowAnOpenedDetailIsBesideTheContentToo() {
+        withDetail = true
+        opened = "a"
+        showInWindow(760, 400, pickerOpen = false)
+
+        val content = rule.onNodeWithTag("content").assertExists().getUnclippedBoundsInRoot()
+        val detail = rule.onNodeWithTag("detail").assertExists().getUnclippedBoundsInRoot()
+
+        assertTrue("content $content, detail $detail", content.right <= detail.left)
+        rule.onNodeWithTag(DETAIL_BACK_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun inAnExpandedWindowTheMonthPanelTakesTheDetailsPlaceWhileItIsOpen() {
+        withDetail = true
+        showInWindow(900, 700, pickerOpen = true)
+
+        rule.onNodeWithTag(MONTH_PICKER_TAG).assertExists()
+        rule.onNodeWithTag("content").assertExists()
+        rule.onNodeWithTag("detail").assertDoesNotExist()
     }
 
     @Test

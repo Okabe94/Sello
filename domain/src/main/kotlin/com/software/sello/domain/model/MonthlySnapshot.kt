@@ -72,12 +72,14 @@ sealed interface OverallBudget {
 /**
  * One category in the month. [budget] is present only when the category has a finite
  * limit that month; its spending counts towards the month's total either way.
+ * [expenseCount] is how many expenses make up [spent].
  */
 data class CategoryMonth(
     val category: Category,
     val state: MonthBudgetState,
     val spent: Money,
-    val budget: LimitedBudget?
+    val budget: LimitedBudget?,
+    val expenseCount: Int
 )
 
 /**

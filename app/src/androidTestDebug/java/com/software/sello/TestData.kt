@@ -31,6 +31,9 @@ object TestData {
         }
     }
 
+    /** Changes rows behind the app's back, to damage or repair what it will read. */
+    fun execute(sql: String) = database(SQLiteDatabase.OPEN_READWRITE) { it.execSQL(sql) }
+
     fun count(table: String): Long = long("SELECT COUNT(*) FROM $table")
 
     fun financialRows(): Long = tables.sumOf(::count)

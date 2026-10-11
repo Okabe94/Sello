@@ -2,19 +2,56 @@ package com.software.sello.data.repository
 
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.entity.ExpenseEntity
+import com.software.sello.data.mapper.decodeAll
 import com.software.sello.data.mapper.toDomain
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.port.ExpenseCursor
+import com.software.sello.domain.port.ExpensePage
 import com.software.sello.domain.port.ExpenseReads
+import java.time.YearMonth
 
 class RoomExpenseReads(private val database: SelloDatabase) : ExpenseReads {
+    private companion object {
+        const val MAX_PAGE = 200
+    }
+
     override suspend fun byId(id: ExpenseId): Outcome<Expense?, StorageFailure> = reading {
         when (val row = database.expenseDao().byId(id.value)) {
             null -> Outcome.Success(null)
             else -> row.toDomain()
+        }
+    }
+
+    override suspend fun inCategory(
+        categoryId: CategoryId,
+        month: YearMonth,
+        after: ExpenseCursor?,
+        limit: Int
+    ): Outcome<ExpensePage, StorageFailure> = reading {
+        require(limit in 1..MAX_PAGE) { "a page holds 1 to $MAX_PAGE expenses" }
+        val until = month.plusMonths(1).atDay(1).toString()
+        // One more than asked for, only to learn whether another page exists.
+        val rows = database.expenseDao().newestInCategory(
+            categoryId = categoryId.value,
+            from = month.atDay(1).toString(),
+            until = until,
+            beforeDate = after?.date?.toString() ?: until,
+            beforeSequence = after?.sequence ?: Long.MAX_VALUE,
+            limit = limit + 1
+        )
+        when (val expenses = rows.take(limit).decodeAll { it.toDomain() }) {
+            is Outcome.Failure -> expenses
+
+            is Outcome.Success -> {
+                val last = expenses.value.lastOrNull()
+                val next = last?.takeIf { rows.size > limit }
+                    ?.let { ExpenseCursor(it.date, it.sequence) }
+                Outcome.Success(ExpensePage(expenses.value, next))
+            }
         }
     }
 

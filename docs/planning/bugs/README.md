@@ -13,9 +13,10 @@ The epic orders them by severity/exposure, not the technical report's confidence
 - [Technical assessment](../technical/ASSESSMENT-2026-10-11.md), prepared against
   `7f5c7ca` after SELLO-018 was recorded Done.
 - [Development handoff](../../development/HANDOFF.md).
-- [Exploration evidence](evidence/20261010/): 81 retained files, approximately
-  6.7 MiB, including PNG/XML, MP4, host-test output, manifests and synthetic database
-  snapshots. Relative evidence filenames in the revised report resolve here.
+- [Exploration evidence](evidence/20261010/): 67 retained files, approximately
+  5.8 MiB, including PNG/XML, MP4, host-test output, manifests and a synthetic database
+  snapshot. Retained relative evidence filenames in the revised report resolve here;
+  omitted historical artifacts are documented below.
 
 Reports and retained evidence were copied byte-for-byte; the originals under
 `/home/okabe94` remain untouched. Archive-scoped Git attributes disable line-ending
@@ -28,18 +29,42 @@ unchanged, including its distinction between executed probes and unmeasured risk
 
 ## Evidence retention decision
 
-On 2026-10-11 the owner approved a conservative trim: remove only the 200 extracted
-PNGs in `navigation-frames/` (26 unique images, approximately 8.33 MiB). The original
-`08-navigation.mp4`, both navigation contact sheets and `08-detail-entry-frames.png`
+On 2026-10-11 the owner approved trimming redundant extracted PNGs and then asked
+to retain the specific frames cited by SELLO-057. Of the 200 extracted PNGs in
+`navigation-frames/` (26 unique images), frames 46–50 are retained for direct
+inspection; the other 195 are omitted (approximately 8.08 MiB). The original
+`08-navigation.mp4`, `08-detail-entry-frames.png` and the five cited individual PNGs
 remain, preserving the temporal recording and convenient loading-title comparisons.
 The complete source archive under `/home/okabe94/bugs_revision_evidence/20261010/`
 is untouched. Archived reports describe the original capture, not this curated count.
 
-No other evidence was removed: primary and preliminary screenshots/XML, all three
-videos, restoration records, build/test logs, source manifests/status snapshots,
-historical patch and both synthetic database snapshots with their WAL/SHM files
-remain. This reduces checkout evidence size by approximately 55% without dropping
-any reported bug's primary recording, hierarchy or persisted-state evidence.
+The owner also approved omitting these 19 artifacts after a ticket-by-ticket audit:
+
+- Six preliminary PNG/XML captures numbered `00`–`02`, from the interrupted run,
+  not the primary reproduction baseline.
+- `17-restored-draft.png/.xml`, byte-identical to `16-old-key-position.png/.xml`;
+  retain `17-process-restoration.txt` to document that this was not process death.
+- `08-navigation-header-contact-sheet.png`, an uncited navigation overview that
+  does not show the title flash; the defect-focused composite and videos remain.
+- `draft-validation.txt` and `draft-validation-bug-ids.txt`, obsolete draft-only
+  checks superseded by canonical board validation, not financial acceptance.
+- `emulator.log`, `emulator-restart.log` and `avd-home.txt`, startup diagnostics and
+  a temporary path; device configuration and cleanup confirmation remain.
+- `git-status-final.txt` and `source-manifest-final.sha256`, third byte-identical
+  copies; both before/after pairs remain directly inspectable.
+- The three-file `db-after-one-expense/` bundle. Isolated-copy SQLite checks proved
+  integrity and that `db-final` retains every earlier category, limit, expense and
+  receipt row unchanged, plus the later expense. The complete final DB/WAL/SHM
+  bundle remains, with exactly 1 and 12,500 COP expenses and a 400,000 COP limit.
+
+All primary bug screenshot/XML pairs, all three videos, cited frames 46–50, verified
+process-death restoration, large-font/invalid-input/duplicate-submit baseline evidence,
+build/test output, APK/environment metadata, before/after source manifests/status,
+historical patch and final persisted-state evidence remain. The additional audit
+trim saves approximately 1.14 MiB without dropping a ticket's primary defect evidence.
+Current artifacts establish the historical baseline, not completed fixes: each ticket
+still needs fresh red→green tests, its retained G2 report and specified device/manual
+acceptance. Neither archival reduction nor passing planning tests replaces those gates.
 
 ## Registration and safety
 

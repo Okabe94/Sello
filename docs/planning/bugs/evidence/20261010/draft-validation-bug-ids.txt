@@ -1,8 +1,0 @@
-SELLO-BUG-001 draft ID/references/structure/metadata/dependencies OK
-SELLO-BUG-002 draft ID/references/structure/metadata/dependencies OK
-SELLO-BUG-003 draft ID/references/structure/metadata/dependencies OK
-SELLO-BUG-004 draft ID/references/structure/metadata/dependencies OK
-SELLO-BUG-005 draft ID/references/structure/metadata/dependencies OK
-SELLO-BUG-006 draft ID/references/structure/metadata/dependencies OK
-SELLO-BUG-007 draft ID/references/structure/metadata/dependencies OK
-Draft-only validation passed; native board/quality-tool support for SELLO-BUG IDs is not implemented or claimed.

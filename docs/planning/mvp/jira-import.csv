@@ -8087,6 +8087,13 @@ Selection-aware title presentation and focused asynchronous-load/navigation regr
 ### Reproduction and evidence
 On baseline Recibo, tap Exploracion. `08-navigation.mp4` and `08-detail-entry-frames.png` show Categoría during loading, followed by Exploracion. The contact sheet includes resampled frames 46–49 with the fallback, before frame 50 shows the name; sampling is not a frame-perfect duration measurement.
 
+The individually cited sampled frames are also retained for direct inspection:
+[46](../../bugs/evidence/20261010/navigation-frames/frame-046.png),
+[47](../../bugs/evidence/20261010/navigation-frames/frame-047.png),
+[48](../../bugs/evidence/20261010/navigation-frames/frame-048.png),
+[49](../../bugs/evidence/20261010/navigation-frames/frame-049.png), and
+[50](../../bugs/evidence/20261010/navigation-frames/frame-050.png).
+
 Expected: stable selected-category identity, or a neutral loading treatment when identity is genuinely unavailable; no wrong-category title.
 
 ### Acceptance criteria

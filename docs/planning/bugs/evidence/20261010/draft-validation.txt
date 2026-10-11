@@ -1,8 +1,0 @@
-SELLO-045 structure/metadata/dependencies OK
-SELLO-046 structure/metadata/dependencies OK
-SELLO-047 structure/metadata/dependencies OK
-SELLO-048 structure/metadata/dependencies OK
-SELLO-049 structure/metadata/dependencies OK
-SELLO-050 structure/metadata/dependencies OK
-SELLO-051 structure/metadata/dependencies OK
-Seven drafts validated against current required sections and type/status/priority/gate/dependency conventions. No canonical board registration performed.

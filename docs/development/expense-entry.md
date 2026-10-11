@@ -28,8 +28,9 @@ what storage confirmed.
 | Date | The financial day the form was opened; it stays that day if the draft is restored later. Any earlier day can be picked; a later one cannot |
 | Note | Optional, up to 60 characters, one line. Blank means no note |
 
-The button is off until there is an amount, a category and a valid note, and a line
-above it says which is missing. It is read aloud as the whole sentence: "Anotar
+The button is off until there is an amount, a category and a valid note. A missing
+category or a note to correct is said in a line above the keypad; a missing amount
+is not, because the slip already shows "Sin monto". The button is read aloud as the whole sentence: "Anotar
 gasto de 48.700 pesos en Alimentación".
 
 ## The preview
@@ -74,6 +75,15 @@ One column on a phone: the slip, category, date and note scroll; the keypad and 
 button stay in view at the bottom. While the system keyboard is up for the note the
 keypad steps aside. Sideways or wide, the slip is at the left and the keypad and
 button at the right.
+
+**No key moves.** The keypad and the button are held from the bottom of their
+column, 16dp apart (`spacing.lg`), and everything the form says (what is missing,
+why a save failed) is laid out above the keypad and outside its scroll. A message
+appearing or going therefore changes the space above the keys, never where a key
+is. Do not put anything whose height changes between the keypad and the button, or
+below them. Two limits: in a window too short for the message and the keys together
+the top row is partly covered while the message shows, and at twice the font size
+the two-line "Comprobar si se guardó" button lifts the keys, which are off then.
 
 Back with an amount or a note typed asks "¿Descartar este gasto?". On the receipt
 it simply leaves. While saving it does nothing.

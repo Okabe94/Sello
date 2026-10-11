@@ -184,7 +184,6 @@
     <string name="expense_entry_amount_not_amount">Eso no es un monto. Escribe solo el número, por ejemplo 48700 o 48.700.</string>
     <string name="expense_entry_amount_zero">El monto debe ser mayor que cero.</string>
     <string name="expense_entry_amount_too_large">El monto es mayor que el máximo de 999.999.999.999 pesos.</string>
-    <string name="expense_entry_missing_amount">Escribe un monto.</string>
     <string name="expense_entry_missing_category">Elige una categoría.</string>
     <string name="expense_entry_missing_note">Corrige la nota.</string>
     <string name="expense_entry_submit">Anotar gasto</string>

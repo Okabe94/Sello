@@ -206,7 +206,7 @@ opening storage off the main thread once a slow migration can be measured.
 - **Source classification:** Task
 - **Classification:** Bug + related submission-separation UX risk; original reports 5 and 7
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-017, SELLO-008, SELLO-009, SELLO-004
 - **Gate:** G2
 - **Decision needed:** approve increased keypad-to-submit separation using existing Sello spacing tokens
@@ -256,6 +256,38 @@ Increasing the gap alone does not fix the 65px movement. Conversely, merely remo
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-046 --retain` for the final G2 gate.
 Focused entry state tests and connected geometry/intent assertions first; run the original coordinate sequence and empty/valid/clear/error cases at agreed configurations; reconcile one real save to stored expense/receipt; G2 with retained report and before/after captures.
+
+### Execution progress
+2026-10-11: started on branch `sello-046-keypad-geometry-submit-separation` after
+SELLO-045 merged. The claim was verified first on the API 30 emulator: after the
+first digit every key dropped 65 px, and 1 followed by a tap on the upper part of
+where 7 had been gave 14. The keypad ended 22 px (8dp) above the button. Nothing was
+saved.
+
+Owner decisions taken before the fix (2026-10-11): work on it; **16dp**
+(`spacing.lg`) between the keypad and the button, which is the decision this ticket
+needed; and what the form says goes **above the keypad** instead of in a reserved
+area between the keypad and the button.
+
+Delivered, in `ExpenseEntryScreen` only. What is missing or went wrong is laid out
+above the keypad and outside its scroll; the keypad and the button are one group,
+16dp apart, held from the bottom in both layouts. "Escribe un monto." is gone, as
+the acceptance asks; the slip still says "Sin monto" and the button stays off. No
+view model, command, design-system component or string other than that one changed,
+so the catalog is unchanged.
+
+Choices made during the work, for owner review:
+- Sideways or wide, the keypad and button now sit at the bottom of the right column
+  and messages at its top. Before, they started at the top and a message pushed the
+  button down.
+- In a window too short for a message and the keys together (360dp high, sideways),
+  the top row of keys is partly covered while the message shows; the keys do not move.
+- At twice the font size "Comprobar si se guardó" takes two lines and lifts the
+  keys by the extra line. The keys are off in that state.
+- A failed save's message is now always in view; before it could need scrolling.
+
+Not done: no confirmation step and no change to what Enter does, as the acceptance
+says. The system-keyboard case (keypad steps aside for the note) was not changed.
 
 ## SELLO-047 — Reject effective dates that the storage codec cannot read
 

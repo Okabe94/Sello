@@ -2,6 +2,7 @@ package com.software.sello.feature.expense
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
@@ -125,7 +127,7 @@ fun ExpenseEntryScreen(
                 }
             },
             secondaryPane = if (split) {
-                { padding -> Pane(padding) { Controls(state, onAction) } }
+                { padding -> ControlsPane(state, onAction, padding) }
             } else {
                 null
             }
@@ -198,15 +200,41 @@ private fun Stacked(
             verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
         ) { Draft(state, dates, onAction) }
+        // Above the keys, never between them and the button: the keys are held from
+        // the bottom, so what is said here comes and goes without moving one of them.
+        Said(state)
         // Scrolls on its own only when a very large font makes it taller than its share.
         Column(
-            verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm),
             modifier = Modifier
                 .heightIn(max = pinnedMax)
                 .verticalScroll(rememberScrollState())
                 .padding(top = SelloTheme.spacing.sm)
                 .testTag(ENTRY_PINNED_TAG)
-        ) { Controls(state, onAction, keypad = !keyboardOpen) }
+        ) { Keys(state, onAction, keypad = !keyboardOpen) }
+    }
+}
+
+/**
+ * The right-hand column of a sideways or wide window. What is said sits at the top
+ * and the keys are held from the bottom, as in one column, so nothing said moves a
+ * key or the button. If the keys do not fit they scroll from the bottom for the same
+ * reason.
+ */
+@Composable
+private fun ControlsPane(
+    state: ExpenseEntryState,
+    onAction: (ExpenseEntryAction) -> Unit,
+    padding: PaddingValues
+) {
+    Column(modifier = Modifier.fillMaxSize().padding(padding).imePadding()) {
+        Said(state)
+        Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState(), reverseScrolling = true)
+                    .padding(top = SelloTheme.spacing.sm)
+            ) { Keys(state, onAction) }
+        }
     }
 }
 
@@ -300,64 +328,76 @@ private fun Draft(
     )
 }
 
-/** The keypad, what is missing or went wrong, and the one button. */
+/**
+ * What is missing or went wrong. A missing amount is not said here: the slip already
+ * shows "Sin monto" and the button is off.
+ */
 @Composable
-private fun Controls(
+private fun Said(state: ExpenseEntryState) {
+    val top = Modifier.padding(top = SelloTheme.spacing.sm)
+    state.error?.let { error ->
+        FieldMessageText(
+            FieldMessage(stringResource(error.text())),
+            top.testTag(ENTRY_ERROR_TAG)
+        )
+    }
+    val missing = state.missing?.text()
+    if (missing != null && !state.busy && state.error != EntryError.Unknown) {
+        FieldMessageText(
+            FieldMessage(stringResource(missing), isError = false),
+            top.testTag(ENTRY_MISSING_TAG)
+        )
+    }
+}
+
+/** The keypad and the one button, always the same distance apart. */
+@Composable
+private fun Keys(
     state: ExpenseEntryState,
     onAction: (ExpenseEntryAction) -> Unit,
     keypad: Boolean = true
 ) {
-    if (keypad) {
-        AmountKeypad(
-            onDigit = { onAction(ExpenseEntryAction.Digit(it)) },
-            onTripleZero = { onAction(ExpenseEntryAction.TripleZero) },
-            onBackspace = { onAction(ExpenseEntryAction.Backspace) },
-            onClearAll = { onAction(ExpenseEntryAction.ClearAmount) },
-            modifier = Modifier.testTag(ENTRY_KEYPAD_TAG),
-            enabled = state.editable
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.lg)) {
+        if (keypad) {
+            AmountKeypad(
+                onDigit = { onAction(ExpenseEntryAction.Digit(it)) },
+                onTripleZero = { onAction(ExpenseEntryAction.TripleZero) },
+                onBackspace = { onAction(ExpenseEntryAction.Backspace) },
+                onClearAll = { onAction(ExpenseEntryAction.ClearAmount) },
+                modifier = Modifier.testTag(ENTRY_KEYPAD_TAG),
+                enabled = state.editable
+            )
+        }
+        if (state.error == EntryError.Unknown) {
+            SelloButton(
+                text = stringResource(R.string.expense_entry_check_again),
+                onClick = { onAction(ExpenseEntryAction.Retry) },
+                modifier = Modifier.fillMaxWidth().testTag(ENTRY_SUBMIT_TAG),
+                loading = state.busy
+            )
+        } else {
+            // Read aloud as the whole sentence, so it is clear what will be recorded and where.
+            val sentence = if (state.amount != null && state.category != null) {
+                stringResource(
+                    R.string.expense_entry_submit_description,
+                    state.amount.spoken,
+                    state.category!!.name
+                )
+            } else {
+                stringResource(R.string.expense_entry_submit)
+            }
+            SelloButton(
+                text = stringResource(R.string.expense_entry_submit),
+                onClick = { onAction(ExpenseEntryAction.Submit) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(ENTRY_SUBMIT_TAG)
+                    .semantics { contentDescription = sentence },
+                enabled = state.canSubmit,
+                loading = state.busy
+            )
+        }
     }
-    state.error?.let { error ->
-        FieldMessageText(
-            FieldMessage(stringResource(error.text())),
-            Modifier.testTag(ENTRY_ERROR_TAG)
-        )
-    }
-    if (state.error == EntryError.Unknown) {
-        SelloButton(
-            text = stringResource(R.string.expense_entry_check_again),
-            onClick = { onAction(ExpenseEntryAction.Retry) },
-            modifier = Modifier.fillMaxWidth().testTag(ENTRY_SUBMIT_TAG),
-            loading = state.busy
-        )
-        return
-    }
-    if (state.missing != null && !state.busy) {
-        FieldMessageText(
-            FieldMessage(stringResource(state.missing.text()), isError = false),
-            Modifier.testTag(ENTRY_MISSING_TAG)
-        )
-    }
-    // Read aloud as the whole sentence, so it is clear what will be recorded and where.
-    val sentence = if (state.amount != null && state.category != null) {
-        stringResource(
-            R.string.expense_entry_submit_description,
-            state.amount.spoken,
-            state.category!!.name
-        )
-    } else {
-        stringResource(R.string.expense_entry_submit)
-    }
-    SelloButton(
-        text = stringResource(R.string.expense_entry_submit),
-        onClick = { onAction(ExpenseEntryAction.Submit) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(ENTRY_SUBMIT_TAG)
-            .semantics { contentDescription = sentence },
-        enabled = state.canSubmit,
-        loading = state.busy
-    )
 }
 
 @Composable
@@ -491,8 +531,8 @@ private fun NoteProblem.text() = when (this) {
     NoteProblem.NotAllowed -> R.string.expense_entry_note_not_allowed
 }
 
-private fun Missing.text() = when (this) {
-    Missing.Amount -> R.string.expense_entry_missing_amount
+private fun Missing.text(): Int? = when (this) {
+    Missing.Amount -> null
     Missing.Category -> R.string.expense_entry_missing_category
     Missing.Note -> R.string.expense_entry_missing_note
 }

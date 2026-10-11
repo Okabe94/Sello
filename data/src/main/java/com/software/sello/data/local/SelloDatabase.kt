@@ -51,6 +51,9 @@ abstract class SelloDatabase : RoomDatabase() {
 
     companion object {
         const val FILE_NAME = "sello.db"
+
+        /** Where a file that could not be opened is kept when the person starts again. */
+        const val SET_ASIDE_FILE_NAME = "sello-unreadable.db"
     }
 }
 

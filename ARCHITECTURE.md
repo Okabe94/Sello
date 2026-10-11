@@ -200,6 +200,10 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 - **MUST** fence reset/restore against stale commands/jobs with a persisted
   generation. Recovery receipts survive the replacement they describe. Reset
   requires counts, then a second confirmation typing **BORRAR**.
+- **MUST** show data that cannot be opened at start as a failed start with retry,
+  never a crash, an empty history or the device zone in its place. Starting over
+  from that screen needs the typed **BORRAR** and sets the unreadable file aside
+  instead of deleting it; see [ADR 0008](docs/decisions/0008-unreadable-storage-start-over.md).
 - **COULD** add durable pending follow-up records only for actual consumers;
   financial receipts are required now, a generic outbox is not.
 

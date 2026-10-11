@@ -31,6 +31,7 @@ import com.software.sello.feature.recibo.CATEGORY_DETAIL_HEADER_TAG
 import com.software.sello.feature.recibo.CATEGORY_DETAIL_TAG
 import com.software.sello.feature.recibo.RECIBO_SUMMARY_TAG
 import com.software.sello.feature.recibo.reciboCategoryTag
+import com.software.sello.readyViewModels
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -65,7 +66,7 @@ class ReciboListDetailWideTest {
 
     @Test
     fun reciboAndACategorysDetailAreSideBySideAndChoosingAnotherChangesOnlyTheDetail() {
-        val viewModels = (rule.activity.application as SelloApplication).viewModels
+        val viewModels = (rule.activity.application as SelloApplication).readyViewModels()
         rule.setContent {
             CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
                 SelloTheme(reducedMotion = true) {

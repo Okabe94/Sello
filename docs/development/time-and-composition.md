@@ -59,6 +59,24 @@ that reports success.
 `app/src/debug/.../devtools` and are absent from release builds. The debug app
 still runs on production time; SELLO-024 adds the sandbox entry point.
 
+## When the data cannot be opened
+
+`SelloApplication` holds one `Startup`. It opens storage and builds the graph once,
+on the main thread, and keeps the result as `StartupState`: `Ready` with the view
+model factory, or `Failed` with the storage failure. `MainActivity` shows the app
+only when `Ready`; when `Failed` it shows `feature/startup`, whose view model is the
+one built without the graph. A link that arrives while failed is dropped.
+
+- `retry()` opens again only while failed, so a second store is never opened beside
+  one in use. A retry that works replaces the failure screen with the app.
+- `setAside()` moves the unreadable file away and is refused once the data opened.
+  After it, `MainActivity` opens again and shows the app in a new task, so nothing
+  saved by the old screens is restored onto the empty history.
+- Koin is started only inside a successful open, so there is never a graph without
+  a stored financial zone.
+
+Startup is deliberately synchronous ([ADR 0008](../decisions/0008-unreadable-storage-start-over.md)).
+
 ## Not here yet
 
 Preference contracts: none is defined because nothing consumes one before

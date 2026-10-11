@@ -214,6 +214,11 @@ approved D09 and [recovery cases](../DECISION_INPUTS.md#recovery-cases-to-turn-i
   pending settings visible; reopening/retry must not replace financial data again.
 - Cancel after Room commit: durable operation lookup recovers truth. Old generation
   submit/undo cannot cross replacement, even if restored record IDs resemble prior ones.
+- Owner request, 2026-10-11 (SELLO-045, [ADR 0008](../../../decisions/0008-unreadable-storage-start-over.md)):
+  restore from a backup must be reachable from the screen shown when the data cannot
+  be opened at start, where no financial graph exists; a restore offered only inside
+  the working app is unreachable exactly then. Decide here whether the file kept
+  aside as `sello-unreadable.db` can be recovered or only replaced.
 
 ### Verification recipe
 Create/run RestoreCommandContractTest on real Room, `*RestoreRecoveryViewModelTest`
@@ -284,6 +289,9 @@ payload. Read [settings reset](../../../design/sello-spec.html#s-config), archit
   cannot contain the entire “deleted” dataset as a hidden tombstone archive.
 - Keep an external backup file intact and demonstrate deliberate new restore still
   works; reset must not pretend that external plaintext copies were erased.
+- A start over after unreadable data (SELLO-045, [ADR 0008](../../../decisions/0008-unreadable-storage-start-over.md))
+  leaves `sello-unreadable.db` and its companion files in private storage. Reset must
+  erase them too: a kept copy that survives reset is the hidden archive ruled out above.
 
 ### Verification recipe
 Create/run ResetGenerationContractTest, `*ResetViewModelTest` and ResetReuseJourneyTest;
@@ -353,6 +361,9 @@ approved D08/D09 and official backup/documents sources in the executor guide.
   opening a system document does not justify broad filesystem access.
 - Old staging cleanup must not delete unrelated external user documents or another
   sandbox/profile's pending recovery file.
+- `sello-unreadable.db` (SELLO-045, [ADR 0008](../../../decisions/0008-unreadable-storage-start-over.md))
+  is private plaintext financial data: verify it is never shared, backed up by the
+  system or left behind by reset.
 
 ### Verification recipe
 Create/run ManifestPrivacyTest, FileBoundaryTest and DebugReleaseIsolationTest;

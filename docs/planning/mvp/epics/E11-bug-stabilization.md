@@ -1,6 +1,6 @@
 # SELLO-E11 — First-slice bug stabilization
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Increment:** MVP
 - **Goal:** Address the collected first-slice correctness, availability, accessibility and measured scaling findings without weakening financial contracts.
 - **Exit:** All adopted children have meaningful red→green coverage, their own fresh retained G2 evidence and designated review; deferred or rejected proposals require an explicit owner decision rather than silent acceptance changes.
@@ -68,7 +68,7 @@ the existing SELLO-### runner grammar; original draft IDs remain aliases below.
 - **Type:** Task
 - **Source classification:** Bug
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Confidence:** 99%, conditional on profile establishment returning a failure.
 - **Depends on:** SELLO-004, SELLO-011, SELLO-015, SELLO-018
 - **Gate:** G2
@@ -143,6 +143,62 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-045 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-11: started on branch `sello-045-startup-failure-recovery`. The claim was
+verified first on the API 30 emulator: with `sello.db` replaced by text the debug
+app died in `SelloApplication.onCreate` with `FinancialStorageUnavailable`, on
+every launch, and the file was left byte for byte as it was.
+
+Owner decisions taken before the fix, recorded in
+[ADR 0008](../../../decisions/0008-unreadable-storage-start-over.md):
+- **Startup stays synchronous.** The Deliverables ask for asynchronous
+  initialization with an initializing state. The owner chose the smaller fix: the
+  failure becomes a state and a screen, and the open is not moved off the main
+  thread, because that wait is unmeasured. The acceptance criteria are unchanged and
+  are met without it; the "initializing" presentation is not delivered.
+- **Empezar de cero was added.** The owner did not want a person left on a screen
+  whose only button may never work. It sets the unreadable file aside (kept as
+  `sello-unreadable.db`, not deleted) after a warning and the typed word BORRAR.
+- **Restore from a backup on this screen** is left to SELLO-030, which now says so;
+  SELLO-031 and SELLO-032 carry the matching notes about the kept copy.
+
+Delivered. `:data`: `setAsideFinancialStorage`. `:app`: `Startup` and
+`StartupState` in composition, `openStorage` returning a typed result instead of
+throwing, `feature/startup` (state, view model, screen), and `MainActivity` showing
+the app only on data that opened. No dependency, permission or schema changed, and
+no design-system component was added or changed, so the catalog is unchanged.
+
+Choices made during the work, for owner review:
+- The Spanish wording is mine: "No pudimos abrir tus datos", "Sello no pudo leer lo
+  que tienes guardado. No se borró nada.", "Intentar de nuevo", "Empezar de cero",
+  and a warning that says the data is kept aside on the device but cannot be
+  recovered by Sello yet, with a hint to install the newest version first.
+- One message for every cause; the screen does not say "damaged".
+- The word is accepted with spaces around it and only in capitals.
+- Back closes the warning; with no warning open it leaves the app.
+- A link that opens the app while the data cannot be opened is dropped.
+- After starting from zero the app opens in a new task, so no old selection or
+  draft is restored onto the empty history.
+
+Found on the way: with the keyboard open the word field and its buttons were hidden
+behind it. The scaffold's padding already includes the keyboard, so it has to be
+applied outside the scroll; adding `imePadding` as well doubled it. Fixed on this
+screen and checked by hand. The category editor and the wide expense form apply the
+same two paddings inside their scroll and were not touched.
+
+Left for later: restore from this screen and recovery of the kept copy (SELLO-030),
+erasing it on reset (SELLO-031), a typed cause so the message can differ, and
+opening storage off the main thread once a slow migration can be measured.
+
+### Delivery evidence
+- **Revision:** branch `sello-045-startup-failure-recovery`; tested snapshot is commit `c2a92d0`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** failure reaches a visible, accessible explanation without terminating startup → `StartupTest.dataThatCannotBeOpenedIsAFailedStartNotACrash`, `StartupFailureScreenTest.itSaysTheDataCouldNotBeOpenedAndThatNothingWasDeleted` and `atTwiceTheFontSizeEveryChoiceCanStillBeReached`, and the device journey below. Retry recovers and never opens competing stores → `StartupTest.tryingAgainOpensOnceMoreAndBecomesReadyWhenItWorks`, `tryingAgainThatFailsStaysFailedWithTheLatestReason`, `onceReadyTryingAgainNeverOpensASecondStore`; everything runs on the main thread, so two attempts cannot overlap. No empty database, device-zone substitute, destructive fallback or mutation → `openStorage` closes storage and returns the failure; `ProfileInitializationTest` (existing) proves a damaged and a newer-schema file are refused and left as they were; starting over happens only after the typed word (`StartupFailureViewModelTest.confirmingWithoutTheWordMovesNothing`, `cancellingClosesTheWarningAndForgetsWhatWasTyped`) and keeps the file (`SetAsideTest`, `UnreadableFileSetAsideTest`); readable data is never set aside (`StartupTest.dataThatOpenedIsNeverSetAside`). Financial destinations unavailable until the profile is ready → `MainActivity` composes the app only for `StartupState.Ready`, and the graph is started only inside a successful open. Rotation/backgrounding do not start duplicate initialization; failed files survive → the `Startup` is held by the application, not the activity, and opens again only on request; `anOpenWarningAndWhatWasTypedSurviveRecreationWithoutConfirmingAnything`; the file's checksum was the same after two launches, a reinstall and a failed retry.
+- **Red / Green:** red first. `./gradlew :data:testDebugUnitTest --tests '*SetAsideTest'` against a function that did nothing: 3 of 4 failed. `./gradlew :app:testDebugUnitTest --tests '*StartupTest' --tests '*StartupFailureViewModelTest'` against a `Startup` that still threw on a failed open, as the application did, and a view model that ignored actions: 14 of 18 failed, the first with the same `IllegalStateException` at construction that crashed the app. `StartupFailureScreenTest` against an empty screen on the emulator: 8 of 8 failed. All pass after the implementation. `UnreadableFileSetAsideTest` was written after `setAside` existed and passed on its first run; it was not checked by mutation. The keyboard fix has no automated test; it was found and checked by hand.
+- **Gate results:** local `./scripts/verify-ticket SELLO-045 --gate G2 --retain` passed on the tested commit: 331 host tests (196 app, 93 domain, 31 design-system, 8 data, 3 catalog), 270 device tests on the API 30 emulator (107 app, 97 data, 56 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before this ticket. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261011T194501Z-beab9d55; SELLO-045 G2 passed; HEAD c2a92d0, inputs sha256 0ad48cd58130; report docs/planning/mvp/quality-reports/SELLO-045.json sha256 0a1c56104fef98f09240eb95a759fd54d42540e98b56182d0df1d13fca807999
+- **Device / Artifact:** the debug app on the API 30 emulator (1080×2340, Cobalto light, font scale 1.0), 2026-10-11, on a build of the working tree before the commit, with a synthetic installation. Before the fix: `sello.db` replaced by text, launch → `FATAL EXCEPTION ... FinancialStorageUnavailable ... SQLiteDatabaseCorruptException`, no process, twice. After: the same file → [the screen](../../../testing/evidence/SELLO-045/01-could-not-open.png), process alive, no fatal exception; "Intentar de nuevo" → "Todavía no se pueden abrir tus datos." and the file's checksum unchanged; "Empezar de cero" → [the warning](../../../testing/evidence/SELLO-045/02-start-over-warning.png), confirmation disabled with `borrar` and with nothing typed, Back and Cancelar close it with the files unchanged; with `BORRAR` → [an empty Recibo](../../../testing/evidence/SELLO-045/03-started-from-zero.png) in a new task, `sello-unreadable.db` present with the damaged file's checksum beside a new `sello.db`. Separately: launch on a damaged file, put a good file back, "Intentar de nuevo" → Recibo without restarting. The ordinary create → receipt → Recibo and restart journeys ran in the gate (`WalkingSliceJourneyTest` and the other 106 app device tests). Not executed: a second API level (only the API 30 emulator was connected), a newer-schema file through the installed app's own screen (covered on real files in `:data` only), TalkBack, and rotation on the failure screen by hand.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices and the Spanish wording; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-046 — Stabilize expense keypad geometry and separate financial submission
 

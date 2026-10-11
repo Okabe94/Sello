@@ -9,6 +9,8 @@ import com.software.sello.feature.category.CategoryEditorViewModel
 import com.software.sello.feature.expense.ExpenseEntryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
 import com.software.sello.feature.recibo.ReciboViewModel
+import com.software.sello.feature.startup.StartupFailureViewModel
+import com.software.sello.feature.startup.StartupRecovery
 import com.software.sello.navigation.MonthSession
 import com.software.sello.navigation.ShellViewModel
 import com.software.sello.presentation.money.MoneyFormatter
@@ -54,3 +56,12 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
         )
     }
 }
+
+/**
+ * The one view model built without the graph: its screen is shown when the data could
+ * not be opened, which is exactly when there is no graph.
+ */
+fun startupFailureViewModels(recovery: StartupRecovery): ViewModelProvider.Factory =
+    viewModelFactory {
+        initializer { StartupFailureViewModel(createSavedStateHandle(), recovery) }
+    }

@@ -10,7 +10,10 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario
+import com.software.sello.composition.SelloApplication
+import com.software.sello.composition.StartupState
 
 /*
  * The app reads its database off the main thread, which the test framework does not
@@ -49,3 +52,7 @@ fun SemanticsNodeInteraction.press(): SemanticsNodeInteraction =
 fun ActivityScenario<out Activity>.hideKeyboard() {
     onActivity { it.window.insetsController?.hide(WindowInsets.Type.ime()) }
 }
+
+/** The installed app's own view models. A test run starts on data that opened. */
+fun SelloApplication.readyViewModels(): ViewModelProvider.Factory =
+    (startup.state.value as StartupState.Ready).viewModels

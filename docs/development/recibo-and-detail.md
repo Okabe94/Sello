@@ -55,9 +55,18 @@ per read) and a cursor for the next. Rules:
 - No expenses and a list that could not be read are different states: "Sin gastos en
   octubre" with "Anotar aquí", or an error with retry. A later page that fails keeps
   the rows already listed and asks for that same page again.
-- Each new snapshot lists the same number of pages again, keeping the rows on screen
-  meanwhile. A saved expense therefore appears by itself; nothing on screen is
-  adjusted by hand.
+- Each new snapshot lists again everything that was listed, in as few reads as
+  `ExpenseReads.MAX_PAGE` allows, keeping the rows on screen meanwhile. A saved
+  expense therefore appears by itself; nothing on screen is adjusted by hand.
+- The rows kept on screen during that read are marked `Rows.refreshing`: they are of
+  an earlier snapshot than the figures above them. They are replaced whole when the
+  read finishes, so the list never drops to its first page and grows back, and "Ver
+  más" asks nothing meanwhile. Nothing is drawn for `refreshing` (owner decision,
+  2026-10-11: the read takes milliseconds and an indicator would flicker).
+- Kept rows are reused only for the same month, category and generation. If the read
+  fails the list is `Failed`, not the old rows, and retry reads all of it again.
+- The header and the rows are two reads. A save between them can leave them one
+  revision apart until that save's own snapshot lists the rows again.
 - "Anotar aquí" and the dock open [Anotar](expense-entry.md) with the category
   chosen. A finished month or an archived category does not offer "Anotar aquí".
 

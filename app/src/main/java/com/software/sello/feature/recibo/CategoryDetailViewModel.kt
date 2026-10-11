@@ -7,6 +7,7 @@ import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.MonthlySnapshot
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.port.ExpenseCursor
+import com.software.sello.domain.port.ExpensePage
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.SnapshotState
@@ -31,6 +32,10 @@ import kotlinx.coroutines.flow.update
  * snapshot lists them again, so a saved expense appears without anything here adding
  * to or subtracting from what is on screen. A page is only ever a list: no figure is
  * worked out from the rows.
+ *
+ * Listing again keeps what was listed in view, marked as being refreshed, and replaces
+ * it whole once everything that was listed has been read again: the list never shrinks
+ * to its first page and grows back.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CategoryDetailViewModel(
@@ -48,14 +53,20 @@ class CategoryDetailViewModel(
 
     private data class Shown(val month: YearMonth, val categoryId: String?)
 
-    /** The list last shown and what it was a list of, kept so a refresh does not blank it. */
-    private var kept: Pair<Shown, ExpenseListState>? = null
+    /**
+     * The list last shown and what it was a list of, kept so a refresh does not blank
+     * it. [generation] is the history it was read from: after a restore or reset the
+     * same month and category are another history, and its rows are not these.
+     */
+    private class Kept(val shown: Shown, val generation: Long, val list: ExpenseListState)
+
+    private var kept: Kept? = null
 
     val state: StateFlow<CategoryDetailState> =
         combine(session.selectedMonth, category, attempt) { month, id, _ -> Shown(month, id) }
             .flatMapLatest { shown ->
                 // Another month or category starts from its first page.
-                if (kept?.first != shown) pagesWanted.value = 1
+                if (kept?.shown != shown) pagesWanted.value = 1
                 val id = shown.categoryId?.let { CategoryId.of(it) as? Outcome.Success }?.value
                 when {
                     shown.categoryId == null -> flowOf(CategoryDetailState.Closed)
@@ -79,7 +90,10 @@ class CategoryDetailViewModel(
             CategoryDetailAction.ShowMore -> {
                 val list = (state.value as? CategoryDetailState.Ready)?.expenses
                 // One page per request: a second tap while one is being read asks nothing.
-                if (list is ExpenseListState.Rows && list.more && !list.loadingMore) {
+                // Nor does a tap while the list is being read again: that read brings
+                // back what is listed now, and a page asked for meanwhile would be lost.
+                val idle = list is ExpenseListState.Rows && !list.loadingMore && !list.refreshing
+                if (list is ExpenseListState.Rows && list.more && idle) {
                     pagesWanted.update { it + 1 }
                 }
             }
@@ -104,55 +118,92 @@ class CategoryDetailViewModel(
             today = snapshot.asOf,
             stale = stale,
             canRecord = !line.archived && snapshot.month == YearMonth.from(snapshot.asOf),
-            expenses = kept?.takeIf { it.first == shown }?.second ?: ExpenseListState.Loading
+            expenses = when (
+                val before = kept
+                    ?.takeIf { it.shown == shown && it.generation == snapshot.generation }?.list
+            ) {
+                null -> ExpenseListState.Loading
+
+                // Rows of an earlier snapshot under this one's figures: said to be so.
+                is ExpenseListState.Rows ->
+                    before.copy(refreshing = true, loadingMore = false, moreFailed = false)
+
+                else -> before
+            }
         )
         return flow {
             emit(ready)
             list(id, snapshot).collect { list ->
                 // Only a list that was read is worth showing again while refreshing.
-                if (list !is ExpenseListState.Failed) kept = shown to list
+                if (list !is ExpenseListState.Failed) kept = Kept(shown, snapshot.generation, list)
                 emit(ready.copy(expenses = list))
             }
         }
     }
 
-    /** The first pages, then one more each time another is asked for. */
+    /**
+     * Everything that was listed before, read in one step, then one more page each time
+     * another is asked for. Nothing is published while that first step is being read.
+     */
     private fun list(id: CategoryId, snapshot: MonthlySnapshot): Flow<ExpenseListState> = flow {
         val rows = ArrayList<ExpenseRow>()
         var pages = 0
         var next: ExpenseCursor? = null
         pagesWanted.collect { wanted ->
             while (pages < wanted && (pages == 0 || next != null)) {
+                val step = if (pages == 0) wanted else 1
                 if (pages > 0) emit(ExpenseListState.Rows(rows.toList(), true, loadingMore = true))
-                when (val page = expenses.inCategory(id, snapshot.month, next, PAGE_SIZE)) {
-                    is Outcome.Failure -> {
-                        emit(
-                            if (pages == 0) {
-                                ExpenseListState.Failed
-                            } else {
-                                ExpenseListState.Rows(rows.toList(), true, moreFailed = true)
-                            }
-                        )
+                val read = read(id, snapshot.month, next, step * PAGE_SIZE)
+                if (read == null) {
+                    if (pages == 0) {
+                        // Retry reads again all that was listed, so the count is kept.
+                        emit(ExpenseListState.Failed)
+                    } else {
+                        emit(ExpenseListState.Rows(rows.toList(), true, moreFailed = true))
                         // Asking again asks for this same page, not for one after it.
-                        pagesWanted.value = maxOf(pages, 1)
-                        return@collect
+                        pagesWanted.value = pages
                     }
+                    return@collect
+                }
+                rows += read.expenses.map { row(it, snapshot) }
+                next = read.next
+                pages += step
+                emit(
+                    if (rows.isEmpty()) {
+                        ExpenseListState.Empty
+                    } else {
+                        ExpenseListState.Rows(rows.toList(), more = next != null)
+                    }
+                )
+            }
+        }
+    }
 
-                    is Outcome.Success -> {
-                        rows += page.value.expenses.map { row(it, snapshot) }
-                        next = page.value.next
-                        pages++
-                        emit(
-                            if (rows.isEmpty()) {
-                                ExpenseListState.Empty
-                            } else {
-                                ExpenseListState.Rows(rows.toList(), more = next != null)
-                            }
-                        )
-                    }
+    /**
+     * The next [count] expenses after [after], in as few reads as storage allows, or
+     * null when one of them failed. [ExpensePage.next] is where the page after begins.
+     */
+    private suspend fun read(
+        id: CategoryId,
+        month: YearMonth,
+        after: ExpenseCursor?,
+        count: Int
+    ): ExpensePage? {
+        val read = ArrayList<Expense>(count)
+        var cursor = after
+        while (read.size < count) {
+            val limit = minOf(count - read.size, ExpenseReads.MAX_PAGE)
+            when (val page = expenses.inCategory(id, month, cursor, limit)) {
+                is Outcome.Failure -> return null
+
+                is Outcome.Success -> {
+                    read += page.value.expenses
+                    cursor = page.value.next
+                    if (cursor == null) break
                 }
             }
         }
+        return ExpensePage(read, cursor)
     }
 
     private fun row(expense: Expense, snapshot: MonthlySnapshot) = ExpenseRow(

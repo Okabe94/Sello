@@ -1,100 +1,219 @@
-# Handoff — SELLO-003 onward
+# Handoff — SELLO-019 onward
 
-**Snapshot:** 2026-10-08, accompanying the SELLO-002 delivery commit.
+**Snapshot:** 2026-10-11, after SELLO-018 merged. Epics E01–E04 are Done.
 This is a starting-state guide, not a second architecture or permission to bypass
-ticket dependencies. Verify current HEAD, Git status, code and ticket status first.
-
-**Update 2026-10-09:** SELLO-003, SELLO-004 and SELLO-005 have since been delivered. The sections
-below describe the state before them; use each ticket's Delivery evidence in the
-[foundation epic](../planning/mvp/epics/E01-foundation.md), [setup](setup.md#modules-identities-and-tasks)
-and the [quality runner guide](../planning/mvp/EXECUTION_GUIDE.md#quality-runner) for the
-actual modules, identities and commands. Work now reaches `main` only through a pull
-request with a passing `quality` check. Clocks, composition and scope ownership are
-described in [time and composition](time-and-composition.md). With E01 complete,
-SELLO-006 and SELLO-010 are the next eligible tickets.
+ticket dependencies. Verify current HEAD, Git status, code and ticket status first;
+where this file and the code disagree, the code and the canonical tickets win.
 
 ## Read before editing
 
 1. Root [AGENTS.md](../../AGENTS.md) and [ARCHITECTURE.md](../../ARCHITECTURE.md).
-2. [Board README/gates](../planning/mvp/README.md),
-   [execution guide](../planning/mvp/EXECUTION_GUIDE.md),
-   [current board](../planning/mvp/BOARD.md), and the complete
-   [SELLO-003 brief](../planning/mvp/epics/E01-foundation.md#sello-003--bootstrap-enforced-modules-and-variant-identities).
-3. [Toolchain ADR](../decisions/0005-toolchain.md), [setup](setup.md),
-   [toolchain evidence](../testing/SELLO-002-toolchain-verification.md), and
-   predecessor Delivery evidence in the foundation epic.
-4. [Approved product contract](../decisions/0001-mvp-contract.md),
-   [version-32 examples](../testing/mvp-financial-examples.md), ADRs
-   [0002](../decisions/0002-signed-carryover-direction.md),
-   [0003](../decisions/0003-mvp-transaction-amount-range.md),
-   [0004](../decisions/0004-category-latest-expense-order.md),
-   [quality flow](../planning/mvp/QUALITY_FLOW.md) and
-   [local visual reference/provenance](../design/README.md).
+2. [Board README and gates](../planning/mvp/README.md), the
+   [execution guide](../planning/mvp/EXECUTION_GUIDE.md), the
+   [quality flow](../planning/mvp/QUALITY_FLOW.md), the
+   [current board](../planning/mvp/BOARD.md) and the whole brief of the ticket.
+3. The [approved product contract](../decisions/0001-mvp-contract.md) (D01–D10), the
+   [worked examples](../testing/mvp-financial-examples.md) and ADRs 0002–0007.
+4. The guide for each area the ticket touches (below) and the Delivery evidence and
+   "Choices made" of the tickets it depends on.
+5. The [visual reference and its provenance](../design/README.md).
 
-## What is actually complete
+## What exists
 
-- **SELLO-001: Done.** Owner approved D01–D10 and the entire guided walkthrough.
-  A separately authorized agent independently reviewed all 88 case IDs and
-  additional examples: Pass. [Review record](../testing/reviews/SELLO-001-independent-review.md).
-  Older dated pending-review entries preserve chronology; closure supersedes them.
-  Do not reopen product questions just because an earlier progress entry says pending.
-- **SELLO-002: Done.** Reproducible matrix, setup, cold-source/cache builds,
-  processor/JVM probe, API-30 greeting launch and one instrumented context test
-  passed. Its review is explicitly executor self-review, not independent approval.
-- Actual production code is still **one `:app` Compose greeting**. There are no
-  domain/data/design-system/catalog modules, financial implementation, database,
-  sandbox, architecture runner or hosted CI. Temporary Room/JVM probe artifacts
-  are evidence, not delivered modules or application tests.
-- Last verification: one sample JVM test, one executed API-30 context test,
-  32 board tests; lint passes with **18 warnings**. Existing warnings were not
-  suppressed. The isolated emulator was shut down; recheck device availability.
+Four modules plus a catalog app, with the dependency graph enforced by
+`scripts/quality/architecture.py`:
 
-## Execute SELLO-003 next
+| Module | Holds | Guide |
+| --- | --- | --- |
+| `:domain` (Kotlin/JVM) | exact money, dates, bounded text, identifiers, budget policies, the monthly snapshot, ports | [money, dates, text](money-dates-text.md), [categories and limits](categories-and-limits.md), [monthly snapshot](monthly-snapshot.md) |
+| `:data` | Room schema version 1, strict mappers, the command protocol, reads | [storage](storage.md), [commands](commands.md) |
+| `:design-system` | tokens, slips, money text, inputs, category cells, scaffold, charts | [layout and charts](layout-and-charts.md) |
+| `:app` | composition, clocks, navigation, features | [time and composition](time-and-composition.md), [app shell](app-shell.md), [category editor](category-editor.md), [Anotar](expense-entry.md), [Recibo and detail](recibo-and-detail.md) |
+| `:catalog` | every design-system component with real examples | — |
 
-003 remains **Backlog**, but both dependencies are Done, so it is eligible to
-start. Follow its entire brief; record actual progress/status in the epic and
-regenerate exports. No other ticket is authorized to skip its prerequisites.
+What a person can do today: start empty, create categories with or without a
+limit, record an expense and see its stored receipt, see what is left in Recibo,
+open a category to see its figures and its expenses, look at earlier months, and
+find all of it again after the process is killed or the app restarted.
 
-- Create Kotlin/JVM `:domain`, Android-library `:data` and `:design-system`, and
-  separate Android app `:catalog`; preserve usable existing `:app`.
-- Enforce architecture §2's graph. Domain has no Android/UI/storage/DI dependency;
-  design-system has no domain/data/app dependency; catalog depends only on the
-  design-system/UI and synthetic render fixtures. App data imports are composition-only.
-- Move reusable template theme ownership to design-system without copying it;
-  keep app and minimal catalog genuinely installable/launchable. No fake save,
-  empty feature navigation, financial schema or catalog duplicate components.
-- Identities: customer `com.software.sello` / **Sello**; debug
-  `com.software.sello.debug` / **Sello Debug**; catalog
-  `com.software.sello.catalog` / **Sello Catalog**. They must coexist without data
-  collision. Update the current literal package assertion for actual variants.
-- Configure test/build source sets, Room/KSP/schema-export capability in data;
-  do not introduce a dummy database/table to simulate completion. Actual Room
-  version-1 schema/business integrity belongs to SELLO-011.
-- Prove a forbidden domain Android import fails for the intended boundary,
-  remove the negative fixture, and rerun green. Run **G1**, inspect dependency/
-  package identities, assemble affected app/catalog test APKs and install/launch
-  both. Compilation and NO-SOURCE tests are not executed behavior tests.
+What does not exist: editing or deleting anything, undo, income, Resumen, settings,
+the sandbox, backup, restore and reset. Schema version 1 has an `income` table and
+no code that writes to it.
 
-## Toolchain constraints to preserve
+## What is next
 
-AGP **9.3.3**, Gradle **9.5.0**, JDK **25** (tested JetBrains 25.0.2),
-Kotlin/JVM/Compose compiler **2.4.20**, Compose BOM **2026.02.01**, KSP2 **2.3.12**,
-compile/target API **37**, minimum **30**, Java/Kotlin output **11**, build tools **36.0.0**.
-ADR 0005 records exact vendor-range limits and the execution-tested AGP patch difference.
+Eligible now, by their dependencies: **SELLO-019** (edit, delete, guarded undo),
+**SELLO-020** (category management, month limits) and **SELLO-024** (sandbox
+sessions and time controls). 021 needs 019; 022 needs 021; 023 needs 020; 025 needs
+022 and 024. Work is done one ticket at a time; running tickets in parallel was
+considered and dropped.
 
-- Existing catalog aliases: Android application, Kotlin Compose/JVM and KSP.
-  Root already declares JVM `apply false` **before** AGP/Compose. Reuse them;
-  add an Android-library alias using the same AGP pin when needed.
-- A child-only versioned JVM plugin request failed on the already loaded unknown
-  KGP classpath. Declare versions at root and apply consistently in children.
-- Keep AGP built-in Kotlin; do not add kotlin-android or disable source-set
-  validation. The older KSP 2.2.10-2.0.2 candidate failed that validation.
-- Room **2.8.4** is a verified processor candidate, not a production dependency
-  already in the catalog. Pin actual adopted Room artifacts centrally when introduced.
-- Preserve pins unless a scoped, primary-source-backed compatibility decision
-  requires change; a newer-version lint advisory is not an upgrade instruction.
+Things earlier tickets left for these:
 
-Host commands and device provisioning are in setup. Relevant environment:
+- **019** adds the first schema change (deletion and undo records), so it also owns
+  the first real migration, its upgrade test and the exported schema. Tapping an
+  expense in the category detail and swiping it are the entry points the reference
+  gives. The snackbar with undo does not exist in the design system yet. After a
+  save, Anotar shows a receipt with "Listo"; the reference's "Gasto anotado ·
+  Deshacer" message was left for this ticket to decide.
+- **020** owns the pencil in the category detail, archiving, changing limits, the
+  long-press menu on a category, and removing a month's own limit. The editor is a
+  full screen and only creates; the reference makes editors a side panel in wide
+  windows. Only 14 of the reference's 28 icons are named and delivered.
+- **021/022** add income, net flow and "por asignar" to the snapshot, and per-day
+  series for charts; the snapshot covers spending and budgets only.
+- **023** owns choosing the category order (only "Más usadas" exists), saving the
+  ink and theme, and the gear.
+- **024** replaces the debug clock (`ControlledFinancialClock`,
+  `financialTimeOverride`) with real sandbox control. Device journeys cannot move
+  the financial day today, which is why they assert verdicts only where the day does
+  not matter.
+- **No owner yet:** a database that cannot be opened at start crashes the app with a
+  clear cause instead of showing a screen (noted in SELLO-011, 015 and 018). It
+  needs a ticket or an explicit home before release.
+
+## How the work is done
+
+Decided by the project owner; none of this is waived by a later ticket.
+
+- **Roles:** the agent implements, the owner reviews and approves. Explanations are
+  in plain language, and choices the agent made are listed for the owner in the
+  ticket's Execution progress.
+- **One branch and one pull request per ticket** (`sello-0NN-<slug>`). The agent may
+  branch, commit, push and open the pull request without asking. Merging waits for
+  the owner's explicit approval and is a squash merge. `main` is protected: pull
+  requests only, with a passing `quality` check.
+- **Done is proposed in the pull request** ([quality flow](../planning/mvp/QUALITY_FLOW.md#done-is-proposed-merging-approves)):
+  the ticket is already Done with full Delivery evidence when the pull request
+  opens, and the merge is the approval. On the **last ticket of an epic the epic is
+  marked Done in that same commit**, so no hosted run is spent on a status line.
+- **Pull requests** use the repository template: the title
+  `<Epic> - <Ticket> | <Ticket title>`, a link to the ticket, then Description,
+  Solution, Things that changed and Evidence ending in "Not covered". Commits and
+  pull requests carry no tool attribution lines.
+- **Gate:** `./scripts/verify-ticket SELLO-0NN --gate G2 --retain` on a clean,
+  committed tree with a booted API 30 emulator, then the printed `Quality run` line
+  goes into the evidence. Any later change to fingerprinted inputs makes it stale.
+  If another pull request merges first, merge `main` in and run the gate again.
+- **After merging**, the next ticket may start while `main`'s run finishes; a
+  failure there is reported and fixed before anything else merges.
+- **Tests:** red→green where a defect or a rule exists first. Where tests are
+  written with the code, the finished code is checked by mutation and the result
+  reported honestly, survivors included.
+- **Not allowed without a current, explicit go-ahead:** delegation to other agents;
+  dependency, toolchain, permission or schema changes outside a ticket that owns
+  them; asking for signing material or tokens.
+
+## Decisions so far
+
+### Product (owner-approved)
+
+- D01–D10 and all worked examples are approved; do not reopen them. Exact integer
+  COP; one 12-digit limit per transaction (ADR 0003); COP 50 flooring only for the
+  daily allowance; a zero limit and no limit are different things; a month's limits
+  never change because a later month's did; undo is guarded; backups are plain text
+  and say so.
+- Budgets renew each month with no carryover. Signed carryover is planned after the
+  MVP (ADR 0002, E09) and has no dormant tables or code.
+- Categories can be ordered by the latest expense **added** (ADR 0004); the default
+  order is most used in the selected month, unlimited ones last (D06).
+- Pesos are shown with no currency symbol; other currencies as code, space, figure
+  (ADR 0007). This overrides the reference's peso sign everywhere, the dock included.
+- Importing the old app's data is after the MVP (E10, SELLO-044) and goes through the
+  validated restore path: as much as possible is brought over, and anything that
+  breaks Sello's rules is skipped, not repaired. The data itself is to be obtained
+  when that ticket starts.
+- The MVP has Recibo and Resumen. Widgets, recurrence, goals, investments, FX and
+  batch entry are out.
+
+### Tooling (owner-approved)
+
+- Pinned toolchain in [ADR 0005](../decisions/0005-toolchain.md): AGP 9.3.3, Gradle
+  9.5.0, JDK 25, Kotlin 2.4.20, Compose BOM 2026.02.01, compile/target 37, minimum 30.
+  A "newer version" lint notice is not an instruction to upgrade.
+- ktlint 1.8.0, strict Gradle dependency locking (`scripts/update-dependency-locks`)
+  instead of hosted dependency review, Detekt deferred
+  ([ADR 0006](../decisions/0006-quality-tooling.md)).
+- Koin **core** only, confined to `:app` composition; `koin-android` was rejected
+  because it would raise several AndroidX versions. View models are built by one
+  factory in `composition/PresentationModule.kt`.
+- Room 2.8.4. Navigation Compose 2.9.8 (2.10 was rejected: it forces upgrades).
+  Charts are small Compose drawings, not a library. Icons are individual vectors.
+- The repository is public by the owner's choice: no personal financial data,
+  credentials or signing material in source, tests, captures or reports.
+
+### Rules the code now relies on
+
+Later tickets build on these; changing one is a decision, not a refactor.
+
+- **Money and text:** amounts are parsed strictly (no leading zeros, no inner
+  spaces, ASCII digits); text is stored NFC; names are unique ignoring case, accents
+  and width; notes are one line. Nothing is trimmed, cut or repaired silently.
+- **Storage:** identifiers are lower-case UUID text. A damaged database file is kept
+  and the open fails; nothing falls back to an empty database. Ranges are enforced
+  by domain types on the way in and strict mappers on the way out; a row that
+  breaks a rule is a typed failure, never a default. Each expense and income has a
+  sequence that orders records within a day.
+- **Limits:** a default limit from a month onwards plus a limit for one month, which
+  wins; no row per month. Archiving pauses the default from the next month. A
+  category and its limits share one version. A month's own limit can be set for the
+  current or a past month, never a future one.
+- **Commands:** generation check, replay, validation, write, in one transaction that
+  always finishes once started. An error before the commit is `Rejected`; only a
+  failed commit is `OutcomeUnknown`, and it is looked up, never blindly retried. A
+  receipt stores a digest of the input, not the input. An operation identifier
+  belongs to one kind of command.
+- **Snapshot:** one place works out a month (`MonthlyBudgetPolicy`), with exact
+  arithmetic in the app over paged rows; SQL adds nothing. Expenses dated after the
+  financial day are left out and counted. A future month is refused. A failed
+  refresh keeps the last good snapshot next to the failure.
+- **Screens:** State / Action / ViewModel / Root / Screen. Drafts, the identifier of
+  a save in flight and what is open live in `SavedStateHandle`; results are state,
+  not one-off events. Routes carry identifiers and hints only, never a record.
+  A screen formats what the snapshot says and never does its own sums; Recibo and
+  the category detail share `ReciboRenderModel`. A failed read is its own state:
+  never zero, never "empty".
+- **Month:** one `MonthSession` for every screen. It follows the current month
+  unless an earlier one was picked, and returns to the current month after 30
+  minutes away, also across process death.
+- **Layout:** the dock and tab bar sit under the content, not over it. No tab bar
+  with one tab, and no control that opens nothing. Detail beside its list needs a
+  two-column window at least 600dp wide. Amounts are read aloud in full, and a
+  verdict is always a word, never a colour alone. Keypad keys are 48dp.
+
+### Where the reference was not followed
+
+Recorded so the next person does not "fix" them by accident; each is in the named
+ticket's Execution progress.
+
+- No peso sign (ADR 0007). Tabular figures on figures only (SELLO-007).
+- After saving, a receipt screen with "Listo" instead of a snackbar (SELLO-017).
+- Anotar and the category editor are full screens, not sheets or side panels; no
+  print-feed, count-up or stamp-landing motion yet (SELLO-016, 017, 018).
+- A new category starts as "Sin límite" (SELLO-016). Recibo has an "Agregar
+  categoría" button (SELLO-016).
+- A finished month over its limit is stamped "Sobre el límite"; the reference says
+  that in its stamps table and "Pasado" in its Recibo text (SELLO-018).
+- The category detail is header, spent, limit and a list paged 20 at a time on the
+  same screen; no charts, comparison, "En números" or separate list screen with sort
+  and search (SELLO-018).
+
+## Known loose ends
+
+- A window that is short **and** narrow (half a phone's screen) is classed as
+  two-column by `selloWindowLayout`. Recibo's detail guards against it; Anotar's
+  form still splits there. Decide the rule once, in the design system.
+- The reduced-motion setting is read when the theme is composed, not observed.
+- Lint reports 29 warnings in `:app`, unchanged since SELLO-017. The number must not
+  grow unexplained.
+- Not done anywhere yet: a physical-device run by the owner since SELLO-006, a
+  tablet image (wide layouts are tested in sized windows), Switch Access, an
+  independent technical review. Every ticket since SELLO-002 is executor
+  self-review plus the owner's merge.
+
+## Running things
+
+Environment and emulator provisioning are in [setup](setup.md). In short:
 
 ```bash
 export ANDROID_HOME=/home/okabe94/Android/Sdk
@@ -102,48 +221,34 @@ export JAVA_HOME=/opt/android-studio/jbr
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
 ```
 
-Daemon criteria override JAVA_HOME for daemon selection; inspect actual versions.
-At the last check product-native device access was disabled, but a new isolated
-CLI emulator worked with KVM. Recheck tools first; never wipe an owner's AVD/device.
-Do not depend on another agent's `/tmp` files, cached SDK/JDK locations or live emulator.
+Use a dedicated synthetic AVD (API 30, port 5580); never wipe or reuse the owner's
+device or emulator. Do not rely on anything in `/tmp`, another session's emulator or
+helper scripts: they do not survive a restart, and the AVD may need recreating.
 
-## After 003: dependency-driven, not numeric-only
+Lessons from the device tests so far:
 
-**004 follows 003 and blocks every later ticket.** It must deliver the real
-`scripts/verify-ticket` entrypoint, structured reports/fingerprints, shared evidence
-validator, architecture/static rules, CI execution and protected-check enforcement.
-Read QUALITY_FLOW; the runner is **not available today**. 001–003 use bootstrap
-recipes; 004 can verify itself before Done. After 004, every ticket requires its
-fresh validated Quality run before Review/Done. Do not downgrade missing checks.
+- The app reads its database off the main thread. Wait for what you expect
+  (`Waits.kt`) instead of reading the screen right after a step.
+- After typing, press through semantics (`press()`), and hide the keyboard in
+  `@After`; a keyboard left open takes the next test's focus.
+- The database, and the month selection, live as long as the process and are shared
+  by every test in a run. Reset both (`TestData.reset()`,
+  `TestCommands.showCurrentMonth()`).
+- Tests that need history use the app's own commands (`TestCommands`), never rows
+  written around them, so the app hears of each change.
+- In a window larger than the screen, assert that something exists and where it is
+  laid out, not that it is displayed.
+- Host tests cannot see Java APIs missing on Android 11 (`BigInteger.TWO` was one);
+  only the device run can.
+- A system dialog on the emulator (a crashed launcher after a display resize)
+  makes every Back press fail. Check what holds focus before blaming the code.
+- Returning to the app by hand must use the same launcher intent it was started
+  with, or Android opens a second copy and restoration seems lost.
 
-No Git remote/hosted runner/admin configuration exists at this snapshot. 004 will
-need user-provided Git host/remote and appropriate access for hosted execution/
-protection evidence. Local tooling or workflow YAML alone cannot close its hosted
-acceptance. Report the concrete missing input; do not weaken the ticket.
+## Ownership
 
-After actual 004 completion, **005**, **006**, **010** become eligible according to
-their individual dependencies. Read each canonical brief rather than implementing
-the whole epic at once. Meaningful behavior red→green, real Room where required,
-isolated sandbox scenarios and real catalog examples must grow with features.
-
-## Product/ownership boundaries
-
-Financial policies are already approved: exact integer COP; unified 12-digit
-transaction cap; COP-50 flooring only for daily allowance; overall budget versus
-category overspend distinction; stable historical limits; last expense **addition**
-ordering; guarded undo; plaintext backup disclosure and atomic recovery. Use the
-contract/examples as truth, not design sample numbers or newly guessed formulas.
-
-MVP has Recibo/Resumen only. Widgets are excluded; recurrence/goals/investments/
-FX/batch entry and signed surplus/deficit carryover are post-MVP. Carryover is
-planned in E09, not dormant MVP tables/jobs. Preserve facts/boundaries, not speculative engines.
-
-The owner handles periodic physical-device testing and release build/signing/key
-custody; private APK only. Do not ask for signing secrets. Future independent
-financial/recovery/release reviewers require separate assignment; the SELLO-001
-agent review did not appoint a permanent reviewer.
-
-Keep epic files canonical and run board generation/checks after edits. Preserve
-other work; no automatic commit/push/branch or delegation without current explicit
-authorization. Record exact tested revision/dirty files, gates, warnings, device
-evidence and designated review before Done. This handoff grants no Git or review waiver.
+The owner handles physical-device testing and release building, signing and key
+custody; the APK is private. Epic files are the canonical ticket source; board and
+CSV views are generated (`python3 docs/planning/mvp/board.py`, then `--check`).
+Preserve other people's work, including uncommitted files. This handoff grants no
+Git or review waiver beyond what "How the work is done" states.

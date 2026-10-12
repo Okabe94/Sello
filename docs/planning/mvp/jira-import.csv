@@ -8543,7 +8543,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Source classification:** Task
 - **Classification:** Bug; original report 1
 - **Priority:** P2
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-018, SELLO-015, SELLO-004
 - **Gate:** G2
 - **Source alias:** SELLO-BUG-001
@@ -8620,6 +8620,15 @@ Choices made during the work, for owner review:
 - The second case, a previous category shown under a new selection, was fixed from
   the code. It was not seen on a device before or after.
 
+### Delivery evidence
+- **Revision:** branch `sello-057-detail-title-identity`; tested snapshot is commit `707e0b1`, which is the work with `main` (through SELLO-056) merged in, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design. The merge conflicted in the generated `BOARD.md`; one commit on the branch holds that file with conflict markers and the next replaces it with a clean regeneration, before the gate ran.
+- **Requirement mapping:** the known selected category's name stays through initial load, refresh and retry → `DetailIdentityTest.whileItsDetailIsStillBeingReadACategoryChosenFromReciboAlreadyHasItsName` (for a detail that is closed, loading, failed or gone) and `onceItsOwnDetailIsReadTheNameComesFromIt`. Switching A to B never shows A's name as B's header, with slow or failing reads → `theNameOfTheCategoryLeftBehindIsNeverPutOverTheOneJustChosen` and `aDetailStillHoldingAnotherCategoryIsNotShownUnderTheOneChosen`. Unknown or missing identifiers get a truthful treatment, not an invented name → `whenNothingReadSoFarKnowsTheCategoryNoNameIsInvented`; the detail's own loading, failed and gone states are passed through unchanged. Rotation, restoration and both layouts keep the selected identity; a failed read is not turned into success → the functions take only the selected identifier and the two screens' current states, so there is nothing of their own to restore; `olderFiguresStillNameTheCategoryWhileTheyAreAllThereIs`; the 56 navigation and Recibo device tests pass unchanged.
+- **Red / Green:** red first: `./gradlew :app:testDebugUnitTest --tests '*DetailIdentityTest'` against functions that still did what the destination did (the title from the detail only, the detail shown whatever its category) failed 5 of 6. The sixth, the detail's own name once read, passed before and is a guard. All 6 pass after the change. The ticket asks for the header to be checked before a controlled read is released; that is done here at the level of the two functions the destination calls, not through the composed destination with held reads.
+- **Gate results:** local `./scripts/verify-ticket SELLO-057 --gate G2 --retain` passed on the tested commit: 357 host tests (211 app, 98 domain, 37 design-system, 8 data, 3 catalog), 320 device tests on the API 30 emulator (130 app, 113 data, 67 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261012T023716Z-2efcd71c; SELLO-057 G2 passed; HEAD 707e0b1, inputs sha256 94895138302d; report docs/planning/mvp/quality-reports/SELLO-057.json sha256 1ff97af821ab49f9b7688ad3548229b3bf9b9bc37c33807cff2216097b105119
+- **Device / Artifact:** the debug app on the API 30 emulator, 2026-10-12, a build of the working tree before the commit, one synthetic category, cold start, then the category opened while `screenrecord` ran. Every recorded frame of the title area is in [the sheet](../../../testing/evidence/SELLO-057/01-after-title-frames.png): Recibo, then ""Exploracion"" over an empty screen, over the loading bars and over the loaded detail; ""Categoría"" is in none. The sheet's colours are wrong (too blue) from the conversion; only its text is evidence. The state before is the ticket's own retained frames 46 to 49; it was not recorded again on this build. Not executed: the wide layout with a second category, a slow or failing read on a device, rotation and restoration by hand.
+- **Review:** executor self-review of the diff, the recording, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes
@@ -8687,7 +8696,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,In Progress,sello-057
+",1011,Medium,Done,sello-057
 58,Task,SELLO-058 — Make unlimited category budgets an explicit opt-in,"Local ID: SELLO-058
 Epic: SELLO-E11
 Increment: MVP

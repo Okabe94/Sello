@@ -41,6 +41,8 @@
     <string name="month_picker_previous_year">Año anterior</string>
     <string name="month_picker_next_year">Año siguiente</string>
     <string name="month_picker_title">Elige un mes</string>
+    <string name="month_picker_current">Mes actual</string>
+    <string name="month_picker_current_description">Ir al mes actual: %1$s</string>
     <string name="recibo_first_run_title">Tu recibo está en blanco</string>
     <string name="recibo_first_run_body">Tres pasos y queda listo: crea tus categorías, ponle un límite a cada una y anota tu primer gasto.</string>
     <string name="recibo_create_categories">Crear categorías</string>

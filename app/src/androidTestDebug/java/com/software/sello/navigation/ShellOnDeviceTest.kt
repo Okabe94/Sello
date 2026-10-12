@@ -151,6 +151,29 @@ class ShellOnDeviceTest {
     }
 
     @Test
+    fun fromAMonthInAnotherYearMesActualGoesStraightBackAndWritesNothing() {
+        launchToRecibo()
+        val revision = TestData.long("SELECT revision FROM profile")
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
+        rule.onNodeWithContentDescription(context.getString(R.string.month_picker_previous_year))
+            .performClick()
+        val march = YearMonth.of(current.year - 1, 3)
+        rule.onNodeWithContentDescription(title(march)).performClick()
+        rule.onNodeWithText(title(march)).assertIsDisplayed()
+
+        // The picker opens on last year; the current month's cell is not on it.
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
+        rule.onNodeWithContentDescription(title(current)).assertDoesNotExist()
+        rule.onNodeWithTag(MONTH_PICKER_CURRENT_TAG).performClick()
+
+        rule.onNodeWithTag(MONTH_PICKER_TAG).assertDoesNotExist()
+        rule.onNodeWithText(title(current)).assertIsDisplayed()
+        assertEquals(current, shell().state.value.selectedMonth)
+        assertEquals(revision, TestData.long("SELECT revision FROM profile"))
+        assertEquals(0, TestData.financialRows())
+    }
+
+    @Test
     fun theSelectedMonthAndTheOpenPickerSurviveTheScreenBeingRecreated() {
         val app = launchToRecibo()
         val march = YearMonth.of(current.year - 1, 3)

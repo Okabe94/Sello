@@ -1570,7 +1570,7 @@ switch it off first.
 - **Source classification:** Task
 - **Classification:** Requested navigation improvement; original report 6
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-015, SELLO-009, SELLO-004
 - **Gate:** G2
 - **Decision needed:** approve current-month action placement/copy
@@ -1615,6 +1615,30 @@ Do not treat selected month as current month, use LocalDate.now(), add a fake sw
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-059 --retain` for the final G2 gate.
 Focused MonthSession/NavigationState tests, connected historic-year → current-month journeys and controlled rollover checks, then G2 with retained evidence. Owner placement approval is required before Ready.
+
+### Execution progress
+2026-10-12: started on branch `sello-059-current-month-shortcut` after SELLO-058
+merged. A requested addition, not a defect: the picker had only year arrows and month
+cells, so from another year the way back was one press per year and then the month.
+The design reference has no such shortcut either.
+
+**Owner decisions (2026-10-12), which are the ones this ticket needed:** do it now; the
+button sits at the right of the picker's title "Elige un mes"; it reads "Mes actual";
+it is always visible, also when the current month is already the one shown; and when
+the title and the button do not fit on one line the button goes under the title.
+Placement was chosen from two mock-ups made in the running app.
+
+Delivered, in the shell only: the button in `MonthPicker`, two string resources and
+its tag. It sends the existing `PickMonth` with the state's own current month, so no
+action, session rule or clock read was added, and the same content serves the bottom
+sheet and the side panel.
+
+Choices made during the work, for owner review:
+- A screen reader is told "Ir al mes actual: Octubre 2026", naming the destination;
+  the visible text stays "Mes actual".
+- Pressed when the current month is already shown, it closes the picker, as picking
+  the current month's cell does.
+- It is a text button from the design system, unchanged, so the catalog is unchanged.
 
 ## SELLO-060 — Make first-slice navigation motion consistent and accessible
 

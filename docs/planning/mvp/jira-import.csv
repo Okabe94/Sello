@@ -7813,7 +7813,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Type:** Task
 - **Classification:** Handoff defect; source-inspected, not freshly device-reproduced
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004, SELLO-006, SELLO-009, SELLO-015
 - **Gate:** G2
 - **Source alias:** HANDOFF-MOTION
@@ -7867,6 +7867,30 @@ Run focused host/Compose red→green tests and affected connected scenarios, inc
 font scale 2.0, restoration and resize/resume. Extend the actual catalog example.
 Run `./scripts/verify-ticket SELLO-053 --retain` for fresh G2 evidence; record
 manual accessibility/adaptive checks separately before designated review.
+
+### Execution progress
+2026-10-12: started on branch `sello-053-live-reduced-motion` after SELLO-052 merged.
+The claim was verified first with a throwaway test on the API 30 emulator: with the
+theme on screen, the system animator scale was set to 0 and the content drawn twice
+more; `SelloTheme.reducedMotion` stayed false each time.
+
+Owner decision (2026-10-12): listen for the setting while the theme is on screen,
+not only read it again when the app returns to the foreground.
+
+Delivered, in `:design-system` only: `systemReducedMotion()` keeps the value as state,
+registers one listener for the system setting for as long as its caller is in the
+composition, reads again once it is listening, and unregisters when the caller
+leaves. `SelloTheme`'s parameter and every component are unchanged. No permission,
+dependency or polling.
+
+Choices made during the work, for owner review:
+- The catalog was not given a ""follow the system"" option. Its motion switch is a
+  deliberate fixed value, which the acceptance asks to keep deterministic, and
+  nothing else in the catalog would show the change.
+- Not checked: how much of what a person sees depended on this. Compose is understood
+  to shorten its own animations when the system scale is 0, in which case the flag
+  mattered mainly where Sello chooses what to draw from it (the skeleton's pulse,
+  the count-up). That was not measured.
 
 Shared definition of done and gates:
 
@@ -7935,7 +7959,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,Backlog,sello-053
+",1011,Medium,In Progress,sello-053
 54,Task,SELLO-054 — Return a typed rollback outcome when counters overflow,"Local ID: SELLO-054
 Epic: SELLO-E11
 Increment: MVP

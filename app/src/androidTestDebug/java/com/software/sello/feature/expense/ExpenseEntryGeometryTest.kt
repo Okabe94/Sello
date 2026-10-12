@@ -17,6 +17,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
@@ -192,5 +193,30 @@ class ExpenseEntryGeometryTest {
 
         assertTrue("$actions", actions.isNotEmpty())
         assertTrue("$actions", ExpenseEntryAction.Submit !in actions)
+    }
+
+    /**
+     * Half a phone's screen. The form is two panes here on purpose (SELLO-052): in one
+     * column the keypad alone would fill the window.
+     */
+    @Test
+    fun inAShortNarrowWindowTheAmountTheKeysAndTheButtonAreSideBySideAndInView() {
+        show(DpSize(393.dp, 400.dp))
+        state = one
+        rule.waitForIdle()
+
+        val amount = bounds(ENTRY_AMOUNT_TAG)
+        val keypad = bounds(ENTRY_KEYPAD_TAG)
+        val button = bounds(ENTRY_SUBMIT_TAG)
+        // The slip at the left, the keys and the button at the right of it.
+        assertTrue("$amount $keypad", amount.right <= keypad.left)
+        assertTrue("$amount $button", amount.right <= button.left)
+        // All three inside the window's height, the button whole.
+        assertTrue("$amount", amount.top >= 0f && amount.bottom <= 400f)
+        assertTrue("$button", button.top >= 0f && button.bottom <= 400f)
+        assertTrue("$keypad", keypad.bottom <= button.top)
+        // Each key is at least the smallest size a finger can be asked to hit.
+        val five = rule.onNodeWithText("5").fetchSemanticsNode().touchBoundsInRoot
+        assertTrue("$five", five.width >= 48f && five.height >= 48f)
     }
 }

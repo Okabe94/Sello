@@ -7644,7 +7644,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Type:** Task
 - **Classification:** Handoff defect; source-inspected, not freshly device-reproduced
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004, SELLO-009, SELLO-017, SELLO-018
 - **Gate:** G2
 - **Source alias:** HANDOFF-LAYOUT
@@ -7695,6 +7695,36 @@ Run focused host/Compose red→green tests and affected connected scenarios, inc
 font scale 2.0, restoration and resize/resume. Extend the actual catalog example.
 Run `./scripts/verify-ticket SELLO-052 --retain` for fresh G2 evidence; record
 manual accessibility/adaptive checks separately before designated review.
+
+### Execution progress
+2026-10-11: started on branch `sello-052-short-narrow-windows` after SELLO-051 merged.
+The claim was verified first on the API 30 emulator with the display set to 393×400dp,
+about half a phone's screen: the expense form is two panes there, as the ticket says.
+The slip, the category, most of the keypad and the button are on screen; the top row
+of keys starts scrolled out of view; a key is about 53dp wide.
+
+The fix the ticket proposes was then tried, not assumed: with the form forced to one
+column below 600dp in the same window (a temporary edit, reverted), the keypad fills
+the window, the amount, category and date are out of sight and the button is cut off.
+
+**Owner decision (2026-10-11): closed without a shared width rule and without a
+change to the layout.** The two screens need different things: Recibo beside a
+detail is two columns of reading and keeps its 600dp guard; the form's second pane
+is a keypad that works at about 160dp. Giving both one minimum width would trade a
+cramped form for an unusable one. The acceptance criterion ""a reviewed minimum width
+governs two-pane layout consistently; Recibo and Anotar agree"" is therefore
+**rejected, not delivered**, and the Deliverables' shared decision and catalog
+example were not made. Done on this ticket means closed by that decision.
+
+Delivered: the reasoning and both captures in
+`docs/development/layout-and-charts.md`, the handoff's loose end rewritten, and one
+guard test of the form in a 393×400dp window so the split is not ""fixed"" later by
+mistake. No production code changed.
+
+Left as it is, for owner awareness: in a window this short the keys are held from
+the bottom (SELLO-046), so the top row is the part that starts out of view. A window
+too narrow for 48dp keys (under about 350dp wide and under 480dp tall) has no good
+layout today and would need its own design.
 
 Shared definition of done and gates:
 
@@ -7763,7 +7793,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,Backlog,sello-052
+",1011,Medium,In Progress,sello-052
 53,Task,SELLO-053 — Observe reduced-motion changes while the app is running,"Local ID: SELLO-053
 Epic: SELLO-E11
 Increment: MVP

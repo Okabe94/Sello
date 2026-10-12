@@ -1,6 +1,7 @@
 package com.software.sello.data.repository
 
 import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.entity.CategoryEntity
 import com.software.sello.data.local.entity.DefaultLimitEntity
 import com.software.sello.data.mapper.StoredReceipt
 import com.software.sello.data.mapper.decodeAll
@@ -138,7 +139,10 @@ class RoomCategoryCommands(
         if (category.version != command.expectedVersion) {
             return refused(CategoryRejection.VersionConflict(category.version))
         }
-        val next = category.copy(version = Math.addExact(category.version, 1), updatedAt = now)
+        val next = category.copy(
+            version = nextCounter(category.version, CategoryEntity.TABLE, id.value, "version"),
+            updatedAt = now
+        )
         val limits = database.limitDao()
         val changed = when (command) {
             is RenameCategory -> {

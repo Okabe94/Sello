@@ -307,6 +307,55 @@ class CategoryCommandContractTest {
         assertEquals(revisionBefore + 1, ledger.revision())
     }
 
+    private fun raw(sql: String) = ledger.database.openHelper.writableDatabase.execSQL(sql)
+
+    @Test
+    fun aVersionThatCannotAdvanceRefusesTheChangeAndWritesNothing() = runBlocking {
+        mercado()
+        raw("UPDATE category SET version = ${Long.MAX_VALUE - 1}")
+
+        val last = ledger.categories.submit(rename(Long.MAX_VALUE - 1, "Plaza"))
+        val beyond = ledger.categories.submit(rename(Long.MAX_VALUE, "Galería"))
+
+        assertTrue("$last", last is Committed)
+        assertEquals(
+            Rejected(
+                CategoryRejection.StorageFailed(
+                    StorageFailure.Integrity("category", uuid(100), "version")
+                )
+            ),
+            beyond
+        )
+        assertEquals(
+            listOf("${uuid(100)}|Plaza|plaza|shopping_cart|0|${Long.MAX_VALUE}"),
+            categoryRows()
+        )
+        // Created and renamed once: two receipts, revision 2, and no third of either.
+        assertEquals(2, receipts())
+        assertEquals(2, ledger.revision())
+    }
+
+    @Test
+    fun aRevisionThatCannotAdvanceRefusesANewCategoryAndWritesNothing() = runBlocking {
+        ledger.revision()
+        raw("UPDATE profile SET revision = ${Long.MAX_VALUE}")
+
+        val outcome = ledger.categories.submit(ledger.createCategory("Mercado"))
+
+        assertEquals(
+            Rejected(
+                CategoryRejection.StorageFailed(
+                    StorageFailure.Integrity("profile", null, "revision")
+                )
+            ),
+            outcome
+        )
+        assertEquals(emptyList<String>(), categoryRows())
+        assertEquals(0, receipts())
+        assertEquals(0, ledger.long("SELECT COUNT(*) FROM default_limit"))
+        assertEquals(Long.MAX_VALUE, ledger.revision())
+    }
+
     @Test
     fun aLimitCannotBeSetForAMonthThatHasNotStarted() = runBlocking {
         mercado()

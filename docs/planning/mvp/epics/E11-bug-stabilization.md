@@ -1039,7 +1039,7 @@ Choices made during the work, for owner review:
 - **Type:** Task
 - **Source classification:** Bug
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Confidence:** 99%, conditional on incrementing an exhausted persisted counter.
 - **Depends on:** SELLO-004, SELLO-012, SELLO-013, SELLO-018
 - **Gate:** G2
@@ -1115,6 +1115,33 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-054 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-12: started on branch `sello-054-counter-overflow-rejection` after SELLO-053
+merged. The claim was verified first against real Room on the API 30 emulator, which
+the assessment had not done: with the profile revision, an expense's sequence and a
+category's version each set to the largest value in turn, the next command threw
+`ArithmeticException` out of the workflow. In all three the transaction had rolled
+back: no row, no receipt and no revision change.
+
+Owner decision (2026-10-12): the narrow route. One helper for the three increments
+raises a specific signal naming the counter; only that signal becomes a rejection;
+it is reported as the existing integrity failure, not as "unavailable"; and reads are
+not made to refuse such a value.
+
+Delivered, in `:data` only: `nextCounter` and `CounterExhausted` in the command
+protocol, used for the revision, the expense sequence and the category version, and
+one new catch in `runCommand`. No domain type, schema, dependency or screen changed:
+the form already shows a storage failure as "not saved".
+
+Choices made during the work, for owner review:
+- The failure names the row where it has one: `Integrity(category, id, version)`;
+  the revision and the sequence have no single row and carry no key.
+- The last value can still be reached; only the change after it is refused.
+
+Left as it is: a database whose counter is at its largest value can still be read
+and can no longer be written to. Getting out of that state is a repair or a restore
+(SELLO-030), not something a command does.
 
 ## SELLO-055 — Avoid duplicate monthly snapshot pipelines in simultaneous views
 

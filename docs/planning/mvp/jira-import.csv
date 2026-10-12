@@ -3764,7 +3764,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-012, SELLO-017, SELLO-018, SELLO-004
 - **Gate:** G2
 
@@ -3880,13 +3880,51 @@ requests, as agreed with the project owner; the ticket stays In Progress until t
 - A new expense's sequence follows the highest of the recorded and the kept one.
   Once a deletion is final its sequence can be used again.
 
-**Still owed by this ticket, in the second pull request**
+**Second pull request: the screens**
 
-- The form in edit mode, deleting from the form and from a row (swipe, menu and
-  screen-reader action), the undo bar with its catalog example, the guidance for a
-  past month, completion feedback and their host and device tests.
-- Sandbox regression inputs do not exist yet: the sandbox is SELLO-024. The cases
-  here are written so that ticket can run them.
+- The entry form corrects a recorded expense: ""Editar gasto"", ""Guardar cambios"" only
+  after a change, ""Borrar"" in the top bar, the months it touches named before saving.
+- A category's list: press to correct; long press, swipe and screen-reader actions to
+  delete; a line that always says how.
+- ""Gasto borrado"" with ""Deshacer"" over the bottom of Recibo and of a category's detail,
+  held by one object for the whole process.
+- Design system: `SelloNotice`, `ActionLine` and a notice slot in the scaffold, with
+  catalog examples `feedback.notice` and `paper.action-line`.
+
+**Choices made while implementing the screens, for review**
+
+- Deleting does not ask first, from the form or from a row: undo is the safeguard.
+- A correction has no receipt screen. The form closes and the list says ""Gasto
+  actualizado"".
+- The form shows no preview while correcting: the preview adds the draft to the month,
+  and a recorded expense is already counted in it.
+- Once the expense is known to have changed or gone underneath the form, nothing more
+  can be sent from it; the person leaves and opens it again.
+- Texts that were not agreed beforehand: ""Gasto restaurado"", ""Ya no se puede deshacer.
+  El gasto quedó borrado."", ""No se pudo deshacer. Inténtalo de nuevo."", ""No se pudo
+  deshacer porque tus datos cambiaron. El gasto quedó borrado."", ""Aún no cambiaste
+  nada."", ""Corregir este gasto cambia las cifras de septiembre."", ""Toca un gasto para
+  corregirlo. Para borrarlo, deslízalo o mantenlo presionado."", ""Seguir editando"", and
+  the reasons a correction or deletion was refused.
+- A notice that needs no answer stays four seconds.
+- The offer is shown on Recibo and a category's detail, not over the entry form.
+
+**Not delivered here, and where it goes**
+
+- Sandbox regression inputs: there is no sandbox until SELLO-024; a note is on that
+  ticket.
+- The dismissible first-time announcement: SELLO-023, as decided above.
+- Undo after recording a new expense, which the reference also shows: not part of this
+  ticket's acceptance.
+
+### Delivery evidence
+- **Revision:** branch `sello-019-expense-correction-screens`, cut from `main` at `bf9f57d`, which holds the first pull request (#39). Tested snapshot is commit `422cc50` with this ticket's progress notes and the note on SELLO-024 uncommitted on top of it, which the gate counted as inputs; only the status, this evidence text, the retained report and regenerated board views were added after the run, all of which the input fingerprint excludes by design. `main` had not moved when the pull request was opened.
+- **Requirement mapping:** Edit/delete proves the affected row and version and updates consistent snapshots → `ExpenseEditDeleteContractTest` (one record, version 1 to 2, one receipt; `theMonthsTotalFollowsAnEditADeletionAndAnUndoWithoutBeingToldTo`: 10.000, 12.000, 0, 12.000) and in the installed app `ExpenseCorrectionJourneyTest` (288.000 left after 10.000 becomes 12.000, 300.000 after deleting, 288.000 after undo, each compared with the stored row). Editing a deleted or stale record conflicts → `anEditorHoldingTheOldVersionCannotOverwriteTheNewerAmount`, `anExpenseThatDoesNotExistOrWasDeletedCannotBeEdited`, `ofSeveralEditsMadeAtOnceFromTheSameVersionExactlyOneIsSaved`; on screen `ExpenseEditViewModelTest.aRefusedEditKeepsWhatWasTypedAndSaysWhatHappened` and `onceItChangedOrIsGoneUnderneathNothingMoreCanBeSentFromThisForm`. Edit has no creation stamp → the stored `created_at` and sequence are asserted unchanged; a correction shows no receipt (`savingSendsOneEditOfTheVersionReadThenClosesAndSaysItWasUpdated`). Undo restores only the original eligible deletion and refuses conflicting edits, recreation and reset → `UndoCompensationContractTest` (identifier in use, sequence taken, generation replaced, a later deletion). Restart and recomposition cannot extend the offer → `afterTheProcessEndsThereIsNoOfferAndTheDeletionStands`, `theSameDeletionAgainAnswersWithTheOriginalAndNeverGivesMoreTime`, `ExpenseCorrectionsTest.theOfferIsThereJustBeforeSixSecondsAndGoneAtSixWithNothingAsked`, and the journey recreates the activity before pressing ""Deshacer"". D07/U01 to U05 → the cases named U01 to U05 in `UndoCompensationContractTest`; the device sleeping → `whenTheDeviceSleptPastTheTimeComingBackRemovesTheOffer`. Same operation replays safely; failure and cancellation keep a recoverable outcome → replay and cancelled-caller cases in both contract tests, `anEditWhoseOutcomeIsUnknownIsLookedUpAndNeverSentAgain`, `afterTheProcessWasKilledMidSaveTheOutcomeIsLookedUpNotSentAgain`, `anUndoThatFailedCanBeTriedAgainInTimeAsTheSameOperation`. Gesture and accessible menu paths → `CorrectionControlsTest` and `CategoryDetailScreenTest` (press, long press, swipe, named screen-reader actions). Deadlines and receipts explicit → the notice is read as ""Gasto borrado. Puedes deshacerlo durante 6 segundos.""; the journey asserts the receipt kinds in order. Historical correction discoverable, affected period explicit before saving, feedback after the committed receipt → the line in the list (`theListSaysHowAnExpenseIsCorrectedOrDeleted`), `anExpenseOfAnEarlierMonthSaysWhichMonthsWouldChange`, `itSaysWhichOtherMonthsFiguresWouldChangeBeforeAnythingIsSaved`, and ""Gasto actualizado"" only after `Committed`. Existing create journey still works → the 144 app device tests that existed before pass unchanged.
+- **Red / Green:** each group was written before its code and seen failing for the intended reason, then passing. First pull request: 36 real-database tests red against stubs that answered ""conflict"" and an empty migration (""Migration didn't properly handle: deleted_expense""). This one: `ExpenseCorrectionsTest` 13 of 15 red against a class that did nothing; `ExpenseEditViewModelTest` 17 of 18 red against the form without edit behaviour; 3 new `CategoryDetailViewModelTest` cases red; `CorrectionControlsTest` 11 of 11 red on the emulator against components that drew nothing; 18 screen and journey cases red before the screens were wired. Four of my own expectations were corrected on the way and none weakened a contract: a miscounted fixture, a notice test that compared the dock's padded edge, a swipe test that counted the ordinary press a drag across a button makes, and the swipe itself, first built on a Material component whose callback fired repeatedly and replaced by a plain drag. Written after their code and passing first time: seven real-database cases in the first pull request, three of them then checked by removing the guarded code.
+- **Gate results:** local `./scripts/verify-ticket SELLO-019 --gate G2 --retain` passed: 403 host tests (253 app, 101 domain, 37 design-system, 9 data, 3 catalog), 406 device tests on an API 30 emulator (163 app, 155 data, 78 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. An earlier run failed on ktlint alone, three lines one character too long, with every test passing; the run recorded below is the third to pass, repeated because the progress notes written after the second counted as changed inputs. Schema version 2 was added by the first pull request with its exported schema and migration tests; no dependency, lock file or permission changed.
+- **Quality run:** run 20261012T210243Z-26e28205; SELLO-019 G2 passed; HEAD 422cc50, inputs sha256 93a3988ffca7; report docs/planning/mvp/quality-reports/SELLO-019.json sha256 ddc322f9caa30c4c128b1955c529c81b0b1d3f2a677fa933eb9248a464afddaf
+- **Device / Artifact:** the debug app on an API 30 emulator (320×640 at density 1, the default of the image created for this session; Cobalto light, font scale 1.0), 2026-10-12, a build of the working tree before the commit, driven by a throwaway device test that was not committed, on synthetic data. [The list with its line of help](../../../testing/evidence/SELLO-019/01-list-with-hint.png), [the long-press menu](../../../testing/evidence/SELLO-019/02-long-press-menu.png), [the form opened on an expense](../../../testing/evidence/SELLO-019/03-edit-unchanged.png), [after a change](../../../testing/evidence/SELLO-019/04-edit-changed.png), [deleted, with the offer](../../../testing/evidence/SELLO-019/05-deleted-with-undo.png) and [restored](../../../testing/evidence/SELLO-019/06-restored.png). Not executed by hand or on a device: the process being killed with the form or an offer open (covered by saved-state and reopened-database tests, not by killing the installed app), TalkBack, a keyboard, twice the font size, a wide window with the notice, a phone-sized screen, and the device sleeping during the six seconds.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices and what is not delivered here; the pull request and its checks are that record. No independent technical review.
 
 Shared definition of done and gates:
 
@@ -3955,7 +3993,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1005,Highest,In Progress,sello-019
+",1005,Highest,Done,sello-019
 20,Story,SELLO-020 — Complete category management and month-specific budget editing,"Local ID: SELLO-020
 Epic: SELLO-E05
 Increment: MVP
@@ -4593,6 +4631,12 @@ This is an isolated laboratory, not a release settings menu or altered device cl
 Use the distinct clock ports from SELLO-005, real Room factory from SELLO-011 and
 app Root from SELLO-015. Read architecture §9,
 [module map](../EXECUTION_GUIDE.md#module-and-file-map) and accepted D02/D09.
+
+From SELLO-019 (2026-10-12): expense edit, delete and undo shipped before the sandbox
+existed, so they have no sandbox regression inputs. Add them here: U01 to U05 in
+`UndoCompensationContractTest` are written against the distinct clocks and can be
+run as scenarios, including ""advance the financial day a year, undo still ends at
+six real seconds"".
 
 ### Implementation plan
 1. Add debug-only tools UI/bindings with separate sandbox DB/preferences namespace

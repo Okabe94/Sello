@@ -3,20 +3,26 @@ package com.software.sello.designsystem.component
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.theme.SelloTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -103,6 +109,38 @@ class CategorySemanticsTest {
                 assertTrue("$it $tag is $height", height >= 47.9.dp)
             }
         }
+    }
+
+    @Test
+    fun aCellOffersItsActionsByLongPressAndByNameAndPressingStillOnlyOpens() {
+        val done = mutableListOf<String>()
+        rule.setContent {
+            SelloTheme {
+                CategoryCell(
+                    "Alimentación",
+                    SelloIcon.Restaurant,
+                    money("287.600"),
+                    0.68f,
+                    "Alimentación. Quedan 287.600 pesos.",
+                    { done += "open" },
+                    Modifier.testTag("cell"),
+                    actions = listOf(LineAction("Editar categoría") { done += "edit" })
+                )
+            }
+        }
+
+        rule.onNodeWithTag("cell").performClick()
+        rule.onNodeWithTag("cell").performTouchInput { longClick() }
+        rule.onNodeWithText("Editar categoría").assertIsDisplayed().performClick()
+        val offered = rule.onNodeWithTag("cell").fetchSemanticsNode()
+            .config[SemanticsActions.CustomActions]
+        rule.runOnUiThread { offered.single().action() }
+
+        assertEquals(listOf("open", "edit", "edit"), done)
+        assertEquals(listOf("Editar categoría"), offered.map { it.label })
+        rule.onNodeWithTag(
+            "cell"
+        ).assertContentDescriptionEquals("Alimentación. Quedan 287.600 pesos.")
     }
 
     private fun rowsOf(count: Int): List<Dp> = (0 until count).map {

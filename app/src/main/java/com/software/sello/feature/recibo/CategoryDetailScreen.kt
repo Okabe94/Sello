@@ -42,6 +42,7 @@ import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.category.CategoryIcons
 import com.software.sello.presentation.date.DateLabels
 import com.software.sello.presentation.month.MonthNames
+import java.time.YearMonth
 
 /**
  * One category in the selected month: what is left of its limit, what was spent, and
@@ -58,7 +59,8 @@ fun CategoryDetailScreen(
     onRecordHere: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
-    onEditExpense: (String) -> Unit = {}
+    onEditExpense: (String) -> Unit = {},
+    onEditCategory: () -> Unit = {}
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
@@ -94,7 +96,20 @@ fun CategoryDetailScreen(
                         Modifier.testTag(CATEGORY_DETAIL_STALE_TAG)
                     )
                 }
-                HeaderSlip(state.category, showName)
+                HeaderSlip(state.category, showName, onEditCategory)
+                // A month that is over can still have its limit corrected; said where
+                // that month is being looked at, every time.
+                if (state.month < YearMonth.from(state.today)) {
+                    Text(
+                        text = stringResource(
+                            R.string.category_detail_past_help,
+                            months.inSentence(state.month).replaceFirstChar { it.titlecase() }
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SelloTheme.colors.inkSoft,
+                        modifier = Modifier.testTag(CATEGORY_DETAIL_PAST_HELP_TAG)
+                    )
+                }
                 Expenses(state, months, dates, onAction, onRecordHere, onEditExpense)
             }
         }
@@ -102,7 +117,7 @@ fun CategoryDetailScreen(
 }
 
 @Composable
-private fun HeaderSlip(category: ReciboCategory, showName: Boolean) {
+private fun HeaderSlip(category: ReciboCategory, showName: Boolean, onEditCategory: () -> Unit) {
     Slip(Modifier.testTag(CATEGORY_DETAIL_HEADER_TAG)) {
         if (showName) {
             Text(
@@ -155,6 +170,13 @@ private fun HeaderSlip(category: ReciboCategory, showName: Boolean) {
                 color = SelloTheme.colors.inkSoft
             )
         }
+        Spacer(Modifier.height(SelloTheme.spacing.sm))
+        SelloButton(
+            text = stringResource(R.string.category_detail_edit),
+            onClick = onEditCategory,
+            kind = ButtonKind.Outlined,
+            modifier = Modifier.testTag(CATEGORY_DETAIL_EDIT_TAG)
+        )
     }
 }
 
@@ -308,6 +330,8 @@ const val CATEGORY_DETAIL_LIST_LOADING_TAG = "detail:list-loading"
 const val CATEGORY_DETAIL_LIST_FAILED_TAG = "detail:list-failed"
 const val CATEGORY_DETAIL_EMPTY_TAG = "detail:empty"
 const val CATEGORY_DETAIL_MORE_TAG = "detail:more"
+const val CATEGORY_DETAIL_EDIT_TAG = "detail:edit-category"
+const val CATEGORY_DETAIL_PAST_HELP_TAG = "detail:past-help"
 const val CATEGORY_DETAIL_HINT_TAG = "detail:hint"
 const val CATEGORY_DETAIL_DELETE_PROBLEM_TAG = "detail:delete-problem"
 const val CATEGORY_DETAIL_MORE_FAILED_TAG = "detail:more-failed"

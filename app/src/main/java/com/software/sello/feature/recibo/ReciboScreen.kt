@@ -35,6 +35,7 @@ import com.software.sello.designsystem.component.CategoryGrid
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
 import com.software.sello.designsystem.component.LeaderLine
+import com.software.sello.designsystem.component.LineAction
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SelloButton
@@ -211,6 +212,7 @@ private fun CategoriesSlip(
             color = SelloTheme.colors.inkSoft
         )
         Spacer(Modifier.height(SelloTheme.spacing.sm))
+        val editLabel = stringResource(R.string.recibo_category_edit)
         CategoryGrid(categories) { index, category ->
             val isSelected = category.id == selectedCategoryId
             CategoryCell(
@@ -220,6 +222,9 @@ private fun CategoriesSlip(
                 fraction = category.fraction,
                 description = categoryDescription(category),
                 onClick = { onAction(ReciboAction.OpenCategory(category.id)) },
+                actions = listOf(
+                    LineAction(editLabel) { onAction(ReciboAction.EditCategory(category.id)) }
+                ),
                 modifier = Modifier
                     .testTag(reciboCategoryTag(category.id))
                     .fillMaxWidth()

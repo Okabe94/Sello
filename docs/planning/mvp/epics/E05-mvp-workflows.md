@@ -174,7 +174,7 @@ requests, as agreed with the project owner; the ticket stays In Progress until t
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-013, SELLO-018, SELLO-008, SELLO-004
 - **Gate:** G2
 
@@ -245,6 +245,66 @@ and approved D04/D05/D07. Read
 Create/run `*CategoryManagementViewModelTest` and real device CategoryManagementJourneyTest;
 G2. Verify rename/month-specific limit/archive/stale draft/restart and retained source
 history. Archive-only MVP has no implemented or fake destructive aggregate delete.
+
+### Execution progress
+2026-10-12: started on branch `sello-020-category-management` after SELLO-019 merged.
+The storage commands for every change here already existed (SELLO-013); this ticket
+adds no command, schema, dependency or permission.
+
+**Decisions taken with the project owner before any code**
+
+- A name another category already has is announced while it is typed, in the new
+  category form as well, not as the error of a save. The button stays off until the
+  name changes.
+- Changing name, icon and limit together is three separate commands with an honest
+  partial result, not a new combined command.
+- In the current month the limit applies from this month onwards; there is no "only
+  this month" choice for the month in progress.
+- Archiving is an action in the form's top bar, with a confirmation; a long press on
+  a category in Recibo opens the form.
+- The dismissible first-time announcement that a previous month's limit can be
+  corrected is deferred to SELLO-023, which owns remembered preferences; a note is on
+  that ticket. This ticket ships the help that is always in view.
+
+**Delivered**
+
+- `CategoryManagementViewModel` and the edit mode of the category form: rename, icon,
+  the limit of the month it was opened from, conflict with reload or keep-draft,
+  archive and unarchive with a confirmation that states the consequences and counts.
+- Entry points: "Editar categoría" on a category's detail; a long press or a
+  screen-reader action on its cell in Recibo.
+- A line on a finished month's detail saying its limit can still be corrected.
+- Design system: `CategoryCell` takes actions, offered by long press and by name.
+
+**Choices made while implementing, for review**
+
+- A month that has a limit cannot be left without one from this form; there is no
+  command that removes a limit.
+- An archived category's limit cannot be changed from the current month on (the
+  command refuses it); a finished month's still can. Its name and icon stay editable.
+- "Conservar mis cambios" after a conflict reads the category again and keeps the
+  draft, so the next save is knowingly over the newer version.
+- Archiving from a form with unsaved changes discards them, and the confirmation says so.
+- The long press in Recibo offers "Editar categoría" only; archiving is inside the form.
+- One existing assertion changed on purpose: a form showing a taken name used to keep
+  its button on, and now keeps it off.
+- Texts that were not agreed beforehand are listed in the pull request.
+
+**Not delivered here, and where it goes**
+
+- Archive and unarchive across a month boundary in the installed app: that needs
+  simulated financial time (SELLO-024). The approved cases AR01 to AR06 are covered
+  against a real database by `MonthlyBudgetHistoryTest` since SELLO-013.
+- The dismissible announcement: SELLO-023.
+
+### Delivery evidence
+- **Revision:** branch `sello-020-category-management`, cut from `main` at `59021f6` after SELLO-019 merged. Tested snapshot is commit `2fec907`: the gate ran on the working tree that became that commit, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design. `main` had not moved when the pull request was opened.
+- **Requirement mapping:** Current-month changes never mutate prior limits; rename keeps identity; archived history stays readable → `CategoryManagementJourneyTest.renamingAndRaisingTheLimitKeepsTheSameCategoryItsExpensesAndLastMonthsFigures` (same identifier under the new name, both expenses still attached, last month still 100.000 less 20.000 = 80.000, the approved H01) and `nameIconAndLimitAreThreeChangesEachAgainstTheVersionTheOneBeforeLeft` (the current month sends `SetDefaultLimit`). Archive removes the category from new entries without cascading; no aggregate delete → `archivingTheOnlyCategoryKeepsItsHistoryAndSendsAnotarBackToCreatingOne` (row, limit and both expenses stored after archiving; Anotar opens the prerequisite form); no delete action exists. AR01 to AR06, consequences before confirmation, archived rows visible → the rules are `MonthlyBudgetHistoryTest` and `CategoryBudgetPolicyTest` since SELLO-013, unchanged; the confirmation is `beforeArchivingItSaysWhatStaysWhatStopsAndFromWhen`, `whenTheExpensesCouldNotBeCountedNoNumberIsGiven`, `beforeUnarchivingItSaysWhetherTheBudgetComesBack` and `anArchivedCategoryIsOfferedToUnarchiveAndToldWhetherItsBudgetComesBack`. Draft conflict with reload or retry; "Guardar cambios" needs a confirmed receipt → `aCategoryChangedMeanwhileStopsTheFormUntilThePersonChooses`, `keepingTheDraftReadsTheCategoryAgainAndSavesOverItsNewVersion`, `discardingTheDraftStartsAgainFromWhatTheCategoryIsNow`, `anUnknownOutcomeIsLookedUpAndNeverSentAgain`, `whenALaterChangeFailsItSaysWhatWasSavedAndTheNextAttemptSendsOnlyTheRest`. Removing the last active category returns Anotar to the prerequisite → the archive journey. Previous months' limits can be corrected, with retained help; the historical editor names the month and scope; a confirmed save explains the refreshed totals → `aFinishedMonthSaysItsLimitCanStillBeCorrected`, `fromAFinishedMonthItNamesThatMonthAndSaysNothingElseChanges`, `fromAFinishedMonthOnlyThatMonthsLimitIsChangedAndTheNoticeNamesIt`, and in the installed app `aFinishedMonthsLimitIsCorrectedWithoutTouchingThisMonth` (90.000 less 20.000 = 70.000 there, this month still 90.000 left). Long-press actions have accessible equivalents → `aCellOffersItsActionsByLongPressAndByNameAndPressingStillOnlyOpens`, `aLongPressOrAScreenReaderActionOnACategoryOffersToEditItAndPressingStillOpensIt`, and the header button. Owner's addition, a taken name said before saving → `aNameAnotherCategoryHasIsSaidWhileTypingBeforeAnythingIsSent`, `aNameThatIsAlreadyTakenIsSaidWhileTypingBeforeAnyAttemptToSave`, `aNameAnotherCategoryHasIsSaidOnTheFieldAndCannotBeSaved`. Process restoration → `afterTheProcessWasKilledMidSaveTheOutcomeIsLookedUpAndTheDraftIsKept`, `aDraftRestoredAfterTheProcessWasKilledIsNotReadOverAndKeepsTheVersionItRead`.
+- **Red / Green:** each group was written before its code and seen failing, then passing. `CategoryManagementViewModelTest` 30 of 30 red against a class that did nothing, 26 green on the first implementation and 30 after the test snapshot source learned to answer a single read. The new-category taken-name case red, then green. On the emulator, with only parameters and tags in place: the design-system cell case and 20 app screen and journey cases red (three journeys among them), all green after the screens were wired. One of those 20 was an existing assertion that a form showing a taken name keeps its button on; it was changed on purpose to off, by the owner's decision. Those last four were the archive cases: the fake snapshot source refused single reads, which the test set-up had not needed before.
+- **Gate results:** local `./scripts/verify-ticket SELLO-020 --gate G2 --retain` passed: 434 host tests (284 app, 101 domain, 37 design-system, 9 data, 3 catalog), 429 device tests on an API 30 emulator (185 app, 155 data, 79 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. The run before it failed on ktlint alone, three lines one character too long, with every test passing; I had started it without reading the style check's output. No command, schema, dependency, lock file or permission changed.
+- **Quality run:** run 20261012T223116Z-fcd49908; SELLO-020 G2 passed; HEAD 59021f6, inputs sha256 0a1152e58313; report docs/planning/mvp/quality-reports/SELLO-020.json sha256 dd8640cfe94bb8d80e9d14f49172277f77ebdf6370d7d0bd843116ae0c899223
+- **Device / Artifact:** the debug app on an API 30 emulator (320×640 at density 1; Cobalto light, font scale 1.0), 2026-10-12, a build of the working tree before the commit, driven by a throwaway device test that was not committed, on synthetic data. [The long-press menu in Recibo](../../../testing/evidence/SELLO-020/01-recibo-menu.png), [the detail with "Editar categoría"](../../../testing/evidence/SELLO-020/02-detail.png), [the form on a category](../../../testing/evidence/SELLO-020/03-edit.png), [a taken name said while typing](../../../testing/evidence/SELLO-020/04-name-taken.png), [which months the limit is for](../../../testing/evidence/SELLO-020/05-limit-scope.png), [the archive question](../../../testing/evidence/SELLO-020/06-archive-question.png) and [the detail after saving](../../../testing/evidence/SELLO-020/07-updated.png). Not executed by hand or on a device: TalkBack and twice the font size, which the ticket's tests name and which are covered only by semantics assertions and existing large-font tests of the same form; archive and unarchive across a month boundary in the installed app; the process being killed with the form open; a wide window; a phone-sized screen.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices and what is not delivered here; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-021 — Ship income recording, history and guarded correction workflows
 
@@ -443,6 +503,11 @@ Carried over from SELLO-019 (2026-10-12, project owner): the dismissible first-t
 announcement that a past expense can be corrected (D04/H06) needs a remembered
 "seen" preference, so it is delivered here. SELLO-019 ships the guidance that is
 shown in context every time.
+
+Carried over from SELLO-020 (2026-10-12, project owner) for the same reason: the
+dismissible announcement that a previous month's limit can be corrected. SELLO-020
+ships the help that stays in view; this ticket adds the announcement and remembers
+that it was dismissed, for both.
 
 ### Implementation plan
 1. Define typed theme/ink/order/direction preferences and stable codecs in data;

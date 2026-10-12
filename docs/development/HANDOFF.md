@@ -39,7 +39,8 @@ Four modules plus a catalog app, with the dependency graph enforced by
 What a person can do today: start empty, create categories with or without a
 limit, record an expense and see its stored receipt, see what is left in Recibo,
 open a category to see its figures and its expenses, correct an expense or delete
-it and undo that for six seconds, look at earlier months, and find all of it again after the process is killed or the app restarted.
+it and undo that for six seconds, rename a category, change its icon and its limit
+for this month onwards or for one finished month, archive and unarchive it, look at earlier months, and find all of it again after the process is killed or the app restarted.
 
 What does not exist: income, Resumen, settings, the sandbox, backup,
 restore and reset. The schema, now version 2, has an `income` table and no code that

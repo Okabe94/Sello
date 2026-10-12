@@ -103,4 +103,7 @@ sealed interface ReciboAction {
 
     /** Show one category's detail. Which one is shown is the frame's to remember. */
     data class OpenCategory(val id: String) : ReciboAction
+
+    /** Open the form on an existing category. Navigation is the root's. */
+    data class EditCategory(val id: String) : ReciboAction
 }

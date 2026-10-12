@@ -1,22 +1,50 @@
 package com.software.sello.feature.category
 
+import java.time.YearMonth
+
 /** Why the name cannot be used. */
 enum class NameError { Required, TooLong, NotAllowed, Taken }
 
 /** Why the limit cannot be used. The text typed is kept as it was. */
 enum class LimitError { Required, NotAnAmount }
 
-/** Why saving did not finish. None of these means the category was created. */
+/**
+ * Why saving did not finish. For a new category none of these means it was created.
+ * For an existing one, [CategoryEditorState.savedParts] says what was saved before this.
+ */
 enum class SaveError {
-    /** Storage failed and nothing was written. */
+    /** Storage failed and nothing more was written. */
     NotSaved,
 
     /** The data was replaced meanwhile (restore or reset). Trying again uses the new data. */
     DataChanged,
 
     /** It is not known yet whether it was saved; asking again will tell. */
-    Unknown
+    Unknown,
+
+    /** The category was changed since this form read it. The person chooses what to do. */
+    Conflict,
+
+    /** The category being edited no longer exists. */
+    CategoryGone
 }
+
+/** One part of a category, saved by its own command. */
+enum class EditPart { Name, Icon, Limit }
+
+/**
+ * What archiving or unarchiving would do, asked before it is done. [expensesThisMonth]
+ * is null when it could not be counted. [resumesBudget] is for a category archived in
+ * an earlier month: unarchiving gives it its last limit again from [currentMonth].
+ * [discardsChanges] says the form has changes that will not be saved.
+ */
+data class ArchiveQuestion(
+    val unarchive: Boolean,
+    val expensesThisMonth: Int?,
+    val currentMonth: YearMonth,
+    val resumesBudget: Boolean,
+    val discardsChanges: Boolean
+)
 
 /** A limit offered as a shortcut. [label] is the amount as it is shown. */
 data class LimitSuggestion(val pesos: Long, val label: String)
@@ -25,6 +53,14 @@ data class LimitSuggestion(val pesos: Long, val label: String)
 sealed interface EditorResult {
     /** A receipt confirmed the category. [categoryId] is its real identifier. */
     data class Created(val categoryId: String) : EditorResult
+
+    /** Every change to an existing category was confirmed by its receipt. */
+    data object Updated : EditorResult
+
+    /** A receipt confirmed that the category was archived, or unarchived. */
+    data object Archived : EditorResult
+
+    data object Unarchived : EditorResult
 
     data object Discarded : EditorResult
 }
@@ -51,13 +87,42 @@ data class CategoryEditorState(
     val busy: Boolean = false,
     val saveError: SaveError? = null,
     val confirmDiscard: Boolean = false,
-    val result: EditorResult? = null
+    val result: EditorResult? = null,
+    /** An existing category is being changed, not a new one created. */
+    val editing: Boolean = false,
+    val archived: Boolean = false,
+    /** Editing: the month whose limit this form shows and changes. */
+    val targetMonth: YearMonth? = null,
+    /** [targetMonth] is over: only that month's limit changes, no other and no default. */
+    val historical: Boolean = false,
+    /** The limit cannot be changed here: an archived category has no limit going forward. */
+    val limitLocked: Boolean = false,
+    /** Editing: something differs from what is stored. */
+    val changed: Boolean = false,
+    /** What the last attempt saved before it stopped, in order. */
+    val savedParts: List<EditPart> = emptyList(),
+    val archiveQuestion: ArchiveQuestion? = null
 ) {
-    /** Nothing can be sent without a name, while sending, or before the form is ready. */
-    val canSubmit: Boolean get() = !loading && !loadFailed && !busy && name.isNotBlank()
+    /**
+     * Nothing can be sent without a name, with a name known to be taken, while
+     * sending, or before the form is ready. An existing category also needs a change.
+     */
+    val canSubmit: Boolean
+        get() = !loading && !loadFailed && !busy && name.isNotBlank() &&
+            nameError != NameError.Taken && saveError !in Blocking && (!editing || changed)
 
-    /** While saving, or while a save's outcome is unknown, the draft must not change. */
-    val editable: Boolean get() = !busy && saveError != SaveError.Unknown
+    /**
+     * While saving, while a save's outcome is unknown, or once the category is known to
+     * have changed or gone underneath this form, the draft must not change.
+     */
+    val editable: Boolean get() = !busy && saveError !in Blocking
+
+    /** An existing category that has been read can be archived or unarchived from here. */
+    val canArchive: Boolean get() = editing && !loading && !loadFailed && editable
+
+    private companion object {
+        val Blocking = setOf(SaveError.Unknown, SaveError.Conflict, SaveError.CategoryGone)
+    }
 }
 
 sealed interface CategoryEditorAction {
@@ -82,4 +147,17 @@ sealed interface CategoryEditorAction {
     data object DiscardConfirmed : CategoryEditorAction
 
     data object KeepEditing : CategoryEditorAction
+
+    /** Ask to archive the category, or to unarchive an archived one. Nothing is done yet. */
+    data object Archive : CategoryEditorAction
+
+    data object ArchiveConfirmed : CategoryEditorAction
+
+    data object ArchiveDismissed : CategoryEditorAction
+
+    /** After a conflict: read the category again and start from what it is now. */
+    data object ReloadDiscardingDraft : CategoryEditorAction
+
+    /** After a conflict: read the category again and keep what was typed, to save over it. */
+    data object ReloadKeepingDraft : CategoryEditorAction
 }

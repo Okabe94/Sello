@@ -117,8 +117,12 @@ class HandSnapshots : MonthlySnapshots {
         of(snapshot.month).value = SnapshotState.Ready(snapshot)
     }
 
+    /** One read: the month as it was last published, or a failure when it never was. */
     override suspend fun read(month: YearMonth): Outcome<MonthlySnapshot, SnapshotFailure> =
-        error("the form observes; it does not read once")
+        when (val state = of(month).value) {
+            is SnapshotState.Ready -> Outcome.Success(state.snapshot)
+            else -> Outcome.Failure(SnapshotFailure.Storage(StorageFailure.Unavailable("unread")))
+        }
 
     override fun observe(month: YearMonth): Flow<SnapshotState> =
         of(month).onStart { observed += month }

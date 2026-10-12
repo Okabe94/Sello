@@ -174,7 +174,7 @@ requests, as agreed with the project owner; the ticket stays In Progress until t
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-013, SELLO-018, SELLO-008, SELLO-004
 - **Gate:** G2
 
@@ -245,6 +245,57 @@ and approved D04/D05/D07. Read
 Create/run `*CategoryManagementViewModelTest` and real device CategoryManagementJourneyTest;
 G2. Verify rename/month-specific limit/archive/stale draft/restart and retained source
 history. Archive-only MVP has no implemented or fake destructive aggregate delete.
+
+### Execution progress
+2026-10-12: started on branch `sello-020-category-management` after SELLO-019 merged.
+The storage commands for every change here already existed (SELLO-013); this ticket
+adds no command, schema, dependency or permission.
+
+**Decisions taken with the project owner before any code**
+
+- A name another category already has is announced while it is typed, in the new
+  category form as well, not as the error of a save. The button stays off until the
+  name changes.
+- Changing name, icon and limit together is three separate commands with an honest
+  partial result, not a new combined command.
+- In the current month the limit applies from this month onwards; there is no "only
+  this month" choice for the month in progress.
+- Archiving is an action in the form's top bar, with a confirmation; a long press on
+  a category in Recibo opens the form.
+- The dismissible first-time announcement that a previous month's limit can be
+  corrected is deferred to SELLO-023, which owns remembered preferences; a note is on
+  that ticket. This ticket ships the help that is always in view.
+
+**Delivered**
+
+- `CategoryManagementViewModel` and the edit mode of the category form: rename, icon,
+  the limit of the month it was opened from, conflict with reload or keep-draft,
+  archive and unarchive with a confirmation that states the consequences and counts.
+- Entry points: "Editar categoría" on a category's detail; a long press or a
+  screen-reader action on its cell in Recibo.
+- A line on a finished month's detail saying its limit can still be corrected.
+- Design system: `CategoryCell` takes actions, offered by long press and by name.
+
+**Choices made while implementing, for review**
+
+- A month that has a limit cannot be left without one from this form; there is no
+  command that removes a limit.
+- An archived category's limit cannot be changed from the current month on (the
+  command refuses it); a finished month's still can. Its name and icon stay editable.
+- "Conservar mis cambios" after a conflict reads the category again and keeps the
+  draft, so the next save is knowingly over the newer version.
+- Archiving from a form with unsaved changes discards them, and the confirmation says so.
+- The long press in Recibo offers "Editar categoría" only; archiving is inside the form.
+- One existing assertion changed on purpose: a form showing a taken name used to keep
+  its button on, and now keeps it off.
+- Texts that were not agreed beforehand are listed in the pull request.
+
+**Not delivered here, and where it goes**
+
+- Archive and unarchive across a month boundary in the installed app: that needs
+  simulated financial time (SELLO-024). The approved cases AR01 to AR06 are covered
+  against a real database by `MonthlyBudgetHistoryTest` since SELLO-013.
+- The dismissible announcement: SELLO-023.
 
 ## SELLO-021 — Ship income recording, history and guarded correction workflows
 
@@ -443,6 +494,11 @@ Carried over from SELLO-019 (2026-10-12, project owner): the dismissible first-t
 announcement that a past expense can be corrected (D04/H06) needs a remembered
 "seen" preference, so it is delivered here. SELLO-019 ships the guidance that is
 shown in context every time.
+
+Carried over from SELLO-020 (2026-10-12, project owner) for the same reason: the
+dismissible announcement that a previous month's limit can be corrected. SELLO-020
+ships the help that stays in view; this ticket adds the announcement and remembers
+that it was dismissed, for both.
 
 ### Implementation plan
 1. Define typed theme/ink/order/direction preferences and stable codecs in data;

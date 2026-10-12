@@ -2,7 +2,9 @@ package com.software.sello.designsystem.component
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -17,7 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -29,9 +34,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.font.FontWeight
@@ -119,9 +126,13 @@ private const val FILL_STAGGER_MILLIS = 30L
  * [amountPrefix] what was spent when there is no limit. The amount is exact even when
  * the circle can only show "full".
  *
+ * [actions] are offered by a long press, as a menu, and to a screen reader by name;
+ * pressing the cell is still only [onClick].
+ *
  * @param description the whole cell in words, such as "Alimentación. Quedan 287.600
  * pesos de 900.000. 68 por ciento usado." The cell is one button that says this.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CategoryCell(
     name: String,
@@ -133,15 +144,21 @@ fun CategoryCell(
     modifier: Modifier = Modifier,
     over: Boolean = false,
     amountPrefix: String? = null,
-    staggerIndex: Int = 0
+    staggerIndex: Int = 0,
+    actions: List<LineAction> = emptyList()
 ) {
     val colors = SelloTheme.colors
     val largeType = LocalDensity.current.fontScale >= LARGE_NAME_SCALE
+    var menuOpen by remember { mutableStateOf(false) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
-            .clickable(role = Role.Button, onClick = onClick)
+            .combinedClickable(
+                role = Role.Button,
+                onLongClick = { menuOpen = true }.takeIf { actions.isNotEmpty() },
+                onClick = onClick
+            )
             .heightIn(min = SelloTheme.spacing.minTouchTarget)
             .clearAndSetSemantics {
                 contentDescription = description
@@ -150,8 +167,18 @@ fun CategoryCell(
                     onClick()
                     true
                 }
+                // The same actions the long press offers, by name, with no gesture.
+                if (actions.isNotEmpty()) {
+                    customActions = actions.map { action ->
+                        CustomAccessibilityAction(action.label) {
+                            action.onClick()
+                            true
+                        }
+                    }
+                }
             }
     ) {
+        LineActionMenu(actions, menuOpen) { menuOpen = false }
         CategoryCircle(icon, fraction, over = over, staggerIndex = staggerIndex)
         Column {
             Text(

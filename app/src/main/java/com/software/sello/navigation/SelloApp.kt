@@ -46,6 +46,7 @@ import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.category.CategoryEditorRoot
+import com.software.sello.feature.category.CategoryManagementRoot
 import com.software.sello.feature.expense.ExpenseEntryRoot
 import com.software.sello.feature.recibo.CategoryDetailAction
 import com.software.sello.feature.recibo.CategoryDetailScreen
@@ -91,6 +92,12 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 onUndo = corrections::undo,
                 onEditExpense = { id ->
                     navigation.navigate(ExpenseEditRoute(id)) { launchSingleTop = true }
+                },
+                // Opened from the month on screen: that is the month whose limit it edits.
+                onEditCategory = { id ->
+                    navigation.navigate(CategoryEditRoute(id, state.selectedMonth.toString())) {
+                        launchSingleTop = true
+                    }
                 }
             ) { navigation.navigate(CategoryEditorRoute()) }
         }
@@ -114,6 +121,13 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                         navigation.navigate(ExpenseEntryRoute(createdId, amount))
                     }
                 }
+            }
+        }
+        composable<CategoryEditRoute> {
+            CategoryManagementRoot(viewModels) {
+                val onEdit =
+                    navigation.currentBackStackEntry?.destination?.hasRoute<CategoryEditRoute>()
+                if (onEdit == true) navigation.popBackStack()
             }
         }
         composable<ExpenseEntryRoute> {
@@ -174,6 +188,7 @@ private fun ReciboDestination(
     notice: CorrectionNotice?,
     onUndo: () -> Unit,
     onEditExpense: (String) -> Unit,
+    onEditCategory: (String) -> Unit,
     onCreateCategory: () -> Unit
 ) {
     val recibo: ReciboViewModel = viewModel(factory = viewModels)
@@ -206,7 +221,8 @@ private fun ReciboDestination(
                         onAction = detail::onAction,
                         onRecordHere = { onShell(ShellAction.StartEntryIn(id)) },
                         contentPadding = padding,
-                        onEditExpense = onEditExpense
+                        onEditExpense = onEditExpense,
+                        onEditCategory = { onEditCategory(id) }
                     )
                 }
             }
@@ -217,6 +233,7 @@ private fun ReciboDestination(
                     when (action) {
                         ReciboAction.CreateCategory -> onCreateCategory()
                         is ReciboAction.OpenCategory -> onShell(ShellAction.OpenCategory(action.id))
+                        is ReciboAction.EditCategory -> onEditCategory(action.id)
                         ReciboAction.Retry -> Unit
                     }
                     recibo.onAction(action)
@@ -398,6 +415,19 @@ private fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
 
         CorrectionNotice.Updated ->
             SelloNotice(stringResource(R.string.correction_updated), tagged)
+
+        is CorrectionNotice.CategorySaved -> SelloNotice(
+            message = notice.limitOf?.let {
+                stringResource(R.string.category_saved_month, monthNames().inSentence(it))
+            } ?: stringResource(R.string.category_saved),
+            modifier = tagged
+        )
+
+        CorrectionNotice.CategoryArchived ->
+            SelloNotice(stringResource(R.string.category_archived_notice), tagged)
+
+        CorrectionNotice.CategoryUnarchived ->
+            SelloNotice(stringResource(R.string.category_unarchived_notice), tagged)
     }
 }
 

@@ -3,15 +3,18 @@ package com.software.sello.feature.recibo
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -292,5 +295,27 @@ class ReciboScreenTest {
         assertEquals(listOf<ReciboAction>(ReciboAction.Retry), actions)
         rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
         rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aLongPressOrAScreenReaderActionOnACategoryOffersToEditItAndPressingStillOpensIt() {
+        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+
+        rule.onNodeWithTag(reciboCategoryTag("a")).performScrollTo().performClick()
+        rule.onNodeWithTag(reciboCategoryTag("a")).performTouchInput { longClick() }
+        rule.onNodeWithText("Editar categoría").assertIsDisplayed().performClick()
+        val offered = rule.onNodeWithTag(reciboCategoryTag("b")).fetchSemanticsNode()
+            .config[SemanticsActions.CustomActions]
+        rule.runOnUiThread { offered.single().action() }
+
+        assertEquals(listOf("Editar categoría"), offered.map { it.label })
+        assertEquals(
+            listOf(
+                ReciboAction.OpenCategory("a"),
+                ReciboAction.EditCategory("a"),
+                ReciboAction.EditCategory("b")
+            ),
+            actions
+        )
     }
 }

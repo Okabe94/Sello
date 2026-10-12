@@ -33,6 +33,14 @@ data class ExpenseEntryRoute(val categoryId: String? = null, val amount: String?
 @Serializable
 data class ExpenseEditRoute(val expenseId: String)
 
+/**
+ * The same form on an existing category. [month] is the month it was opened from, as
+ * `yyyy-MM`: the month whose limit the form shows and changes. Without it, or with
+ * one that has not started, that is the current month.
+ */
+@Serializable
+data class CategoryEditRoute(val categoryId: String, val month: String? = null)
+
 /** Where the editor leaves the new category's identifier for the screen that opened it. */
 const val CREATED_CATEGORY_RESULT = "result.createdCategoryId"
 

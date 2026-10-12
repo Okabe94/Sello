@@ -36,6 +36,7 @@ import com.software.sello.designsystem.component.ChartPoint
 import com.software.sello.designsystem.component.ChartReference
 import com.software.sello.designsystem.component.ColumnsChart
 import com.software.sello.designsystem.component.EntryDock
+import com.software.sello.designsystem.component.LineAction
 import com.software.sello.designsystem.component.LineChart
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
@@ -149,7 +150,11 @@ fun CategoryCellExample() {
                     over = category.over,
                     amountPrefix = if (category.limit == null) "gastado" else null,
                     staggerIndex = index,
-                    modifier = Modifier.testTag("category:$index")
+                    modifier = Modifier.testTag("category:$index"),
+                    // A long press, or a screen reader's action, offers this.
+                    actions = listOf(
+                        LineAction("Editar categoría") { opened = "Editar: ${category.name}" }
+                    )
                 )
             }
         }

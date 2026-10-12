@@ -160,27 +160,33 @@ fun ActionLine(
     }
     Box {
         if (swipeAway == null) line() else SwipeAway(swipeAway, line)
-        DropdownMenu(
-            expanded = menuOpen,
-            onDismissRequest = { menuOpen = false },
-            containerColor = SelloTheme.colors.paper,
-            modifier = Modifier.testTag(ACTION_LINE_MENU_TAG)
-        ) {
-            actions.forEach { action ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = action.label,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = SelloTheme.colors.ink
-                        )
-                    },
-                    onClick = {
-                        menuOpen = false
-                        action.onClick()
-                    }
-                )
-            }
+        LineActionMenu(actions, menuOpen) { menuOpen = false }
+    }
+}
+
+/** [actions] as a menu. Choosing one closes it and then runs it. */
+@Composable
+internal fun LineActionMenu(actions: List<LineAction>, open: Boolean, onClose: () -> Unit) {
+    DropdownMenu(
+        expanded = open,
+        onDismissRequest = onClose,
+        containerColor = SelloTheme.colors.paper,
+        modifier = Modifier.testTag(ACTION_LINE_MENU_TAG)
+    ) {
+        actions.forEach { action ->
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = action.label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = SelloTheme.colors.ink
+                    )
+                },
+                onClick = {
+                    onClose()
+                    action.onClick()
+                }
+            )
         }
     }
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.feature.category.CategoryEditorViewModel
+import com.software.sello.feature.category.CategoryManagementViewModel
 import com.software.sello.feature.expense.ExpenseEntryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
 import com.software.sello.feature.recibo.ReciboViewModel
@@ -44,6 +45,18 @@ fun presentationModule(): Module = module {
 fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     initializer { ShellViewModel(createSavedStateHandle(), koin.get(), koin.get()) }
     initializer { CorrectionsViewModel(koin.get()) }
+    initializer {
+        CategoryManagementViewModel(
+            createSavedStateHandle(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get()
+        )
+    }
     initializer { ReciboViewModel(koin.get(), koin.get(), koin.get()) }
     initializer {
         CategoryDetailViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())

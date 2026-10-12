@@ -46,6 +46,7 @@ class CategoryDetailScreenTest {
     private val actions = mutableListOf<CategoryDetailAction>()
     private var recordHere = 0
     private val edited = mutableListOf<String>()
+    private var editCategory = 0
 
     private fun show(state: CategoryDetailState, fontScale: Float = 1f, showName: Boolean = false) {
         rule.setContent {
@@ -60,7 +61,8 @@ class CategoryDetailScreenTest {
                         onAction = { actions += it },
                         onRecordHere = { recordHere++ },
                         contentPadding = PaddingValues(12.dp),
-                        onEditExpense = { edited += it }
+                        onEditExpense = { edited += it },
+                        onEditCategory = { editCategory++ }
                     )
                 }
             }
@@ -498,5 +500,37 @@ class CategoryDetailScreenTest {
             rule.onNodeWithText(text).assertExists()
             rule.onNodeWithTag(categoryExpenseTag("1")).assertExists()
         }
+    }
+
+    // --- Changing the category itself ---
+
+    @Test
+    fun theCategoryCanBeEditedFromItsHeader() {
+        show(ready(ExpenseListState.Rows(rows, more = false)))
+
+        rule.onNodeWithTag(CATEGORY_DETAIL_EDIT_TAG).performScrollTo().assertIsDisplayed()
+            .performClick()
+
+        rule.onNodeWithText("Editar categoría").assertExists()
+        assertEquals(1, editCategory)
+        assertEquals(emptyList<CategoryDetailAction>(), actions)
+    }
+
+    @Test
+    fun theMonthInProgressHasNoLineAboutCorrectingItsLimit() {
+        // The state's month is October and its "today" is 21 October: the month in progress.
+        show(ready(ExpenseListState.Empty))
+        rule.onNodeWithTag(CATEGORY_DETAIL_PAST_HELP_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aFinishedMonthSaysItsLimitCanStillBeCorrected() {
+        show(ready(ExpenseListState.Empty).copy(today = LocalDate.of(2026, 11, 3)))
+
+        rule.onNodeWithTag(CATEGORY_DETAIL_PAST_HELP_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText(
+            "Octubre ya terminó. Su límite aún se puede corregir en Editar categoría, " +
+                "sin cambiar los demás meses."
+        ).assertExists()
     }
 }

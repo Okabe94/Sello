@@ -80,6 +80,7 @@ bottom of the content, above the dock:
 | "Gasto borrado" | Until the time to undo is over | "Deshacer" |
 | "No se pudo deshacer. Inténtalo de nuevo." | The same, after an undo that failed | "Deshacer", the same operation again |
 | "Gasto restaurado", "Gasto actualizado" | Four seconds | none |
+| "Categoría actualizada", "Límite de septiembre actualizado. Sus cifras ya lo usan.", "Categoría archivada", "Categoría desarchivada" | Four seconds | none |
 | "Ya no se puede deshacer…", "No se pudo deshacer porque tus datos cambiaron…" | Four seconds | none |
 
 - **The six seconds are not the screen's.** They belong to the

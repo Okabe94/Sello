@@ -44,7 +44,9 @@ class ReciboViewModel(
             ReciboAction.Retry -> attempt.update { it + 1 }
 
             // Handled by the root, which owns navigation and the selection.
-            ReciboAction.CreateCategory, is ReciboAction.OpenCategory -> Unit
+            ReciboAction.CreateCategory,
+            is ReciboAction.OpenCategory,
+            is ReciboAction.EditCategory -> Unit
         }
     }
 

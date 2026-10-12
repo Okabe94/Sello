@@ -344,6 +344,24 @@ class CategoryEditorViewModelTest {
     }
 
     @Test
+    fun aNameThatIsAlreadyTakenIsSaidWhileTypingBeforeAnyAttemptToSave() {
+        reads.categories = listOf(reads.category(1, "Mercado", archived = true))
+        val editor = editor()
+
+        // Ignoring case, accents and outer spaces, and counting an archived category.
+        editor.withNoLimit("  mercadó ")
+        val taken = editor.state.value
+        editor.submit()
+        editor.type("Mercadito")
+
+        assertEquals(NameError.Taken, taken.nameError)
+        assertFalse(taken.canSubmit)
+        assertEquals(emptyList<Any>(), commands.submitted)
+        assertNull(editor.state.value.nameError)
+        assertTrue(editor.state.value.canSubmit)
+    }
+
+    @Test
     fun aTakenNameIsShownOnTheFieldAndTheNextAttemptIsANewOperation() {
         commands.answer = { rejected(CategoryRejection.NameTaken) }
         val editor = editor()

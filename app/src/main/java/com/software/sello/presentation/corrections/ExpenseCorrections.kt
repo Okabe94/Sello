@@ -10,6 +10,7 @@ import com.software.sello.domain.port.ExpenseRejection
 import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.domain.port.RestoreExpense
+import java.time.YearMonth
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
@@ -44,6 +45,16 @@ sealed interface CorrectionNotice {
 
     /** An edit was saved. */
     data object Updated : CorrectionNotice
+
+    /**
+     * A category's changes were saved. [limitOf] is the finished month whose limit was
+     * changed, when it was one: that month's figures now follow the new limit.
+     */
+    data class CategorySaved(val limitOf: YearMonth?) : CorrectionNotice
+
+    data object CategoryArchived : CorrectionNotice
+
+    data object CategoryUnarchived : CorrectionNotice
 }
 
 /** How a deletion ended. Only [Deleted] means the expense is gone. */
@@ -168,6 +179,12 @@ class ExpenseCorrections(
 
     /** A screen reports that an edit was saved. */
     fun updated() = said(CorrectionNotice.Updated)
+
+    /** A screen reports a category change its receipt confirmed. */
+    fun categoryChanged(notice: CorrectionNotice) {
+        require(notice !is CorrectionNotice.Deleted) { "An offer to undo is not a statement" }
+        said(notice)
+    }
 
     fun dismiss() {
         val now = shown.value

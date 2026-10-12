@@ -78,6 +78,17 @@ per read) and a cursor for the next. Rules:
 - "Anotar aquí" and the dock open [Anotar](expense-entry.md) with the category
   chosen. A finished month or an archived category does not offer "Anotar aquí".
 
+## Changing the category
+
+"Editar categoría" in the detail's header opens
+[the form on that category](category-editor.md#changing-an-existing-category) for the
+month on screen. A long press on a category's cell in Recibo offers the same in a
+menu, and a screen reader is offered it by name; pressing a cell still only opens it.
+
+The detail of a month that is over always says that its limit can still be corrected
+and that other months do not change. An archived category stays listed, marked
+"Archivada", in every month where it has a limit or expenses.
+
 ## Correcting and deleting an expense
 
 Each listed expense is an `ActionLine`:
@@ -134,5 +145,5 @@ side of the screen, as it already did at the top and bottom.
 ## Not here yet
 
 The weekly and six-month charts, "En números" and the comparison with last month;
-editing or deleting a category (SELLO-020); the gear and
+the gear and
 other tabs; swiping between months; and the count-up and stamp-landing motion.

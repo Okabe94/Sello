@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 26/52 · **Epics Done:** 4/9
+**Tickets Done:** 27/52 · **Epics Done:** 4/9
 
-Backlog: 25 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 26
+Backlog: 25 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 27
 
 [Workflow, gates and definition of done](README.md)
 
@@ -20,7 +20,7 @@ Backlog: 25 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 26
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Backlog | 0/4 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Backlog | 0/5 |
 | [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | Backlog | 0/4 |
-| [SELLO-E11](epics/E11-bug-stabilization.md) | Address the collected first-slice correctness, availability, accessibility and measured scaling findings without weakening financial contracts. | In Progress | 8/16 |
+| [SELLO-E11](epics/E11-bug-stabilization.md) | Address the collected first-slice correctness, availability, accessibility and measured scaling findings without weakening financial contracts. | In Progress | 9/16 |
 
 ## Ready
 
@@ -28,9 +28,7 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-053](epics/E11-bug-stabilization.md#sello-053--observe-reduced-motion-changes-while-the-app-is-running) | Observe reduced-motion changes while the app is running | SELLO-E11 | P2 | G2 | None |
+No tickets.
 
 ## Review
 
@@ -100,6 +98,7 @@ No tickets.
 | [SELLO-050](epics/E11-bug-stabilization.md#sello-050--distinguish-selected-month-from-current-month-in-accessible-labels) | Distinguish selected month from current month in accessible labels | SELLO-E11 | P2 | G2 | None |
 | [SELLO-051](epics/E11-bug-stabilization.md#sello-051--show-readable-grouped-cop-category-limits-without-changing-input-meaning) | Show readable grouped COP category limits without changing input meaning | SELLO-E11 | P2 | G2 | None |
 | [SELLO-052](epics/E11-bug-stabilization.md#sello-052--keep-short-narrow-expense-windows-usable-with-one-shared-width-policy) | Keep short narrow expense windows usable with one shared width policy | SELLO-E11 | P2 | G2 | None |
+| [SELLO-053](epics/E11-bug-stabilization.md#sello-053--observe-reduced-motion-changes-while-the-app-is-running) | Observe reduced-motion changes while the app is running | SELLO-E11 | P2 | G2 | None |
 
 ## Ready promotion candidates
 

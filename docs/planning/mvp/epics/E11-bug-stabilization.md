@@ -1039,7 +1039,7 @@ Choices made during the work, for owner review:
 - **Type:** Task
 - **Source classification:** Bug
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** Done
 - **Confidence:** 99%, conditional on incrementing an exhausted persisted counter.
 - **Depends on:** SELLO-004, SELLO-012, SELLO-013, SELLO-018
 - **Gate:** G2
@@ -1115,6 +1115,42 @@ and device scenarios. Run `./scripts/verify-ticket SELLO-054 --retain`;
 record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
+
+### Execution progress
+2026-10-12: started on branch `sello-054-counter-overflow-rejection` after SELLO-053
+merged. The claim was verified first against real Room on the API 30 emulator, which
+the assessment had not done: with the profile revision, an expense's sequence and a
+category's version each set to the largest value in turn, the next command threw
+`ArithmeticException` out of the workflow. In all three the transaction had rolled
+back: no row, no receipt and no revision change.
+
+Owner decision (2026-10-12): the narrow route. One helper for the three increments
+raises a specific signal naming the counter; only that signal becomes a rejection;
+it is reported as the existing integrity failure, not as "unavailable"; and reads are
+not made to refuse such a value.
+
+Delivered, in `:data` only: `nextCounter` and `CounterExhausted` in the command
+protocol, used for the revision, the expense sequence and the category version, and
+one new catch in `runCommand`. No domain type, schema, dependency or screen changed:
+the form already shows a storage failure as "not saved".
+
+Choices made during the work, for owner review:
+- The failure names the row where it has one: `Integrity(category, id, version)`;
+  the revision and the sequence have no single row and carry no key.
+- The last value can still be reached; only the change after it is refused.
+
+Left as it is: a database whose counter is at its largest value can still be read
+and can no longer be written to. Getting out of that state is a repair or a restore
+(SELLO-030), not something a command does.
+
+### Delivery evidence
+- **Revision:** branch `sello-054-counter-overflow-rejection`; tested snapshot is commit `bfa0e27`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** exhausted revision, sequence and record version return a typed rejection → `ExpenseCommandContractTest.aRevisionThatCannotAdvanceRefusesTheExpenseAndWritesNothing`, `anOrderingSequenceThatCannotAdvanceRefusesTheExpenseAndWritesNothing`, `CategoryCommandContractTest.aVersionThatCannotAdvanceRefusesTheChangeAndWritesNothing` and `aRevisionThatCannotAdvanceRefusesANewCategoryAndWritesNothing`, each `Rejected(StorageFailed(Integrity(table, row, counter)))`. Real Room proves no partial category, expense, receipt or revision mutation → the same tests read the rows, the receipt count, the revision and, for the expense, that the operation is not found afterwards; `CommandRunTest.anExhaustedCounterIsACertainRollbackWithWhatWasWrittenBeforeItUndone` writes a row first and finds none after. A counter one below the largest advances once and the next change is refused → `theLastRevisionCanStillBeReachedAndOnlyTheChangeAfterItIsRefused` and the sequence and version tests, which start one below. Cancellation is rethrown and the uncertain-commit lookup is unchanged → the existing cancellation, replay and unknown-outcome tests in both contract classes pass unchanged. No blanket catch → `CommandRunTest.anyOtherArithmeticFaultIsNotDressedUpAsAStorageFailure`.
+- **Red / Green:** red first, on the emulator, with the helper still a plain checked addition and the new signal not yet caught: the three classes failed 7 of 48, five of them with `java.lang.ArithmeticException: long overflow` thrown out of the command, which is the defect, one expecting the new signal and getting that exception, and one with the signal uncaught. `theValueAfterACounterIsOneMoreUpToTheLargest` and the other-arithmetic-fault test passed before the change and are guards. All pass after it, 113 data device tests in all.
+- **Gate results:** local `./scripts/verify-ticket SELLO-054 --gate G2 --retain` passed on the tested commit: 351 host tests (205 app, 98 domain, 37 design-system, 8 data, 3 catalog), 317 device tests on the API 30 emulator (127 app, 113 data, 67 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261012T010933Z-f54d3c3e; SELLO-054 G2 passed; HEAD bfa0e27, inputs sha256 0bdc3edb198c; report docs/planning/mvp/quality-reports/SELLO-054.json sha256 75fbcc6fed24e80cb4ee243b44371e7c287a71e1089f2600c78054508e349b10
+- **Device / Artifact:** real Room on the API 30 emulator, 2026-10-12. Before the fix a throwaway probe (not kept) set each counter to the largest value in turn: creating an expense with the revision exhausted, creating one with the sequence exhausted and renaming a category with its version exhausted each threw `java.lang.ArithmeticException`, with no row, receipt or revision change. After it, the contract tests above return the typed rejection with the same nothing written. No journey was run by hand in the app: no screen can bring a counter to that value; the form's handling of a storage failure is unchanged and covered by its existing tests.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-055 — Avoid duplicate monthly snapshot pipelines in simultaneous views
 

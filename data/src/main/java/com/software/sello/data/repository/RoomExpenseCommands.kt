@@ -1,6 +1,7 @@
 package com.software.sello.data.repository
 
 import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.entity.ExpenseEntity
 import com.software.sello.data.mapper.StoredReceipt
 import com.software.sello.data.mapper.toDomain
 import com.software.sello.data.mapper.toEntity
@@ -110,7 +111,12 @@ class RoomExpenseCommands(
             id = expenseId,
             categoryId = command.categoryId,
             date = command.date,
-            sequence = Math.addExact(database.expenseDao().highestSequence() ?: 0, 1),
+            sequence = nextCounter(
+                database.expenseDao().highestSequence() ?: 0,
+                ExpenseEntity.TABLE,
+                null,
+                "sequence"
+            ),
             amount = command.amount,
             note = command.note,
             version = 1,

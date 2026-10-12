@@ -17,6 +17,7 @@ import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.OperationKind
 import com.software.sello.domain.model.OperationReceipt
 import com.software.sello.domain.model.TransactionAmount
+import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.CommittedCategoryChange
@@ -32,6 +33,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
@@ -48,11 +51,23 @@ class TestLedger(
 ) {
     val zone: ZoneId = ZoneId.of("America/Bogota")
     val auditMillis: Instant = Instant.parse("2026-10-09T15:04:05.678Z")
-    private val audit = Instant.parse("2026-10-09T15:04:05.678912Z")
+
+    /** The real time the next write is stamped with. A test moves it to tell writes apart. */
+    var audit: Instant = Instant.parse("2026-10-09T15:04:05.678912Z")
     private val today = MutableStateFlow(FinancialDay(LocalDate.of(2026, 10, 9), zone))
     private val clock = object : FinancialClock {
         override val today = this@TestLedger.today
     }
+
+    /** Runs each time a command stamps a write, which is inside its transaction. */
+    var whenAWriteIsStamped: () -> Unit = {}
+    private val auditClock = AuditClock {
+        whenAWriteIsStamped()
+        audit
+    }
+
+    /** Real elapsed time, moved by hand. It starts well after "boot". */
+    var elapsed: Duration = 5.hours
 
     var nextRecord = 100
     var whenAnIdIsTaken: () -> Unit = {}
@@ -73,11 +88,19 @@ class TestLedger(
     fun open() {
         database = files.open()
         categories = RoomCategoryCommands(database, { audit }, clock, ids)
-        expenses = RoomExpenseCommands(database, { audit }, clock, ids)
+        expenses = RoomExpenseCommands(database, auditClock, clock, ids) { elapsed }
         reads = RoomCategoryReads(database)
         snapshots = RoomMonthlySnapshots(database, clock, computation)
         expenseReads = RoomExpenseReads(database)
     }
+
+    /** The storage as the app's composition gets it, on the same file. */
+    fun storage(): FinancialStorage = FinancialStorage(
+        database,
+        RoomFinancialProfileStore(database) {
+            audit
+        }
+    )
 
     /** A new installation: a profile and nothing else. */
     fun start() = runBlocking {

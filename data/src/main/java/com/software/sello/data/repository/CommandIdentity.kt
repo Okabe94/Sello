@@ -8,7 +8,10 @@ import com.software.sello.domain.port.CategoryEdit
 import com.software.sello.domain.port.ChangeCategoryIcon
 import com.software.sello.domain.port.CreateCategory
 import com.software.sello.domain.port.CreateExpense
+import com.software.sello.domain.port.DeleteExpense
+import com.software.sello.domain.port.EditExpense
 import com.software.sello.domain.port.RenameCategory
+import com.software.sello.domain.port.RestoreExpense
 import com.software.sello.domain.port.SetDefaultLimit
 import com.software.sello.domain.port.SetMonthLimit
 import com.software.sello.domain.port.UnarchiveCategory
@@ -32,6 +35,35 @@ internal fun inputDigest(command: CreateExpense): String = digest(
     command.date.toString(),
     if (command.note == null) "0" else "1",
     command.note?.value.orEmpty()
+)
+
+internal fun inputDigest(command: EditExpense): String = digest(
+    OperationKind.EditExpense.key,
+    "1",
+    command.generation.toString(),
+    command.expenseId.value,
+    command.expectedVersion.toString(),
+    command.categoryId.value,
+    command.amount.money.minorUnits.toString(),
+    command.amount.money.currency.code,
+    command.date.toString(),
+    if (command.note == null) "0" else "1",
+    command.note?.value.orEmpty()
+)
+
+internal fun inputDigest(command: DeleteExpense): String = digest(
+    OperationKind.DeleteExpense.key,
+    "1",
+    command.generation.toString(),
+    command.expenseId.value,
+    command.expectedVersion.toString()
+)
+
+internal fun inputDigest(command: RestoreExpense): String = digest(
+    OperationKind.RestoreExpense.key,
+    "1",
+    command.generation.toString(),
+    command.deletionId.value
 )
 
 internal val CategoryCommand.kind: OperationKind

@@ -41,6 +41,14 @@ Every rejection returns before the first write. A database error during these st
 rolls everything back and is `Rejected(StorageFailed)`. Only an error from the
 commit itself is `OutcomeUnknown`.
 
+The revision, an expense's ordering sequence and a category's version advance through
+`nextCounter`. It never wraps, saturates or starts again: at the largest value it
+raises `CounterExhausted`, which rolls the transaction back and is
+`Rejected(StorageFailed(Integrity(table, row, counter)))`, never `OutcomeUnknown`.
+Typing cannot reach that value; a damaged or imported database can. Only that
+signal is caught: any other arithmetic fault inside a command is a bug and is left to
+fail as one.
+
 ## Guarantees and how they are kept
 
 - **One operation, one record.** The receipt's primary key is the operation

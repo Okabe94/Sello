@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteException
 import androidx.room.withTransaction
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.entity.OperationReceiptEntity
+import com.software.sello.data.local.entity.ProfileEntity
 import com.software.sello.data.mapper.StoredReceipt
 import com.software.sello.data.mapper.profileFrom
 import com.software.sello.data.mapper.toStored
@@ -37,6 +38,26 @@ internal sealed interface CommandRun<out T> {
 }
 
 /**
+ * A stored counter is already at the largest value it can hold, so the change that
+ * needs the one after it cannot be written. [failure] names the counter. Raised inside
+ * a command's transaction, which it rolls back.
+ */
+internal class CounterExhausted(val failure: StorageFailure.Integrity) :
+    RuntimeException("No value follows the largest one: $failure")
+
+/**
+ * The value after [current], which is stored in [field] of [record]'s row [key]. It
+ * never wraps, saturates or starts again: at the largest value it raises
+ * [CounterExhausted], and the command is refused with nothing written.
+ */
+internal fun nextCounter(current: Long, record: String, key: String?, field: String): Long {
+    if (current == Long.MAX_VALUE) {
+        throw CounterExhausted(StorageFailure.Integrity(record, key, field))
+    }
+    return current + 1
+}
+
+/**
  * Runs [decide] in one transaction. The caller is checked for cancellation before it
  * starts and after it ends; in between the transaction always runs to its end, so a
  * cancellation can never stop it halfway. A cancelled caller is told so instead of
@@ -51,6 +72,10 @@ internal suspend fun <T> SelloDatabase.runCommand(decide: suspend () -> T): Comm
         }
     } catch (cancelled: CancellationException) {
         throw cancelled
+    } catch (exhausted: CounterExhausted) {
+        // Raised before anything is committed, so this is certain, never Unknown. Only
+        // this is caught: any other arithmetic fault is a bug and stays one.
+        CommandRun.RolledBack(exhausted.failure)
     } catch (failure: SQLiteException) {
         if (everyStatementRan) CommandRun.Unknown else rolledBack(failure)
     } catch (failure: IllegalStateException) {
@@ -130,7 +155,7 @@ internal suspend fun SelloDatabase.commitCommand(
     subjectId: String,
     at: Instant
 ): StoredReceipt {
-    val revision = Math.addExact(profile.revision, 1)
+    val revision = nextCounter(profile.revision, ProfileEntity.TABLE, null, "revision")
     val advanced = profileDao().advanceRevision(profile.generation, profile.revision, revision)
     check(advanced == 1) { "The profile changed inside the transaction that read it" }
     val receipt = OperationReceiptEntity(

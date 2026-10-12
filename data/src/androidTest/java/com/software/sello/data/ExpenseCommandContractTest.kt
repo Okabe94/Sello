@@ -342,6 +342,64 @@ class ExpenseCommandContractTest {
         )
     }
 
+    private fun raw(sql: String) = database.openHelper.writableDatabase.execSQL(sql)
+
+    private fun integrity(record: String, field: String) =
+        Rejected(ExpenseRejection.StorageFailed(StorageFailure.Integrity(record, null, field)))
+
+    @Test
+    fun aRevisionThatCannotAdvanceRefusesTheExpenseAndWritesNothing() = runBlocking {
+        start()
+        raw("UPDATE profile SET revision = ${Long.MAX_VALUE}")
+
+        val outcome = commands.create(command(50))
+
+        assertEquals(integrity("profile", "revision"), outcome)
+        assertEquals(emptyList<ExpenseEntity>(), expenses())
+        assertEquals(0, database.count("operation_receipt"))
+        assertEquals(Long.MAX_VALUE, revision())
+        assertNull(commands.find(command(50).operationId).valueOrFail())
+    }
+
+    @Test
+    fun theLastRevisionCanStillBeReachedAndOnlyTheChangeAfterItIsRefused() = runBlocking {
+        start()
+        raw("UPDATE profile SET revision = ${Long.MAX_VALUE - 1}")
+
+        val last = commands.create(command(50))
+        val beyond = commands.create(command(51, pesos = 2_000))
+
+        assertEquals(
+            Long.MAX_VALUE,
+            ((last as Committed).expense.receipt).revision
+        )
+        assertEquals(integrity("profile", "revision"), beyond)
+        assertEquals(listOf(10_000L), expenses().map { it.amountMinor })
+        assertEquals(1, database.count("operation_receipt"))
+        assertEquals(Long.MAX_VALUE, revision())
+    }
+
+    @Test
+    fun anOrderingSequenceThatCannotAdvanceRefusesTheExpenseAndWritesNothing() = runBlocking {
+        start()
+        commands.create(command(50))
+        raw("UPDATE expense SET sequence = ${Long.MAX_VALUE - 1}")
+
+        val last = commands.create(command(51, pesos = 2_000))
+        val beyond = commands.create(command(52, pesos = 3_000))
+
+        assertTrue("$last", last is Committed)
+        assertEquals(integrity("expense", "sequence"), beyond)
+        assertEquals(
+            listOf(Long.MAX_VALUE - 1 to 10_000L, Long.MAX_VALUE to 2_000L),
+            expenses().map { it.sequence to it.amountMinor }
+        )
+        // The refused one left no receipt and did not move the revision: both are 2.
+        assertEquals(2, database.count("operation_receipt"))
+        assertEquals(2, revision())
+        assertNull(commands.find(command(52).operationId).valueOrFail())
+    }
+
     @Test
     fun manyIdenticalSubmissionsAtOnceSaveOneExpense() = runBlocking {
         start()

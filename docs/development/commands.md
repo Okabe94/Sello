@@ -4,7 +4,8 @@
 
 How a change to financial data is made so that its result is always knowable. The
 first command is creating an expense (`ExpenseCommands` in `:domain`,
-`RoomExpenseCommands` in `:data`); [category and limit commands](categories-and-limits.md)
+`RoomExpenseCommands` in `:data`), followed by
+[editing, deleting and undo](#editing-deleting-and-undo); [category and limit commands](categories-and-limits.md)
 follow the same steps. The shared steps are functions in
 `data/repository/CommandProtocol.kt`; each workflow keeps its own typed command,
 checks and outcome. There is deliberately no generic "repository" that does everything.
@@ -49,6 +50,57 @@ Typing cannot reach that value; a damaged or imported database can. Only that
 signal is caught: any other arithmetic fault inside a command is a bug and is left to
 fail as one.
 
+## Editing, deleting and undo
+
+`EditExpense`, `DeleteExpense` and `RestoreExpense` (SELLO-019) follow the same steps
+with their own kinds, `expense.edit`, `expense.delete` and `expense.restore`, and
+their own input identities. Edit and delete also carry the expense `version` the
+caller read. Step 3 for each:
+
+| Command | Refused with | Writes |
+| --- | --- | --- |
+| Edit | `ExpenseMissing`; `VersionConflict(current)`; `Unchanged` when nothing differs; `CategoryMissing` or `CategoryArchived` only when moving to another category; `FutureDate`, `InvalidDate` | The same row: new category, date, amount and note, version + 1, `updated_at`. Identity, sequence and `created_at` never change |
+| Delete | `ExpenseMissing`; `VersionConflict(current)` | Removes the row and keeps it, column for column, in `deleted_expense`, replacing any earlier kept copy |
+| Restore | `UndoExpired`; `UndoConflict` | Puts the kept row back exactly as it was, same version and timestamps, and removes the kept copy |
+
+Each is one revision and one receipt whose subject is the expense. The row update or
+removal is guarded by the version in SQL as well, and the transaction fails if it
+does not change exactly one row.
+
+- **An expense may stay in a category archived since**, with its other fields edited.
+  It cannot be moved into an archived category.
+- **The date rule is applied to every edit**, including one that leaves the date as
+  it was.
+- **A new expense never takes the sequence of one that can still come back**: the
+  next sequence follows the highest of `expense` and `deleted_expense`.
+
+### The six seconds
+
+`ExpenseCommands.undoOffer()` is the one deletion that can be undone, with the
+`MonotonicClock` reading at which it stops being so: `UndoPolicy.WINDOW`, six
+seconds, after the deletion committed. At six seconds exactly it has ended.
+
+- The offer is held in memory by `RoomExpenseCommands`, of which the process has one.
+  Nothing a screen does (rotation, leaving and returning) touches it, and a replay
+  of the deletion does not start it again. `FinancialClock` and `AuditClock` are
+  never consulted, so simulated financial time cannot shorten or extend it.
+- **A process that ends takes the offer with it.** The next one has none, restore
+  answers `UndoExpired`, and startup removes the kept copy. The deletion's receipt
+  is still found with `find`.
+- **A second deletion makes the first final.** Restore naming the first is
+  `UndoExpired`.
+- **Restore is refused with `UndoConflict`** when the kept copy belongs to another
+  generation (the history was replaced), or the expense's identifier or sequence is
+  in use again. It does not ask whether the category was archived meanwhile: the
+  expense goes back where it was.
+- **A restore that already committed is a replay** whatever the time is, in this
+  process or a later one, so recovering its outcome never deletes or restores twice.
+- Delete and restore run one at a time and, like every transaction, are not stopped
+  by a cancelled caller: a deletion that committed always leaves its offer, even
+  when the caller never heard the result.
+- When a deletion ends as `OutcomeUnknown` no offer is made. If `find` then shows
+  that it committed, it stands.
+
 ## Guarantees and how they are kept
 
 - **One operation, one record.** The receipt's primary key is the operation
@@ -75,5 +127,5 @@ fail as one.
   beyond the 100.000-record backup bound. Totals are checked where they are
   computed (SELLO-014).
 - `Committed` has no follow-up state because nothing follows a save yet.
-- Editing, deleting and undo (SELLO-019) reuse these steps with their own typed
-  commands and receipts.
+- No screen offers editing, deleting or undo yet; those arrive with the rest of
+  SELLO-019.

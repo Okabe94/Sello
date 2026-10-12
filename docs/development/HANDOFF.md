@@ -41,9 +41,11 @@ limit, record an expense and see its stored receipt, see what is left in Recibo,
 open a category to see its figures and its expenses, look at earlier months, and
 find all of it again after the process is killed or the app restarted.
 
-What does not exist: editing or deleting anything, undo, income, Resumen, settings,
-the sandbox, backup, restore and reset. Schema version 1 has an `income` table and
-no code that writes to it.
+What does not exist: screens for editing or deleting an expense or undoing that
+(their [commands](commands.md#editing-deleting-and-undo) do, since SELLO-019's first
+part), income, Resumen, settings, the sandbox, backup,
+restore and reset. The schema, now version 2, has an `income` table and no code that
+writes to it.
 
 ## What is next
 

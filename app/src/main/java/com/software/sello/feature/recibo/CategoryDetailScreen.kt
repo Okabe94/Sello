@@ -26,11 +26,13 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.software.sello.R
+import com.software.sello.designsystem.component.ActionLine
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.CategoryCircle
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
 import com.software.sello.designsystem.component.LeaderLine
+import com.software.sello.designsystem.component.LineAction
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SelloButton
@@ -55,7 +57,8 @@ fun CategoryDetailScreen(
     onAction: (CategoryDetailAction) -> Unit,
     onRecordHere: () -> Unit,
     contentPadding: PaddingValues,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditExpense: (String) -> Unit = {}
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
@@ -92,7 +95,7 @@ fun CategoryDetailScreen(
                     )
                 }
                 HeaderSlip(state.category, showName)
-                Expenses(state, months, dates, onAction, onRecordHere)
+                Expenses(state, months, dates, onAction, onRecordHere, onEditExpense)
             }
         }
     }
@@ -161,7 +164,8 @@ private fun Expenses(
     months: MonthNames,
     dates: DateLabels,
     onAction: (CategoryDetailAction) -> Unit,
-    onRecordHere: () -> Unit
+    onRecordHere: () -> Unit,
+    onEditExpense: (String) -> Unit
 ) {
     when (val list = state.expenses) {
         ExpenseListState.Loading -> SlipSkeleton(Modifier.testTag(CATEGORY_DETAIL_LIST_LOADING_TAG))
@@ -184,7 +188,7 @@ private fun Expenses(
             onAction = onRecordHere.takeIf { state.canRecord }
         )
 
-        is ExpenseListState.Rows -> ExpenseList(state, list, dates, onAction)
+        is ExpenseListState.Rows -> ExpenseList(state, list, dates, onAction, onEditExpense)
     }
 }
 
@@ -193,28 +197,52 @@ private fun ExpenseList(
     state: CategoryDetailState.Ready,
     list: ExpenseListState.Rows,
     dates: DateLabels,
-    onAction: (CategoryDetailAction) -> Unit
+    onAction: (CategoryDetailAction) -> Unit,
+    onEditExpense: (String) -> Unit
 ) {
     val count = state.category.expenseCount
+    val edit = stringResource(R.string.category_detail_expense_edit)
+    val delete = stringResource(R.string.category_detail_expense_delete)
     Slip(Modifier.testTag(CATEGORY_DETAIL_LIST_TAG), pinked = false) {
         LeaderLine(
             stringResource(R.string.category_detail_expenses),
             pluralStringResource(R.plurals.category_detail_expense_count, count, count),
             Modifier.semantics { heading() }
         )
+        // Always there, so how to correct an expense never has to be remembered.
+        Text(
+            text = stringResource(R.string.category_detail_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = SelloTheme.colors.inkSoft,
+            modifier = Modifier.testTag(CATEGORY_DETAIL_HINT_TAG)
+        )
+        state.deleteProblem?.let { problem ->
+            Text(
+                text = stringResource(problem.text()),
+                style = MaterialTheme.typography.bodyMedium,
+                color = SelloTheme.colors.semantic.loss,
+                modifier = Modifier
+                    .testTag(CATEGORY_DETAIL_DELETE_PROBLEM_TAG)
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+            )
+        }
         list.rows.forEach { row ->
             // Each row is its expense, not its place in the list: a new expense at the
             // top is one row added, instead of every row below it drawn again.
             key(row.id) {
                 val day = dates.day(row.date, state.today)
-                LeaderLine(
+                val remove = LineAction(delete) { onAction(CategoryDetailAction.Delete(row.id)) }
+                ActionLine(
                     label = row.note ?: stringResource(R.string.category_detail_no_note),
+                    onClick = { onEditExpense(row.id) },
+                    actions = listOf(LineAction(edit) { onEditExpense(row.id) }, remove),
                     modifier = Modifier.testTag(categoryExpenseTag(row.id)),
                     caption = if (row.notCountedYet) {
                         day + ". " + stringResource(R.string.category_detail_not_counted)
                     } else {
                         day
-                    }
+                    },
+                    swipeAway = remove
                 ) { MoneyText(row.amount) }
             }
         }
@@ -248,6 +276,13 @@ private fun ExpenseList(
     }
 }
 
+private fun DeleteProblem.text() = when (this) {
+    DeleteProblem.Gone -> R.string.category_detail_delete_gone
+    DeleteProblem.Changed -> R.string.category_detail_delete_changed
+    DeleteProblem.DataChanged -> R.string.category_detail_delete_data_changed
+    DeleteProblem.Failed -> R.string.category_detail_delete_failed
+}
+
 @Composable
 private fun detailHeadline(headline: ReciboHeadline): String = stringResource(
     when (headline) {
@@ -273,4 +308,6 @@ const val CATEGORY_DETAIL_LIST_LOADING_TAG = "detail:list-loading"
 const val CATEGORY_DETAIL_LIST_FAILED_TAG = "detail:list-failed"
 const val CATEGORY_DETAIL_EMPTY_TAG = "detail:empty"
 const val CATEGORY_DETAIL_MORE_TAG = "detail:more"
+const val CATEGORY_DETAIL_HINT_TAG = "detail:hint"
+const val CATEGORY_DETAIL_DELETE_PROBLEM_TAG = "detail:delete-problem"
 const val CATEGORY_DETAIL_MORE_FAILED_TAG = "detail:more-failed"

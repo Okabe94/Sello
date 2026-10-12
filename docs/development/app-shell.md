@@ -69,6 +69,32 @@ follows a month that turns while the picker is open. A screen reader is told the
 destination, "Ir al mes actual: Octubre 2026". With a large font it goes under the
 title instead of being cut.
 
+## What is said about a correction
+
+`ExpenseCorrections` (`presentation/corrections`) is one object for the whole process.
+It deletes an expense, undoes that, and holds the one notice the frame shows over the
+bottom of the content, above the dock:
+
+| Notice | Shown | Action |
+| --- | --- | --- |
+| "Gasto borrado" | Until the time to undo is over | "Deshacer" |
+| "No se pudo deshacer. Inténtalo de nuevo." | The same, after an undo that failed | "Deshacer", the same operation again |
+| "Gasto restaurado", "Gasto actualizado" | Four seconds | none |
+| "Ya no se puede deshacer…", "No se pudo deshacer porque tus datos cambiaron…" | Four seconds | none |
+
+- **The six seconds are not the screen's.** They belong to the
+  [commands](commands.md#the-six-seconds). This object only stops showing the offer
+  when the same monotonic clock says the time is over, and checks again when the app
+  comes back into view, because waiting does not advance while a device sleeps.
+- **Drawing again changes nothing.** Rotation, a resize or another screen in between
+  show the same notice with the same time left. A process that ends has no notice.
+- **A deletion runs to its end** even if the screen that asked for it is gone, and is
+  then on offer all the same.
+- **Read aloud** as "Gasto borrado. Puedes deshacerlo durante 6 segundos.", and
+  announced when it appears.
+- It is shown on Recibo and a category's detail. The entry form does not show it;
+  leaving the form does.
+
 ## Routes and links
 
 - Routes are `@Serializable` objects in `Routes.kt` and carry identifiers only. A

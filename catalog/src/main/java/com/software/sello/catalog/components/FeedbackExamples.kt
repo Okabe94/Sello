@@ -23,6 +23,7 @@ import com.software.sello.designsystem.component.ConfirmSlip
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
 import com.software.sello.designsystem.component.SelloButton
+import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SlipSkeleton
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
@@ -86,6 +87,27 @@ fun ConfirmSlipExample() {
 }
 
 private const val CONFIRM_BUSY_MILLIS = 1_200L
+
+/** The notice in each thing it says. It holds no time: here it stays until something else is shown. */
+@Composable
+fun NoticeExample() {
+    var undone by rememberSaveable { mutableIntStateOf(0) }
+    Stack {
+        SelloNotice(
+            message = "Gasto borrado",
+            actionLabel = "Deshacer",
+            onAction = { undone++ },
+            spoken = "Gasto borrado. Puedes deshacerlo durante 6 segundos.",
+            modifier = Modifier.testTag("notice:undo")
+        )
+        Result("Deshecho: $undone", "notice:undone")
+        SelloNotice(message = "Gasto borrado", actionLabel = "Deshacer", onAction = {}, busy = true)
+        SelloNotice(message = "Gasto actualizado")
+        SelloNotice(
+            message = "No se pudo deshacer porque tus datos cambiaron. El gasto quedó borrado."
+        )
+    }
+}
 
 @Composable
 fun EmptySlipExample() {

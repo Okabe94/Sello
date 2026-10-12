@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
@@ -13,14 +14,18 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.software.sello.designsystem.component.ACTION_LINE_MENU_TAG
 import com.software.sello.designsystem.component.MoneySign
 import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.designsystem.theme.SelloTheme
@@ -40,6 +45,7 @@ class CategoryDetailScreenTest {
 
     private val actions = mutableListOf<CategoryDetailAction>()
     private var recordHere = 0
+    private val edited = mutableListOf<String>()
 
     private fun show(state: CategoryDetailState, fontScale: Float = 1f, showName: Boolean = false) {
         rule.setContent {
@@ -53,7 +59,8 @@ class CategoryDetailScreenTest {
                         showName = showName,
                         onAction = { actions += it },
                         onRecordHere = { recordHere++ },
-                        contentPadding = PaddingValues(12.dp)
+                        contentPadding = PaddingValues(12.dp),
+                        onEditExpense = { edited += it }
                     )
                 }
             }
@@ -385,5 +392,111 @@ class CategoryDetailScreenTest {
         assertEquals(drawn, drawnBy(before))
         // And each still shows its own text, in its new place.
         rule.onNode(inRow("n7", "Gasto 7"), useUnmergedTree = true).assertExists()
+    }
+
+    // --- Correcting an expense from the list ---
+
+    @Test
+    fun pressingAnExpenseOpensItToBeCorrectedAndDeletesNothing() {
+        show(ready(ExpenseListState.Rows(rows, more = false)))
+
+        rule.onNodeWithTag(categoryExpenseTag("2")).performScrollTo().performClick()
+
+        assertEquals(listOf("2"), edited)
+        assertEquals(emptyList<CategoryDetailAction>(), actions)
+    }
+
+    @Test
+    fun aLongPressOffersToEditOrDeleteThatExpense() {
+        show(ready(ExpenseListState.Rows(rows, more = false)))
+
+        rule.onNodeWithTag(categoryExpenseTag("1")).performScrollTo()
+            .performTouchInput { longClick() }
+        rule.onNode(hasText("Borrar") and hasAnyAncestor(hasTestTag(ACTION_LINE_MENU_TAG)))
+            .performClick()
+        rule.onNodeWithTag(categoryExpenseTag("2")).performTouchInput { longClick() }
+        rule.onNode(hasText("Editar") and hasAnyAncestor(hasTestTag(ACTION_LINE_MENU_TAG)))
+            .performClick()
+
+        assertEquals(listOf<CategoryDetailAction>(CategoryDetailAction.Delete("1")), actions)
+        assertEquals(listOf("2"), edited)
+    }
+
+    @Test
+    fun swipingAnExpenseAwayDeletesThatOneOnce() {
+        show(ready(ExpenseListState.Rows(rows, more = false)))
+
+        rule.onNodeWithTag(categoryExpenseTag("3")).performScrollTo()
+            .performTouchInput { swipeLeft(startX = right - 4f, endX = left + 4f) }
+        rule.waitForIdle()
+
+        assertEquals(listOf<CategoryDetailAction>(CategoryDetailAction.Delete("3")), actions)
+        assertEquals(emptyList<String>(), edited)
+    }
+
+    @Test
+    fun aScreenReaderCanEditOrDeleteAnExpenseByNameAndHearsItWhole() {
+        show(ready(ExpenseListState.Rows(rows, more = false)))
+
+        val node = rule.onNodeWithTag(categoryExpenseTag("1")).fetchSemanticsNode()
+        val offered = node.config[SemanticsActions.CustomActions]
+        rule.runOnUiThread { offered.forEach { it.action() } }
+
+        assertEquals(listOf("Editar", "Borrar"), offered.map { it.label })
+        assertEquals(listOf("1"), edited)
+        assertEquals(listOf<CategoryDetailAction>(CategoryDetailAction.Delete("1")), actions)
+        // Read as one line: what, when and exactly how much.
+        rule.onNode(inRow("1", "Rappi, almuerzo"), useUnmergedTree = true).assertExists()
+        rule.onNode(
+            hasContentDescription("20.600 pesos") and
+                hasAnyAncestor(hasTestTag(categoryExpenseTag("1"))),
+            useUnmergedTree = true
+        ).assertExists()
+    }
+
+    @Test
+    fun theListSaysHowAnExpenseIsCorrectedOrDeleted() {
+        show(ready(ExpenseListState.Rows(rows, more = false)))
+
+        rule.onNodeWithTag(CATEGORY_DETAIL_HINT_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText(
+            "Toca un gasto para corregirlo. Para borrarlo, deslízalo o mantenlo presionado."
+        ).assertExists()
+    }
+
+    @Test
+    fun aDeletionThatDidNotHappenIsSaidAndTheExpenseStaysListed() {
+        val texts = mapOf(
+            DeleteProblem.Gone to "Ese gasto ya estaba borrado.",
+            DeleteProblem.Changed to "Ese gasto cambió mientras tanto. No se borró; revísalo.",
+            DeleteProblem.DataChanged to "Tus datos cambiaron mientras tanto. No se borró nada.",
+            DeleteProblem.Failed to "No se pudo borrar. El gasto sigue anotado."
+        )
+        var problem by mutableStateOf(DeleteProblem.Gone)
+        rule.setContent {
+            SelloTheme(reducedMotion = true) {
+                CategoryDetailScreen(
+                    state = ready(
+                        ExpenseListState.Rows(rows, more = false)
+                    ).copy(deleteProblem = problem),
+                    months = monthNames(),
+                    dates = dateLabels(),
+                    showName = false,
+                    onAction = { actions += it },
+                    onRecordHere = {},
+                    contentPadding = PaddingValues(12.dp)
+                )
+            }
+        }
+
+        texts.forEach { (which, text) ->
+            problem = which
+            rule.waitForIdle()
+            rule.onNodeWithTag(
+                CATEGORY_DETAIL_DELETE_PROBLEM_TAG
+            ).performScrollTo().assertIsDisplayed()
+            rule.onNodeWithText(text).assertExists()
+            rule.onNodeWithTag(categoryExpenseTag("1")).assertExists()
+        }
     }
 }

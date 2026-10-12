@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.feature.category.CategoryEditorViewModel
 import com.software.sello.feature.expense.ExpenseEntryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
@@ -13,8 +14,11 @@ import com.software.sello.feature.startup.StartupFailureViewModel
 import com.software.sello.feature.startup.StartupRecovery
 import com.software.sello.navigation.MonthSession
 import com.software.sello.navigation.ShellViewModel
+import com.software.sello.presentation.corrections.CorrectionsViewModel
+import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import com.software.sello.presentation.money.ResourceMoneyLabels
+import kotlinx.coroutines.CoroutineScope
 import org.koin.core.Koin
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -23,6 +27,13 @@ import org.koin.dsl.module
 fun presentationModule(): Module = module {
     single { MonthSession(get(), get()) }
     single { MoneyFormatter(ResourceMoneyLabels(get<Context>().resources)) }
+    // On the main thread, like the screens that call it, and for as long as the process.
+    single {
+        val scope = CoroutineScope(
+            get<CoroutineScope>().coroutineContext + get<DispatcherProvider>().main
+        )
+        ExpenseCorrections(get(), get(), get(), scope)
+    }
 }
 
 /**
@@ -32,11 +43,15 @@ fun presentationModule(): Module = module {
  */
 fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     initializer { ShellViewModel(createSavedStateHandle(), koin.get(), koin.get()) }
+    initializer { CorrectionsViewModel(koin.get()) }
     initializer { ReciboViewModel(koin.get(), koin.get(), koin.get()) }
-    initializer { CategoryDetailViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
+    initializer {
+        CategoryDetailViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+    }
     initializer {
         ExpenseEntryViewModel(
             createSavedStateHandle(),
+            koin.get(),
             koin.get(),
             koin.get(),
             koin.get(),

@@ -26,6 +26,13 @@ data class CategoryEditorRoute(val forEntry: Boolean = false)
 @Serializable
 data class ExpenseEntryRoute(val categoryId: String? = null, val amount: String? = null)
 
+/**
+ * The same form, correcting the recorded expense with this identifier. The form reads
+ * the expense itself; if there is none with that identifier it says so.
+ */
+@Serializable
+data class ExpenseEditRoute(val expenseId: String)
+
 /** Where the editor leaves the new category's identifier for the screen that opened it. */
 const val CREATED_CATEGORY_RESULT = "result.createdCategoryId"
 

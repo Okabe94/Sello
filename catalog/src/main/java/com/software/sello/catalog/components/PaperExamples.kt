@@ -9,14 +9,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import com.software.sello.designsystem.component.ActionLine
 import com.software.sello.designsystem.component.KeyValue
 import com.software.sello.designsystem.component.LeaderLine
+import com.software.sello.designsystem.component.LineAction
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.Slip
@@ -75,6 +78,38 @@ fun TearLineExample() {
         MoneyText(copFixture(99_144), style = MoneyStyle.Title)
         TearLine()
         Soft("Como máximo dos por slip")
+    }
+}
+
+/** A line that opens, with the same two actions by long press, by name and by swiping away. */
+@Composable
+fun ActionLineExample() {
+    var last by rememberSaveable { mutableStateOf("Nada todavía") }
+    Stack {
+        Slip(modifier = Modifier.fillMaxWidth()) {
+            listOf("Pan" to 10_000L, "Verduras" to 23_400L).forEach { (note, pesos) ->
+                val delete = LineAction("Borrar") { last = "Borrar: $note" }
+                ActionLine(
+                    label = note,
+                    onClick = { last = "Abrir: $note" },
+                    actions = listOf(LineAction("Editar") { last = "Editar: $note" }, delete),
+                    modifier = Modifier.testTag("action-line:$note"),
+                    caption = "jue 22 oct",
+                    swipeAway = delete
+                ) { MoneyText(copFixture(pesos)) }
+            }
+            ActionLine(
+                label = "Sin deslizar",
+                onClick = { last = "Abrir: Sin deslizar" },
+                actions = listOf(LineAction("Editar") { last = "Editar: Sin deslizar" })
+            ) { MoneyText(copFixture(1_000)) }
+        }
+        Text(
+            last,
+            style = MaterialTheme.typography.bodyLarge,
+            color = SelloTheme.colors.ink,
+            modifier = Modifier.testTag("action-line:last")
+        )
     }
 }
 

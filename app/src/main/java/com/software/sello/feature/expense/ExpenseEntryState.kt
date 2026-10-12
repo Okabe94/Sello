@@ -2,14 +2,19 @@ package com.software.sello.feature.expense
 
 import com.software.sello.designsystem.component.MoneyTextValue
 import java.time.LocalDate
+import java.time.YearMonth
 
 /** Why the amount as typed or pasted cannot be used. The text is kept as it was. */
 enum class AmountProblem { NotAnAmount, Zero, TooLarge }
 
 enum class NoteProblem { TooLong, NotAllowed }
 
-/** What still has to be filled in before the expense can be recorded, most important first. */
-enum class Missing { Amount, Category, Note }
+/**
+ * What still has to be filled in before the expense can be recorded, most important
+ * first. [Changes] is only for a recorded expense being corrected: nothing differs yet
+ * from what is stored, so there is nothing to save.
+ */
+enum class Missing { Amount, Category, Note, Changes }
 
 /** Why recording did not finish. None of these means the expense was saved. */
 enum class EntryError {
@@ -29,7 +34,16 @@ enum class EntryError {
     DataChanged,
 
     /** It is not known yet whether it was saved; asking again will tell. */
-    Unknown
+    Unknown,
+
+    /** The expense being corrected no longer exists. */
+    ExpenseGone,
+
+    /** The expense being corrected was changed since this form read it. */
+    ExpenseChanged,
+
+    /** Deleting failed and the expense is still there. */
+    NotDeleted
 }
 
 data class EntryCategory(val id: String, val name: String, val iconKey: String)
@@ -85,15 +99,33 @@ data class ExpenseEntryState(
     val confirmDiscard: Boolean = false,
     val receipt: ExpenseReceiptView? = null,
     /** The form is finished and should close. */
-    val closed: Boolean = false
+    val closed: Boolean = false,
+    /** A recorded expense is being corrected, not a new one written. */
+    val editing: Boolean = false,
+    /**
+     * Months other than the current one whose figures saving or deleting would change:
+     * the month the expense is recorded in and the month the draft would move it to.
+     */
+    val pastMonths: List<YearMonth> = emptyList()
 ) {
     val canSubmit: Boolean
-        get() = !loading && !loadFailed && !busy && missing == null && error != EntryError.Unknown
+        get() = !loading && !loadFailed && !busy && missing == null && error !in Blocking
 
-    /** While saving, or while a save's outcome is unknown, the draft must not change. */
-    val editable: Boolean get() = !busy && error != EntryError.Unknown && receipt == null
+    /**
+     * While saving, while a save's outcome is unknown, or once the expense is known to
+     * be gone or changed underneath this form, the draft must not change.
+     */
+    val editable: Boolean get() = !busy && error !in Blocking && receipt == null
+
+    /** A recorded expense can be deleted from here once it has been read. */
+    val canDelete: Boolean get() = editing && !loading && !loadFailed && editable
 
     val category: EntryCategory? get() = categories.firstOrNull { it.id == categoryId }
+
+    private companion object {
+        /** After these nothing in the form can be sent as it is. */
+        val Blocking = setOf(EntryError.Unknown, EntryError.ExpenseGone, EntryError.ExpenseChanged)
+    }
 }
 
 sealed interface ExpenseEntryAction {
@@ -131,4 +163,7 @@ sealed interface ExpenseEntryAction {
 
     /** Leave the receipt. */
     data object Done : ExpenseEntryAction
+
+    /** Delete the recorded expense being corrected. */
+    data object Delete : ExpenseEntryAction
 }

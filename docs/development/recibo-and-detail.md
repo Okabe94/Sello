@@ -78,6 +78,30 @@ per read) and a cursor for the next. Rules:
 - "Anotar aquí" and the dock open [Anotar](expense-entry.md) with the category
   chosen. A finished month or an archived category does not offer "Anotar aquí".
 
+## Correcting and deleting an expense
+
+Each listed expense is an `ActionLine`:
+
+| How | What it does |
+| --- | --- |
+| Press | Opens [the form on that expense](expense-entry.md#correcting-a-recorded-expense) |
+| Long press | A menu with "Editar" and "Borrar" |
+| Swipe towards the start, past 40 % of the width | Deletes it |
+| Screen reader | The actions "Editar" and "Borrar", by name |
+
+Nothing depends on a gesture alone. A line under the count always says how: "Toca un
+gasto para corregirlo. Para borrarlo, deslízalo o mantenlo presionado."
+
+- **A deletion is of the row as listed.** The view model keeps each listed expense's
+  version and the generation it was listed from, and `ExpenseCorrections.delete`
+  sends exactly those. A row that is out of date is refused and said so above the
+  rows ("Ese gasto cambió mientras tanto. No se borró; revísalo."); it is not deleted
+  as something it no longer is.
+- **Nothing is taken off the screen by hand.** The row leaves, and comes back after an
+  undo, when the month is read again, like any other change. The figures move with it.
+- **The offer to undo** is the frame's, not this screen's: see
+  [the app shell](app-shell.md#what-is-said-about-a-correction).
+
 ## When a read fails
 
 | What happened | Recibo | Detail |
@@ -110,5 +134,5 @@ side of the screen, as it already did at the top and bottom.
 ## Not here yet
 
 The weekly and six-month charts, "En números" and the comparison with last month;
-editing or deleting an expense or a category (SELLO-019, SELLO-020); the gear and
+editing or deleting a category (SELLO-020); the gear and
 other tabs; swiping between months; and the count-up and stamp-landing motion.

@@ -6,8 +6,11 @@ import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.SnapshotFailure
 import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.port.ExpenseCommandOutcome.Rejected
 import com.software.sello.domain.port.ExpenseCursor
+import com.software.sello.domain.port.ExpenseRejection
 import com.software.sello.domain.port.SnapshotState
+import com.software.sello.feature.expense.HandExpenseCommands
 import com.software.sello.feature.expense.HandExpenseReads
 import com.software.sello.feature.expense.HandSnapshots
 import com.software.sello.feature.expense.categoryIn
@@ -17,11 +20,14 @@ import com.software.sello.feature.expense.uuid
 import com.software.sello.navigation.HandFinancialClock
 import com.software.sello.navigation.HandMonotonicClock
 import com.software.sello.navigation.MonthSession
+import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import com.software.sello.presentation.money.MoneyLabels
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -42,6 +48,8 @@ class CategoryDetailViewModelTest {
     private val session = MonthSession(HandFinancialClock("2026-10-23"), HandMonotonicClock())
     private val snapshots = HandSnapshots()
     private val reads = HandExpenseReads()
+    private val commands = HandExpenseCommands()
+    private var nextOperation = 700
     private val labels = object : MoneyLabels {
         override fun amount(currency: Currency, digits: String, isOne: Boolean) = "$digits pesos"
 
@@ -61,8 +69,15 @@ class CategoryDetailViewModelTest {
     private fun plain(digits: String) = MoneyTextValue(MoneySign.None, "", digits, "$digits pesos")
 
     private fun TestScope.started(): CategoryDetailViewModel {
+        val corrections = ExpenseCorrections(
+            commands,
+            // The clock moves with the test's own time, so a notice shown ends when it should.
+            { testScheduler.currentTime.milliseconds },
+            { uuid(nextOperation++) },
+            CoroutineScope(Dispatchers.Main)
+        )
         val viewModel =
-            CategoryDetailViewModel(session, snapshots, reads, MoneyFormatter(labels))
+            CategoryDetailViewModel(session, snapshots, reads, MoneyFormatter(labels), corrections)
         // Something has to be watching for the state to be kept up to date.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.state.collect {}
@@ -549,5 +564,72 @@ class CategoryDetailViewModelTest {
         assertEquals(1, during.category.expenseCount)
         assertEquals(ExpenseListState.Loading, during.expenses)
         assertEquals(listOf(uuid(700)), viewModel.rows.rows.map { it.id })
+    }
+
+    // --- Deleting from the list ---
+
+    @Test
+    fun deletingAListedExpenseDeletesItAtTheVersionAndHistoryItWasListedFrom() = runTest {
+        val viewModel = started()
+        val expenses = listOf(
+            storedExpense(100, 1, "2026-10-20", 33_500).copy(version = 4),
+            storedExpense(101, 1, "2026-10-21", 20_600)
+        )
+        reads.stored.putAll(expenses.associateBy { it.id })
+        snapshots.ready(
+            monthOf("2026-10-23", listOf(food, coffee), expenses, october, generation = 6)
+        )
+        show(viewModel, 1)
+
+        viewModel.onAction(CategoryDetailAction.Delete(uuid(100)))
+
+        val sent = commands.deleted.single()
+        assertEquals(
+            listOf(uuid(100), 4L, 6L),
+            listOf(sent.expenseId.value, sent.expectedVersion, sent.generation)
+        )
+        // Nothing is taken off the screen by hand: the row goes when the month is read again.
+        assertEquals(listOf(uuid(101), uuid(100)), viewModel.rows.rows.map { it.id })
+        assertEquals(null, viewModel.ready.deleteProblem)
+    }
+
+    @Test
+    fun anExpenseThatIsNotListedOrIsAlreadyBeingDeletedAsksNothingMore() = runTest {
+        val viewModel = started()
+        commit(many(2))
+        show(viewModel, 1)
+        commands.hold = CompletableDeferred()
+
+        viewModel.onAction(CategoryDetailAction.Delete(uuid(999)))
+        viewModel.onAction(CategoryDetailAction.Delete("not an identifier"))
+        viewModel.onAction(CategoryDetailAction.Delete(uuid(100)))
+        viewModel.onAction(CategoryDetailAction.Delete(uuid(100)))
+
+        assertEquals(listOf(uuid(100)), commands.deleted.map { it.expenseId.value })
+    }
+
+    @Test
+    fun aDeletionThatDidNotHappenSaysWhyUntilTheNextOneIsAsked() = runTest {
+        val viewModel = started()
+        commit(many(2))
+        show(viewModel, 1)
+        val refusals = listOf(
+            ExpenseRejection.ExpenseMissing to DeleteProblem.Gone,
+            ExpenseRejection.VersionConflict(current = 2) to DeleteProblem.Changed,
+            ExpenseRejection.StaleGeneration(current = 2) to DeleteProblem.DataChanged,
+            ExpenseRejection.StorageFailed(StorageFailure.Unavailable("x")) to DeleteProblem.Failed
+        )
+
+        val said = refusals.map { (reason, _) ->
+            commands.deleteAnswer = { Rejected(reason) }
+            viewModel.onAction(CategoryDetailAction.Delete(uuid(100)))
+            viewModel.ready.deleteProblem
+        }
+        commands.hold = CompletableDeferred()
+        viewModel.onAction(CategoryDetailAction.Delete(uuid(101)))
+
+        assertEquals(refusals.map { it.second }, said)
+        assertEquals(null, viewModel.ready.deleteProblem)
+        assertEquals(2, viewModel.rows.rows.size)
     }
 }

@@ -19,6 +19,7 @@ class CatalogExamplesTest {
                 "paper.slip",
                 "paper.tear-line",
                 "paper.leader-line",
+                "paper.action-line",
                 "paper.total-line",
                 "paper.key-value",
                 "stamps.stamp",
@@ -43,6 +44,7 @@ class CatalogExamplesTest {
                 "feedback.confirm-slip",
                 "feedback.empty-slip",
                 "feedback.error-slip",
+                "feedback.notice",
                 "feedback.slip-skeleton"
             ),
             catalogExamples.map { it.id }

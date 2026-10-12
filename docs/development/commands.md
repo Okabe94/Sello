@@ -128,5 +128,5 @@ seconds, after the deletion committed. At six seconds exactly it has ended.
   beyond the 100.000-record backup bound. Totals are checked where they are
   computed (SELLO-014).
 - `Committed` has no follow-up state because nothing follows a save yet.
-- No screen offers editing, deleting or undo yet; those arrive with the rest of
-  SELLO-019.
+- Only expenses can be edited, deleted and restored. Categories' own history and
+  income follow in SELLO-020 and SELLO-021.

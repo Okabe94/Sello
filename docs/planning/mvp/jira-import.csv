@@ -9082,6 +9082,47 @@ Do not mask failed reads with animation, animate financial truth using approxima
 Use `./scripts/verify-ticket SELLO-060 --retain` for the final G2 gate.
 Focused animation/navigation tests, scoped device recordings at normal and zero animation scales, applicable catalog verification, then G2 and fresh retained report. General flashing needs further reproduction if it persists after the confirmed title defect is corrected.
 
+### Execution progress
+2026-10-12: triaged and prototyped, not started. **Parked by owner decision; the
+ticket stays Backlog.** The owner's reason: it needs more detailed design work first.
+
+What is there today, from the code and the design reference: Dock → Anotar is the
+navigation library's default cross-fade, which nothing in the app chose; changing
+month and opening or leaving a category replace the content at once. The reference
+asks for the dock to morph into the slip (or ""a plain rise"") and for the month's
+slips to slide 24dp and cross-fade; it says nothing about a category's screen. The
+one visual fault confirmed from the original report, the ""Categoría"" flash, was
+SELLO-057 and is fixed.
+
+A throwaway prototype of all three was built in the running app on the API 30
+emulator and filmed, then discarded; no prototype code is in the repository. Frames:
+[Dock → Anotar](../../../testing/evidence/SELLO-060/prototype-1-dock-anotar.png),
+[month change](../../../testing/evidence/SELLO-060/prototype-2-month-change.png),
+[category](../../../testing/evidence/SELLO-060/prototype-3-category.png). Their
+colours are wrong (too blue) from the video conversion.
+
+What it showed, for whoever takes this up:
+- **Dock → Anotar** as a rise from the bottom on `SelloMotion.emphasized` is small
+  and looked finished. The dock morphing into the slip was not tried.
+- **Month change** works only if the old receipt is held until the new month is
+  read; a plain slide goes through the loading skeleton. With that, the header still
+  names the new month for several frames while the old receipt is under it. The
+  header has to wait or be part of the transition. At 24dp the slide mostly reads as
+  a cross-fade.
+- **A category's screen** is not a navigation destination on a phone; it is a swap
+  inside the frame. Sliding it shows two top bars and two docks cross-fading over
+  each other. Doing it properly means one bar that stays and content that moves,
+  which is a restructure of the frame. The leaving screen also has to keep what it
+  was showing, or it slides away empty.
+- Against the prototype, the 217 host tests passed and 1 of the 143 app device
+  tests failed: a journey that looks at the screen straight after a month change.
+- Not covered by the prototype: tests of its own, reduced motion (wired, not
+  checked), wide and side-by-side windows, and where the held month and held
+  category would live so they can be tested.
+
+The estimate for the ticket as written stays about 6 to 7 on the 0 to 10 scale used
+in this triage. Nothing was delivered, so there is no Delivery evidence.
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes

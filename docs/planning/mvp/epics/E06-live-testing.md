@@ -44,6 +44,12 @@ Use the distinct clock ports from SELLO-005, real Room factory from SELLO-011 an
 app Root from SELLO-015. Read architecture §9,
 [module map](../EXECUTION_GUIDE.md#module-and-file-map) and accepted D02/D09.
 
+From SELLO-019 (2026-10-12): expense edit, delete and undo shipped before the sandbox
+existed, so they have no sandbox regression inputs. Add them here: U01 to U05 in
+`UndoCompensationContractTest` are written against the distinct clocks and can be
+run as scenarios, including "advance the financial day a year, undo still ends at
+six real seconds".
+
 ### Implementation plan
 1. Add debug-only tools UI/bindings with separate sandbox DB/preferences namespace
    and visible session/date/zone badge; normal debug profile and production stay untouched.

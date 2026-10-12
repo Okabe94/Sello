@@ -17,6 +17,7 @@ import com.software.sello.domain.policy.EffectiveDates
 import com.software.sello.domain.policy.ExpensePreviewPolicy
 import com.software.sello.domain.policy.PreviewFigure
 import com.software.sello.domain.port.CreateExpense
+import com.software.sello.domain.port.EditExpense
 import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
@@ -25,6 +26,8 @@ import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.domain.port.SnapshotState
+import com.software.sello.presentation.corrections.DeleteResult
+import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import java.time.LocalDate
 import java.time.YearMonth
@@ -49,6 +52,13 @@ import kotlinx.coroutines.launch
  *
  * The preview comes from the shared snapshot and policy. Nothing is added or
  * compared here.
+ *
+ * With [KEY_EDITED_EXPENSE] it corrects that recorded expense instead. The draft
+ * starts as what storage holds, read once; what was read, with its version, is kept in
+ * [saved] too, so a restored draft is still compared with and sent against the
+ * expense as it was when the form opened, never against a later one it has not shown.
+ * Saving is an edit of that version, deleting goes through [corrections], and
+ * neither is ever turned into recording a new expense.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpenseEntryViewModel(
@@ -58,7 +68,8 @@ class ExpenseEntryViewModel(
     snapshots: MonthlySnapshots,
     private val clock: FinancialClock,
     private val ids: RecordIdSource,
-    private val money: MoneyFormatter
+    private val money: MoneyFormatter,
+    private val corrections: ExpenseCorrections
 ) : ViewModel() {
     private data class Draft(
         val amount: AmountDraft,
@@ -77,8 +88,24 @@ class ExpenseEntryViewModel(
         val confirmDiscard: Boolean = false,
         val receipt: ExpenseReceiptView? = null,
         val closed: Boolean = false,
-        val attempt: Int = 0
+        val attempt: Int = 0,
+        /** Correcting: the recorded expense as it was read, or null until it has been. */
+        val original: Original? = null,
+        val originalUnreadable: Boolean = false
     )
+
+    /** The recorded expense as the form first read it. Notes are compared as stored. */
+    private data class Original(
+        val version: Long,
+        val digits: String,
+        val categoryId: String,
+        val date: LocalDate,
+        val note: String?
+    )
+
+    private val editedExpense: ExpenseId? =
+        (saved.get<String>(KEY_EDITED_EXPENSE)?.let(ExpenseId::of) as? Outcome.Success)?.value
+    private val editing = saved.get<String>(KEY_EDITED_EXPENSE) != null
 
     private val draft = MutableStateFlow(
         Draft(
@@ -88,7 +115,7 @@ class ExpenseEntryViewModel(
             note = saved[KEY_NOTE] ?: ""
         )
     )
-    private val progress = MutableStateFlow(Progress())
+    private val progress = MutableStateFlow(Progress(original = savedOriginal()))
 
     init {
         // "Today" is fixed when the form opens, so a draft restored tomorrow is still
@@ -128,6 +155,60 @@ class ExpenseEntryViewModel(
                 saved.get<String>(KEY_OPERATION) != null -> recover()
             }
         }
+        if (editing && progress.value.original == null) viewModelScope.launch { loadOriginal() }
+    }
+
+    private fun savedOriginal(): Original? {
+        val version = saved.get<Long>(KEY_ORIGINAL_VERSION) ?: return null
+        val date =
+            (
+                saved.get<String>(
+                    KEY_ORIGINAL_DATE
+                )?.let(EffectiveDates::parseDate) as? Outcome.Success
+                )
+                ?.value ?: return null
+        return Original(
+            version = version,
+            digits = saved.get<String>(KEY_ORIGINAL_AMOUNT) ?: return null,
+            categoryId = saved.get<String>(KEY_ORIGINAL_CATEGORY) ?: return null,
+            date = date,
+            note = saved[KEY_ORIGINAL_NOTE]
+        )
+    }
+
+    /**
+     * Reads the recorded expense once and starts the draft from it. A draft that was
+     * restored already has what it was started from and is never read over.
+     */
+    private suspend fun loadOriginal() {
+        val id = editedExpense
+            ?: return progress.update { it.copy(error = EntryError.ExpenseGone) }
+        when (val read = reads.byId(id)) {
+            is Outcome.Failure -> progress.update { it.copy(originalUnreadable = true) }
+
+            is Outcome.Success -> {
+                val expense = read.value
+                    ?: return progress.update { it.copy(error = EntryError.ExpenseGone) }
+                val original = Original(
+                    version = expense.version,
+                    digits = expense.amount.money.minorUnits.toString(),
+                    categoryId = expense.categoryId.value,
+                    date = expense.date,
+                    note = expense.note?.value
+                )
+                saved[KEY_ORIGINAL_VERSION] = original.version
+                saved[KEY_ORIGINAL_AMOUNT] = original.digits
+                saved[KEY_ORIGINAL_CATEGORY] = original.categoryId
+                saved[KEY_ORIGINAL_DATE] = original.date.toString()
+                saved[KEY_ORIGINAL_NOTE] = original.note
+                setAmount(AmountDraft.paste(original.digits))
+                setCategory(original.categoryId)
+                saved[KEY_DATE] = original.date.toString()
+                saved[KEY_NOTE] = original.note.orEmpty()
+                draft.update { it.copy(date = original.date, note = original.note.orEmpty()) }
+                progress.update { it.copy(original = original, originalUnreadable = false) }
+            }
+        }
     }
 
     private fun prefilledAmount(): AmountDraft {
@@ -140,8 +221,13 @@ class ExpenseEntryViewModel(
     private fun savedDate(): LocalDate? =
         (saved.get<String>(KEY_DATE)?.let(EffectiveDates::parseDate) as? Outcome.Success)?.value
 
-    private fun eligible(snapshot: MonthlySnapshot) =
-        snapshot.categories.filter { !it.category.archived }.map { it.category }
+    /**
+     * The categories an expense can be put in. [keeping] is the category a recorded
+     * expense is already in: it may stay there even if that category was archived since.
+     */
+    private fun eligible(snapshot: MonthlySnapshot, keeping: String? = null) = snapshot.categories
+        .filter { !it.category.archived || it.category.id.value == keeping }
+        .map { it.category }
 
     /**
      * The first time the categories are known and none is chosen: the one the caller
@@ -149,6 +235,8 @@ class ExpenseEntryViewModel(
      * take an expense is never chosen.
      */
     private suspend fun chooseCategoryOnce(snapshot: MonthlySnapshot) {
+        // A recorded expense has its category; none is chosen for it.
+        if (editing) return
         if (saved.get<Boolean>(KEY_CATEGORY_DEFAULTED) == true) return
         saved[KEY_CATEGORY_DEFAULTED] = true
         if (draft.value.categoryId != null) return
@@ -230,8 +318,13 @@ class ExpenseEntryViewModel(
 
             ExpenseEntryAction.Retry -> when {
                 now.busy -> Unit
+
                 saved.get<String>(KEY_OPERATION) != null -> viewModelScope.launch { recover() }
-                else -> progress.update { it.copy(attempt = it.attempt + 1) }
+
+                else -> {
+                    if (progress.value.originalUnreadable) viewModelScope.launch { loadOriginal() }
+                    progress.update { it.copy(attempt = it.attempt + 1) }
+                }
             }
 
             ExpenseEntryAction.Back -> when {
@@ -246,11 +339,10 @@ class ExpenseEntryViewModel(
 
             ExpenseEntryAction.KeepEditing -> progress.update { it.copy(confirmDiscard = false) }
 
-            ExpenseEntryAction.Done -> if (now.receipt !=
-                null
-            ) {
-                progress.update { it.copy(closed = true) }
-            }
+            ExpenseEntryAction.Done ->
+                if (now.receipt != null) progress.update { it.copy(closed = true) }
+
+            ExpenseEntryAction.Delete -> if (now.canDelete) delete()
         }
     }
 
@@ -259,7 +351,47 @@ class ExpenseEntryViewModel(
         if (change.limitReached) progress.update { it.copy(limitPulse = it.limitPulse + 1) }
     }
 
-    private fun isTyped() = draft.value.amount != AmountDraft.Empty || draft.value.note.isNotBlank()
+    /** Whether leaving would lose something: anything typed, or any change to a recorded expense. */
+    private fun isTyped(): Boolean {
+        if (!editing) {
+            return draft.value.amount != AmountDraft.Empty ||
+                draft.value.note.isNotBlank()
+        }
+        val original = progress.value.original ?: return false
+        return changed(draft.value, original)
+    }
+
+    /** Compared as it would be stored: a note differing only in outer spaces is the same note. */
+    private fun changed(draft: Draft, original: Original): Boolean {
+        val note = (Note.of(draft.note) as? Outcome.Success)?.value?.value
+        return (draft.amount as? AmountDraft.Digits)?.digits != original.digits ||
+            draft.categoryId != original.categoryId ||
+            draft.date != original.date ||
+            (Note.of(draft.note) is Outcome.Failure || note != original.note)
+    }
+
+    private fun delete() {
+        val id = editedExpense ?: return
+        val original = progress.value.original ?: return
+        val snapshot = (month.value as? SnapshotState.Ready)?.snapshot ?: return
+        progress.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            val error = when (corrections.delete(id, original.version, snapshot.generation)) {
+                DeleteResult.Deleted -> return@launch progress.update {
+                    it.copy(busy = false, closed = true)
+                }
+
+                DeleteResult.Gone -> EntryError.ExpenseGone
+
+                DeleteResult.Changed -> EntryError.ExpenseChanged
+
+                DeleteResult.DataChanged -> EntryError.DataChanged
+
+                DeleteResult.Failed -> EntryError.NotDeleted
+            }
+            progress.update { it.copy(busy = false, error = error) }
+        }
+    }
 
     private fun submit() {
         val draft = draft.value
@@ -274,9 +406,37 @@ class ExpenseEntryViewModel(
         val operation = (OperationId.of(ids.next()) as Outcome.Success).value
         saved[KEY_OPERATION] = operation.value
         progress.update { it.copy(busy = true, error = null) }
-        val command =
-            CreateExpense(operation, snapshot.generation, category, amount, draft.date, note)
-        viewModelScope.launch { settle(commands.create(command)) }
+        val original = progress.value.original
+        val edited = editedExpense
+        viewModelScope.launch {
+            settle(
+                if (edited != null && original != null) {
+                    commands.edit(
+                        EditExpense(
+                            operation,
+                            snapshot.generation,
+                            edited,
+                            original.version,
+                            category,
+                            amount,
+                            draft.date,
+                            note
+                        )
+                    )
+                } else {
+                    commands.create(
+                        CreateExpense(
+                            operation,
+                            snapshot.generation,
+                            category,
+                            amount,
+                            draft.date,
+                            note
+                        )
+                    )
+                }
+            )
+        }
     }
 
     private suspend fun settle(outcome: ExpenseCommandOutcome) {
@@ -299,6 +459,10 @@ class ExpenseEntryViewModel(
                     ExpenseRejection.InvalidDate -> EntryError.InvalidDate
 
                     is ExpenseRejection.StaleGeneration -> EntryError.DataChanged
+
+                    ExpenseRejection.ExpenseMissing -> EntryError.ExpenseGone
+
+                    is ExpenseRejection.VersionConflict -> EntryError.ExpenseChanged
 
                     else -> EntryError.NotSaved
                 }
@@ -334,6 +498,13 @@ class ExpenseEntryViewModel(
     }
 
     private suspend fun saved(expenseId: ExpenseId) {
+        if (editing) {
+            // A correction has no receipt of its own: the lists show the expense as it
+            // is now, and the notice says the change was saved.
+            saved[KEY_OPERATION] = null
+            corrections.updated()
+            return progress.update { it.copy(busy = false, error = null, closed = true) }
+        }
         saved[KEY_SAVED_EXPENSE] = expenseId.value
         saved[KEY_OPERATION] = null
         showReceipt(expenseId.value)
@@ -368,7 +539,8 @@ class ExpenseEntryViewModel(
         today: LocalDate
     ): ExpenseEntryState {
         val snapshot = (month as? SnapshotState.Ready)?.snapshot
-        val categories = snapshot?.let(::eligible).orEmpty()
+        val original = progress.original
+        val categories = snapshot?.let { eligible(it, original?.categoryId) }.orEmpty()
             .map { EntryCategory(it.id.value, it.name.value, it.icon.value) }
         val amount = (draft.amount.toTransactionAmount() as? Outcome.Success)?.value
         val noteProblem = when (val note = Note.of(draft.note)) {
@@ -380,15 +552,21 @@ class ExpenseEntryViewModel(
             }
         }
         val chosen = draft.categoryId?.takeIf { id -> categories.any { it.id == id } }
-        val preview = if (snapshot != null && amount != null) {
+        // The preview adds the draft to the month. A recorded expense is already in it,
+        // so for a correction that sum would count it twice: none is shown.
+        val preview = if (snapshot != null && amount != null && !editing) {
             val category = (chosen?.let(CategoryId::of) as? Outcome.Success)?.value
             (ExpensePreviewPolicy.preview(snapshot, amount, category) as? Outcome.Success)?.value
         } else {
             null
         }
+        val waitingForOriginal = editing && original == null && progress.error == null
+        val currentMonth = YearMonth.from(today)
         return ExpenseEntryState(
-            loading = month is SnapshotState.Loading && progress.receipt == null,
-            loadFailed = month is SnapshotState.Failed && progress.receipt == null,
+            loading = progress.receipt == null && !progress.originalUnreadable &&
+                (month is SnapshotState.Loading || waitingForOriginal),
+            loadFailed = progress.receipt == null &&
+                (month is SnapshotState.Failed || progress.originalUnreadable),
             amount = amount?.let { money.format(it.money) },
             amountText = (draft.amount as? AmountDraft.Rejected)?.original,
             amountProblem = (draft.amount as? AmountDraft.Rejected)?.let { problem(it.error) },
@@ -405,13 +583,19 @@ class ExpenseEntryViewModel(
                 amount == null -> Missing.Amount
                 chosen == null -> Missing.Category
                 noteProblem != null -> Missing.Note
+                original != null && !changed(draft, original) -> Missing.Changes
                 else -> null
             },
             busy = progress.busy,
             error = progress.error,
             confirmDiscard = progress.confirmDiscard,
             receipt = progress.receipt,
-            closed = progress.closed
+            closed = progress.closed,
+            editing = editing,
+            pastMonths = original?.let {
+                listOf(YearMonth.from(it.date), YearMonth.from(draft.date)).distinct()
+                    .filter { month -> month != currentMonth }
+            }.orEmpty()
         )
     }
 
@@ -439,6 +623,9 @@ class ExpenseEntryViewModel(
         const val KEY_PREFILL_CATEGORY = "categoryId"
         const val KEY_PREFILL_AMOUNT = "amount"
 
+        /** Route argument: the recorded expense to correct. Without it the form records a new one. */
+        const val KEY_EDITED_EXPENSE = "expenseId"
+
         private const val KEY_AMOUNT = "expense.amount"
         private const val KEY_CATEGORY = "expense.category"
         private const val KEY_CATEGORY_DEFAULTED = "expense.categoryDefaulted"
@@ -446,5 +633,10 @@ class ExpenseEntryViewModel(
         private const val KEY_NOTE = "expense.note"
         private const val KEY_OPERATION = "expense.operation"
         private const val KEY_SAVED_EXPENSE = "expense.saved"
+        private const val KEY_ORIGINAL_VERSION = "expense.original.version"
+        private const val KEY_ORIGINAL_AMOUNT = "expense.original.amount"
+        private const val KEY_ORIGINAL_CATEGORY = "expense.original.category"
+        private const val KEY_ORIGINAL_DATE = "expense.original.date"
+        private const val KEY_ORIGINAL_NOTE = "expense.original.note"
     }
 }

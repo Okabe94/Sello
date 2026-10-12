@@ -124,23 +124,51 @@ class HandSnapshots : MonthlySnapshots {
         of(month).onStart { observed += month }
 }
 
-/** Commands a test scripts: what `create` and `find` answer, and what they were sent. */
+/**
+ * Commands a test scripts: what each one answers, and what it was sent. Unless told
+ * otherwise every command commits.
+ */
 class HandExpenseCommands : ExpenseCommands {
     val created = mutableListOf<CreateExpense>()
+    val edited = mutableListOf<EditExpense>()
+    val deleted = mutableListOf<DeleteExpense>()
+    val restored = mutableListOf<RestoreExpense>()
     val looked = mutableListOf<OperationId>()
     var answer: (CreateExpense) -> ExpenseCommandOutcome =
         { ExpenseCommandOutcome.Committed(committed(it.operationId), replayed = false) }
+    var editAnswer: (EditExpense) -> ExpenseCommandOutcome = {
+        ExpenseCommandOutcome.Committed(
+            committed(it.operationId, it.expenseId, OperationKind.EditExpense),
+            replayed = false
+        )
+    }
+    var deleteAnswer: (DeleteExpense) -> ExpenseCommandOutcome = {
+        ExpenseCommandOutcome.Committed(
+            committed(it.operationId, it.expenseId, OperationKind.DeleteExpense),
+            replayed = false
+        )
+    }
+    var restoreAnswer: (RestoreExpense) -> ExpenseCommandOutcome = {
+        ExpenseCommandOutcome.Committed(
+            committed(it.operationId, expenseId(900), OperationKind.RestoreExpense),
+            replayed = false
+        )
+    }
     var found: (
         OperationId
     ) -> Outcome<CommittedExpense?, StorageFailure> = { Outcome.Success(null) }
 
-    /** When set, `create` waits here: the save is in flight. */
+    /** What [undoOffer] answers: the adapter's own knowledge of the deletion on offer. */
+    var offer: () -> UndoOffer? = { null }
+
+    /** When set, every command waits here: the save is in flight. */
     var hold: CompletableDeferred<Unit>? = null
 
-    fun committed(operation: OperationId, expense: Int = 900) = CommittedExpense(
-        OperationReceipt(operation, OperationKind.CreateExpense, 1, 1, Instant.EPOCH),
-        expenseId(expense)
-    )
+    fun committed(operation: OperationId, expense: Int = 900) =
+        committed(operation, expenseId(expense), OperationKind.CreateExpense)
+
+    fun committed(operation: OperationId, expense: ExpenseId, kind: OperationKind) =
+        CommittedExpense(OperationReceipt(operation, kind, 1, 1, Instant.EPOCH), expense)
 
     override suspend fun create(command: CreateExpense): ExpenseCommandOutcome {
         created += command
@@ -155,17 +183,25 @@ class HandExpenseCommands : ExpenseCommands {
         return found(operationId)
     }
 
-    // The screens for these arrive with the rest of SELLO-019; nothing calls them yet.
-    override suspend fun edit(command: EditExpense): ExpenseCommandOutcome =
-        error("not scripted: no screen edits an expense yet")
+    override suspend fun edit(command: EditExpense): ExpenseCommandOutcome {
+        edited += command
+        hold?.await()
+        return editAnswer(command)
+    }
 
-    override suspend fun delete(command: DeleteExpense): ExpenseCommandOutcome =
-        error("not scripted: no screen deletes an expense yet")
+    override suspend fun delete(command: DeleteExpense): ExpenseCommandOutcome {
+        deleted += command
+        hold?.await()
+        return deleteAnswer(command)
+    }
 
-    override suspend fun restore(command: RestoreExpense): ExpenseCommandOutcome =
-        error("not scripted: no screen undoes a deletion yet")
+    override suspend fun restore(command: RestoreExpense): ExpenseCommandOutcome {
+        restored += command
+        hold?.await()
+        return restoreAnswer(command)
+    }
 
-    override fun undoOffer(): UndoOffer? = null
+    override fun undoOffer(): UndoOffer? = offer()
 }
 
 /** What "storage" holds, set by the test. */

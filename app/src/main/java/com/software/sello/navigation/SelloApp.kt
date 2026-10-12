@@ -38,6 +38,7 @@ import com.software.sello.R
 import com.software.sello.designsystem.component.Blotter
 import com.software.sello.designsystem.component.MonthSwitcher
 import com.software.sello.designsystem.component.SelloDock
+import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
@@ -53,6 +54,8 @@ import com.software.sello.feature.recibo.ReciboAction
 import com.software.sello.feature.recibo.ReciboScreen
 import com.software.sello.feature.recibo.ReciboState
 import com.software.sello.feature.recibo.ReciboViewModel
+import com.software.sello.presentation.corrections.CorrectionNotice
+import com.software.sello.presentation.corrections.CorrectionsViewModel
 import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.month.MonthNames
 import com.software.sello.presentation.month.monthNames
@@ -67,8 +70,11 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
     val state by shell.state.collectAsStateWithLifecycle()
     // Stop and start, not pause and resume: a dialog over the app is not time away.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { shell.onAction(ShellAction.EnteredBackground) }
+    val corrections: CorrectionsViewModel = viewModel(factory = viewModels)
+    val notice by corrections.notice.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
         shell.onAction(ShellAction.ReturnedToForeground)
+        corrections.returned()
     }
 
     val navigation = rememberNavController()
@@ -77,9 +83,16 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
 
     NavHost(navController = navigation, startDestination = ReciboRoute) {
         composable<ReciboRoute> {
-            ReciboDestination(state, viewModels, shell::onAction) {
-                navigation.navigate(CategoryEditorRoute())
-            }
+            ReciboDestination(
+                state = state,
+                viewModels = viewModels,
+                onShell = shell::onAction,
+                notice = notice,
+                onUndo = corrections::undo,
+                onEditExpense = { id ->
+                    navigation.navigate(ExpenseEditRoute(id)) { launchSingleTop = true }
+                }
+            ) { navigation.navigate(CategoryEditorRoute()) }
         }
         composable<CategoryEditorRoute> { entry ->
             val forEntry = entry.toRoute<CategoryEditorRoute>().forEntry
@@ -108,6 +121,14 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 val onEntry =
                     navigation.currentBackStackEntry?.destination?.hasRoute<ExpenseEntryRoute>()
                 if (onEntry == true) navigation.popBackStack()
+            }
+        }
+        // The same form: the route's identifier makes it correct that expense.
+        composable<ExpenseEditRoute> {
+            ExpenseEntryRoot(viewModels) {
+                val onEdit =
+                    navigation.currentBackStackEntry?.destination?.hasRoute<ExpenseEditRoute>()
+                if (onEdit == true) navigation.popBackStack()
             }
         }
     }
@@ -150,6 +171,9 @@ private fun ReciboDestination(
     state: ShellState,
     viewModels: ViewModelProvider.Factory,
     onShell: (ShellAction) -> Unit,
+    notice: CorrectionNotice?,
+    onUndo: () -> Unit,
+    onEditExpense: (String) -> Unit,
     onCreateCategory: () -> Unit
 ) {
     val recibo: ReciboViewModel = viewModel(factory = viewModels)
@@ -171,6 +195,7 @@ private fun ReciboDestination(
             state = state,
             names = names,
             onAction = onShell,
+            notice = notice?.let { { CorrectionNoticeBar(it, onUndo) } },
             detail = shownId?.let { id ->
                 ShellDetail(title) { padding ->
                     CategoryDetailScreen(
@@ -180,7 +205,8 @@ private fun ReciboDestination(
                         showName = twoPane,
                         onAction = detail::onAction,
                         onRecordHere = { onShell(ShellAction.StartEntryIn(id)) },
-                        contentPadding = padding
+                        contentPadding = padding,
+                        onEditExpense = onEditExpense
                     )
                 }
             }
@@ -237,6 +263,7 @@ fun ShellScreen(
     onAction: (ShellAction) -> Unit,
     modifier: Modifier = Modifier,
     detail: ShellDetail? = null,
+    notice: (@Composable () -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
@@ -276,6 +303,7 @@ fun ShellScreen(
                     actionLabel = stringResource(R.string.dock_entry_action),
                     onClick = { onAction(ShellAction.StartEntryIn(openedId)) }
                 ),
+                notice = notice,
                 content = detail.content
             )
         } else {
@@ -296,6 +324,7 @@ fun ShellScreen(
                     actionLabel = stringResource(R.string.dock_entry_action),
                     onClick = { onAction(ShellAction.StartEntry) }
                 ),
+                notice = notice,
                 secondaryPane = if (state.monthPickerOpen && sidePanel) {
                     { padding ->
                         Column(
@@ -329,5 +358,49 @@ fun ShellScreen(
     }
 }
 
+/**
+ * What is said about the last correction. Only a deletion that can still be undone
+ * has something to press; everything else is a statement that goes away by itself.
+ */
+@Composable
+private fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
+    val tagged = Modifier.testTag(CORRECTION_NOTICE_TAG)
+    when (notice) {
+        is CorrectionNotice.Deleted -> SelloNotice(
+            message = stringResource(
+                if (notice.undoFailed) {
+                    R.string.correction_undo_failed
+                } else {
+                    R.string.correction_deleted
+                }
+            ),
+            modifier = tagged,
+            actionLabel = stringResource(R.string.correction_undo).takeIf { notice.canUndo },
+            onAction = onUndo.takeIf { notice.canUndo },
+            busy = notice.undoing,
+            spoken = stringResource(
+                when {
+                    notice.undoFailed -> R.string.correction_undo_failed
+                    notice.canUndo -> R.string.correction_deleted_spoken
+                    else -> R.string.correction_deleted
+                }
+            )
+        )
+
+        CorrectionNotice.Restored ->
+            SelloNotice(stringResource(R.string.correction_restored), tagged)
+
+        CorrectionNotice.UndoTooLate ->
+            SelloNotice(stringResource(R.string.correction_too_late), tagged)
+
+        CorrectionNotice.UndoBlocked ->
+            SelloNotice(stringResource(R.string.correction_blocked), tagged)
+
+        CorrectionNotice.Updated ->
+            SelloNotice(stringResource(R.string.correction_updated), tagged)
+    }
+}
+
 const val MONTH_SWITCHER_TAG = "shell:month-switcher"
 const val DETAIL_BACK_TAG = "shell:detail-back"
+const val CORRECTION_NOTICE_TAG = "shell:correction-notice"

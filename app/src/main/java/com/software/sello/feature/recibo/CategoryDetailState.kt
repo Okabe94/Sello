@@ -22,13 +22,30 @@ sealed interface CategoryDetailState {
         val today: LocalDate,
         val stale: Boolean,
         val canRecord: Boolean,
-        val expenses: ExpenseListState
+        val expenses: ExpenseListState,
+        /** Why the last deletion asked for from this list did not happen, until the next one. */
+        val deleteProblem: DeleteProblem? = null
     ) : CategoryDetailState
 
     /** The month was read and this category has nothing in it. */
     data object Gone : CategoryDetailState
 
     data object Failed : CategoryDetailState
+}
+
+/** Why an expense was not deleted. In every case it is still recorded, or was already gone. */
+enum class DeleteProblem {
+    /** It had already been deleted. */
+    Gone,
+
+    /** It was changed since it was listed; the list shows it as it is now. */
+    Changed,
+
+    /** The data was replaced meanwhile (restore or reset). */
+    DataChanged,
+
+    /** Storage failed and nothing was deleted. */
+    Failed
 }
 
 /** The expenses listed. An empty list and a list that could not be read are different. */
@@ -72,4 +89,7 @@ sealed interface CategoryDetailAction {
 
     /** List the next older expenses. */
     data object ShowMore : CategoryDetailAction
+
+    /** Delete one of the listed expenses, as it is listed. */
+    data class Delete(val expenseId: String) : CategoryDetailAction
 }

@@ -51,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.software.sello.R
 import com.software.sello.designsystem.component.AmountField
 import com.software.sello.designsystem.component.AmountKeypad
+import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ChipFlow
 import com.software.sello.designsystem.component.ConfirmSlip
 import com.software.sello.designsystem.component.ErrorSlip
@@ -79,6 +80,7 @@ import com.software.sello.domain.model.Note
 import com.software.sello.presentation.category.CategoryIcons
 import com.software.sello.presentation.date.DateLabels
 import com.software.sello.presentation.date.dateLabels
+import com.software.sello.presentation.month.monthNames
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -117,12 +119,30 @@ fun ExpenseEntryScreen(
         val form = state.receipt == null && !state.loading && !state.loadFailed
         val split = form && selloWindowLayout(maxWidth, maxHeight).twoPane
         SelloScaffold(
-            title = stringResource(R.string.expense_entry_title),
+            title = stringResource(
+                if (state.editing) R.string.expense_edit_title else R.string.expense_entry_title
+            ),
             navigationIcon = {
                 IconButton(onClick = { onAction(ExpenseEntryAction.Back) }) {
                     Icon(
                         SelloIcon.ArrowBack.painter(),
                         stringResource(R.string.expense_entry_close)
+                    )
+                }
+            },
+            actions = {
+                // Only for an expense that is recorded and has been read: nothing else
+                // is there to delete. Undo is offered afterwards, so it does not ask first.
+                if (state.editing && !state.loading && !state.loadFailed) {
+                    val description = stringResource(R.string.expense_edit_delete_description)
+                    SelloButton(
+                        text = stringResource(R.string.expense_edit_delete),
+                        onClick = { onAction(ExpenseEntryAction.Delete) },
+                        kind = ButtonKind.Text,
+                        enabled = state.canDelete,
+                        modifier = Modifier
+                            .testTag(ENTRY_DELETE_TAG)
+                            .semantics { contentDescription = description }
                     )
                 }
             },
@@ -143,7 +163,13 @@ fun ExpenseEntryScreen(
 
                 state.loadFailed -> Pane(padding) {
                     ErrorSlip(
-                        message = stringResource(R.string.expense_entry_load_failed),
+                        message = stringResource(
+                            if (state.editing) {
+                                R.string.expense_edit_load_failed
+                            } else {
+                                R.string.expense_entry_load_failed
+                            }
+                        ),
                         onRetry = { onAction(ExpenseEntryAction.Retry) },
                         modifier = Modifier.testTag(ENTRY_LOAD_FAILED_TAG)
                     )
@@ -156,14 +182,35 @@ fun ExpenseEntryScreen(
         }
     }
     if (state.confirmDiscard) {
+        val editing = state.editing
         ConfirmSlip(
-            title = stringResource(R.string.expense_entry_discard_title),
-            message = AnnotatedString(stringResource(R.string.expense_entry_discard_message)),
+            title = stringResource(
+                if (editing) {
+                    R.string.expense_edit_discard_title
+                } else {
+                    R.string.expense_entry_discard_title
+                }
+            ),
+            message = AnnotatedString(
+                stringResource(
+                    if (editing) {
+                        R.string.expense_edit_discard_message
+                    } else {
+                        R.string.expense_entry_discard_message
+                    }
+                )
+            ),
             confirmLabel = stringResource(R.string.expense_entry_discard_confirm),
             onConfirm = { onAction(ExpenseEntryAction.DiscardConfirmed) },
             onDismiss = { onAction(ExpenseEntryAction.KeepEditing) },
             destructive = false,
-            dismissLabel = stringResource(R.string.expense_entry_discard_keep)
+            dismissLabel = stringResource(
+                if (editing) {
+                    R.string.expense_edit_discard_keep
+                } else {
+                    R.string.expense_entry_discard_keep
+                }
+            )
         )
     }
     if (state.datePickerOpen) DayPicker(state.date, state.today, onAction)
@@ -248,7 +295,10 @@ private fun Draft(
     val day = dates.day(state.date, state.today)
     Slip(modifier = Modifier.fillMaxWidth().testTag(ENTRY_SLIP_TAG)) {
         Text(
-            text = stringResource(R.string.expense_entry_new_line, day),
+            text = stringResource(
+                if (state.editing) R.string.expense_edit_line else R.string.expense_entry_new_line,
+                day
+            ),
             style = MaterialTheme.typography.labelMedium,
             color = SelloTheme.colors.inkSoft
         )
@@ -309,6 +359,22 @@ private fun Draft(
             .testTag(ENTRY_DATE_TAG)
             .semantics { contentDescription = dateDescription }
     )
+    // Said by the date, before anything is saved: which other months' figures this touches.
+    if (state.pastMonths.isNotEmpty()) {
+        val months = monthNames()
+        val named = state.pastMonths.map(months::inSentence)
+        FieldMessageText(
+            FieldMessage(
+                if (named.size == 1) {
+                    stringResource(R.string.expense_edit_past_month, named[0])
+                } else {
+                    stringResource(R.string.expense_edit_past_months, named[0], named[1])
+                },
+                isError = false
+            ),
+            Modifier.testTag(ENTRY_PAST_MONTHS_TAG)
+        )
+    }
     FormField(
         label = stringResource(R.string.expense_entry_note),
         value = state.note,
@@ -337,7 +403,7 @@ private fun Said(state: ExpenseEntryState) {
     val top = Modifier.padding(top = SelloTheme.spacing.sm)
     state.error?.let { error ->
         FieldMessageText(
-            FieldMessage(stringResource(error.text())),
+            FieldMessage(stringResource(error.text(state.editing))),
             top.testTag(ENTRY_ERROR_TAG)
         )
     }
@@ -377,17 +443,24 @@ private fun Keys(
             )
         } else {
             // Read aloud as the whole sentence, so it is clear what will be recorded and where.
+            val label = stringResource(
+                if (state.editing) R.string.expense_edit_submit else R.string.expense_entry_submit
+            )
             val sentence = if (state.amount != null && state.category != null) {
                 stringResource(
-                    R.string.expense_entry_submit_description,
+                    if (state.editing) {
+                        R.string.expense_edit_submit_description
+                    } else {
+                        R.string.expense_entry_submit_description
+                    },
                     state.amount.spoken,
                     state.category!!.name
                 )
             } else {
-                stringResource(R.string.expense_entry_submit)
+                label
             }
             SelloButton(
-                text = stringResource(R.string.expense_entry_submit),
+                text = label,
                 onClick = { onAction(ExpenseEntryAction.Submit) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -535,15 +608,33 @@ private fun Missing.text(): Int? = when (this) {
     Missing.Amount -> null
     Missing.Category -> R.string.expense_entry_missing_category
     Missing.Note -> R.string.expense_entry_missing_note
+    Missing.Changes -> R.string.expense_edit_no_changes
 }
 
-private fun EntryError.text() = when (this) {
-    EntryError.NotSaved -> R.string.expense_entry_not_saved
-    EntryError.CategoryGone -> R.string.expense_entry_category_gone
-    EntryError.FutureDate -> R.string.expense_entry_future_date
-    EntryError.InvalidDate -> R.string.expense_entry_invalid_date
-    EntryError.DataChanged -> R.string.expense_entry_data_changed
+/** A correction that was refused left the expense as it was; a new one left nothing recorded. */
+private fun EntryError.text(editing: Boolean) = when (this) {
+    EntryError.NotSaved ->
+        if (editing) R.string.expense_edit_not_saved else R.string.expense_entry_not_saved
+
+    EntryError.CategoryGone ->
+        if (editing) R.string.expense_edit_category_gone else R.string.expense_entry_category_gone
+
+    EntryError.FutureDate ->
+        if (editing) R.string.expense_edit_future_date else R.string.expense_entry_future_date
+
+    EntryError.InvalidDate ->
+        if (editing) R.string.expense_edit_invalid_date else R.string.expense_entry_invalid_date
+
+    EntryError.DataChanged ->
+        if (editing) R.string.expense_edit_data_changed else R.string.expense_entry_data_changed
+
     EntryError.Unknown -> R.string.expense_entry_unknown
+
+    EntryError.ExpenseGone -> R.string.expense_edit_gone
+
+    EntryError.ExpenseChanged -> R.string.expense_edit_changed
+
+    EntryError.NotDeleted -> R.string.expense_edit_not_deleted
 }
 
 const val ENTRY_LOADING_TAG = "expense-entry:loading"
@@ -565,3 +656,5 @@ const val ENTRY_ERROR_TAG = "expense-entry:error"
 const val ENTRY_SUBMIT_TAG = "expense-entry:submit"
 const val ENTRY_RECEIPT_TAG = "expense-entry:receipt"
 const val ENTRY_DONE_TAG = "expense-entry:done"
+const val ENTRY_DELETE_TAG = "expense-entry:delete"
+const val ENTRY_PAST_MONTHS_TAG = "expense-entry:past-months"

@@ -69,6 +69,43 @@ receipt after rotation or a restart reads it again and sends nothing.
 The stamp's landing and the vibration are feedback for a save that already happened.
 They run once per receipt and nothing depends on them.
 
+## Correcting a recorded expense
+
+The same form, opened by `ExpenseEditRoute(expenseId)` from an expense in a
+[category's list](recibo-and-detail.md#correcting-and-deleting-an-expense). It is
+titled "Editar gasto", its button is "Guardar cambios" and the top bar has "Borrar".
+
+- **It starts as what is stored.** The expense is read once (`ExpenseReads.byId`).
+  What was read, with its version, is kept in saved state beside the draft, so a draft
+  restored after the process was killed is still compared with, and sent against, the
+  expense as it was when the form opened. A restored draft is never read over.
+- **"Guardar cambios" needs a change.** Until something differs from what is stored
+  the button is off and the line above the keys says "Aún no cambiaste nada.". A note
+  that differs only in outer spaces is the same note.
+- **Saving is `EditExpense` of the version read**, through the same steps as recording:
+  identifier saved first, form locked, an unknown outcome settled by `find`. It is
+  never turned into recording a new expense. When it commits the form closes and the
+  list says "Gasto actualizado"; there is no receipt screen, because the list shows
+  the expense as it is now.
+- **The category it is in stays offered even if archived since.** No other archived
+  category is.
+- **Other months are named before saving.** When the expense is recorded in, or the
+  draft would move it to, a month that is not the current one, a line under the date
+  says "Corregir este gasto cambia las cifras de septiembre." (or of two months).
+- **No preview.** The preview adds the draft to the month, and a recorded expense is
+  already in it.
+- **"Borrar" deletes at once**, through `ExpenseCorrections`, and returns to the list,
+  where it can be undone for six seconds. It does not ask first.
+
+| What happened | What the person sees | Then |
+| --- | --- | --- |
+| The expense was changed since it was read | "Este gasto cambió mientras lo corregías…" | Nothing more can be sent or deleted from this form; leave and open it again |
+| The expense no longer exists | "Este gasto ya no existe…" | The same |
+| Storage failed, a future date, a category that stopped taking expenses, data replaced | The same reasons as when recording, worded "El gasto quedó como estaba" | The draft is kept |
+| Deleting failed | "No se pudo borrar. El gasto sigue anotado." | The form stays open |
+
+Back with a change asks "¿Descartar los cambios?".
+
 ## Layout
 
 One column on a phone: the slip, category, date and note scroll; the keypad and the
@@ -91,6 +128,8 @@ it simply leaves. While saving it does nothing.
 ## Not here yet
 
 - Income, "Anotar varios" and repeating expenses: SELLO-021 and after the MVP.
-- Undo after saving, editing and deleting: SELLO-019.
+- Undo after recording a new expense. The reference offers it; only a deletion can be
+  undone today.
+- The dismissible first-time announcement that past expenses can be corrected: SELLO-023.
 - The date picker is the platform's, tinted with Sello's colours, not a Sello component.
 - Opening as a sheet with the dock morphing into the slip, and the print-feed motion.

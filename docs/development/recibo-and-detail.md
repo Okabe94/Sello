@@ -63,6 +63,14 @@ per read) and a cursor for the next. Rules:
   read finishes, so the list never drops to its first page and grows back, and "Ver
   más" asks nothing meanwhile. Nothing is drawn for `refreshing` (owner decision,
   2026-10-11: the read takes milliseconds and an indicator would flicker).
+- Every listed row is drawn, on screen or not, inside one slip; there is no lazy list
+  (SELLO-056, parked: the slip is one surface and a lazy list would mean splitting
+  it). Each row is keyed by its expense identifier, so a new expense at the top adds
+  one row instead of redrawing all of them. Measured on the API 30 emulator, debug
+  build, including about 80 ms of test overhead: one new expense at the top of 40 /
+  200 / 500 rows took 100 / 250 / 400 ms before the key and 46 / 66 / 100 ms with it;
+  drawing 200 / 500 / 1,000 rows from nothing takes 316 / 750 / 1,333 ms. A category
+  opens on 20 rows and "Ver más" adds 20, so the long case needs many presses.
 - Kept rows are reused only for the same month, category and generation. If the read
   fails the list is `Failed`, not the old rows, and retry reads all of it again.
 - The header and the rows are two reads. A save between them can leave them one

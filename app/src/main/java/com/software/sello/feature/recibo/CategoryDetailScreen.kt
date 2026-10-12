@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -202,16 +203,20 @@ private fun ExpenseList(
             Modifier.semantics { heading() }
         )
         list.rows.forEach { row ->
-            val day = dates.day(row.date, state.today)
-            LeaderLine(
-                label = row.note ?: stringResource(R.string.category_detail_no_note),
-                modifier = Modifier.testTag(categoryExpenseTag(row.id)),
-                caption = if (row.notCountedYet) {
-                    day + ". " + stringResource(R.string.category_detail_not_counted)
-                } else {
-                    day
-                }
-            ) { MoneyText(row.amount) }
+            // Each row is its expense, not its place in the list: a new expense at the
+            // top is one row added, instead of every row below it drawn again.
+            key(row.id) {
+                val day = dates.day(row.date, state.today)
+                LeaderLine(
+                    label = row.note ?: stringResource(R.string.category_detail_no_note),
+                    modifier = Modifier.testTag(categoryExpenseTag(row.id)),
+                    caption = if (row.notCountedYet) {
+                        day + ". " + stringResource(R.string.category_detail_not_counted)
+                    } else {
+                        day
+                    }
+                ) { MoneyText(row.amount) }
+            }
         }
         if (list.more) {
             Spacer(Modifier.height(SelloTheme.spacing.sm))

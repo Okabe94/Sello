@@ -212,8 +212,10 @@ ticket's Execution progress.
   form splits there on purpose: SELLO-052 was closed without a shared width rule
   because one column is worse for the form in such a window
   ([layout guide](layout-and-charts.md#frame-and-navigation)).
-- The reduced-motion setting is read when the theme is composed, not observed;
-  SELLO-053 owns observing runtime changes safely.
+- The reduced-motion setting is followed while the theme is on screen (SELLO-053):
+  `systemReducedMotion()` listens for the system setting and stops when it leaves the
+  composition. A value passed to `SelloTheme` still wins, which is what tests and the
+  catalog use.
 - Lint reports 29 warnings in `:app`, unchanged since SELLO-017. The number must not
   grow unexplained.
 - Not done anywhere yet: a physical-device run by the owner since SELLO-006, a

@@ -946,7 +946,7 @@ layout today and would need its own design.
 - **Type:** Task
 - **Classification:** Handoff defect; source-inspected, not freshly device-reproduced
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-004, SELLO-006, SELLO-009, SELLO-015
 - **Gate:** G2
 - **Source alias:** HANDOFF-MOTION
@@ -1000,6 +1000,39 @@ Run focused host/Compose red→green tests and affected connected scenarios, inc
 font scale 2.0, restoration and resize/resume. Extend the actual catalog example.
 Run `./scripts/verify-ticket SELLO-053 --retain` for fresh G2 evidence; record
 manual accessibility/adaptive checks separately before designated review.
+
+### Execution progress
+2026-10-12: started on branch `sello-053-live-reduced-motion` after SELLO-052 merged.
+The claim was verified first with a throwaway test on the API 30 emulator: with the
+theme on screen, the system animator scale was set to 0 and the content drawn twice
+more; `SelloTheme.reducedMotion` stayed false each time.
+
+Owner decision (2026-10-12): listen for the setting while the theme is on screen,
+not only read it again when the app returns to the foreground.
+
+Delivered, in `:design-system` only: `systemReducedMotion()` keeps the value as state,
+registers one listener for the system setting for as long as its caller is in the
+composition, reads again once it is listening, and unregisters when the caller
+leaves. `SelloTheme`'s parameter and every component are unchanged. No permission,
+dependency or polling.
+
+Choices made during the work, for owner review:
+- The catalog was not given a "follow the system" option. Its motion switch is a
+  deliberate fixed value, which the acceptance asks to keep deterministic, and
+  nothing else in the catalog would show the change.
+- Not checked: how much of what a person sees depended on this. Compose is understood
+  to shorten its own animations when the system scale is 0, in which case the flag
+  mattered mainly where Sello chooses what to draw from it (the skeleton's pulse,
+  the count-up). That was not measured.
+
+### Delivery evidence
+- **Revision:** branch `sello-053-live-reduced-motion`; tested snapshot is commit `790a37f`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** turning reduced motion on updates the running theme, and turning it off restores motion, without navigation → `LiveReducedMotionTest.theRealSystemSettingIsFollowedWhileTheThemeIsOnScreen` (the emulator's own setting changed to 0 and back to 1 with `SelloTheme` on screen) and `aChangeWhileOnScreenIsFollowedInBothDirections`; the instant end states themselves are each component's existing reduced-motion branch, unchanged and already tested. Registration and disposal are bounded and drawing again does not leak → `drawingAgainNeverListensTwiceAndLeavingTheScreenStopsListening` (one listener after six draws, none after leaving) and `aChangeMadeJustBeforeListeningStartedIsNotMissed`. Rotation, background and restoration preserve screen, draft and financial state → nothing but the theme's flag changed; the journeys in the gate pass unchanged. Explicit overrides stay deterministic → `aValueGivenToTheThemeWinsOverTheSystemSettingWhateverItBecomes`; the default is not even evaluated when a value is passed, so no listener exists then.
+- **Red / Green:** red first, on the emulator against a version that still read the setting once: `./gradlew :design-system:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.designsystem.theme.LiveReducedMotionTest` failed 4 of 5 (the value never followed a change, by hand or through the real setting; nothing was listening; a change before listening was missed). The override test passed before the change and is a guard. All 5 pass after it, with the other 62 design-system device tests.
+- **Gate results:** local `./scripts/verify-ticket SELLO-053 --gate G2 --retain` passed on the tested commit: 351 host tests (205 app, 98 domain, 37 design-system, 8 data, 3 catalog), 308 device tests on the API 30 emulator (127 app, 104 data, 67 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261012T003638Z-9a1e87eb; SELLO-053 G2 passed; HEAD 790a37f, inputs sha256 0e80278d738f; report docs/planning/mvp/quality-reports/SELLO-053.json sha256 6c8b4b2cf36db1f90ebb48a01c73debe1162a70186972c92e47308129e0d8cc3
+- **Device / Artifact:** API 30 emulator, 2026-10-12. Before: a throwaway test set `animator_duration_scale` to 0 with the theme on screen and drew twice more; the flag stayed false. After: the test above changes the same real setting to 0 and to 1 and the flag follows each time. The tests restore the device's setting, which read 1 before and after. **Not executed:** toggling "Remove animations" by hand in the system's accessibility settings with the app alive and with it in the background, looking at a component's motion in the running app before and after, twice the font size, and the catalog, which was not changed.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices and the manual checks not done; the pull request and its checks are that record. No independent technical review.
 
 ## SELLO-054 — Return a typed rollback outcome when counters overflow
 

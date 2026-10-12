@@ -18,7 +18,7 @@ below, with severity order and original-ID mappings. All fixes remain Backlog;
    [quality flow](../planning/mvp/QUALITY_FLOW.md), the
    [current board](../planning/mvp/BOARD.md) and the whole brief of the ticket.
 3. The [approved product contract](../decisions/0001-mvp-contract.md) (D01–D10), the
-   [worked examples](../testing/mvp-financial-examples.md) and ADRs 0002–0008.
+   [worked examples](../testing/mvp-financial-examples.md) and ADRs 0002–0009.
 4. The guide for each area the ticket touches (below) and the Delivery evidence and
    "Choices made" of the tickets it depends on.
 5. The [visual reference and its provenance](../design/README.md).

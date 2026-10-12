@@ -194,9 +194,13 @@ Flow for a ticket:
    `- **Quality run:** ...` line. Paste that line into the ticket's Delivery evidence.
 3. Set the status to Review, regenerate the board, run `board.py --check`, commit
    the retained report with the change and open the pull request.
-4. CI runs `verify-ticket --merge-candidate <base> --gate G2` on the merge commit
-   and then `board.py --check --base <base>`. Its reports are the `quality-reports`
-   artifact of the workflow run, kept 90 days:
+4. CI asks `verify-ticket --candidate-gate <base>` which gate the merge commit needs
+   (G2, or G1 for a candidate that advances no ticket and changes only documents),
+   runs `verify-ticket --merge-candidate <base> --gate <that>` on the merge commit
+   and then `board.py --check --base <base>`. After the merge, the push to `main`
+   runs `verify-ticket --landed <previous main>`, the host gate, and the same
+   evidence check; `main` gets the device gate nightly. Reports are the
+   `quality-reports` artifact of each workflow run, kept 90 days:
    `gh run download <run id> -n quality-reports`.
 
 What makes a report stale: any change to a tracked or untracked-but-not-ignored

@@ -105,9 +105,14 @@ approved.
   wrong-ticket, lower-gate, edited or stale one. Bootstrap tickets are exempt.
   A ticket that becomes Done in a pull request is checked against that pull
   request's own inputs, exactly as one entering Review was.
-- **CI:** the `quality` check runs the same entrypoint on the merge commit of every
-  pull request and on `main`, then validates completion evidence against the base.
-  `main` requires that check to pass.
+- **CI:** the `quality` check runs the same entrypoint and then validates completion
+  evidence against the base, on every run. What it executes depends on the event
+  ([ADR 0009](../../decisions/0009-hosted-gate-scope.md)): a pull request's merge
+  commit gets the device gate (G2), or the host gate (G1) when it advances no ticket
+  and changes only documents; a push to `main` gets the host gate, because the
+  candidate passed its own gate before it could merge; `main` gets the device gate
+  every night. `main` requires the check to pass and the pull request to be up to
+  date. There is no path filter, so the check always reports.
 
 These tools prove that checks ran on a known snapshot. They do not judge whether
 acceptance is met; the designated review still does. Agent instructions are policy,

@@ -103,6 +103,9 @@ class WalkingSliceJourneyTest {
 
     /** Records an expense with the keypad from whichever screen shows the dock. */
     private fun record(vararg keys: String, note: String? = null) {
+        // The dock is not drawn while the system keyboard is up, and a keyboard used
+        // just before may still be closing.
+        rule.awaitDescription("Anotar un gasto")
         rule.onNodeWithContentDescription("Anotar un gasto").performClick()
         rule.awaitTag(ENTRY_KEYPAD_TAG)
         rule.onNode(hasText("Mercado") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))

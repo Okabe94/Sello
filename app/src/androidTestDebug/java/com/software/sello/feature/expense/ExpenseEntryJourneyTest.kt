@@ -92,6 +92,9 @@ class ExpenseEntryJourneyTest {
     }
 
     private fun openAnotar() {
+        // The dock is not drawn while the system keyboard is up, and the keyboard used
+        // to type the category's name may still be closing when Recibo comes back.
+        rule.awaitDescription("Anotar un gasto")
         rule.onNodeWithContentDescription("Anotar un gasto").performClick()
         rule.awaitTag(ENTRY_KEYPAD_TAG)
     }

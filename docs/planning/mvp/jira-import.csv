@@ -8506,7 +8506,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Source classification:** Task
 - **Classification:** Bug; original report 1
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-018, SELLO-015, SELLO-004
 - **Gate:** G2
 - **Source alias:** SELLO-BUG-001
@@ -8558,6 +8558,30 @@ Do not use a global name cache, pass domain objects through routes, or remove lo
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-057 --retain` for the final G2 gate.
 Run affected detail ViewModel/navigation tests first, then connected header/selection journeys and G2 with retained evidence under SELLO-057. Capture initial, delayed, failed, and restored states. SELLO-018's historical evidence does not verify this independently registered fix.
+
+### Execution progress
+2026-10-12: started on branch `sello-057-detail-title-identity`. The claim was
+verified from the code and the frames kept with the ticket, not with a fresh run:
+the title came only from the detail once it was read, and until then was the
+fallback ""Categoría"", although Recibo, where the category is chosen, already had its
+name. The same code let a detail still holding the category shown before appear
+under the one just chosen.
+
+Owner decision (2026-10-12): take the title from the chosen category's identifier,
+using the name Recibo already has while the detail is read, and never show another
+category's detail under the selection.
+
+Delivered, in `:app` navigation only: `detailTitle` and `detailOf` in
+`navigation/DetailIdentity.kt`, used by the Recibo destination. No view model, state
+class, route, cache, schema or design-system component changed.
+
+Choices made during the work, for owner review:
+- If the detail's name and Recibo's differ, the detail's is used once it is read: it
+  is the later read.
+- A detail that failed or found nothing keeps its own message; the title above it is
+  still the chosen category's name when Recibo knows it.
+- The second case, a previous category shown under a new selection, was fixed from
+  the code. It was not seen on a device before or after.
 
 Shared definition of done and gates:
 
@@ -8626,7 +8650,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,Backlog,sello-057
+",1011,Medium,In Progress,sello-057
 58,Task,SELLO-058 — Make unlimited category budgets an explicit opt-in,"Local ID: SELLO-058
 Epic: SELLO-E11
 Increment: MVP

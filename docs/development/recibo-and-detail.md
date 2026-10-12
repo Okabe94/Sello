@@ -87,6 +87,15 @@ screen under its own title, Back returns to Recibo, and the dock records in that
 category. A window that is short and narrow, such as half a phone's screen, shows
 one at a time even though the layout rules call it two-column.
 
+The title over a detail, and the detail under it, are always of the category that
+was chosen (`navigation/DetailIdentity.kt`). The detail is asked for by identifier
+and read a moment later, so meanwhile the name comes from Recibo's own list, which
+is how the category was chosen in the first place; once the detail is read its own
+name is used. A detail still holding the category shown before is treated as
+loading. "Categoría" appears only when neither screen has read the category yet,
+such as just after the app is restored. Nothing is cached and no name travels
+through navigation.
+
 `SelloScaffold` keeps both panes and the dock clear of a system bar or cutout at the
 side of the screen, as it already did at the top and bottom.
 

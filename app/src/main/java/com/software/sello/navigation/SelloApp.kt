@@ -48,7 +48,6 @@ import com.software.sello.feature.category.CategoryEditorRoot
 import com.software.sello.feature.expense.ExpenseEntryRoot
 import com.software.sello.feature.recibo.CategoryDetailAction
 import com.software.sello.feature.recibo.CategoryDetailScreen
-import com.software.sello.feature.recibo.CategoryDetailState
 import com.software.sello.feature.recibo.CategoryDetailViewModel
 import com.software.sello.feature.recibo.ReciboAction
 import com.software.sello.feature.recibo.ReciboScreen
@@ -164,7 +163,9 @@ private fun ReciboDestination(
         val first = (reciboState as? ReciboState.Month)?.categories?.firstOrNull()?.id
         val shownId = state.detailCategoryId ?: first.takeIf { twoPane }
         LaunchedEffect(shownId) { detail.onAction(CategoryDetailAction.Show(shownId)) }
-        val title = (detailState as? CategoryDetailState.Ready)?.category?.name
+        // The name and the detail of the category chosen, never of the one before it.
+        val shownDetail = detailOf(shownId, detailState)
+        val title = detailTitle(shownId, detailState, reciboState)
             ?: stringResource(R.string.category_detail_title_fallback)
         ShellScreen(
             state = state,
@@ -173,7 +174,7 @@ private fun ReciboDestination(
             detail = shownId?.let { id ->
                 ShellDetail(title) { padding ->
                     CategoryDetailScreen(
-                        state = detailState,
+                        state = shownDetail,
                         months = names,
                         dates = dates,
                         showName = twoPane,

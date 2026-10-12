@@ -8879,7 +8879,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Source classification:** Task
 - **Classification:** Requested navigation improvement; original report 6
 - **Priority:** P2
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-015, SELLO-009, SELLO-004
 - **Gate:** G2
 - **Decision needed:** approve current-month action placement/copy
@@ -8949,6 +8949,15 @@ Choices made during the work, for owner review:
   the current month's cell does.
 - It is a text button from the design system, unchanged, so the catalog is unchanged.
 
+### Delivery evidence
+- **Revision:** branch `sello-059-current-month-shortcut`, cut from `main` after SELLO-058 merged; tested snapshot is commit `08a0498`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design. `main` had not moved when the pull request was opened.
+- **Requirement mapping:** from any browsed year or month one explicit action selects the financial current month and dismisses the picker like a normal selection → `MonthPickerShortcutTest.fromAnyYearBeingBrowsedOnePressPicksTheCurrentMonth` (it sends the existing `PickMonth`), `NavigationStateTest.pickingTheCurrentMonthFromAnotherYearGoesBackClosesThePickerAndFollowsTheClock`, and in the installed app `ShellOnDeviceTest.fromAMonthInAnotherYearMesActualGoesStraightBackAndWritesNothing`. Sheet and side panel have equivalent accessible actions and the copy names the destination → the same content serves both; `theSidePanelOfAWideWindowHasItToo`; `itReadsMesActualAndSaysWhereItGoes` (visible ""Mes actual"", spoken ""Ir al mes actual: Octubre 2026""); it is a design-system button, so it has a click action, a touch area of at least 48dp (`itSitsAtTheRightOfTheTitleOnTheSameLine`) and keyboard focus like any other. The current month comes from the session, not a new clock read or a cached year → the button reads `ShellState.currentMonth`; `whenTheMonthTurnsWhileThePickerIsOpenItGoesToTheNewMonth`. A future month stays impossible → no rule changed; the existing picker tests pass. Selection sharing, restoration and the 30-minute return are intact, drafts are not cleared and nothing is written → the host test shows the month is not pinned and follows the clock; the journey checks the revision and that no financial row exists; the other 142 app device tests pass unchanged. Already-current selection → `itIsThereAndWorksWhenTheCurrentMonthIsAlreadyTheOneShown`. Large font → `atTwiceTheFontSizeItDropsBelowTheTitleWithItsTextWhole`.
+- **Red / Green:** red first, on the emulator with only the button's tag defined: `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.navigation.MonthPickerShortcutTest` failed 7 of 7, there being no button. All 7 pass after it; one expectation of mine was corrected on the way, from the button's drawn height (46dp) to the area a finger can hit (at least 48dp). The host test and the installed-app journey passed on their first run: the first exercises behaviour the session already had, the second was written after the button existed.
+- **Gate results:** local `./scripts/verify-ticket SELLO-059 --gate G2 --retain` passed on the tested commit: 363 host tests (217 app, 98 domain, 37 design-system, 8 data, 3 catalog), 333 device tests on the API 30 emulator (143 app, 113 data, 67 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261012T044524Z-f16de237; SELLO-059 G2 passed; HEAD 08a0498, inputs sha256 e37bec96af61; report docs/planning/mvp/quality-reports/SELLO-059.json sha256 bebfdf8758a9f91c1fe59ce12d373e074fa519075a69874917dd173df2becde8
+- **Device / Artifact:** the debug app on the API 30 emulator (1080×2340, Cobalto light, font scale 1.0), 2026-10-12, a build of the working tree before the commit, on cleared data, financial day in October 2026. The picker opened on the current month shows [the button beside the title](../../../testing/evidence/SELLO-059/01-picker-on-current-month.png). With March 2025 selected the picker opens [on 2025 with the button](../../../testing/evidence/SELLO-059/02-picker-on-another-year.png), announced as ""Ir al mes actual: Octubre 2026""; pressing it closed the picker and showed Octubre 2026. Not executed by hand: twice the font size, a wide window, a month turning with the picker open, a draft in progress, TalkBack and a keyboard.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices; the pull request and its checks are that record. No independent technical review.
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes
@@ -9016,7 +9025,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,In Progress,sello-059
+",1011,Medium,Done,sello-059
 60,Task,SELLO-060 — Make first-slice navigation motion consistent and accessible,"Local ID: SELLO-060
 Epic: SELLO-E11
 Increment: MVP

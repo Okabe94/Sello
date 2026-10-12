@@ -215,6 +215,7 @@ class RoomExpenseCommands(
      * Runs inside the transaction. The expense keeps its identity, its place in the
      * order and when it was first recorded; its version goes up by one. It may stay in
      * a category that was archived since, but it cannot be moved into an archived one.
+     * Likewise it may keep a date that is after today, but cannot be moved to one.
      */
     private suspend fun decide(command: EditExpense): ExpenseCommandOutcome {
         val kind = OperationKind.EditExpense
@@ -237,7 +238,11 @@ class RoomExpenseCommands(
             if (command.categoryId != current.categoryId) {
                 categoryRejection(command.categoryId)?.let { return it }
             }
-            dateRejection(command.date)?.let { return Rejected(it) }
+            // As with the category, only where it is moved to is checked: an expense
+            // already dated after today can still have its other fields corrected.
+            if (command.date != current.date) {
+                dateRejection(command.date)?.let { return Rejected(it) }
+            }
 
             val now = audit.now()
             val changed = database.expenseDao().update(

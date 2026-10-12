@@ -3861,8 +3861,10 @@ requests, as agreed with the project owner; the ticket stays In Progress until t
 - Real-database contract tests for U01 to U05, stale versions, replays, concurrent
   commands, cancelled callers, rollback and the month's totals.
 - Nothing in the app calls the new commands yet, so every existing journey is as it was.
-- Verified on the uncommitted tree over `4b684d7` with the ticket's G2 gate on an
-  API 30 emulator: run 20261012T190048Z-4eafa3e0 passed. Its report is not retained
+- Verified with the ticket's G2 gate on an API 30 emulator, each time on the
+  uncommitted tree that became the commit: run 20261012T190048Z-4eafa3e0 passed
+  before the first commits, and run 20261012T200307Z-43c7e3f2 after the date rule
+  changed. Its report is not retained
   here; the run that counts as Delivery evidence is the one made when the ticket
   is proposed Done.
 
@@ -3870,9 +3872,10 @@ requests, as agreed with the project owner; the ticket stays In Progress until t
 
 - An edit that changes nothing is refused by the command (`Unchanged`) and writes no
   receipt, so the rule does not depend on the screen alone.
-- The date rule applies to every edit, including one that keeps the date. An expense
-  already dated after today (possible only if the financial day moved backwards)
-  cannot be edited until its date is corrected in the same edit.
+- The date rule applies only when an edit changes the date (project owner,
+  2026-10-12, replacing my first choice of checking every edit). An expense already
+  dated after today, possible only if the financial day moved backwards, can have
+  its other fields corrected; it cannot be moved to another future date.
 - Undo puts the row back without interpreting it, exactly as deletion kept it.
 - A new expense's sequence follows the highest of the recorded and the kept one.
   Once a deletion is final its sequence can be used again.

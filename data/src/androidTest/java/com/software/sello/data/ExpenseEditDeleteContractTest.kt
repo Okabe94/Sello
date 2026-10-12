@@ -271,6 +271,35 @@ class ExpenseEditDeleteContractTest {
     }
 
     @Test
+    fun anExpenseAlreadyDatedAfterTodayCanBeCorrectedWithoutTouchingItsDate() = runBlocking {
+        start()
+        // The financial day moved back, so the expense of 3 October is now two days ahead.
+        ledger.goTo("2026-10-01")
+
+        val amountOnly = ledger.expenses.edit(edit(version = 1, pesos = 12_000))
+        val toAnotherFutureDay = ledger.expenses.edit(
+            edit(version = 2, pesos = 12_000, date = "2026-10-02")
+        )
+        val afterRefusal = expenses()
+        val toToday = ledger.expenses.edit(edit(version = 2, pesos = 12_000, date = "2026-10-01"))
+
+        assertTrue("$amountOnly", amountOnly is Committed)
+        assertEquals(
+            Rejected(ExpenseRejection.FutureDate(today = LocalDate.of(2026, 10, 1))),
+            toAnotherFutureDay
+        )
+        assertEquals(
+            listOf("1|$pan|${uuid(100)}|2026-10-03|12000|COP|null|2|$recorded|$recorded"),
+            afterRefusal
+        )
+        assertTrue("$toToday", toToday is Committed)
+        assertEquals(
+            listOf("2026-10-01|12000|3"),
+            ledger.rows("expense", "effective_date", "amount_minor", "version")
+        )
+    }
+
+    @Test
     fun anEditPreparedAgainstAHistoryThatWasReplacedIsRefused() = runBlocking {
         start()
         val before = expenses()

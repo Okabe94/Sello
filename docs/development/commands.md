@@ -59,7 +59,7 @@ caller read. Step 3 for each:
 
 | Command | Refused with | Writes |
 | --- | --- | --- |
-| Edit | `ExpenseMissing`; `VersionConflict(current)`; `Unchanged` when nothing differs; `CategoryMissing` or `CategoryArchived` only when moving to another category; `FutureDate`, `InvalidDate` | The same row: new category, date, amount and note, version + 1, `updated_at`. Identity, sequence and `created_at` never change |
+| Edit | `ExpenseMissing`; `VersionConflict(current)`; `Unchanged` when nothing differs; `CategoryMissing` or `CategoryArchived` only when moving to another category; `FutureDate` or `InvalidDate` only when changing the date | The same row: new category, date, amount and note, version + 1, `updated_at`. Identity, sequence and `created_at` never change |
 | Delete | `ExpenseMissing`; `VersionConflict(current)` | Removes the row and keeps it, column for column, in `deleted_expense`, replacing any earlier kept copy |
 | Restore | `UndoExpired`; `UndoConflict` | Puts the kept row back exactly as it was, same version and timestamps, and removes the kept copy |
 
@@ -69,8 +69,9 @@ does not change exactly one row.
 
 - **An expense may stay in a category archived since**, with its other fields edited.
   It cannot be moved into an archived category.
-- **The date rule is applied to every edit**, including one that leaves the date as
-  it was.
+- **The date rule is applied only when the date changes.** An expense already dated
+  after today, which needs the financial day to have moved backwards, can still have
+  its amount, note or category corrected; it cannot be moved to another future date.
 - **A new expense never takes the sequence of one that can still come back**: the
   next sequence follows the highest of `expense` and `deleted_expense`.
 

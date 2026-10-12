@@ -7644,7 +7644,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Type:** Task
 - **Classification:** Handoff defect; source-inspected, not freshly device-reproduced
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-004, SELLO-009, SELLO-017, SELLO-018
 - **Gate:** G2
 - **Source alias:** HANDOFF-LAYOUT
@@ -7695,6 +7695,45 @@ Run focused host/Compose red→green tests and affected connected scenarios, inc
 font scale 2.0, restoration and resize/resume. Extend the actual catalog example.
 Run `./scripts/verify-ticket SELLO-052 --retain` for fresh G2 evidence; record
 manual accessibility/adaptive checks separately before designated review.
+
+### Execution progress
+2026-10-11: started on branch `sello-052-short-narrow-windows` after SELLO-051 merged.
+The claim was verified first on the API 30 emulator with the display set to 393×400dp,
+about half a phone's screen: the expense form is two panes there, as the ticket says.
+The slip, the category, most of the keypad and the button are on screen; the top row
+of keys starts scrolled out of view; a key is about 53dp wide.
+
+The fix the ticket proposes was then tried, not assumed: with the form forced to one
+column below 600dp in the same window (a temporary edit, reverted), the keypad fills
+the window, the amount, category and date are out of sight and the button is cut off.
+
+**Owner decision (2026-10-11): closed without a shared width rule and without a
+change to the layout.** The two screens need different things: Recibo beside a
+detail is two columns of reading and keeps its 600dp guard; the form's second pane
+is a keypad that works at about 160dp. Giving both one minimum width would trade a
+cramped form for an unusable one. The acceptance criterion ""a reviewed minimum width
+governs two-pane layout consistently; Recibo and Anotar agree"" is therefore
+**rejected, not delivered**, and the Deliverables' shared decision and catalog
+example were not made. Done on this ticket means closed by that decision.
+
+Delivered: the reasoning and both captures in
+`docs/development/layout-and-charts.md`, the handoff's loose end rewritten, and one
+guard test of the form in a 393×400dp window so the split is not ""fixed"" later by
+mistake. No production code changed.
+
+Left as it is, for owner awareness: in a window this short the keys are held from
+the bottom (SELLO-046), so the top row is the part that starts out of view. A window
+too narrow for 48dp keys (under about 350dp wide and under 480dp tall) has no good
+layout today and would need its own design.
+
+### Delivery evidence
+- **Revision:** branch `sello-052-short-narrow-windows`; tested snapshot is commit `8ed60d0`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design.
+- **Requirement mapping:** closed by owner decision of 2026-10-11, so this maps what holds and what was rejected. A short narrow window keeps amount, keypad and submit reachable → holds with the existing two-pane layout: `ExpenseEntryGeometryTest.inAShortNarrowWindowTheAmountTheKeysAndTheButtonAreSideBySideAndInView` (393×400dp: the slip left of the keys and the button, the button whole, a key at least 48dp each way). **Rejected, not delivered:** ""a reviewed minimum width governs two-pane layout consistently; Recibo and Anotar agree""; the shared design-system decision; a catalog example. Valid wide and landscape layouts, insets, Back, large fonts, resize and restoration → unchanged code, covered by the existing layout, geometry and journey tests in the gate.
+- **Red / Green:** not applicable: no behaviour changed. The one test added passes on the unchanged code and is a guard of the decision, not a red test. The reason for the decision is the comparison in Device / Artifact.
+- **Gate results:** local `./scripts/verify-ticket SELLO-052 --gate G2 --retain` passed on the tested commit: 351 host tests (205 app, 98 domain, 37 design-system, 8 data, 3 catalog), 303 device tests on the API 30 emulator (127 app, 104 data, 62 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No production code, dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261012T000702Z-60798b95; SELLO-052 G2 passed; HEAD 8ed60d0, inputs sha256 18b88a7a31c2; report docs/planning/mvp/quality-reports/SELLO-052.json sha256 00bd673651f7d6370e0ab77f9022864478aceef3e68804d395b619d79d22e069
+- **Device / Artifact:** the debug app on the API 30 emulator with the display set to 1080×1100 px at density 440 (393×400dp) by `wm size`, 2026-10-11, one synthetic category. As it is: [two panes](../../../testing/evidence/SELLO-052/01-two-columns-393x400.png), with the slip, the category, keys 4 to 0 and the button on screen and the top row of keys scrolled out of view. With the form forced to one column below 600dp (a temporary edit, reverted and not committed): [the keypad alone](../../../testing/evidence/SELLO-052/02-one-column-393x400-rejected.png), with the amount, category and date out of sight and the button cut off. The display size was reset afterwards. Not executed: a real split-screen session, other short sizes, twice the font size in this window, and Recibo in the same window.
+- **Review:** executor self-review of the captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance of closing it without the shared rule; the pull request and its checks are that record. No independent technical review.
 
 Shared definition of done and gates:
 
@@ -7763,7 +7802,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,Backlog,sello-052
+",1011,Medium,Done,sello-052
 53,Task,SELLO-053 — Observe reduced-motion changes while the app is running,"Local ID: SELLO-053
 Epic: SELLO-E11
 Increment: MVP

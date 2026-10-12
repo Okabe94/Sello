@@ -209,7 +209,9 @@ ticket's Execution progress.
 
 - A window that is short **and** narrow (half a phone's screen) is classed as
   two-column by `selloWindowLayout`. Recibo's detail guards against it; Anotar's
-  form still splits there. SELLO-052 owns deciding the rule once in the design system.
+  form splits there on purpose: SELLO-052 was closed without a shared width rule
+  because one column is worse for the form in such a window
+  ([layout guide](layout-and-charts.md#frame-and-navigation)).
 - The reduced-motion setting is read when the theme is composed, not observed;
   SELLO-053 owns observing runtime changes safely.
 - Lint reports 29 warnings in `:app`, unchanged since SELLO-017. The number must not

@@ -291,3 +291,54 @@ def run_merge_candidate(base, root, requested_gate=None, stream=sys.stderr, **op
         if path is not None:
             paths.append(path)
     return worst, paths
+
+
+def is_document(path):
+    """A file no device test can see: anything under docs/ that is not code, or top-level Markdown."""
+    if path.endswith(".py"):
+        return False
+    return path.startswith("docs/") or ("/" not in path and path.endswith(".md"))
+
+
+def changed_paths(root, base):
+    """Every path that differs from [base], committed or not, with both ends of a move."""
+    def git(*arguments):
+        return subprocess.run(
+            ["git", "-C", str(root), *arguments], check=True, capture_output=True, text=True
+        ).stdout
+
+    committed = git("diff", "--name-only", "--no-renames", "-z", base, "--")
+    untracked = git("ls-files", "--others", "--exclude-standard", "-z")
+    return sorted(set(filter(None, (committed + untracked).split("\0"))))
+
+
+def candidate_gate(root, base):
+    """The gate CI asks for on a merge candidate: G2, unless it advances no ticket and touches only documents.
+
+    Anything uncertain (an unreadable board, an unknown base) is G2.
+    """
+    try:
+        if merge_candidate_tickets(root, base):
+            return "G2"
+        return "G1" if all(is_document(path) for path in changed_paths(root, base)) else "G2"
+    except (ValueError, OSError, subprocess.CalledProcessError):
+        return "G2"
+
+
+def run_landed(base, root, stream=sys.stderr, **options):
+    """Check what has just merged into main. Return (exit code, report paths).
+
+    The candidate was verified at its own gate, on its merge commit, before it could
+    merge, and main only takes candidates that are up to date. So this runs the host
+    gate whatever tickets the merge completed; their evidence is validated separately.
+    """
+    root = Path(root)
+    known = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--verify", "--quiet", f"{base}^{{commit}}"], capture_output=True
+    ).returncode == 0
+    if not known:
+        print(f"REFUSED: Unknown base revision {base}; fetch full history before verifying", file=stream)
+        return 2, []
+    print(f"Landed on main since {base[:12]}: host gate", file=stream)
+    code, path = run(UNTICKETED, root, stream=stream, **options)
+    return code, [path] if path is not None else []

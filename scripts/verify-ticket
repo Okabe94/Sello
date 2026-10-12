@@ -20,6 +20,14 @@ def main():
         help="CI mode: verify every ticket advanced since BASE, or the bare gate if none is.",
     )
     parser.add_argument(
+        "--candidate-gate", metavar="BASE",
+        help="CI: print the gate a merge candidate needs (G1 for documents only, otherwise G2) and exit.",
+    )
+    parser.add_argument(
+        "--landed", metavar="BASE",
+        help="CI on main: run the host gate on what merged since BASE; its own gate ran before the merge.",
+    )
+    parser.add_argument(
         "--gate", choices=gates.GATES[1:],
         help="Run a higher gate than the ticket requires. A lower one is refused.",
     )
@@ -28,11 +36,21 @@ def main():
         help="After a passed run, copy the report to docs/planning/mvp/quality-reports and print the Quality run field.",
     )
     arguments = parser.parse_args()
-    if bool(arguments.ticket) == bool(arguments.merge_candidate):
-        parser.error("give either a ticket ID or --merge-candidate BASE")
+    modes = [arguments.ticket, arguments.merge_candidate, arguments.candidate_gate, arguments.landed]
+    if sum(bool(mode) for mode in modes) != 1:
+        parser.error("give exactly one of: a ticket ID, --merge-candidate, --candidate-gate, --landed")
+    if arguments.retain and not arguments.ticket:
+        parser.error("--retain needs a ticket ID")
+    if arguments.candidate_gate:
+        if arguments.gate:
+            parser.error("--candidate-gate takes no --gate")
+        print(runner.candidate_gate(ROOT, arguments.candidate_gate))
+        return 0
+    if arguments.landed:
+        if arguments.gate:
+            parser.error("--landed takes no --gate: it always runs the host gate")
+        return runner.run_landed(arguments.landed, ROOT)[0]
     if arguments.merge_candidate:
-        if arguments.retain:
-            parser.error("--retain needs a ticket ID")
         return runner.run_merge_candidate(arguments.merge_candidate, ROOT, requested_gate=arguments.gate)[0]
     return runner.run(arguments.ticket, ROOT, requested_gate=arguments.gate, retain=arguments.retain)[0]
 

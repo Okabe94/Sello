@@ -1,16 +1,28 @@
 name: Quality
 
-# No path filters: every merge candidate runs the gate, including changes to this file.
+# No path filters: every merge candidate reports this check, including changes to this
+# file. What a run executes is decided inside the job, by scripts/verify-ticket:
+#   pull request  the device gate (G2), or the host gate (G1) when the candidate advances
+#                 no ticket and touches only documents
+#   push to main  the host gate: the candidate passed its own gate on its merge commit,
+#                 and main only takes candidates that are up to date
+#   nightly       the device gate on main, so anything only a device shows is still seen
+# See docs/decisions/0009-hosted-gate-scope.md.
 on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: "23 7 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# One run per branch and kind of event: a newer push replaces an older one, and the
+# nightly run and a push to main never cancel each other.
 concurrency:
-  group: quality-${{ github.ref }}
+  group: quality-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -20,7 +32,8 @@ jobs:
     timeout-minutes: 60
     env:
       # Pull requests are checked out as the merge commit; BASE is what it merges into.
-      BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+      # A nightly or manual run has neither and compares the commit with itself.
+      BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -32,13 +45,29 @@ jobs:
           distribution: temurin
           java-version: 25
 
+      - name: Decide what this run verifies
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          case "$EVENT" in
+            pull_request) mode=candidate; gate=$(./scripts/verify-ticket --candidate-gate "$BASE") ;;
+            push)         mode=landed;    gate=G1 ;;
+            *)            mode=full;      gate=G2 ;;
+          esac
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "gate=$gate" >> "$GITHUB_OUTPUT"
+          echo "$EVENT: $mode at $gate" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Enable KVM for the emulator
+        if: steps.plan.outputs.gate == 'G2'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Verify the merge candidate (G2 on API 30)
+      - name: Verify on a device (G2 on API 30)
+        if: steps.plan.outputs.gate == 'G2'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 30
@@ -46,6 +75,20 @@ jobs:
           arch: x86_64
           disable-animations: true
           script: ./scripts/verify-ticket --merge-candidate "$BASE" --gate G2
+
+      # The emulator action accepts these on the device path; the host path has to itself,
+      # or the build cannot fetch the SDK packages it needs.
+      - name: Accept Android SDK licences
+        if: steps.plan.outputs.gate == 'G1'
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Verify documents only on the host (G1)
+        if: steps.plan.outputs.mode == 'candidate' && steps.plan.outputs.gate == 'G1'
+        run: ./scripts/verify-ticket --merge-candidate "$BASE" --gate G1
+
+      - name: Verify what landed on main on the host (G1)
+        if: steps.plan.outputs.mode == 'landed'
+        run: ./scripts/verify-ticket --landed "$BASE"
 
       - name: Validate completion evidence
         run: python3 docs/planning/mvp/board.py --check --base "$BASE"

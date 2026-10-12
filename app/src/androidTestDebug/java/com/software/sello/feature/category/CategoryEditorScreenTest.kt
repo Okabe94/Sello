@@ -4,6 +4,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -74,14 +76,54 @@ class CategoryEditorScreenTest {
     }
 
     @Test
-    fun anEmptyFormCannotBeSubmittedAndStartsUnlimitedWithTheAmountOff() {
+    fun anEmptyFormCannotBeSubmittedAndStartsAskingForAnAmountWithSinLimiteOff() {
         show(ready)
 
         rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
-        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).assertIsOn()
-        limit.assertIsNotEnabled()
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().assertIsOff()
+        limit.performScrollTo().assertIsDisplayed().assertIsEnabled()
+        rule.onNodeWithText("200.000").performScrollTo().assertIsDisplayed()
         rule.onNodeWithContentDescription("Hogar").assertIsSelected()
         rule.onNodeWithTag(EDITOR_PREREQUISITE_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun withSinLimiteChosenThereIsNoAmountToTypeAndNoAmountToPick() {
+        // An amount typed before the switch is kept by the form and not shown.
+        show(ready.copy(name = "Mercado", unlimited = true, limitText = "450000"))
+
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().assertIsOn()
+        limit.assertDoesNotExist()
+        rule.onNodeWithTag(EDITOR_LIMIT_TAG).assertDoesNotExist()
+        for (suggestion in listOf("200.000", "300.000", "500.000", "450.000", "450000")) {
+            rule.onNodeWithText(suggestion).assertDoesNotExist()
+        }
+        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsEnabled().performClick()
+
+        assertEquals(listOf<CategoryEditorAction>(CategoryEditorAction.Submit), actions)
+    }
+
+    @Test
+    fun switchingSinLimiteOffAgainShowsTheAmountThatHadBeenTyped() {
+        show(ready.copy(name = "Mercado", unlimited = false, limitText = "450000"))
+
+        limit.performScrollTo()
+
+        assertEquals("450.000", drawnLimit())
+    }
+
+    @Test
+    fun anAmountThatIsMissingIsSaidOnTheFieldWhenCreatingWasTried() {
+        show(ready.copy(name = "Mercado", limitError = LimitError.Required))
+
+        rule.onNodeWithText("Escribe el límite o activa Sin límite.").performScrollTo()
+            .assertIsDisplayed()
+        limit.assert(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.Error,
+                "Escribe el límite o activa Sin límite."
+            )
+        )
     }
 
     @Test

@@ -31,6 +31,7 @@ import com.software.sello.awaitText
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.feature.category.EDITOR_PREREQUISITE_TAG
 import com.software.sello.feature.category.EDITOR_SUBMIT_TAG
+import com.software.sello.feature.category.EDITOR_UNLIMITED_TAG
 import com.software.sello.feature.recibo.RECIBO_CATEGORIES_TAG
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
 import com.software.sello.hideKeyboard
@@ -78,6 +79,8 @@ class ExpenseEntryJourneyTest {
     private fun createCategory(name: String) {
         rule.awaitDescription("Nombre")
         rule.onNodeWithContentDescription("Nombre").performTextInput(name)
+        // These journeys are about expenses: the category is given no limit, on purpose.
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().press()
         rule.onNodeWithTag(EDITOR_SUBMIT_TAG).press()
     }
 

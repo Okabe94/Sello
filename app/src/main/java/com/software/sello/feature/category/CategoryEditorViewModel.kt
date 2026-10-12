@@ -47,7 +47,8 @@ class CategoryEditorViewModel(
             name = saved[KEY_NAME] ?: "",
             iconKeys = CategoryIcons.keys,
             iconKey = saved[KEY_ICON] ?: "",
-            unlimited = saved[KEY_UNLIMITED] ?: true,
+            // No limit is chosen, never assumed: a new draft starts asking for an amount.
+            unlimited = saved[KEY_UNLIMITED] ?: false,
             limitText = saved[KEY_LIMIT] ?: "",
             suggestions = SUGGESTED_LIMITS.map {
                 LimitSuggestion(it, money.format(Money.cop(it)).digits)
@@ -77,7 +78,9 @@ class CategoryEditorViewModel(
                 }
 
             is CategoryEditorAction.UnlimitedChanged -> if (now.editable) {
-                setLimit(action.unlimited, if (action.unlimited) "" else now.limitText)
+                // The amount typed is kept: it is not sent while there is no limit, and
+                // it is there again if the switch was touched by mistake.
+                setLimit(action.unlimited, now.limitText)
             }
 
             is CategoryEditorAction.LimitChanged -> if (now.editable && !now.unlimited) {
@@ -115,8 +118,11 @@ class CategoryEditorViewModel(
         mutable.update { it.copy(unlimited = unlimited, limitText = text, limitError = null) }
     }
 
-    private fun isDirty(state: CategoryEditorState) =
-        state.name.isNotBlank() || !state.unlimited || saved.get<Boolean>(KEY_ICON_CHOSEN) == true
+    /** Whether leaving would lose something the person entered or chose. */
+    private fun isDirty(state: CategoryEditorState) = state.name.isNotBlank() ||
+        state.limitText.isNotBlank() ||
+        state.unlimited ||
+        saved.get<Boolean>(KEY_ICON_CHOSEN) == true
 
     /**
      * Reads the generation a command must carry and which icons are taken, then, if a

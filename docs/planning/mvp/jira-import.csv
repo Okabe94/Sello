@@ -8326,7 +8326,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Type:** Task
 - **Source classification:** Performance risk
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Confidence:** 85%, conditional on repeatedly loading many expense pages.
 - **Depends on:** SELLO-004, SELLO-009, SELLO-018
 - **Gate:** G2
@@ -8400,6 +8400,34 @@ record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
 
+### Execution progress
+2026-10-12: started on branch `sello-056-lazy-expense-history` after SELLO-054 merged.
+The claim was verified and measured with throwaway tests on the API 30 emulator
+(debug build; each figure includes about 80 ms of test overhead): every listed row is
+drawn, on screen or not. Drawing 20 / 100 / 200 / 500 / 1,000 rows from nothing took
+83 / 199 / 316 / 750 / 1,333 ms. ""Ver más"" on a list of 200 / 500 / 1,000 took 83 /
+116 / 133 ms, because rows already drawn are not drawn again. One new expense at the
+top of 40 / 200 / 500 rows took 100 / 250 / 400 ms: without an identity each row was
+its place in the list, so every row below the new one was drawn again.
+
+**Owner decision (2026-10-12): the small fix now, the lazy list parked.** Rows are
+keyed by expense identifier; the same measurement then gave 46 / 66 / 100 ms. The
+lazy list is not delivered: the rows sit in one slip, drawn as one surface, and a
+lazy list would mean splitting the slip in the design system and rebuilding the
+screen, for a list that opens on 20 rows and grows 20 per press. **Not delivered and
+not claimed:** ""a synthetic long history demonstrates viewport-bounded row
+composition"", the composition-count regression, scroll and heap evidence, and
+reviewed targets. Done on this ticket means closed by that decision with the
+identity part delivered.
+
+Delivered: `key(row.id)` around each listed row in `CategoryDetailScreen`, three
+tests of row identity, and the figures above in
+`docs/development/recibo-and-detail.md`. No view model, design-system component,
+query or schema changed.
+
+Left for later: the lazy list, if a real need or SELLO-035's targets ask for it;
+what the list does to the scroll position on edit and delete (SELLO-019).
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes
@@ -8467,7 +8495,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,Backlog,sello-056
+",1011,Medium,In Progress,sello-056
 57,Task,SELLO-057 — Keep category-detail identity stable while data loads,"Local ID: SELLO-057
 Epic: SELLO-E11
 Increment: MVP

@@ -2,6 +2,9 @@ package com.software.sello.feature.recibo
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -304,5 +307,83 @@ class CategoryDetailScreenTest {
         rule.onNodeWithTag(categoryExpenseTag("9")).performScrollTo().assertIsDisplayed()
         rule.onNode(inRow("9", "mié 31 dic 2025"), useUnmergedTree = true).assertExists()
         rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().assertIsDisplayed()
+    }
+
+    private fun numbered(numbers: List<Int>) = ExpenseListState.Rows(
+        numbers.map {
+            ExpenseRow(
+                "n$it",
+                LocalDate.of(2026, 10, 1 + it % 20),
+                "Gasto $it",
+                plain("${1000 + it}"),
+                false
+            )
+        },
+        more = false
+    )
+
+    /** Which piece of the screen is drawing each expense, by the expense's identifier. */
+    private fun drawnBy(numbers: List<Int>): Map<Int, Int> = numbers.associateWith {
+        rule.onNodeWithTag(categoryExpenseTag("n$it")).fetchSemanticsNode().id
+    }
+
+    private fun showChanging(first: ExpenseListState): (ExpenseListState) -> Unit {
+        var state by mutableStateOf<CategoryDetailState>(ready(first))
+        rule.setContent {
+            SelloTheme(reducedMotion = true) {
+                CategoryDetailScreen(
+                    state = state,
+                    months = monthNames(),
+                    dates = dateLabels(),
+                    showName = false,
+                    onAction = { actions += it },
+                    onRecordHere = { recordHere++ },
+                    contentPadding = PaddingValues(12.dp)
+                )
+            }
+        }
+        return { next ->
+            state = ready(next)
+            rule.waitForIdle()
+        }
+    }
+
+    @Test
+    fun aNewExpenseAtTheTopLeavesEveryRowThatWasThereBeingTheSameRow() {
+        val before = (1..30).toList()
+        val change = showChanging(numbered(before))
+        val drawn = drawnBy(before)
+
+        // Saved while the list is open: it goes first and the others move down one.
+        change(numbered(listOf(99) + before))
+
+        assertEquals(drawn, drawnBy(before))
+        rule.onNodeWithTag(categoryExpenseTag("n99")).assertExists()
+    }
+
+    @Test
+    fun aRowTakenOutOfTheMiddleLeavesTheOthersBeingTheSameRows() {
+        val before = (1..30).toList()
+        val change = showChanging(numbered(before))
+        val after = before - 12
+        val drawn = drawnBy(after)
+
+        change(numbered(after))
+
+        assertEquals(drawn, drawnBy(after))
+        rule.onNodeWithTag(categoryExpenseTag("n12")).assertDoesNotExist()
+    }
+
+    @Test
+    fun rowsThatChangePlacesAreStillThemselves() {
+        val before = (1..10).toList()
+        val change = showChanging(numbered(before))
+        val drawn = drawnBy(before)
+
+        change(numbered(before.reversed()))
+
+        assertEquals(drawn, drawnBy(before))
+        // And each still shows its own text, in its new place.
+        rule.onNode(inRow("n7", "Gasto 7"), useUnmergedTree = true).assertExists()
     }
 }

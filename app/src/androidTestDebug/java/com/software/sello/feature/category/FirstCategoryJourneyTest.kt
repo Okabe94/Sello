@@ -99,8 +99,10 @@ class FirstCategoryJourneyTest {
         rule.awaitDescription("Nombre")
         rule.nameField().performTextInput(name)
         if (limit != null) {
-            rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
             rule.limitField().performScrollTo().performTextInput(limit)
+        } else {
+            // No limit is a choice the person makes; it is not where the form starts.
+            rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
         }
         submit()
         rule.waitUntilExactlyOneExists(hasTestTag(RECIBO_CATEGORIES_TAG), 10_000)
@@ -117,7 +119,6 @@ class FirstCategoryJourneyTest {
 
         rule.nameField().performScrollTo().performTextInput(" Mercado de plaza ")
         rule.onNodeWithContentDescription("Mercado").performScrollTo().performClick()
-        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
         rule.limitField().performScrollTo().performTextInput("300.000")
         submit()
 
@@ -179,7 +180,6 @@ class FirstCategoryJourneyTest {
         launch()
         openFirstForm()
         rule.nameField().performTextInput("Mercado")
-        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
 
         rule.onNodeWithText("500.000").performScrollTo().performClick()
         val suggested = rule.limitField().fetchSemanticsNode().config
@@ -211,6 +211,7 @@ class FirstCategoryJourneyTest {
         rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().performClick()
         rule.awaitDescription("Nombre")
         rule.nameField().performTextInput("CAFE")
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
         submit()
 
         rule.awaitText("Ya tienes una categoría con ese nombre.")
@@ -228,11 +229,58 @@ class FirstCategoryJourneyTest {
     }
 
     @Test
+    fun aCategoryIsNotCreatedWithoutALimitUntilSinLimiteIsChosenOnPurpose() {
+        launch()
+        openFirstForm()
+        rule.nameField().performTextInput("Mercado")
+
+        // Nothing said about the limit: not unlimited, not zero, not created.
+        submit()
+        rule.onNodeWithText("Escribe el límite o activa Sin límite.").performScrollTo()
+            .assertIsDisplayed()
+        assertEquals(0, TestData.financialRows())
+
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
+        rule.limitField().assertDoesNotExist()
+        rule.onNodeWithText("500.000").assertDoesNotExist()
+        submit()
+
+        rule.waitUntilExactlyOneExists(hasTestTag(RECIBO_CATEGORIES_TAG), 10_000)
+        rule.onNodeWithContentDescription("Mercado. Has gastado 0 pesos. Sin límite.")
+            .performScrollTo().assertIsDisplayed()
+        assertEquals(
+            listOf("unlimited|null"),
+            TestData.rows("SELECT kind, limit_minor FROM default_limit")
+        )
+    }
+
+    @Test
+    fun anAmountTypedComesBackWhenSinLimiteIsSwitchedOnAndOffAndIsWhatGetsSaved() {
+        launch()
+        openFirstForm()
+        rule.nameField().performTextInput("Mercado")
+        rule.limitField().performScrollTo().performTextInput("450000")
+
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
+        rule.limitField().assertDoesNotExist()
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
+        val back = rule.limitField().performScrollTo().fetchSemanticsNode().config
+            .getOrNull(SemanticsProperties.EditableText)?.text
+        submit()
+
+        rule.waitUntilExactlyOneExists(hasTestTag(RECIBO_CATEGORIES_TAG), 10_000)
+        assertEquals("450.000", back)
+        assertEquals(
+            listOf("finite|450000|COP"),
+            TestData.rows("SELECT kind, limit_minor, currency FROM default_limit")
+        )
+    }
+
+    @Test
     fun aLimitThatIsNotAnAmountIsExplainedKeptAsTypedAndCreatesNothing() {
         launch()
         openFirstForm()
         rule.nameField().performTextInput("Mercado")
-        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
 
         submit()
         rule.onNodeWithText("Escribe el límite o activa Sin límite.").performScrollTo()
@@ -252,6 +300,7 @@ class FirstCategoryJourneyTest {
         launch()
         openFirstForm()
         rule.nameField().performTextInput("Mercado")
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
 
         // Two presses with nothing in between, faster than a finger could manage.
         val create = rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().fetchSemanticsNode()
@@ -272,7 +321,6 @@ class FirstCategoryJourneyTest {
         openFirstForm()
         rule.nameField().performTextInput("Mercado de pla")
         rule.onNodeWithContentDescription("Mascotas").performScrollTo().performClick()
-        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
         rule.limitField().performScrollTo().performTextInput("12.34")
 
         app.recreate()

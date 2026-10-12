@@ -19,7 +19,7 @@ and the [app shell](app-shell.md).
 | --- | --- |
 | Name | Required; the button is off without one. Validated with `CategoryName`: up to 24 characters, no line breaks. A name already used, ignoring case and accents and including archived categories, is refused by the command and shown on the field |
 | Icon | One of `CategoryIcons.options`. A new form starts on the first icon no category uses |
-| Limit | "Sin límite" is on by default. Turned off, an amount must be typed: empty is never read as zero. `0` is a real zero budget. The amount goes through `CopAmountInput`; anything else is refused and left as typed |
+| Limit | A new category asks for an amount: "Sin límite" is off and the amount is empty (owner decision, SELLO-058). Empty is never read as zero or as no limit, so creating without an amount is refused with "Escribe el límite o activa Sin límite." `0` is a real zero budget. No limit is only ever chosen: with "Sin límite" on, the amount field and the suggestions are not shown. The amount typed is kept while it is on, is not sent, and is back when it is turned off. The amount goes through `CopAmountInput`; anything else is refused and left as typed |
 
 The limit applies to the current financial month and is the default afterwards, as
 `CreateCategory` defines. Text that fails a rule stays exactly as typed next to the

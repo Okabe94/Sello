@@ -1472,7 +1472,7 @@ Choices made during the work, for owner review:
 - **Source classification:** Task
 - **Classification:** Requested UX improvement; original report 3
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-016, SELLO-008, SELLO-004
 - **Gate:** G2
 - **Decision needed:** confirm finite-empty default and finite-draft behavior when toggling unlimited
@@ -1519,6 +1519,41 @@ Do not migrate unlimited categories to zero/finite, invent a default monetary li
 ### Verification recipe
 Use `./scripts/verify-ticket SELLO-058 --retain` for the final G2 gate.
 Focused editor state/UI tests and real finite/unlimited device creation/restart, then G2 with retained evidence. Decision remains outstanding; this ticket is not Ready just because dependencies are Done.
+
+### Execution progress
+2026-10-12: started on branch `sello-058-unlimited-opt-in`. This is a requested
+change, not a defect: "Sin límite" was on by default with the amount field disabled
+and the suggestions active, and switching it on erased any amount typed.
+
+**Owner decisions (2026-10-12), which are the ones this ticket needed:** a new
+category starts with "Sin límite" off and an empty amount; the amount typed is kept
+when "Sin límite" is switched on and off, and is never sent while it is on; and with
+"Sin límite" on, the amount field and the suggestions are hidden, not disabled.
+
+Delivered, in the category form only: the default in the state and the view model,
+the switch no longer clearing the amount, the field and suggestions shown only
+without "Sin límite", and what counts as a draft when leaving. No domain rule,
+command, stored data, schema or design-system component changed: a zero limit, no
+limit and a missing amount mean what they meant.
+
+Choices made during the work, for owner review:
+- Leaving the form asks before discarding when a name or an amount was typed, an
+  icon was chosen, or "Sin límite" is on. An untouched form, or one where "Sin
+  límite" was switched on and off again with nothing typed, leaves without asking.
+  Before, "Sin límite off" counted as a change, which would now be every new form.
+- "Crear categoría" stays enabled once there is a name; pressing it without an
+  amount shows the existing message "Escribe el límite o activa Sin límite." on the
+  field. It is not disabled until an amount exists.
+- The line "El límite vale desde este mes. Podrás cambiarlo después sin alterar los
+  meses anteriores." stays visible with "Sin límite" on. It reads a little oddly
+  there; the wording was not changed.
+- A draft restored from before this change that had never touched the switch comes
+  back asking for an amount, not unlimited. That needs the app to be updated while
+  such a draft is waiting.
+
+Tests that relied on the old default now say what they want: journeys about
+expenses choose "Sin límite" on purpose, and those that type an amount no longer
+switch it off first.
 
 ## SELLO-059 — Offer a direct return to the financial current month
 

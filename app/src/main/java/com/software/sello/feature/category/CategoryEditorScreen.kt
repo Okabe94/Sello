@@ -178,31 +178,34 @@ private fun Form(state: CategoryEditorState, onAction: (CategoryEditorAction) ->
                 subtitle = stringResource(R.string.category_editor_unlimited_hint),
                 enabled = state.editable
             )
-            FormField(
-                label = stringResource(R.string.category_editor_limit_amount),
-                value = state.limitText,
-                onValueChange = { onAction(CategoryEditorAction.LimitChanged(it)) },
-                modifier = Modifier.testTag(EDITOR_LIMIT_TAG),
-                message = state.limitError?.let { FieldMessage(stringResource(it.text())) },
-                enabled = state.editable && !state.unlimited,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done
-                ),
-                // Drawn 500.000 so its size can be read; limitText stays as typed.
-                visualTransformation = DigitGrouping()
-            )
-            ChipFlow {
-                state.suggestions.forEach { suggestion ->
-                    SelloChip(
-                        label = suggestion.label,
-                        selected = !state.unlimited &&
-                            state.limitText == suggestion.pesos.toString(),
-                        onClick = {
-                            onAction(CategoryEditorAction.SuggestionPicked(suggestion.pesos))
-                        },
-                        enabled = state.editable
-                    )
+            // With no limit chosen there is no amount to type or to pick, so neither is
+            // shown. What was typed is kept by the form and comes back with the switch.
+            if (!state.unlimited) {
+                FormField(
+                    label = stringResource(R.string.category_editor_limit_amount),
+                    value = state.limitText,
+                    onValueChange = { onAction(CategoryEditorAction.LimitChanged(it)) },
+                    modifier = Modifier.testTag(EDITOR_LIMIT_TAG),
+                    message = state.limitError?.let { FieldMessage(stringResource(it.text())) },
+                    enabled = state.editable,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    // Drawn 500.000 so its size can be read; limitText stays as typed.
+                    visualTransformation = DigitGrouping()
+                )
+                ChipFlow {
+                    state.suggestions.forEach { suggestion ->
+                        SelloChip(
+                            label = suggestion.label,
+                            selected = state.limitText == suggestion.pesos.toString(),
+                            onClick = {
+                                onAction(CategoryEditorAction.SuggestionPicked(suggestion.pesos))
+                            },
+                            enabled = state.editable
+                        )
+                    }
                 }
             }
             Text(

@@ -107,6 +107,12 @@ class CategoryEditorViewModelTest {
     private fun CategoryEditorViewModel.type(name: String) =
         onAction(CategoryEditorAction.NameChanged(name))
 
+    /** A name and, on purpose, no limit: what a test about saving needs and no more. */
+    private fun CategoryEditorViewModel.withNoLimit(name: String) {
+        type(name)
+        onAction(CategoryEditorAction.UnlimitedChanged(true))
+    }
+
     private fun CategoryEditorViewModel.limit(text: String) {
         onAction(CategoryEditorAction.UnlimitedChanged(false))
         onAction(CategoryEditorAction.LimitChanged(text))
@@ -118,7 +124,7 @@ class CategoryEditorViewModelTest {
         (BudgetLimit.finite(Money.cop(pesos)) as Outcome.Success).value
 
     @Test
-    fun aNewFormIsEmptyUnlimitedAndOnTheFirstIconNobodyUses() {
+    fun aNewFormAsksForALimitHasNoAmountAndIsOnTheFirstIconNobodyUses() {
         reads.categories = listOf(
             reads.category(1, "Comida", icon = "restaurant"),
             reads.category(2, "Casa", icon = "home", archived = true)
@@ -127,7 +133,8 @@ class CategoryEditorViewModelTest {
         val state = editor().state.value
 
         assertEquals("" to "", state.name to state.limitText)
-        assertTrue(state.unlimited)
+        // No limit is something chosen, never where a new category starts.
+        assertFalse(state.unlimited)
         assertEquals("directions_bus", state.iconKey)
         assertEquals(14, state.iconKeys.size)
         assertEquals(listOf("200.000", "300.000", "500.000"), state.suggestions.map { it.label })
@@ -169,9 +176,34 @@ class CategoryEditorViewModelTest {
     }
 
     @Test
-    fun withoutALimitTheCategoryIsUnlimitedNotZero() {
+    fun aCategoryNobodySaidAnythingAboutTheLimitOfIsNotCreatedUnlimitedOrZero() {
         val editor = editor()
         editor.type("Mercado")
+
+        editor.submit()
+
+        assertEquals(LimitError.Required, editor.state.value.limitError)
+        assertEquals(emptyList<CreateCategory>(), commands.submitted)
+        assertNull(editor.state.value.result)
+    }
+
+    @Test
+    fun sinLimiteChosenOnPurposeCreatesAnUnlimitedCategoryNotAZeroOne() {
+        val editor = editor()
+        editor.type("Mercado")
+        editor.onAction(CategoryEditorAction.UnlimitedChanged(true))
+
+        editor.submit()
+
+        assertEquals(BudgetLimit.Unlimited, commands.submitted.single().limit)
+    }
+
+    @Test
+    fun anAmountLeftTypedIsNotSentWhileSinLimiteIsOn() {
+        val editor = editor()
+        editor.type("Mercado")
+        editor.limit("450000")
+        editor.onAction(CategoryEditorAction.UnlimitedChanged(true))
 
         editor.submit()
 
@@ -217,14 +249,28 @@ class CategoryEditorViewModelTest {
     }
 
     @Test
-    fun choosingSinLimiteClearsTheAmountAndIgnoresTyping() {
+    fun choosingSinLimiteKeepsTheAmountTypedAndIgnoresTypingUntilItIsTurnedOffAgain() {
         val editor = editor()
         editor.limit("300000")
 
         editor.onAction(CategoryEditorAction.UnlimitedChanged(true))
         editor.onAction(CategoryEditorAction.LimitChanged("999"))
+        val on = editor.state.value.run { unlimited to limitText }
+        editor.onAction(CategoryEditorAction.UnlimitedChanged(false))
 
-        assertEquals(true to "", editor.state.value.run { unlimited to limitText })
+        assertEquals(true to "300000", on)
+        assertEquals(false to "300000", editor.state.value.run { unlimited to limitText })
+    }
+
+    @Test
+    fun switchingSinLimiteOnOrOffClearsAnErrorAboutTheAmount() {
+        val editor = editor()
+        editor.type("Mercado")
+        editor.submit()
+
+        editor.onAction(CategoryEditorAction.UnlimitedChanged(true))
+
+        assertNull(editor.state.value.limitError)
     }
 
     @Test
@@ -262,7 +308,7 @@ class CategoryEditorViewModelTest {
     @Test
     fun twentyFourCharactersOfAnyKindAreAccepted() {
         val editor = editor()
-        editor.type("🎉".repeat(24))
+        editor.withNoLimit("🎉".repeat(24))
 
         editor.submit()
 
@@ -273,7 +319,7 @@ class CategoryEditorViewModelTest {
     fun whileSavingTheFormIsBusyLockedAndASecondTapSendsNothing() {
         commands.hold = CompletableDeferred()
         val editor = editor()
-        editor.type("Mercado")
+        editor.withNoLimit("Mercado")
 
         editor.submit()
         val saving = editor.state.value
@@ -301,7 +347,7 @@ class CategoryEditorViewModelTest {
     fun aTakenNameIsShownOnTheFieldAndTheNextAttemptIsANewOperation() {
         commands.answer = { rejected(CategoryRejection.NameTaken) }
         val editor = editor()
-        editor.type("mercado")
+        editor.withNoLimit("mercado")
 
         editor.submit()
         val refused = editor.state.value
@@ -324,7 +370,7 @@ class CategoryEditorViewModelTest {
             rejected(CategoryRejection.StaleGeneration(current = 2))
         }
         val editor = editor()
-        editor.type("Mercado")
+        editor.withNoLimit("Mercado")
 
         editor.submit()
         val refused = editor.state.value
@@ -359,7 +405,7 @@ class CategoryEditorViewModelTest {
         commands.answer = { CategoryCommandOutcome.OutcomeUnknown(it.operationId) }
         commands.found = { Outcome.Success(change(it)) }
         val editor = editor()
-        editor.type("Mercado")
+        editor.withNoLimit("Mercado")
 
         editor.submit()
 
@@ -387,7 +433,7 @@ class CategoryEditorViewModelTest {
         commands.answer = { CategoryCommandOutcome.OutcomeUnknown(it.operationId) }
         commands.found = { Outcome.Failure(StorageFailure.Unavailable("SQLiteException")) }
         val editor = editor()
-        editor.type("Mercado")
+        editor.withNoLimit("Mercado")
 
         editor.submit()
         val unknown = editor.state.value
@@ -423,11 +469,23 @@ class CategoryEditorViewModelTest {
     }
 
     @Test
+    fun aDraftWithSinLimiteChosenComesBackChosenWithTheAmountThatWasTyped() {
+        val saved = SavedStateHandle()
+        val first = editor(saved)
+        first.limit("450000")
+        first.onAction(CategoryEditorAction.UnlimitedChanged(true))
+
+        val restored = editor(saved.afterProcessDeath()).state.value
+
+        assertEquals(true to "450000", restored.unlimited to restored.limitText)
+    }
+
+    @Test
     fun aSaveInterruptedByTheProcessDyingIsRecoveredFromItsReceiptWithoutSendingAgain() {
         commands.hold = CompletableDeferred()
         val saved = SavedStateHandle()
         val first = editor(saved)
-        first.type("Mercado")
+        first.withNoLimit("Mercado")
         first.submit()
         // The process dies here: the command left, its answer never arrived.
         val afterDeath = saved.afterProcessDeath()
@@ -445,7 +503,7 @@ class CategoryEditorViewModelTest {
         commands.hold = CompletableDeferred()
         val saved = SavedStateHandle()
         val first = editor(saved)
-        first.type("Mercado")
+        first.withNoLimit("Mercado")
         first.submit()
         val afterDeath = saved.afterProcessDeath()
         commands.hold = null
@@ -465,7 +523,7 @@ class CategoryEditorViewModelTest {
     fun aCreatedResultSurvivesTheScreenBeingRebuilt() {
         val saved = SavedStateHandle()
         val first = editor(saved)
-        first.type("Mercado")
+        first.withNoLimit("Mercado")
         first.submit()
 
         val restored = editor(saved.afterProcessDeath())
@@ -504,9 +562,28 @@ class CategoryEditorViewModelTest {
         val limit = editor()
         limit.onAction(CategoryEditorAction.SuggestionPicked(200_000))
         limit.onAction(CategoryEditorAction.Back)
+        val typed = editor()
+        typed.onAction(CategoryEditorAction.LimitChanged("5"))
+        typed.onAction(CategoryEditorAction.Back)
+        val unlimited = editor()
+        unlimited.onAction(CategoryEditorAction.UnlimitedChanged(true))
+        unlimited.onAction(CategoryEditorAction.Back)
 
         assertTrue(icon.state.value.confirmDiscard)
         assertTrue(limit.state.value.confirmDiscard)
+        assertTrue(typed.state.value.confirmDiscard)
+        assertTrue(unlimited.state.value.confirmDiscard)
+    }
+
+    @Test
+    fun turningSinLimiteOnAndOffAgainWithNothingTypedIsNotADraft() {
+        val editor = editor()
+        editor.onAction(CategoryEditorAction.UnlimitedChanged(true))
+        editor.onAction(CategoryEditorAction.UnlimitedChanged(false))
+
+        editor.onAction(CategoryEditorAction.Back)
+
+        assertEquals(EditorResult.Discarded, editor.state.value.result)
     }
 
     @Test
@@ -514,7 +591,7 @@ class CategoryEditorViewModelTest {
         reads.failure = StorageFailure.Unavailable("SQLiteException")
         val editor = editor()
         val failed = editor.state.value
-        editor.type("Mercado")
+        editor.withNoLimit("Mercado")
         editor.submit()
         reads.failure = null
 

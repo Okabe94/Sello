@@ -31,8 +31,9 @@ sealed interface EditorResult {
 
 /**
  * The new-category form. [name] and [limitText] are exactly what was typed. The limit
- * is either [unlimited] or the amount in [limitText]; an empty amount is never read
- * as zero.
+ * is either [unlimited], which is only ever chosen, or the amount in [limitText]; an
+ * empty amount is never read as zero or as no limit. [limitText] is kept while
+ * [unlimited] is on and is not sent then.
  */
 data class CategoryEditorState(
     val loading: Boolean = true,
@@ -43,7 +44,7 @@ data class CategoryEditorState(
     val nameError: NameError? = null,
     val iconKeys: List<String> = emptyList(),
     val iconKey: String = "",
-    val unlimited: Boolean = true,
+    val unlimited: Boolean = false,
     val limitText: String = "",
     val limitError: LimitError? = null,
     val suggestions: List<LimitSuggestion> = emptyList(),

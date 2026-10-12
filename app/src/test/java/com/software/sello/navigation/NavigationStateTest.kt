@@ -354,4 +354,24 @@ class NavigationStateTest {
             shell.state.value.run { currentMonth to selectedMonth }
         )
     }
+
+    @Test
+    fun pickingTheCurrentMonthFromAnotherYearGoesBackClosesThePickerAndFollowsTheClock() {
+        val shell = shell()
+        shell.onAction(ShellAction.PickMonth(YearMonth.of(2024, 3)))
+        shell.onAction(ShellAction.OpenMonthPicker)
+        shell.onAction(ShellAction.ShowPickerYear(2021))
+
+        // What "Mes actual" sends: the month the shell itself says is current.
+        shell.onAction(ShellAction.PickMonth(shell.state.value.currentMonth))
+        val back = shell.state.value
+        shell.onAction(ShellAction.OpenMonthPicker)
+        val reopened = shell.state.value.pickerYear
+        // Not pinned to October: when the month turns, what is shown turns with it.
+        clock.goTo("2026-11-01")
+
+        assertEquals(october to false, back.selectedMonth to back.monthPickerOpen)
+        assertEquals(2026, reopened)
+        assertEquals(YearMonth.of(2026, 11), shell.state.value.selectedMonth)
+    }
 }

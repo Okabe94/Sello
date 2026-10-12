@@ -62,6 +62,13 @@ months off; in a window wide enough for a side panel it is a panel beside the co
 The scaffold keeps content clear of the system bars and hides the dock and tab bar
 while the system keyboard is open.
 
+At the right of the picker's title, "Mes actual" goes to the month the financial day
+is in from whatever year is being browsed (SELLO-059). It is always there, sends the
+same `PickMonth` as that month's cell with the state's own current month, and so
+follows a month that turns while the picker is open. A screen reader is told the
+destination, "Ir al mes actual: Octubre 2026". With a large font it goes under the
+title instead of being cut.
+
 ## Routes and links
 
 - Routes are `@Serializable` objects in `Routes.kt` and carry identifiers only. A

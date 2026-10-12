@@ -8326,7 +8326,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Type:** Task
 - **Source classification:** Performance risk
 - **Priority:** P2
-- **Status:** In Progress
+- **Status:** Done
 - **Confidence:** 85%, conditional on repeatedly loading many expense pages.
 - **Depends on:** SELLO-004, SELLO-009, SELLO-018
 - **Gate:** G2
@@ -8428,6 +8428,15 @@ query or schema changed.
 Left for later: the lazy list, if a real need or SELLO-035's targets ask for it;
 what the list does to the scroll position on edit and delete (SELLO-019).
 
+### Delivery evidence
+- **Revision:** branch `sello-056-lazy-expense-history`; tested snapshot is commit `f2ca722`, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design. `main` had not moved when the pull request was opened, so there was nothing to merge in.
+- **Requirement mapping:** closed by owner decision of 2026-10-12 with one part delivered. Delivered: stable row identity on new saves and refreshes → `CategoryDetailScreenTest.aNewExpenseAtTheTopLeavesEveryRowThatWasThereBeingTheSameRow`, `aRowTakenOutOfTheMiddleLeavesTheOthersBeingTheSameRows` and `rowsThatChangePlacesAreStillThemselves`, which compare which piece of the screen draws each expense before and after. Unchanged and still covered by existing tests: every row reachable, paging never truncating totals, loading more, failure and retry, spoken amounts, twice the font size, and the compact, sideways and wide layouts. **Not delivered and not claimed:** viewport-bounded row composition, the composition-count or visibility regression, scroll and heap evidence against reviewed targets; scroll behaviour on insertion is as it was.
+- **Red / Green:** red first, on the emulator against the unchanged screen: `./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.feature.recibo.CategoryDetailScreenTest` failed 3 of 18. With the order reversed, each expense was drawn by the piece that had drawn the one in its new place, which is the defect stated exactly. All 18 pass with the key. One finder in a new test was corrected to look inside a merged row.
+- **Gate results:** local `./scripts/verify-ticket SELLO-056 --gate G2 --retain` passed on the tested commit: 351 host tests (205 app, 98 domain, 37 design-system, 8 data, 3 catalog), 320 device tests on the API 30 emulator (130 app, 113 data, 67 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. No dependency, lock file, permission or schema changed.
+- **Quality run:** run 20261012T014037Z-74d08687; SELLO-056 G2 passed; HEAD f2ca722, inputs sha256 21fe57ede2c3; report docs/planning/mvp/quality-reports/SELLO-056.json sha256 c1f2866595d1b67d043212d040327e91c930e5befbd0e230b05c21638b23033f
+- **Device / Artifact:** API 30 emulator, debug build, 2026-10-12, the detail screen given state by hand in throwaway tests that were not kept; median of five, each figure including about 80 ms of test overhead. One new expense at the top of 40 / 200 / 500 rows: 100 / 250 / 400 ms before, 46 / 66 / 100 ms with the rows keyed (measured with the same change applied temporarily). Drawing 20 / 100 / 200 / 500 / 1,000 rows from nothing: 83 / 199 / 316 / 750 / 1,333 ms, which the key does not change. These are relative figures from a desktop emulator, not targets met. Not executed: a release build, a real phone, the running app with a real long history, heap, and scrolling smoothness.
+- **Review:** executor self-review of the diff, reports and logs. The merge of this ticket's pull request is the project owner's acceptance of the small fix and of parking the lazy list; the pull request and its checks are that record. No independent technical review.
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes
@@ -8495,7 +8504,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1011,Medium,In Progress,sello-056
+",1011,Medium,Done,sello-056
 57,Task,SELLO-057 — Keep category-detail identity stable while data loads,"Local ID: SELLO-057
 Epic: SELLO-E11
 Increment: MVP

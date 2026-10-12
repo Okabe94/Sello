@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 32/52 · **Epics Done:** 4/9
 
-Backlog: 20 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 32
+Backlog: 19 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 32
 
 [Workflow, gates and definition of done](README.md)
 
@@ -16,7 +16,7 @@ Backlog: 20 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 32
 | [SELLO-E02](epics/E02-design-system.md) | Build the actual reusable visual language and a separately runnable UI laboratory. | Done | 4/4 |
 | [SELLO-E03](epics/E03-financial-core.md) | Make amounts, budgets, dates and saved outcomes trustworthy before the UI relies on them. | Done | 5/5 |
 | [SELLO-E04](epics/E04-first-slice.md) | Turn the greeting into a usable category → expense → receipt → Recibo journey. | Done | 4/4 |
-| [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | Backlog | 0/5 |
+| [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | In Progress | 0/5 |
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Backlog | 0/4 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Backlog | 0/5 |
 | [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | Backlog | 0/4 |
@@ -28,7 +28,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo) | Implement expense edits, deletion and guarded six-second undo | SELLO-E05 | P0 | G2 | None |
 
 ## Review
 
@@ -42,7 +44,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo) | Implement expense edits, deletion and guarded six-second undo | SELLO-E05 | P0 | G2 | None |
 | [SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing) | Complete category management and month-specific budget editing | SELLO-E05 | P0 | G2 | None |
 | [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Ship income recording, history and guarded correction workflows | SELLO-E05 | P0 | G2 | [SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo) |
 | [SELLO-022](epics/E05-mvp-workflows.md#sello-022--deliver-basic-resumen-with-exact-actuals-and-history-charts) | Deliver basic Resumen with exact actuals and history charts | SELLO-E05 | P0 | G2 | [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) |
@@ -102,4 +103,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-019](epics/E05-mvp-workflows.md#sello-019--implement-expense-edits-deletion-and-guarded-six-second-undo), [SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing), [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-055](epics/E11-bug-stabilization.md#sello-055--avoid-duplicate-monthly-snapshot-pipelines-in-simultaneous-views), [SELLO-060](epics/E11-bug-stabilization.md#sello-060--make-first-slice-navigation-motion-consistent-and-accessible)
+[SELLO-020](epics/E05-mvp-workflows.md#sello-020--complete-category-management-and-month-specific-budget-editing), [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-055](epics/E11-bug-stabilization.md#sello-055--avoid-duplicate-monthly-snapshot-pipelines-in-simultaneous-views), [SELLO-060](epics/E11-bug-stabilization.md#sello-060--make-first-slice-navigation-motion-consistent-and-accessible)

@@ -1,6 +1,6 @@
 # SELLO-E05 — Complete everyday MVP workflows
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Goal:** Complete maintainable expense/income history and an honest monthly summary.
 - **Exit:** Edits/deletes/undo, category/budget management, income, basic Resumen and preferences all work after restart and preserve prior history.
 
@@ -8,7 +8,7 @@
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-012, SELLO-017, SELLO-018, SELLO-004
 - **Gate:** G2
 
@@ -76,6 +76,61 @@ SELLO-018's lists and approved D07. Read architecture §5 and
 Create/run `ExpenseEditDeleteContractTest`, `UndoCompensationContractTest` on real
 Room and `*ExpenseEditViewModelTest` on host; G2. Execute edit/stale/delete/undo/expiry/
 recreate device journeys with exact row/version/receipt/snapshot assertions.
+
+### Execution progress
+2026-10-12: started on branch `sello-019-expense-corrections`. Delivered in two pull
+requests, as agreed with the project owner; the ticket stays In Progress until the second.
+
+**Decisions taken with the project owner before any code**
+
+- A deleted expense is removed from `expense` and what it was is kept in a separate
+  table, not marked as deleted in place, so no read or total can count it by mistake.
+- The six seconds are counted on the monotonic clock and held in memory. A process
+  that ends takes the offer with it and startup removes the kept copy.
+- A second deletion makes the first one final: at most one deletion can be undone.
+- An edit is refused when the expense changed since it was read. An expense may be
+  edited while it stays in a category archived since, or be moved out of it, but
+  never moved into an archived category.
+- "Guardar cambios" is available only after a change.
+- Wording: "Editar gasto", "Guardar cambios", "Borrar", "Gasto borrado", "Deshacer",
+  "Gasto actualizado". The creation flow does not change.
+- The dismissible first-time announcement of historical correction is deferred to
+  SELLO-023, which owns remembered preferences; a note is on that ticket. This
+  ticket delivers the guidance shown in context every time.
+
+**First pull request: storage and commands, no screens**
+
+- Schema version 2 with a tested migration: `deleted_expense`.
+- `ExpenseCommands.edit`, `delete`, `restore` and `undoOffer`, with their receipts.
+- Real-database contract tests for U01 to U05, stale versions, replays, concurrent
+  commands, cancelled callers, rollback and the month's totals.
+- Nothing in the app calls the new commands yet, so every existing journey is as it was.
+- Verified with the ticket's G2 gate on an API 30 emulator, each time on the
+  uncommitted tree that became the commit: run 20261012T190048Z-4eafa3e0 passed
+  before the first commits, and run 20261012T200307Z-43c7e3f2 after the date rule
+  changed. Its report is not retained
+  here; the run that counts as Delivery evidence is the one made when the ticket
+  is proposed Done.
+
+**Choices made while implementing, for review**
+
+- An edit that changes nothing is refused by the command (`Unchanged`) and writes no
+  receipt, so the rule does not depend on the screen alone.
+- The date rule applies only when an edit changes the date (project owner,
+  2026-10-12, replacing my first choice of checking every edit). An expense already
+  dated after today, possible only if the financial day moved backwards, can have
+  its other fields corrected; it cannot be moved to another future date.
+- Undo puts the row back without interpreting it, exactly as deletion kept it.
+- A new expense's sequence follows the highest of the recorded and the kept one.
+  Once a deletion is final its sequence can be used again.
+
+**Still owed by this ticket, in the second pull request**
+
+- The form in edit mode, deleting from the form and from a row (swipe, menu and
+  screen-reader action), the undo bar with its catalog example, the guidance for a
+  past month, completion feedback and their host and device tests.
+- Sandbox regression inputs do not exist yet: the sandbox is SELLO-024. The cases
+  here are written so that ticket can run them.
 
 ## SELLO-020 — Complete category management and month-specific budget editing
 
@@ -345,6 +400,11 @@ Preferences should not make settings a financial transaction coordinator. Use
 neutral contracts from SELLO-005, theme from SELLO-006, real categories and approved
 D06/D09. Read [settings](../../../design/sello-spec.html#s-config), architecture §§2/7
 and the guide's DataStore source. Rate/currency/notification settings are not MVP.
+
+Carried over from SELLO-019 (2026-10-12, project owner): the dismissible first-time
+announcement that a past expense can be corrected (D04/H06) needs a remembered
+"seen" preference, so it is delivered here. SELLO-019 ships the guidance that is
+shown in context every time.
 
 ### Implementation plan
 1. Define typed theme/ink/order/direction preferences and stable codecs in data;

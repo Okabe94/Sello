@@ -9,6 +9,7 @@ import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.model.TransactionAmount
 import java.time.LocalDate
+import kotlin.time.Duration
 
 /**
  * A request to record one new expense. [operationId] names this attempt and
@@ -24,7 +25,49 @@ data class CreateExpense(
     val note: Note?
 )
 
-/** Why nothing was written. Each of these is certain: the expense does not exist. */
+/**
+ * A request to change one recorded expense. [expectedVersion] is the version the
+ * caller read: the change is made only to that version, so it can never overwrite a
+ * change the caller has not seen. The four fields are the expense as it should be
+ * afterwards; when it was first recorded and its place in the order do not change.
+ */
+data class EditExpense(
+    val operationId: OperationId,
+    val generation: Long,
+    val expenseId: ExpenseId,
+    val expectedVersion: Long,
+    val categoryId: CategoryId,
+    val amount: TransactionAmount,
+    val date: LocalDate,
+    val note: Note?
+)
+
+/** A request to remove one recorded expense, as the caller read it at [expectedVersion]. */
+data class DeleteExpense(
+    val operationId: OperationId,
+    val generation: Long,
+    val expenseId: ExpenseId,
+    val expectedVersion: Long
+)
+
+/**
+ * A request to put back the expense that the deletion [deletionId] removed. It is a new
+ * operation of its own: [operationId] names this attempt to undo, not the deletion.
+ */
+data class RestoreExpense(
+    val operationId: OperationId,
+    val generation: Long,
+    val deletionId: OperationId
+)
+
+/**
+ * The one deletion that can still be undone. [until] is the reading of the monotonic
+ * clock at which it stops being so: [UndoPolicy.WINDOW] after the deletion committed,
+ * in real elapsed time. It exists only in the process that made the deletion.
+ */
+data class UndoOffer(val deletionId: OperationId, val expenseId: ExpenseId, val until: Duration)
+
+/** Why nothing was written. Each of these is certain: nothing changed. */
 sealed interface ExpenseRejection {
     /** The history was replaced (restore or reset) since the command was prepared. */
     data class StaleGeneration(val current: Long) : ExpenseRejection
@@ -42,16 +85,41 @@ sealed interface ExpenseRejection {
     /** This operation already committed with different input. The original is unchanged. */
     data object OperationConflict : ExpenseRejection
 
+    /** There is no expense with that identifier: never recorded, or already deleted. */
+    data object ExpenseMissing : ExpenseRejection
+
+    /** The expense changed since the caller read it. [current] is its version now. */
+    data class VersionConflict(val current: Long) : ExpenseRejection
+
+    /** The edit asks for exactly what is already recorded, so there is nothing to save. */
+    data object Unchanged : ExpenseRejection
+
+    /**
+     * The deletion can no longer be undone: its time ran out, another deletion took its
+     * place, or it was made before the app was last started.
+     */
+    data object UndoExpired : ExpenseRejection
+
+    /**
+     * Putting the expense back would overwrite or contradict what is recorded now: the
+     * history was replaced, or its place has been taken. Nothing was restored.
+     */
+    data object UndoConflict : ExpenseRejection
+
     /** Storage failed and the write was rolled back. */
     data class StorageFailed(val failure: StorageFailure) : ExpenseRejection
 }
 
-/** A committed expense and the receipt that proves it. */
+/**
+ * A committed change to an expense and the receipt that proves it: recorded, edited,
+ * deleted or restored, as [OperationReceipt.kind] says. [expenseId] is the expense it
+ * was about, which after a deletion no longer exists.
+ */
 data class CommittedExpense(val receipt: OperationReceipt, val expenseId: ExpenseId)
 
 sealed interface ExpenseCommandOutcome {
     /**
-     * The expense is saved. [replayed] is true when this operation had already
+     * The change is saved. [replayed] is true when this operation had already
      * committed with the same input and this call wrote nothing new.
      */
     data class Committed(val expense: CommittedExpense, val replayed: Boolean) :
@@ -60,7 +128,7 @@ sealed interface ExpenseCommandOutcome {
     data class Rejected(val reason: ExpenseRejection) : ExpenseCommandOutcome
 
     /**
-     * It is not known whether the expense was saved. Ask [ExpenseCommands.find] with
+     * It is not known whether the change was saved. Ask [ExpenseCommands.find] with
      * the same [operationId], or submit the same command again; never a new one.
      */
     data class OutcomeUnknown(val operationId: OperationId) : ExpenseCommandOutcome
@@ -76,6 +144,34 @@ interface ExpenseCommands {
      * expense was saved; [find] does.
      */
     suspend fun create(command: CreateExpense): ExpenseCommandOutcome
+
+    /**
+     * Changes the expense once, if it is still at the version the caller read. The
+     * expense, the revision and the receipt are one transaction. A saved edit is not a
+     * new expense: when it was first recorded and its order are kept.
+     */
+    suspend fun edit(command: EditExpense): ExpenseCommandOutcome
+
+    /**
+     * Removes the expense once, if it is still at the version the caller read, and keeps
+     * what it was so that [restore] can put it back while [undoOffer] lasts. A deletion
+     * that takes the place of an earlier one makes the earlier one final.
+     */
+    suspend fun delete(command: DeleteExpense): ExpenseCommandOutcome
+
+    /**
+     * Puts back exactly the expense a deletion removed, if that deletion is the one
+     * [undoOffer] names, its time has not run out, the history is the same one and
+     * nothing has taken the expense's place. Asked again with the same operation, it
+     * answers with the original result whatever the time is by then.
+     */
+    suspend fun restore(command: RestoreExpense): ExpenseCommandOutcome
+
+    /**
+     * The deletion that can be undone right now, or null. Null once its time has run
+     * out, and always null in a process that did not make the deletion.
+     */
+    fun undoOffer(): UndoOffer?
 
     /** The committed result of [operationId], or null when it did not commit. */
     suspend fun find(operationId: OperationId): Outcome<CommittedExpense?, StorageFailure>

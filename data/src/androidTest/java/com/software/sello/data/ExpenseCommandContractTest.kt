@@ -32,6 +32,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -79,7 +80,7 @@ class ExpenseCommandContractTest {
 
     private fun open() {
         database = files.open()
-        commands = RoomExpenseCommands(database, { audit }, clock, ids)
+        commands = RoomExpenseCommands(database, { audit }, clock, ids) { 5.hours }
     }
 
     /** A new installation with one category, "Mercado", number 1. */

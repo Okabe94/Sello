@@ -22,6 +22,8 @@ import com.software.sello.domain.policy.MonthBudgetState
 import com.software.sello.domain.policy.MonthlyBudgetPolicy
 import com.software.sello.domain.port.CommittedExpense
 import com.software.sello.domain.port.CreateExpense
+import com.software.sello.domain.port.DeleteExpense
+import com.software.sello.domain.port.EditExpense
 import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseCursor
@@ -29,7 +31,9 @@ import com.software.sello.domain.port.ExpensePage
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialDay
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.RestoreExpense
 import com.software.sello.domain.port.SnapshotState
+import com.software.sello.domain.port.UndoOffer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
@@ -150,6 +154,18 @@ class HandExpenseCommands : ExpenseCommands {
         looked += operationId
         return found(operationId)
     }
+
+    // The screens for these arrive with the rest of SELLO-019; nothing calls them yet.
+    override suspend fun edit(command: EditExpense): ExpenseCommandOutcome =
+        error("not scripted: no screen edits an expense yet")
+
+    override suspend fun delete(command: DeleteExpense): ExpenseCommandOutcome =
+        error("not scripted: no screen deletes an expense yet")
+
+    override suspend fun restore(command: RestoreExpense): ExpenseCommandOutcome =
+        error("not scripted: no screen undoes a deletion yet")
+
+    override fun undoOffer(): UndoOffer? = null
 }
 
 /** What "storage" holds, set by the test. */

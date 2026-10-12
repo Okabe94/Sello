@@ -10,6 +10,7 @@ import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomExpenseReads
 import com.software.sello.data.repository.RoomFinancialProfileStore
 import com.software.sello.data.repository.RoomMonthlySnapshots
+import com.software.sello.data.repository.reading
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AuditClock
@@ -19,6 +20,7 @@ import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
 import kotlin.coroutines.CoroutineContext
@@ -39,8 +41,9 @@ class FinancialStorage internal constructor(
     fun expenseCommands(
         audit: AuditClock,
         clock: FinancialClock,
-        ids: RecordIdSource
-    ): ExpenseCommands = RoomExpenseCommands(database, audit, clock, ids)
+        ids: RecordIdSource,
+        monotonic: MonotonicClock
+    ): ExpenseCommands = RoomExpenseCommands(database, audit, clock, ids, monotonic)
 
     fun categoryCommands(
         audit: AuditClock,
@@ -58,6 +61,17 @@ class FinancialStorage internal constructor(
      */
     fun monthlySnapshots(clock: FinancialClock, computation: CoroutineContext): MonthlySnapshots =
         RoomMonthlySnapshots(database, clock, computation)
+
+    /**
+     * Makes every deletion final by removing what was kept to undo it. The time to undo
+     * is counted in the process that deleted, so whatever a new process finds here can
+     * no longer be undone. Call it once when storage is opened. It removes no expense
+     * and changes no figure: a deleted expense was already gone.
+     */
+    suspend fun discardUndoCopies(): Outcome<Unit, StorageFailure> = reading {
+        database.deletedExpenseDao().clear()
+        Outcome.Success(Unit)
+    }
 
     override fun close() = database.close()
 }

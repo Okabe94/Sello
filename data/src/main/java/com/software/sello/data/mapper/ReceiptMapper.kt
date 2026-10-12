@@ -12,7 +12,7 @@ import java.time.Instant
 
 /**
  * A stored receipt, decoded. The subject is the record the operation changed: an
- * expense for [OperationKind.CreateExpense], a category for every other kind.
+ * expense for the four expense kinds, a category for every other kind.
  */
 internal class StoredReceipt(
     val receipt: OperationReceipt,
@@ -22,6 +22,14 @@ internal class StoredReceipt(
 )
 
 private val sha256Hex = Regex("[0-9a-f]{64}")
+
+/** The kinds whose subject is an expense. Every other kind is about a category. */
+private val ExpenseKinds = setOf(
+    OperationKind.CreateExpense,
+    OperationKind.EditExpense,
+    OperationKind.DeleteExpense,
+    OperationKind.RestoreExpense
+)
 
 internal fun OperationReceiptEntity.toStored(): Outcome<StoredReceipt, StorageFailure.Integrity> =
     decodeRow(OperationReceiptEntity.TABLE, operationId) {
@@ -38,7 +46,7 @@ internal fun OperationReceiptEntity.toStored(): Outcome<StoredReceipt, StorageFa
             committedAt = Instant.ofEpochMilli(committedAt)
         )
         val subject = subjectId.orEmpty()
-        if (kind == OperationKind.CreateExpense) {
+        if (kind in ExpenseKinds) {
             StoredReceipt(receipt, inputDigest, valid("subject_id", ExpenseId.of(subject)), null)
         } else {
             StoredReceipt(receipt, inputDigest, null, valid("subject_id", CategoryId.of(subject)))

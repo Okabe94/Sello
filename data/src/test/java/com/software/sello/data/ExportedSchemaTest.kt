@@ -10,38 +10,46 @@ import org.junit.Test
 class ExportedSchemaTest {
     private val schemas = File("schemas/com.software.sello.data.local.SelloDatabase")
     private val versionOne = File(schemas, "1.json").readText()
+    private val current = File(schemas, "2.json").readText()
 
-    private fun values(key: String) =
-        Regex("\"$key\"\\s*:\\s*\"?([\\w]+)\"?").findAll(versionOne).map { it.groupValues[1] }
+    private fun values(schema: String, key: String) =
+        Regex("\"$key\"\\s*:\\s*\"?([\\w]+)\"?").findAll(schema).map { it.groupValues[1] }
+
+    private val mvpTables = setOf(
+        "profile",
+        "category",
+        "default_limit",
+        "month_limit",
+        "expense",
+        "income",
+        "operation_receipt"
+    )
 
     @Test
-    fun versionOneIsTheOnlyExportedSchema() {
-        assertEquals(listOf("1.json"), schemas.list()!!.sorted())
-        assertEquals(listOf("1"), values("version").toList())
+    fun everyVersionThatShippedIsStillExported() {
+        assertEquals(listOf("1.json", "2.json"), schemas.list()!!.sorted())
+        assertEquals(listOf("1"), values(versionOne, "version").toList())
+        assertEquals(listOf("2"), values(current, "version").toList())
     }
 
     @Test
-    fun theSchemaHoldsOnlyTheMvpTables() {
-        assertEquals(
-            setOf(
-                "profile",
-                "category",
-                "default_limit",
-                "month_limit",
-                "expense",
-                "income",
-                "operation_receipt"
-            ),
-            values("tableName").toSet()
-        )
+    fun versionOneStillHoldsOnlyTheTablesItShippedWith() {
+        assertEquals(mvpTables, values(versionOne, "tableName").toSet())
+    }
+
+    @Test
+    fun versionTwoAddsOnlyTheTableForDeletedExpenses() {
+        assertEquals(mvpTables + "deleted_expense", values(current, "tableName").toSet())
     }
 
     @Test
     fun noForeignKeyCascadesOrDetaches() {
-        val actions = (values("onDelete") + values("onUpdate")).toList()
+        for (schema in listOf(versionOne, current)) {
+            val actions = (values(schema, "onDelete") + values(schema, "onUpdate")).toList()
 
-        assertEquals(6, actions.size)
-        assertEquals(setOf("RESTRICT"), actions.toSet())
+            assertEquals(6, actions.size)
+            assertEquals(setOf("RESTRICT"), actions.toSet())
+        }
     }
 
     @Test

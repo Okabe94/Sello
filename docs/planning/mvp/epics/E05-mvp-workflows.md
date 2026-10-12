@@ -284,6 +284,10 @@ scope/examples I01/G01, and architecture §4. Detailed comparisons/records/expor
   independence, accessible labels and screen hierarchy; updated labels do not change formulas.
 - G01 cumulative chart is 10,000/25,000/30,000; selected values/text equal source
   rows even when geometry uses approximate coordinates.
+- Resumen and its charts are further consumers of the same month's snapshot, which
+  each screen observes separately today. Sharing one observation was parked in
+  SELLO-055 (2026-10-12) as not worth its risk for two screens; decide it again here,
+  with measurements, before adding more.
 - Month switches cannot combine October income with September budgets; no-history
   cannot produce an invented comparison trend or a zero on failed reads.
 

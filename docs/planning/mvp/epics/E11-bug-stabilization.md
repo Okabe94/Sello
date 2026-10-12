@@ -1235,6 +1235,29 @@ record the fresh G2 Quality run before proposing Done under QUALITY_FLOW.md.
 Performance/accessibility acceptance additionally needs the reviewed measurements
 and manual checks stated above; host tests or assembly alone are insufficient.
 
+### Execution progress
+2026-10-12: triaged, not started. **Parked by owner decision; the ticket stays Backlog.**
+
+The claim holds from the code: `MonthlySnapshots.observe` is a cold flow, so each
+screen that observes a month gets its own read and its own calculation. Recibo, the
+category detail and, while it is open, the expense form each observe one. The detail
+observes nothing while no category is open, so the work doubles only while a detail
+is open. Nothing new was measured for this ticket; from SELLO-048's measurements on
+the API 30 emulator one snapshot is about 7 to 20 ms of reading and 1 to 3 ms of
+calculation for 100 to 1,000 expenses in the month, all off the main thread since
+SELLO-048. The duplicate is therefore roughly 10 to 25 ms of background work per
+save while a detail is open. Nothing is wrong on screen: two screens can be one save
+apart for an instant and converge by themselves.
+
+Why it is parked: the fix is a shared, long-lived observation per month, which adds
+things the present design does not have to get right (when it stops, what one
+screen's retry does to the others, whose "last good" data is kept) for a saving
+nobody would notice. Revisit when SELLO-022 gives the same month more consumers, with
+the workloads and targets of SELLO-035; a note there says so.
+
+Nothing was changed in the code. No Delivery evidence exists because nothing was
+delivered.
+
 ## SELLO-056 — Render growing expense history lazily with stable identity
 
 - **Type:** Task

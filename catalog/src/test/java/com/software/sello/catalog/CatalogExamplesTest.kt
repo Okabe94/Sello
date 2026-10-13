@@ -35,6 +35,7 @@ class CatalogExamplesTest {
                 "inputs.switch",
                 "inputs.icon-choice",
                 "inputs.expense-entry",
+                "inputs.income-entry",
                 "navigation.scaffold",
                 "navigation.entry-dock",
                 "navigation.navigation-bar",

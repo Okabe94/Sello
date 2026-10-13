@@ -6,10 +6,15 @@ import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommandOutcome.OutcomeUnknown
 import com.software.sello.domain.port.ExpenseCommandOutcome.Rejected
 import com.software.sello.domain.port.ExpenseRejection
+import com.software.sello.domain.port.IncomeCommandOutcome
+import com.software.sello.domain.port.IncomeRejection
+import com.software.sello.domain.port.IncomeUndoOffer
 import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.UndoOffer
 import com.software.sello.feature.expense.HandExpenseCommands
+import com.software.sello.feature.expense.HandIncomeCommands
 import com.software.sello.feature.expense.expenseId
+import com.software.sello.feature.expense.incomeId
 import com.software.sello.feature.expense.uuid
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -36,12 +41,13 @@ import org.junit.Test
 class ExpenseCorrectionsTest {
     private val scope = TestScope()
     private val commands = HandExpenseCommands()
+    private val incomes = HandIncomeCommands()
     private var slept: Duration = Duration.ZERO
     private val monotonic =
         MonotonicClock { 5.hours + scope.testScheduler.currentTime.milliseconds + slept }
     private var nextId = 500
     private val corrections =
-        ExpenseCorrections(commands, monotonic, { uuid(nextId++) }, scope.backgroundScope)
+        ExpenseCorrections(commands, incomes, monotonic, { uuid(nextId++) }, scope.backgroundScope)
 
     private val storageFailed =
         Rejected(ExpenseRejection.StorageFailed(StorageFailure.Unavailable("SQLiteException")))
@@ -345,5 +351,115 @@ class ExpenseCorrectionsTest {
             listOf(said, stillSaid, gone)
         )
         assertNull(notice)
+    }
+
+    // --- Income: the same offer, the income's own commands and words ---
+
+    private suspend fun deleteIncome(
+        income: Int = 201,
+        version: Long = 2,
+        generation: Long = 7
+    ): DeleteResult {
+        deletedAt = monotonic.elapsed()
+        incomes.offer = {
+            incomes.deleted.lastOrNull()?.let {
+                IncomeUndoOffer(it.operationId, it.incomeId, deletedAt + 6.seconds)
+            }?.takeIf { monotonic.elapsed() < it.until }
+        }
+        return corrections.deleteIncome(incomeId(income), version, generation)
+    }
+
+    @Test
+    fun deletingAnIncomeSendsOneIncomeDeletionAndOffersUndoInItsOwnWords() = test {
+        val result = deleteIncome()
+
+        assertEquals(DeleteResult.Deleted, result)
+        val sent = incomes.deleted.single()
+        assertEquals(
+            listOf(uuid(500), uuid(201), 2L, 7L),
+            listOf(
+                sent.operationId.value,
+                sent.incomeId.value,
+                sent.expectedVersion,
+                sent.generation
+            )
+        )
+        assertEquals(CorrectionNotice.IncomeDeleted(canUndo = true), notice)
+        assertEquals(emptyList<Any>(), commands.deleted)
+    }
+
+    @Test
+    fun undoingADeletedIncomeRestoresItThroughTheIncomeCommandsOnly() = test {
+        deleteIncome(generation = 7)
+        advanceTimeBy(2_000)
+
+        corrections.undo()
+        runCurrent()
+
+        val sent = incomes.restored.single()
+        assertEquals(
+            listOf(uuid(501), 7L, uuid(500)),
+            listOf(sent.operationId.value, sent.generation, sent.deletionId.value)
+        )
+        assertEquals(emptyList<Any>(), commands.restored)
+        assertEquals(CorrectionNotice.IncomeRestored, notice)
+    }
+
+    @Test
+    fun anIncomeOfferEndsAtSixSecondsAndALateOrBlockedUndoSaysSoAboutTheIncome() = test {
+        deleteIncome()
+        advanceTimeBy(5_999)
+        runCurrent()
+        val before = notice
+        advanceTimeBy(1)
+        runCurrent()
+        val after = notice
+        incomes.restoreAnswer = { IncomeCommandOutcome.Rejected(IncomeRejection.UndoExpired) }
+        deleteIncome()
+        corrections.undo()
+        runCurrent()
+        val late = notice
+        incomes.restoreAnswer = { IncomeCommandOutcome.Rejected(IncomeRejection.UndoConflict) }
+        deleteIncome()
+        corrections.undo()
+        runCurrent()
+
+        assertEquals(CorrectionNotice.IncomeDeleted(canUndo = true), before)
+        assertNull(after)
+        assertEquals(CorrectionNotice.IncomeUndoTooLate, late)
+        assertEquals(CorrectionNotice.IncomeUndoBlocked, notice)
+    }
+
+    @Test
+    fun anIncomeDeletionTakesAnExpenseOffersPlaceAndUndoThenGoesToTheIncome() = test {
+        delete(expense = 101)
+        advanceTimeBy(1_000)
+
+        deleteIncome()
+        corrections.undo()
+        runCurrent()
+
+        assertEquals(1, incomes.restored.size)
+        assertEquals(emptyList<Any>(), commands.restored)
+        assertEquals(CorrectionNotice.IncomeRestored, notice)
+    }
+
+    @Test
+    fun aRefusedIncomeDeletionSaysWhyAndASavedIncomeEditIsSaidForAMoment() = test {
+        val answers = listOf(
+            IncomeRejection.IncomeMissing to DeleteResult.Gone,
+            IncomeRejection.VersionConflict(current = 4) to DeleteResult.Changed,
+            IncomeRejection.StaleGeneration(current = 8) to DeleteResult.DataChanged,
+            IncomeRejection.StorageFailed(StorageFailure.Unavailable("x")) to DeleteResult.Failed
+        )
+
+        val results = answers.map { (reason, _) ->
+            incomes.deleteAnswer = { IncomeCommandOutcome.Rejected(reason) }
+            deleteIncome() to notice
+        }
+        corrections.incomeUpdated()
+
+        assertEquals(answers.map { it.second to null }, results)
+        assertEquals(CorrectionNotice.IncomeUpdated, notice)
     }
 }

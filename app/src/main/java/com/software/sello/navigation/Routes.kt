@@ -11,6 +11,18 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object ReciboRoute
 
+@Serializable
+data object ResumenRoute
+
+@Serializable
+data object IncomeHistoryRoute
+
+@Serializable
+data object IncomeEntryRoute
+
+@Serializable
+data class IncomeEditRoute(val incomeId: String)
+
 /**
  * The new-category form. [forEntry] says it was opened because recording an expense
  * needs a category first, so the form explains that.
@@ -49,5 +61,6 @@ const val CREATED_CATEGORY_RESULT = "result.createdCategoryId"
  * disabled or placeholder tab. With a single tab the tab bar is not shown.
  */
 enum class ShellTab(val id: String) {
-    Recibo("recibo")
+    Recibo("recibo"),
+    Resumen("resumen")
 }

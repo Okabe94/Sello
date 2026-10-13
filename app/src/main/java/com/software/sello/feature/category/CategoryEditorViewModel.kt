@@ -41,6 +41,9 @@ class CategoryEditorViewModel(
 ) : ViewModel() {
     private var generation: Long? = null
 
+    /** What the existing categories are called, archived ones too, as names are compared. */
+    private var takenNames: Set<String> = emptySet()
+
     private val mutable = MutableStateFlow(
         CategoryEditorState(
             forEntry = saved[KEY_FOR_ENTRY] ?: false,
@@ -67,7 +70,7 @@ class CategoryEditorViewModel(
         when (action) {
             is CategoryEditorAction.NameChanged -> if (now.editable) {
                 saved[KEY_NAME] = action.text
-                mutable.update { it.copy(name = action.text, nameError = null) }
+                mutable.update { it.copy(name = action.text, nameError = takenError(action.text)) }
             }
 
             is CategoryEditorAction.IconPicked ->
@@ -109,7 +112,23 @@ class CategoryEditorViewModel(
                 mutable.update { it.copy(confirmDiscard = false, result = EditorResult.Discarded) }
 
             CategoryEditorAction.KeepEditing -> mutable.update { it.copy(confirmDiscard = false) }
+
+            // A category that does not exist yet has nothing to archive or to reload.
+            CategoryEditorAction.Archive,
+            CategoryEditorAction.ArchiveConfirmed,
+            CategoryEditorAction.ArchiveDismissed,
+            CategoryEditorAction.ReloadDiscardingDraft,
+            CategoryEditorAction.ReloadKeepingDraft -> Unit
         }
+    }
+
+    /**
+     * Said while typing, not after trying to save: a name another category already has,
+     * however it is written. The command still refuses it, for a name taken meanwhile.
+     */
+    private fun takenError(text: String): NameError? {
+        val name = (CategoryName.of(text) as? Outcome.Success)?.value ?: return null
+        return NameError.Taken.takeIf { name.uniquenessKey in takenNames }
     }
 
     private fun setLimit(unlimited: Boolean, text: String) {
@@ -136,6 +155,8 @@ class CategoryEditorViewModel(
 
                 is Outcome.Success -> {
                     generation = read.value.generation
+                    takenNames =
+                        read.value.categories.map { it.category.name.uniquenessKey }.toSet()
                     if (mutable.value.iconKey.isEmpty()) {
                         val used = read.value.categories.map { it.category.icon.value }.toSet()
                         val first = CategoryIcons.keys.firstOrNull { it !in used }
@@ -143,7 +164,10 @@ class CategoryEditorViewModel(
                         saved[KEY_ICON] = first
                         mutable.update { it.copy(iconKey = first) }
                     }
-                    mutable.update { it.copy(loading = false) }
+                    // A restored draft may hold a name that is taken.
+                    mutable.update {
+                        it.copy(loading = false, nameError = it.nameError ?: takenError(it.name))
+                    }
                     if (saved.get<String>(KEY_OPERATION) != null) recover()
                 }
             }

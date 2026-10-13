@@ -39,6 +39,7 @@
     <string name="catalog_example_slip">Slip</string>
     <string name="catalog_example_tear_line">TearLine</string>
     <string name="catalog_example_leader_line">LeaderLine</string>
+    <string name="catalog_example_action_line">ActionLine</string>
     <string name="catalog_example_total_line">TotalLine</string>
     <string name="catalog_example_key_value">KeyValue</string>
     <string name="catalog_example_stamp">Stamp</string>
@@ -48,6 +49,7 @@
     <string name="catalog_example_confirm_slip">ConfirmSlip</string>
     <string name="catalog_example_empty_slip">EmptySlip</string>
     <string name="catalog_example_error_slip">ErrorSlip</string>
+    <string name="catalog_example_notice">SelloNotice</string>
     <string name="catalog_example_slip_skeleton">SlipSkeleton</string>
     <string name="catalog_example_amount_keypad">AmountKeypad</string>
     <string name="catalog_example_chip">SelloChip</string>
@@ -56,6 +58,7 @@
     <string name="catalog_example_switch">Switches</string>
     <string name="catalog_example_icon_choice">Elegir ícono</string>
     <string name="catalog_example_expense_entry">Entry controls together</string>
+    <string name="catalog_example_income_entry">Income controls together</string>
     <string name="catalog_example_category_circle">CategoryCircle</string>
     <string name="catalog_example_category_cell">CategoryCell</string>
     <string name="catalog_example_scaffold">SelloScaffold</string>

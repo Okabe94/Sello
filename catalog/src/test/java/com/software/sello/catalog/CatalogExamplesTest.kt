@@ -19,6 +19,7 @@ class CatalogExamplesTest {
                 "paper.slip",
                 "paper.tear-line",
                 "paper.leader-line",
+                "paper.action-line",
                 "paper.total-line",
                 "paper.key-value",
                 "stamps.stamp",
@@ -34,6 +35,7 @@ class CatalogExamplesTest {
                 "inputs.switch",
                 "inputs.icon-choice",
                 "inputs.expense-entry",
+                "inputs.income-entry",
                 "navigation.scaffold",
                 "navigation.entry-dock",
                 "navigation.navigation-bar",
@@ -43,6 +45,7 @@ class CatalogExamplesTest {
                 "feedback.confirm-slip",
                 "feedback.empty-slip",
                 "feedback.error-slip",
+                "feedback.notice",
                 "feedback.slip-skeleton"
             ),
             catalogExamples.map { it.id }

@@ -14,6 +14,8 @@ import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonthlySnapshots
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
@@ -39,14 +41,19 @@ fun openStorage(
     audit: AuditClock
 ): Outcome<OpenedStorage, StorageFailure> {
     val storage = openFinancialStorage(context, dispatchers.io, audit)
-    return when (val profile = runBlocking { storage.profiles.establish(deviceZone) }) {
-        is Outcome.Success -> Outcome.Success(OpenedStorage(storage, profile.value))
+    val opened = runBlocking {
+        when (val profile = storage.profiles.establish(deviceZone)) {
+            is Outcome.Failure -> profile
 
-        is Outcome.Failure -> {
-            storage.close()
-            profile
+            // Whatever an earlier process kept to undo a deletion can no longer be undone.
+            is Outcome.Success -> when (val discarded = storage.discardUndoCopies()) {
+                is Outcome.Failure -> discarded
+                is Outcome.Success -> Outcome.Success(OpenedStorage(storage, profile.value))
+            }
         }
     }
+    if (opened is Outcome.Failure) storage.close()
+    return opened
 }
 
 /** Keeps the file that could not be opened under another name; see `:data`. */
@@ -57,11 +64,13 @@ fun setAsideStorage(context: Context): Outcome<Unit, StorageFailure> =
 fun storageModule(storage: FinancialStorage): Module = module {
     single { storage } onClose { it?.close() }
     single<FinancialProfileStore> { storage.profiles }
-    single<ExpenseCommands> { storage.expenseCommands(get(), get(), get()) }
+    single<ExpenseCommands> { storage.expenseCommands(get(), get(), get(), get()) }
     single<CategoryCommands> { storage.categoryCommands(get(), get(), get()) }
     single<CategoryReads> { storage.categoryReads }
     single<MonthlySnapshots> {
         storage.monthlySnapshots(get(), get<DispatcherProvider>().default)
     }
     single<ExpenseReads> { storage.expenseReads }
+    single<IncomeCommands> { storage.incomeCommands(get(), get(), get(), get()) }
+    single<IncomeReads> { storage.incomeReads }
 }

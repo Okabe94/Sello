@@ -1,6 +1,9 @@
 package com.software.sello.feature.category
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -16,6 +19,8 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -174,7 +179,9 @@ class CategoryEditorScreenTest {
             .performScrollTo().assertIsDisplayed()
         limit.assertTextContains("1e3")
         rule.onNodeWithTag(EDITOR_SAVE_ERROR_TAG).performScrollTo().assertIsDisplayed()
-        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsEnabled()
+        // A name known to be taken cannot be sent (owner decision, SELLO-020): the
+        // button waits for another name instead of offering a save that must fail.
+        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
     }
 
     @Test
@@ -282,5 +289,226 @@ class CategoryEditorScreenTest {
         assertEquals("1e3", drawnLimit())
         rule.onNodeWithText("Escribe solo el número, por ejemplo 300000 o 300.000.")
             .performScrollTo().assertIsDisplayed()
+    }
+
+    // --- Changing an existing category ---
+
+    private val october = java.time.YearMonth.of(2026, 10)
+
+    /** "Café", limit 100.000, opened from October and not changed yet. */
+    private val editing get() = ready.copy(
+        editing = true,
+        name = "Café",
+        iconKey = "local_cafe",
+        limitText = "100000",
+        targetMonth = october
+    )
+
+    @Test
+    fun anExistingCategoryIsTitledAndWordedAsAChangeWithNothingToSaveYet() {
+        show(editing)
+
+        rule.onNodeWithText("Editar categoría").assertIsDisplayed()
+        rule.onNodeWithText("Nueva categoría").assertDoesNotExist()
+        rule.onNodeWithText("Crear categoría").assertDoesNotExist()
+        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithText("Guardar cambios").assertExists()
+        rule.onNodeWithTag(EDITOR_NO_CHANGES_TAG).assertIsDisplayed()
+        rule.onNodeWithText("Aún no cambiaste nada.").assertExists()
+    }
+
+    @Test
+    fun onceSomethingChangedItCanBeSaved() {
+        show(editing.copy(name = "Cafetería", changed = true))
+
+        rule.onNodeWithTag(EDITOR_NO_CHANGES_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsEnabled().performClick()
+
+        assertEquals(listOf<CategoryEditorAction>(CategoryEditorAction.Submit), actions)
+    }
+
+    @Test
+    fun aNameAnotherCategoryHasIsSaidOnTheFieldAndCannotBeSaved() {
+        show(editing.copy(name = "Mercado", changed = true, nameError = NameError.Taken))
+
+        rule.onNodeWithText("Ya tienes una categoría con ese nombre.").assertIsDisplayed()
+        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+    }
+
+    @Test
+    fun inTheCurrentMonthItSaysTheLimitAppliesFromThisMonthOn() {
+        show(editing)
+
+        rule.onNodeWithTag(EDITOR_SCOPE_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText(
+            "Vale desde Octubre 2026 en adelante. Los meses anteriores no cambian."
+        ).assertExists()
+    }
+
+    @Test
+    fun fromAFinishedMonthItNamesThatMonthAndSaysNothingElseChanges() {
+        show(editing.copy(targetMonth = october.minusMonths(1), historical = true))
+
+        rule.onNodeWithTag(EDITOR_SCOPE_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText(
+            "Cambias solo el límite de Septiembre 2026. " +
+                "Los demás meses y el límite habitual no cambian."
+        ).assertExists()
+    }
+
+    @Test
+    fun whenOnlyPartWasSavedItSaysWhichPartAndThatTheRestWasNot() {
+        show(
+            editing.copy(
+                changed = true,
+                saveError = SaveError.NotSaved,
+                savedParts = listOf(EditPart.Name, EditPart.Icon)
+            )
+        )
+
+        rule.onNodeWithTag(EDITOR_SAVED_PARTS_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Se guardó: nombre, ícono. Lo demás no se guardó; inténtalo de nuevo.")
+            .assertExists()
+        rule.onNodeWithText("No se pudo guardar. No se creó la categoría; inténtalo de nuevo.")
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun aRefusedChangeWithNothingSavedSaysTheCategoryWasLeftAsItWas() {
+        show(editing.copy(changed = true, saveError = SaveError.NotSaved))
+
+        rule.onNodeWithText(
+            "No se pudo guardar. La categoría quedó como estaba; inténtalo de nuevo."
+        )
+            .performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun aConflictOffersToReloadOrToKeepWhatWasTypedAndNothingElse() {
+        show(editing.copy(name = "Cafetería", changed = true, saveError = SaveError.Conflict))
+
+        rule.onNodeWithText("Esta categoría cambió mientras la editabas.")
+            .performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(EDITOR_CONFLICT_RELOAD_TAG).performScrollTo().performClick()
+        rule.onNodeWithTag(EDITOR_CONFLICT_KEEP_TAG).performScrollTo().performClick()
+
+        assertEquals(
+            listOf(
+                CategoryEditorAction.ReloadDiscardingDraft,
+                CategoryEditorAction.ReloadKeepingDraft
+            ),
+            actions
+        )
+        rule.onNodeWithText("Volver a cargar").assertExists()
+        rule.onNodeWithText("Conservar mis cambios").assertExists()
+    }
+
+    @Test
+    fun aCategoryThatNoLongerExistsIsSaidAndNothingCanBeSent() {
+        show(editing.copy(saveError = SaveError.CategoryGone))
+
+        rule.onNodeWithText("Esta categoría ya no existe. No se cambió nada.")
+            .performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag(EDITOR_ARCHIVE_TAG).assertIsNotEnabled()
+    }
+
+    @Test
+    fun archivingIsOfferedInTheTopBarAndANewCategoryHasNoSuchAction() {
+        show(editing)
+
+        rule.onNodeWithTag(EDITOR_ARCHIVE_TAG).assertIsDisplayed().performClick()
+
+        rule.onNodeWithText("Archivar").assertExists()
+        assertEquals(listOf<CategoryEditorAction>(CategoryEditorAction.Archive), actions)
+    }
+
+    @Test
+    fun aNewCategoryHasNothingToArchive() {
+        show(ready)
+
+        rule.onNodeWithTag(EDITOR_ARCHIVE_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun beforeArchivingItSaysWhatStaysWhatStopsAndFromWhen() {
+        show(
+            editing.copy(
+                changed = true,
+                archiveQuestion = ArchiveQuestion(
+                    unarchive = false,
+                    expensesThisMonth = 13,
+                    currentMonth = october,
+                    resumesBudget = false,
+                    discardsChanges = true
+                )
+            )
+        )
+
+        rule.onNodeWithText("¿Archivar Café?").assertIsDisplayed()
+        rule.onNodeWithText(
+            "Deja de aceptar gastos nuevos. Octubre conserva su límite; desde noviembre " +
+                "queda sin presupuesto hasta que la desarchives. Sus 13 gastos de octubre y " +
+                "los de meses anteriores se conservan. Los cambios sin guardar se descartan."
+        ).assertIsDisplayed()
+        rule.onNodeWithText("Cancelar").performClick()
+        rule.onAllNodesWithText("Archivar").onLast().performClick()
+
+        assertEquals(
+            listOf(CategoryEditorAction.ArchiveDismissed, CategoryEditorAction.ArchiveConfirmed),
+            actions
+        )
+    }
+
+    @Test
+    fun whenTheExpensesCouldNotBeCountedNoNumberIsGiven() {
+        show(
+            editing.copy(
+                archiveQuestion = ArchiveQuestion(false, null, october, false, false)
+            )
+        )
+
+        rule.onNodeWithText(
+            "Deja de aceptar gastos nuevos. Octubre conserva su límite; desde noviembre " +
+                "queda sin presupuesto hasta que la desarchives. Sus gastos se conservan."
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun anArchivedCategorySaysSoHasNoLimitToChangeAndIsOfferedToUnarchive() {
+        show(editing.copy(name = "Mercado", archived = true, limitLocked = true, limitText = ""))
+
+        rule.onNodeWithTag(EDITOR_ARCHIVED_TAG).assertIsDisplayed()
+        rule.onNodeWithText("Desarchivar").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Límite en pesos").assertDoesNotExist()
+        rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).assertDoesNotExist()
+        rule.onNodeWithText(
+            "Está archivada: no tiene límite de aquí en adelante. Desarchívala para ponerle uno."
+        ).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun beforeUnarchivingItSaysWhetherTheBudgetComesBack() {
+        var question by mutableStateOf(ArchiveQuestion(true, 0, october, true, false))
+        rule.setContent {
+            SelloTheme(reducedMotion = true) {
+                CategoryEditorScreen(
+                    editing.copy(name = "Mercado", archived = true, archiveQuestion = question),
+                    { actions += it }
+                )
+            }
+        }
+
+        rule.onNodeWithText("¿Desarchivar Mercado?").assertIsDisplayed()
+        rule.onNodeWithText(
+            "Vuelve a aceptar gastos y recupera su último límite desde octubre. " +
+                "Los meses en que estuvo archivada siguen sin presupuesto."
+        ).assertIsDisplayed()
+        question = question.copy(resumesBudget = false)
+        rule.waitForIdle()
+        rule.onNodeWithText(
+            "Vuelve a aceptar gastos. Su límite de octubre sigue como estaba y nada más cambia."
+        ).assertIsDisplayed()
     }
 }

@@ -3,6 +3,7 @@ package com.software.sello.data.mapper
 import com.software.sello.data.local.entity.OperationReceiptEntity
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.ExpenseId
+import com.software.sello.domain.model.IncomeId
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.OperationKind
 import com.software.sello.domain.model.OperationReceipt
@@ -12,16 +13,34 @@ import java.time.Instant
 
 /**
  * A stored receipt, decoded. The subject is the record the operation changed: an
- * expense for [OperationKind.CreateExpense], a category for every other kind.
+ * expense for the four expense kinds, an income for the four income kinds, a category
+ * for every other kind. Exactly one of the three is present.
  */
 internal class StoredReceipt(
     val receipt: OperationReceipt,
     val inputDigest: String,
-    val expenseId: ExpenseId?,
-    val categoryId: CategoryId?
+    val expenseId: ExpenseId? = null,
+    val categoryId: CategoryId? = null,
+    val incomeId: IncomeId? = null
 )
 
 private val sha256Hex = Regex("[0-9a-f]{64}")
+
+/** The kinds whose subject is an expense. Every other kind is about a category. */
+private val ExpenseKinds = setOf(
+    OperationKind.CreateExpense,
+    OperationKind.EditExpense,
+    OperationKind.DeleteExpense,
+    OperationKind.RestoreExpense
+)
+
+/** The kinds whose subject is an income. */
+private val IncomeKinds = setOf(
+    OperationKind.CreateIncome,
+    OperationKind.EditIncome,
+    OperationKind.DeleteIncome,
+    OperationKind.RestoreIncome
+)
 
 internal fun OperationReceiptEntity.toStored(): Outcome<StoredReceipt, StorageFailure.Integrity> =
     decodeRow(OperationReceiptEntity.TABLE, operationId) {
@@ -38,9 +57,26 @@ internal fun OperationReceiptEntity.toStored(): Outcome<StoredReceipt, StorageFa
             committedAt = Instant.ofEpochMilli(committedAt)
         )
         val subject = subjectId.orEmpty()
-        if (kind == OperationKind.CreateExpense) {
-            StoredReceipt(receipt, inputDigest, valid("subject_id", ExpenseId.of(subject)), null)
-        } else {
-            StoredReceipt(receipt, inputDigest, null, valid("subject_id", CategoryId.of(subject)))
+        when (kind) {
+            in ExpenseKinds ->
+                StoredReceipt(
+                    receipt,
+                    inputDigest,
+                    expenseId = valid("subject_id", ExpenseId.of(subject))
+                )
+
+            in IncomeKinds ->
+                StoredReceipt(
+                    receipt,
+                    inputDigest,
+                    incomeId = valid("subject_id", IncomeId.of(subject))
+                )
+
+            else ->
+                StoredReceipt(
+                    receipt,
+                    inputDigest,
+                    categoryId = valid("subject_id", CategoryId.of(subject))
+                )
         }
     }

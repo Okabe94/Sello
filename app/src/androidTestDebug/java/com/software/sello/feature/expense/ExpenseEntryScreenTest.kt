@@ -272,4 +272,128 @@ class ExpenseEntryScreenTest {
         key("000").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsDisplayed().assertIsEnabled()
     }
+
+    // --- Correcting a recorded expense ---
+
+    /** A recorded expense of Monday 5 October, opened and not changed yet. */
+    private val correcting get() = complete.copy(
+        editing = true,
+        preview = null,
+        date = LocalDate.of(2026, 10, 5),
+        missing = Missing.Changes
+    )
+
+    @Test
+    fun aRecordedExpenseIsTitledAndWordedAsACorrectionWithNothingToSaveYet() {
+        show(correcting)
+
+        rule.onNodeWithText("Editar gasto").assertIsDisplayed()
+        rule.onNodeWithText("lun 5 oct, renglón anotado").assertIsDisplayed()
+        rule.onNodeWithText("Guardar cambios").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsNotEnabled()
+        rule.onNodeWithTag(ENTRY_MISSING_TAG).assertIsDisplayed()
+        rule.onNodeWithText("Aún no cambiaste nada.").assertExists()
+        rule.onNodeWithText("Anotar gasto").assertDoesNotExist()
+        rule.onNodeWithText("Anotar").assertDoesNotExist()
+        rule.onNodeWithTag(ENTRY_PREVIEW_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(ENTRY_PAST_MONTHS_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun onceSomethingChangedTheButtonSaysWhatWillBeSavedAndReportsIt() {
+        show(correcting.copy(missing = null))
+
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsEnabled()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.ContentDescription,
+                    listOf("Guardar cambios: gasto de 48.700 pesos en Alimentación")
+                )
+            )
+            .performClick()
+
+        assertEquals(listOf<ExpenseEntryAction>(ExpenseEntryAction.Submit), actions)
+    }
+
+    @Test
+    fun aRecordedExpenseCanBeDeletedFromTheTopBarAndANewOneCannot() {
+        show(correcting)
+
+        rule.onNodeWithTag(ENTRY_DELETE_TAG).assertIsDisplayed().assertIsEnabled()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.ContentDescription,
+                    listOf("Borrar este gasto")
+                )
+            )
+            .performClick()
+
+        assertEquals(listOf<ExpenseEntryAction>(ExpenseEntryAction.Delete), actions)
+    }
+
+    @Test
+    fun aNewExpenseHasNothingToDelete() {
+        show(complete)
+
+        rule.onNodeWithTag(ENTRY_DELETE_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun itSaysWhichOtherMonthsFiguresWouldChangeBeforeAnythingIsSaved() {
+        val september = java.time.YearMonth.of(2026, 9)
+        show(correcting.copy(pastMonths = listOf(september, september.minusMonths(1))))
+
+        rule.onNodeWithTag(ENTRY_PAST_MONTHS_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Corregir este gasto cambia las cifras de septiembre y de agosto.")
+            .assertExists()
+    }
+
+    @Test
+    fun withOneOtherMonthItNamesThatMonth() {
+        show(correcting.copy(pastMonths = listOf(java.time.YearMonth.of(2026, 9))))
+
+        rule.onNodeWithText("Corregir este gasto cambia las cifras de septiembre.")
+            .performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun anExpenseThatChangedUnderneathIsSaidAndNothingCanBeSentOrDeletedFromHere() {
+        show(correcting.copy(missing = null, error = EntryError.ExpenseChanged))
+
+        rule.onNodeWithText(
+            "Este gasto cambió mientras lo corregías. No se guardó nada; sal y vuelve a abrirlo."
+        ).assertIsDisplayed()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag(ENTRY_DELETE_TAG).assertIsNotEnabled()
+        key("7").performScrollTo().assertIsNotEnabled()
+    }
+
+    @Test
+    fun aRefusedCorrectionSaysTheExpenseWasLeftAsItWasNotThatNothingWasRecorded() {
+        show(correcting.copy(missing = null, error = EntryError.NotSaved))
+
+        rule.onNodeWithText("No se pudo guardar. El gasto quedó como estaba; inténtalo de nuevo.")
+            .assertIsDisplayed()
+        rule.onNodeWithText("No se pudo guardar. No se anotó el gasto; inténtalo de nuevo.")
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun leavingWithChangesAsksAboutTheChanges() {
+        show(correcting.copy(missing = null, confirmDiscard = true))
+
+        rule.onNodeWithText("¿Descartar los cambios?").assertIsDisplayed()
+        rule.onNodeWithText("El gasto queda como estaba.").assertIsDisplayed()
+        rule.onNodeWithText("Seguir editando").performClick()
+
+        assertEquals(listOf<ExpenseEntryAction>(ExpenseEntryAction.KeepEditing), actions)
+    }
+
+    @Test
+    fun anExpenseThatCouldNotBeReadSaysSoAndCanBeAskedForAgain() {
+        show(correcting.copy(loadFailed = true))
+
+        rule.onNodeWithText("No pudimos leer este gasto.").assertIsDisplayed()
+        rule.onNodeWithTag(ENTRY_DELETE_TAG).assertDoesNotExist()
+    }
 }

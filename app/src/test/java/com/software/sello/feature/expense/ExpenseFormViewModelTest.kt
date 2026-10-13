@@ -12,11 +12,14 @@ import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseRejection
 import com.software.sello.domain.port.SnapshotState
 import com.software.sello.navigation.HandFinancialClock
+import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import com.software.sello.presentation.money.MoneyLabels
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlin.time.Duration
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -70,8 +73,24 @@ class ExpenseFormViewModelTest {
 
     private fun shown(digits: String) = MoneyTextValue(MoneySign.None, "", digits, "$digits pesos")
 
-    private fun form(saved: SavedStateHandle = SavedStateHandle()) =
-        ExpenseEntryViewModel(saved, commands, reads, snapshots, clock, { uuid(nextId++) }, money)
+    private fun form(saved: SavedStateHandle = SavedStateHandle()) = ExpenseEntryViewModel(
+        saved,
+        commands,
+        reads,
+        snapshots,
+        clock,
+        { uuid(nextId++) },
+        money,
+        ExpenseCorrections(
+            commands,
+            HandIncomeCommands(),
+            {
+                Duration.ZERO
+            },
+            { uuid(nextId++) },
+            CoroutineScope(Dispatchers.Main)
+        )
+    )
 
     /** A form over a month with the given categories, already read. */
     private fun ready(

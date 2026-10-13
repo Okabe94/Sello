@@ -1,6 +1,6 @@
 # Sello — architectural guardrails
 
-**Status:** proposed implementation baseline · **Updated:** 2026-10-08
+**Status:** proposed implementation baseline · **Updated:** 2026-10-13
 
 **MUST** is mandatory; **SHOULD** is the default, with a documented reason to
 deviate; **COULD** is optional, justified by a shipped capability or measured need.
@@ -30,6 +30,10 @@ Sello is an offline-first, local-only Android financial app, Spanish first
 - **SHOULD** launch with two complete tabs, Recibo and Resumen; add Patrimonio when
   Metas ships, then its Inversiones switch when investments ship. This is an explicit
   MVP exception to the three-tab design, not a disabled-tab implementation.
+- **MUST**, for the owner-approved SELLO-021 entry-point exception, expose only
+  working income totals/history navigation in the initial Resumen tab, with shared
+  month and truthful loading/error states. Full Resumen remains SELLO-022; no dummy
+  sections or disabled controls. See [ADR 0010](docs/decisions/0010-income-resumen-entry.md).
 - **MUST** start with Anotar → persisted receipt → Recibo, including recovery,
   accessibility, and CI. Backup/restore/reset must be complete before MVP release.
 - **MUST** build the live-testing sandbox and component catalog alongside the

@@ -48,6 +48,10 @@ Use real schema/history from SELLO-011/020/021, portable preferences from SELLO-
 and approved D05/D08/D09. Read architecture §7, serialization/Room official sources
 and [contract checklist](../EXECUTION_GUIDE.md#contract-and-failure-checklist).
 
+From SELLO-019 and SELLO-021 (2026-10-12): `deleted_expense` and `deleted_income`
+hold what an undo would put back. They are not financial facts and must not be
+exported or imported.
+
 ### Implementation plan
 1. Document the v1 envelope/field schema in `docs/data/backup-format.md`, including
    stable keys, timestamps/zone/order, currency representation, exclusions and version policy.
@@ -269,6 +273,10 @@ Reset is deliberate data erasure; stale recovery or undo must not recreate old m
 Use SELLO-030 replacement/control patterns and actual workflows, but not the backup
 payload. Read [settings reset](../../../design/sello-spec.html#s-config), architecture
 §5 and approved D09's preference/zone/minimal-metadata policy.
+
+From SELLO-019 and SELLO-021 (2026-10-12): reset must also erase `deleted_expense`
+and `deleted_income`. Undo already refuses a kept copy from an earlier generation,
+but the amount and note in it are erased content and must not outlive the reset.
 
 ### Implementation plan
 1. Read actual affected counts at a generation/revision and show first ConfirmSlip;

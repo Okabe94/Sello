@@ -16,6 +16,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -37,7 +40,10 @@ import androidx.navigation.toRoute
 import com.software.sello.R
 import com.software.sello.designsystem.component.Blotter
 import com.software.sello.designsystem.component.MonthSwitcher
+import com.software.sello.designsystem.component.SelloDestination
 import com.software.sello.designsystem.component.SelloDock
+import com.software.sello.designsystem.component.SelloNavigation
+import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
@@ -45,7 +51,11 @@ import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.category.CategoryEditorRoot
+import com.software.sello.feature.category.CategoryManagementRoot
 import com.software.sello.feature.expense.ExpenseEntryRoot
+import com.software.sello.feature.income.IncomeFormRoot
+import com.software.sello.feature.income.IncomeHistoryScreen
+import com.software.sello.feature.income.IncomeHistoryViewModel
 import com.software.sello.feature.recibo.CategoryDetailAction
 import com.software.sello.feature.recibo.CategoryDetailScreen
 import com.software.sello.feature.recibo.CategoryDetailViewModel
@@ -53,6 +63,10 @@ import com.software.sello.feature.recibo.ReciboAction
 import com.software.sello.feature.recibo.ReciboScreen
 import com.software.sello.feature.recibo.ReciboState
 import com.software.sello.feature.recibo.ReciboViewModel
+import com.software.sello.feature.resumen.ResumenScreen
+import com.software.sello.feature.resumen.ResumenViewModel
+import com.software.sello.presentation.corrections.CorrectionNotice
+import com.software.sello.presentation.corrections.CorrectionsViewModel
 import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.month.MonthNames
 import com.software.sello.presentation.month.monthNames
@@ -67,19 +81,107 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
     val state by shell.state.collectAsStateWithLifecycle()
     // Stop and start, not pause and resume: a dialog over the app is not time away.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { shell.onAction(ShellAction.EnteredBackground) }
+    val corrections: CorrectionsViewModel = viewModel(factory = viewModels)
+    val notice by corrections.notice.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
         shell.onAction(ShellAction.ReturnedToForeground)
+        corrections.returned()
     }
 
     val navigation = rememberNavController()
     val entry by navigation.currentBackStackEntryAsState()
     val onDetail = entry != null && navigation.previousBackStackEntry != null
+    val selectedTab = if (entry?.destination?.hasRoute<ResumenRoute>() ==
+        true
+    ) {
+        ShellTab.Resumen
+    } else {
+        ShellTab.Recibo
+    }
+    val tabs = SelloNavigation(
+        listOf(
+            SelloDestination("recibo", stringResource(R.string.tab_recibo), SelloIcon.ReceiptLong),
+            SelloDestination("resumen", stringResource(R.string.tab_resumen), SelloIcon.Insights)
+        ),
+        selectedTab.id
+    ) { id ->
+        if (id != selectedTab.id) {
+            navigation.navigate(if (id == "resumen") ResumenRoute else ReciboRoute) {
+                popUpTo(navigation.graph.startDestinationId) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
 
     NavHost(navController = navigation, startDestination = ReciboRoute) {
         composable<ReciboRoute> {
-            ReciboDestination(state, viewModels, shell::onAction) {
-                navigation.navigate(CategoryEditorRoute())
+            ReciboDestination(
+                state = state,
+                viewModels = viewModels,
+                onShell = shell::onAction,
+                notice = notice,
+                onUndo = corrections::undo,
+                tabs = tabs,
+                onEditExpense = { id ->
+                    navigation.navigate(ExpenseEditRoute(id)) { launchSingleTop = true }
+                },
+                // Opened from the month on screen: that is the month whose limit it edits.
+                onEditCategory = { id ->
+                    navigation.navigate(CategoryEditRoute(id, state.selectedMonth.toString())) {
+                        launchSingleTop = true
+                    }
+                }
+            ) { navigation.navigate(CategoryEditorRoute()) }
+        }
+        composable<ResumenRoute> {
+            val model: ResumenViewModel = viewModel(factory = viewModels)
+            val summary by model.state.collectAsStateWithLifecycle()
+            ShellScreen(
+                state,
+                monthNames(),
+                shell::onAction,
+                navigation = tabs,
+                notice = notice?.let { { CorrectionNoticeBar(it, corrections::undo) } }
+            ) { padding ->
+                ResumenScreen(summary, model::onAction, {
+                    navigation.navigate(IncomeHistoryRoute)
+                }, padding)
             }
+            BackHandler(enabled = !state.monthPickerOpen) { tabs.onSelect("recibo") }
+        }
+        composable<IncomeHistoryRoute> {
+            val model: IncomeHistoryViewModel = viewModel(factory = viewModels)
+            val history by model.state.collectAsStateWithLifecycle()
+            val today by model.today.collectAsStateWithLifecycle()
+            ShellScreen(
+                state,
+                monthNames(),
+                shell::onAction,
+                navigation = null,
+                onBack = { navigation.popBackStack() },
+                screenTitle = stringResource(R.string.income_history_title),
+                notice = notice?.let { { CorrectionNoticeBar(it, corrections::undo) } }
+            ) { padding ->
+                IncomeHistoryScreen(
+                    history,
+                    today,
+                    model::onAction,
+                    { navigation.navigate(IncomeEntryRoute) },
+                    { navigation.navigate(IncomeEditRoute(it)) },
+                    padding
+                )
+            }
+        }
+        composable<IncomeEntryRoute> {
+            EntryDestination(
+                viewModels,
+                startsWithIncome = true,
+                onCreateCategory = { navigation.navigate(CategoryEditorRoute()) }
+            ) { navigation.popBackStack() }
+        }
+        composable<IncomeEditRoute> {
+            IncomeFormRoot(viewModels, onClosed = { navigation.popBackStack() })
         }
         composable<CategoryEditorRoute> { entry ->
             val forEntry = entry.toRoute<CategoryEditorRoute>().forEntry
@@ -103,11 +205,30 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 }
             }
         }
+        composable<CategoryEditRoute> {
+            CategoryManagementRoot(viewModels) {
+                val onEdit =
+                    navigation.currentBackStackEntry?.destination?.hasRoute<CategoryEditRoute>()
+                if (onEdit == true) navigation.popBackStack()
+            }
+        }
         composable<ExpenseEntryRoute> {
-            ExpenseEntryRoot(viewModels) {
+            EntryDestination(
+                viewModels,
+                startsWithIncome = false,
+                onCreateCategory = { navigation.navigate(CategoryEditorRoute()) }
+            ) {
                 val onEntry =
                     navigation.currentBackStackEntry?.destination?.hasRoute<ExpenseEntryRoute>()
                 if (onEntry == true) navigation.popBackStack()
+            }
+        }
+        // The same form: the route's identifier makes it correct that expense.
+        composable<ExpenseEditRoute> {
+            ExpenseEntryRoot(viewModels) {
+                val onEdit =
+                    navigation.currentBackStackEntry?.destination?.hasRoute<ExpenseEditRoute>()
+                if (onEdit == true) navigation.popBackStack()
             }
         }
     }
@@ -150,6 +271,11 @@ private fun ReciboDestination(
     state: ShellState,
     viewModels: ViewModelProvider.Factory,
     onShell: (ShellAction) -> Unit,
+    notice: CorrectionNotice?,
+    onUndo: () -> Unit,
+    tabs: SelloNavigation,
+    onEditExpense: (String) -> Unit,
+    onEditCategory: (String) -> Unit,
     onCreateCategory: () -> Unit
 ) {
     val recibo: ReciboViewModel = viewModel(factory = viewModels)
@@ -171,6 +297,8 @@ private fun ReciboDestination(
             state = state,
             names = names,
             onAction = onShell,
+            notice = notice?.let { { CorrectionNoticeBar(it, onUndo) } },
+            navigation = tabs,
             detail = shownId?.let { id ->
                 ShellDetail(title) { padding ->
                     CategoryDetailScreen(
@@ -180,7 +308,9 @@ private fun ReciboDestination(
                         showName = twoPane,
                         onAction = detail::onAction,
                         onRecordHere = { onShell(ShellAction.StartEntryIn(id)) },
-                        contentPadding = padding
+                        contentPadding = padding,
+                        onEditExpense = onEditExpense,
+                        onEditCategory = { onEditCategory(id) }
                     )
                 }
             }
@@ -191,6 +321,7 @@ private fun ReciboDestination(
                     when (action) {
                         ReciboAction.CreateCategory -> onCreateCategory()
                         is ReciboAction.OpenCategory -> onShell(ShellAction.OpenCategory(action.id))
+                        is ReciboAction.EditCategory -> onEditCategory(action.id)
                         ReciboAction.Retry -> Unit
                     }
                     recibo.onAction(action)
@@ -237,6 +368,10 @@ fun ShellScreen(
     onAction: (ShellAction) -> Unit,
     modifier: Modifier = Modifier,
     detail: ShellDetail? = null,
+    notice: (@Composable () -> Unit)? = null,
+    navigation: SelloNavigation? = null,
+    onBack: (() -> Unit)? = null,
+    screenTitle: String? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
@@ -276,14 +411,31 @@ fun ShellScreen(
                     actionLabel = stringResource(R.string.dock_entry_action),
                     onClick = { onAction(ShellAction.StartEntryIn(openedId)) }
                 ),
+                notice = notice,
                 content = detail.content
             )
         } else {
             SelloScaffold(
-                title = title,
+                title = screenTitle ?: title,
+                navigation = navigation,
+                navigationIcon = onBack?.let { back ->
+                    {
+                        IconButton(onClick = back) {
+                            Icon(
+                                SelloIcon.ArrowBack.painter(),
+                                stringResource(R.string.navigation_back)
+                            )
+                        }
+                    }
+                },
                 titleContent = {
+                    val label = if (screenTitle == null) {
+                        title
+                    } else {
+                        stringResource(R.string.screen_title_month, screenTitle, title)
+                    }
                     MonthSwitcher(
-                        label = title,
+                        label = label,
                         onClick = { onAction(ShellAction.OpenMonthPicker) },
                         modifier = Modifier
                             .testTag(MONTH_SWITCHER_TAG)
@@ -296,6 +448,7 @@ fun ShellScreen(
                     actionLabel = stringResource(R.string.dock_entry_action),
                     onClick = { onAction(ShellAction.StartEntry) }
                 ),
+                notice = notice,
                 secondaryPane = if (state.monthPickerOpen && sidePanel) {
                     { padding ->
                         Column(
@@ -329,5 +482,115 @@ fun ShellScreen(
     }
 }
 
+@Composable
+private fun EntryDestination(
+    viewModels: ViewModelProvider.Factory,
+    startsWithIncome: Boolean,
+    onCreateCategory: () -> Unit,
+    onClosed: () -> Unit
+) {
+    var income by rememberSaveable { mutableStateOf(startsWithIncome) }
+    if (income) {
+        IncomeFormRoot(viewModels, onClosed, onExpense = { income = false })
+    } else {
+        ExpenseEntryRoot(
+            viewModels,
+            onIncome = { income = true },
+            onCreateCategory = onCreateCategory,
+            onClosed = onClosed
+        )
+    }
+}
+
+/**
+ * What is said about the last correction. Only a deletion that can still be undone
+ * has something to press; everything else is a statement that goes away by itself.
+ */
+@Composable
+private fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
+    val tagged = Modifier.testTag(CORRECTION_NOTICE_TAG)
+    when (notice) {
+        is CorrectionNotice.Deleted -> SelloNotice(
+            message = stringResource(
+                if (notice.undoFailed) {
+                    R.string.correction_undo_failed
+                } else {
+                    R.string.correction_deleted
+                }
+            ),
+            modifier = tagged,
+            actionLabel = stringResource(R.string.correction_undo).takeIf { notice.canUndo },
+            onAction = onUndo.takeIf { notice.canUndo },
+            busy = notice.undoing,
+            spoken = stringResource(
+                when {
+                    notice.undoFailed -> R.string.correction_undo_failed
+                    notice.canUndo -> R.string.correction_deleted_spoken
+                    else -> R.string.correction_deleted
+                }
+            )
+        )
+
+        CorrectionNotice.Restored ->
+            SelloNotice(stringResource(R.string.correction_restored), tagged)
+
+        CorrectionNotice.UndoTooLate ->
+            SelloNotice(stringResource(R.string.correction_too_late), tagged)
+
+        CorrectionNotice.UndoBlocked ->
+            SelloNotice(stringResource(R.string.correction_blocked), tagged)
+
+        CorrectionNotice.Updated ->
+            SelloNotice(stringResource(R.string.correction_updated), tagged)
+
+        is CorrectionNotice.CategorySaved -> SelloNotice(
+            message = notice.limitOf?.let {
+                stringResource(R.string.category_saved_month, monthNames().inSentence(it))
+            } ?: stringResource(R.string.category_saved),
+            modifier = tagged
+        )
+
+        CorrectionNotice.CategoryArchived ->
+            SelloNotice(stringResource(R.string.category_archived_notice), tagged)
+
+        CorrectionNotice.CategoryUnarchived ->
+            SelloNotice(stringResource(R.string.category_unarchived_notice), tagged)
+
+        is CorrectionNotice.IncomeDeleted -> SelloNotice(
+            message = stringResource(
+                if (notice.undoFailed) {
+                    R.string.correction_undo_failed
+                } else {
+                    R.string.income_deleted
+                }
+            ),
+            modifier = tagged,
+            actionLabel = stringResource(R.string.correction_undo).takeIf { notice.canUndo },
+            onAction = onUndo.takeIf { notice.canUndo },
+            busy = notice.undoing,
+            spoken = stringResource(
+                when {
+                    notice.undoFailed -> R.string.correction_undo_failed
+                    notice.canUndo -> R.string.income_deleted_spoken
+                    else -> R.string.income_deleted
+                }
+            )
+        )
+
+        CorrectionNotice.IncomeRestored ->
+            SelloNotice(stringResource(R.string.income_restored), tagged)
+
+        CorrectionNotice.IncomeUndoTooLate ->
+            SelloNotice(stringResource(R.string.income_too_late), tagged)
+
+        CorrectionNotice.IncomeUndoBlocked ->
+            SelloNotice(stringResource(R.string.income_blocked), tagged)
+
+        CorrectionNotice.IncomeUpdated ->
+            SelloNotice(stringResource(R.string.income_updated), tagged)
+    }
+}
+
 const val MONTH_SWITCHER_TAG = "shell:month-switcher"
 const val DETAIL_BACK_TAG = "shell:detail-back"
+const val CORRECTION_NOTICE_TAG = "shell:correction-notice"

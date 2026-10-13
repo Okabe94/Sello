@@ -11,6 +11,18 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object ReciboRoute
 
+@Serializable
+data object ResumenRoute
+
+@Serializable
+data object IncomeHistoryRoute
+
+@Serializable
+data object IncomeEntryRoute
+
+@Serializable
+data class IncomeEditRoute(val incomeId: String)
+
 /**
  * The new-category form. [forEntry] says it was opened because recording an expense
  * needs a category first, so the form explains that.
@@ -26,6 +38,21 @@ data class CategoryEditorRoute(val forEntry: Boolean = false)
 @Serializable
 data class ExpenseEntryRoute(val categoryId: String? = null, val amount: String? = null)
 
+/**
+ * The same form, correcting the recorded expense with this identifier. The form reads
+ * the expense itself; if there is none with that identifier it says so.
+ */
+@Serializable
+data class ExpenseEditRoute(val expenseId: String)
+
+/**
+ * The same form on an existing category. [month] is the month it was opened from, as
+ * `yyyy-MM`: the month whose limit the form shows and changes. Without it, or with
+ * one that has not started, that is the current month.
+ */
+@Serializable
+data class CategoryEditRoute(val categoryId: String, val month: String? = null)
+
 /** Where the editor leaves the new category's identifier for the screen that opened it. */
 const val CREATED_CATEGORY_RESULT = "result.createdCategoryId"
 
@@ -34,5 +61,6 @@ const val CREATED_CATEGORY_RESULT = "result.createdCategoryId"
  * disabled or placeholder tab. With a single tab the tab bar is not shown.
  */
 enum class ShellTab(val id: String) {
-    Recibo("recibo")
+    Recibo("recibo"),
+    Resumen("resumen")
 }

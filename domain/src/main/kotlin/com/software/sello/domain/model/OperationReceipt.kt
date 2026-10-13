@@ -5,6 +5,13 @@ import java.time.Instant
 /** What an operation did. [key] is the stable stored spelling. */
 enum class OperationKind(val key: String) {
     CreateExpense("expense.create"),
+    EditExpense("expense.edit"),
+    DeleteExpense("expense.delete"),
+    RestoreExpense("expense.restore"),
+    CreateIncome("income.create"),
+    EditIncome("income.edit"),
+    DeleteIncome("income.delete"),
+    RestoreIncome("income.restore"),
     CreateCategory("category.create"),
     RenameCategory("category.rename"),
     ChangeCategoryIcon("category.change_icon"),

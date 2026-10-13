@@ -42,6 +42,37 @@ interface ExpenseDao {
     @Query("SELECT * FROM expense WHERE id = :id")
     suspend fun byId(id: String): ExpenseEntity?
 
+    /** How many expenses hold [sequence]: one or none. */
+    @Query("SELECT COUNT(*) FROM expense WHERE sequence = :sequence")
+    suspend fun countAtSequence(sequence: Long): Int
+
+    /**
+     * Changes the expense only while it is still at [expectedVersion]. Returns how many
+     * rows changed: one, or none when the expense is gone or was changed meanwhile.
+     * When it was first added and its sequence are not among what can change.
+     */
+    @Query(
+        "UPDATE expense SET category_id = :categoryId, effective_date = :effectiveDate, " +
+            "amount_minor = :amountMinor, currency = :currency, note = :note, " +
+            "version = :newVersion, updated_at = :updatedAt " +
+            "WHERE id = :id AND version = :expectedVersion"
+    )
+    suspend fun update(
+        id: String,
+        expectedVersion: Long,
+        categoryId: String,
+        effectiveDate: String,
+        amountMinor: Long,
+        currency: String,
+        note: String?,
+        newVersion: Long,
+        updatedAt: Long
+    ): Int
+
+    /** Removes the expense only while it is still at [expectedVersion]. Returns the rows removed. */
+    @Query("DELETE FROM expense WHERE id = :id AND version = :expectedVersion")
+    suspend fun delete(id: String, expectedVersion: Long): Int
+
     /**
      * Expenses dated from [from] up to but not including [until], in date then
      * sequence order, starting after the position ([afterDate], [afterSequence]) and

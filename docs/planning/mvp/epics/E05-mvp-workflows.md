@@ -1,6 +1,6 @@
 # SELLO-E05 — Complete everyday MVP workflows
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Goal:** Complete maintainable expense/income history and an honest monthly summary.
 - **Exit:** Edits/deletes/undo, category/budget management, income, basic Resumen and preferences all work after restart and preserve prior history.
 
@@ -8,7 +8,7 @@
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-012, SELLO-017, SELLO-018, SELLO-004
 - **Gate:** G2
 
@@ -77,11 +77,104 @@ Create/run `ExpenseEditDeleteContractTest`, `UndoCompensationContractTest` on re
 Room and `*ExpenseEditViewModelTest` on host; G2. Execute edit/stale/delete/undo/expiry/
 recreate device journeys with exact row/version/receipt/snapshot assertions.
 
+### Execution progress
+2026-10-12: started on branch `sello-019-expense-corrections`. Delivered in two pull
+requests, as agreed with the project owner; the ticket stays In Progress until the second.
+
+**Decisions taken with the project owner before any code**
+
+- A deleted expense is removed from `expense` and what it was is kept in a separate
+  table, not marked as deleted in place, so no read or total can count it by mistake.
+- The six seconds are counted on the monotonic clock and held in memory. A process
+  that ends takes the offer with it and startup removes the kept copy.
+- A second deletion makes the first one final: at most one deletion can be undone.
+- An edit is refused when the expense changed since it was read. An expense may be
+  edited while it stays in a category archived since, or be moved out of it, but
+  never moved into an archived category.
+- "Guardar cambios" is available only after a change.
+- Wording: "Editar gasto", "Guardar cambios", "Borrar", "Gasto borrado", "Deshacer",
+  "Gasto actualizado". The creation flow does not change.
+- The dismissible first-time announcement of historical correction is deferred to
+  SELLO-023, which owns remembered preferences; a note is on that ticket. This
+  ticket delivers the guidance shown in context every time.
+
+**First pull request: storage and commands, no screens**
+
+- Schema version 2 with a tested migration: `deleted_expense`.
+- `ExpenseCommands.edit`, `delete`, `restore` and `undoOffer`, with their receipts.
+- Real-database contract tests for U01 to U05, stale versions, replays, concurrent
+  commands, cancelled callers, rollback and the month's totals.
+- Nothing in the app calls the new commands yet, so every existing journey is as it was.
+- Verified with the ticket's G2 gate on an API 30 emulator, each time on the
+  uncommitted tree that became the commit: run 20261012T190048Z-4eafa3e0 passed
+  before the first commits, and run 20261012T200307Z-43c7e3f2 after the date rule
+  changed. Its report is not retained
+  here; the run that counts as Delivery evidence is the one made when the ticket
+  is proposed Done.
+
+**Choices made while implementing, for review**
+
+- An edit that changes nothing is refused by the command (`Unchanged`) and writes no
+  receipt, so the rule does not depend on the screen alone.
+- The date rule applies only when an edit changes the date (project owner,
+  2026-10-12, replacing my first choice of checking every edit). An expense already
+  dated after today, possible only if the financial day moved backwards, can have
+  its other fields corrected; it cannot be moved to another future date.
+- Undo puts the row back without interpreting it, exactly as deletion kept it.
+- A new expense's sequence follows the highest of the recorded and the kept one.
+  Once a deletion is final its sequence can be used again.
+
+**Second pull request: the screens**
+
+- The entry form corrects a recorded expense: "Editar gasto", "Guardar cambios" only
+  after a change, "Borrar" in the top bar, the months it touches named before saving.
+- A category's list: press to correct; long press, swipe and screen-reader actions to
+  delete; a line that always says how.
+- "Gasto borrado" with "Deshacer" over the bottom of Recibo and of a category's detail,
+  held by one object for the whole process.
+- Design system: `SelloNotice`, `ActionLine` and a notice slot in the scaffold, with
+  catalog examples `feedback.notice` and `paper.action-line`.
+
+**Choices made while implementing the screens, for review**
+
+- Deleting does not ask first, from the form or from a row: undo is the safeguard.
+- A correction has no receipt screen. The form closes and the list says "Gasto
+  actualizado".
+- The form shows no preview while correcting: the preview adds the draft to the month,
+  and a recorded expense is already counted in it.
+- Once the expense is known to have changed or gone underneath the form, nothing more
+  can be sent from it; the person leaves and opens it again.
+- Texts that were not agreed beforehand: "Gasto restaurado", "Ya no se puede deshacer.
+  El gasto quedó borrado.", "No se pudo deshacer. Inténtalo de nuevo.", "No se pudo
+  deshacer porque tus datos cambiaron. El gasto quedó borrado.", "Aún no cambiaste
+  nada.", "Corregir este gasto cambia las cifras de septiembre.", "Toca un gasto para
+  corregirlo. Para borrarlo, deslízalo o mantenlo presionado.", "Seguir editando", and
+  the reasons a correction or deletion was refused.
+- A notice that needs no answer stays four seconds.
+- The offer is shown on Recibo and a category's detail, not over the entry form.
+
+**Not delivered here, and where it goes**
+
+- Sandbox regression inputs: there is no sandbox until SELLO-024; a note is on that
+  ticket.
+- The dismissible first-time announcement: SELLO-023, as decided above.
+- Undo after recording a new expense, which the reference also shows: not part of this
+  ticket's acceptance.
+
+### Delivery evidence
+- **Revision:** branch `sello-019-expense-correction-screens`, cut from `main` at `bf9f57d`, which holds the first pull request (#39). Tested snapshot is commit `422cc50` with this ticket's progress notes and the note on SELLO-024 uncommitted on top of it, which the gate counted as inputs; only the status, this evidence text, the retained report and regenerated board views were added after the run, all of which the input fingerprint excludes by design. `main` had not moved when the pull request was opened.
+- **Requirement mapping:** Edit/delete proves the affected row and version and updates consistent snapshots → `ExpenseEditDeleteContractTest` (one record, version 1 to 2, one receipt; `theMonthsTotalFollowsAnEditADeletionAndAnUndoWithoutBeingToldTo`: 10.000, 12.000, 0, 12.000) and in the installed app `ExpenseCorrectionJourneyTest` (288.000 left after 10.000 becomes 12.000, 300.000 after deleting, 288.000 after undo, each compared with the stored row). Editing a deleted or stale record conflicts → `anEditorHoldingTheOldVersionCannotOverwriteTheNewerAmount`, `anExpenseThatDoesNotExistOrWasDeletedCannotBeEdited`, `ofSeveralEditsMadeAtOnceFromTheSameVersionExactlyOneIsSaved`; on screen `ExpenseEditViewModelTest.aRefusedEditKeepsWhatWasTypedAndSaysWhatHappened` and `onceItChangedOrIsGoneUnderneathNothingMoreCanBeSentFromThisForm`. Edit has no creation stamp → the stored `created_at` and sequence are asserted unchanged; a correction shows no receipt (`savingSendsOneEditOfTheVersionReadThenClosesAndSaysItWasUpdated`). Undo restores only the original eligible deletion and refuses conflicting edits, recreation and reset → `UndoCompensationContractTest` (identifier in use, sequence taken, generation replaced, a later deletion). Restart and recomposition cannot extend the offer → `afterTheProcessEndsThereIsNoOfferAndTheDeletionStands`, `theSameDeletionAgainAnswersWithTheOriginalAndNeverGivesMoreTime`, `ExpenseCorrectionsTest.theOfferIsThereJustBeforeSixSecondsAndGoneAtSixWithNothingAsked`, and the journey recreates the activity before pressing "Deshacer". D07/U01 to U05 → the cases named U01 to U05 in `UndoCompensationContractTest`; the device sleeping → `whenTheDeviceSleptPastTheTimeComingBackRemovesTheOffer`. Same operation replays safely; failure and cancellation keep a recoverable outcome → replay and cancelled-caller cases in both contract tests, `anEditWhoseOutcomeIsUnknownIsLookedUpAndNeverSentAgain`, `afterTheProcessWasKilledMidSaveTheOutcomeIsLookedUpNotSentAgain`, `anUndoThatFailedCanBeTriedAgainInTimeAsTheSameOperation`. Gesture and accessible menu paths → `CorrectionControlsTest` and `CategoryDetailScreenTest` (press, long press, swipe, named screen-reader actions). Deadlines and receipts explicit → the notice is read as "Gasto borrado. Puedes deshacerlo durante 6 segundos."; the journey asserts the receipt kinds in order. Historical correction discoverable, affected period explicit before saving, feedback after the committed receipt → the line in the list (`theListSaysHowAnExpenseIsCorrectedOrDeleted`), `anExpenseOfAnEarlierMonthSaysWhichMonthsWouldChange`, `itSaysWhichOtherMonthsFiguresWouldChangeBeforeAnythingIsSaved`, and "Gasto actualizado" only after `Committed`. Existing create journey still works → the 144 app device tests that existed before pass unchanged.
+- **Red / Green:** each group was written before its code and seen failing for the intended reason, then passing. First pull request: 36 real-database tests red against stubs that answered "conflict" and an empty migration ("Migration didn't properly handle: deleted_expense"). This one: `ExpenseCorrectionsTest` 13 of 15 red against a class that did nothing; `ExpenseEditViewModelTest` 17 of 18 red against the form without edit behaviour; 3 new `CategoryDetailViewModelTest` cases red; `CorrectionControlsTest` 11 of 11 red on the emulator against components that drew nothing; 18 screen and journey cases red before the screens were wired. Four of my own expectations were corrected on the way and none weakened a contract: a miscounted fixture, a notice test that compared the dock's padded edge, a swipe test that counted the ordinary press a drag across a button makes, and the swipe itself, first built on a Material component whose callback fired repeatedly and replaced by a plain drag. Written after their code and passing first time: seven real-database cases in the first pull request, three of them then checked by removing the guarded code.
+- **Gate results:** local `./scripts/verify-ticket SELLO-019 --gate G2 --retain` passed: 403 host tests (253 app, 101 domain, 37 design-system, 9 data, 3 catalog), 406 device tests on an API 30 emulator (163 app, 155 data, 78 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. An earlier run failed on ktlint alone, three lines one character too long, with every test passing; the run recorded below is the third to pass, repeated because the progress notes written after the second counted as changed inputs. Schema version 2 was added by the first pull request with its exported schema and migration tests; no dependency, lock file or permission changed.
+- **Quality run:** run 20261012T210243Z-26e28205; SELLO-019 G2 passed; HEAD 422cc50, inputs sha256 93a3988ffca7; report docs/planning/mvp/quality-reports/SELLO-019.json sha256 ddc322f9caa30c4c128b1955c529c81b0b1d3f2a677fa933eb9248a464afddaf
+- **Device / Artifact:** the debug app on an API 30 emulator (320×640 at density 1, the default of the image created for this session; Cobalto light, font scale 1.0), 2026-10-12, a build of the working tree before the commit, driven by a throwaway device test that was not committed, on synthetic data. [The list with its line of help](../../../testing/evidence/SELLO-019/01-list-with-hint.png), [the long-press menu](../../../testing/evidence/SELLO-019/02-long-press-menu.png), [the form opened on an expense](../../../testing/evidence/SELLO-019/03-edit-unchanged.png), [after a change](../../../testing/evidence/SELLO-019/04-edit-changed.png), [deleted, with the offer](../../../testing/evidence/SELLO-019/05-deleted-with-undo.png) and [restored](../../../testing/evidence/SELLO-019/06-restored.png). Not executed by hand or on a device: the process being killed with the form or an offer open (covered by saved-state and reopened-database tests, not by killing the installed app), TalkBack, a keyboard, twice the font size, a wide window with the notice, a phone-sized screen, and the device sleeping during the six seconds.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices and what is not delivered here; the pull request and its checks are that record. No independent technical review.
+
 ## SELLO-020 — Complete category management and month-specific budget editing
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-013, SELLO-018, SELLO-008, SELLO-004
 - **Gate:** G2
 
@@ -153,11 +246,71 @@ Create/run `*CategoryManagementViewModelTest` and real device CategoryManagement
 G2. Verify rename/month-specific limit/archive/stale draft/restart and retained source
 history. Archive-only MVP has no implemented or fake destructive aggregate delete.
 
+### Execution progress
+2026-10-12: started on branch `sello-020-category-management` after SELLO-019 merged.
+The storage commands for every change here already existed (SELLO-013); this ticket
+adds no command, schema, dependency or permission.
+
+**Decisions taken with the project owner before any code**
+
+- A name another category already has is announced while it is typed, in the new
+  category form as well, not as the error of a save. The button stays off until the
+  name changes.
+- Changing name, icon and limit together is three separate commands with an honest
+  partial result, not a new combined command.
+- In the current month the limit applies from this month onwards; there is no "only
+  this month" choice for the month in progress.
+- Archiving is an action in the form's top bar, with a confirmation; a long press on
+  a category in Recibo opens the form.
+- The dismissible first-time announcement that a previous month's limit can be
+  corrected is deferred to SELLO-023, which owns remembered preferences; a note is on
+  that ticket. This ticket ships the help that is always in view.
+
+**Delivered**
+
+- `CategoryManagementViewModel` and the edit mode of the category form: rename, icon,
+  the limit of the month it was opened from, conflict with reload or keep-draft,
+  archive and unarchive with a confirmation that states the consequences and counts.
+- Entry points: "Editar categoría" on a category's detail; a long press or a
+  screen-reader action on its cell in Recibo.
+- A line on a finished month's detail saying its limit can still be corrected.
+- Design system: `CategoryCell` takes actions, offered by long press and by name.
+
+**Choices made while implementing, for review**
+
+- A month that has a limit cannot be left without one from this form; there is no
+  command that removes a limit.
+- An archived category's limit cannot be changed from the current month on (the
+  command refuses it); a finished month's still can. Its name and icon stay editable.
+- "Conservar mis cambios" after a conflict reads the category again and keeps the
+  draft, so the next save is knowingly over the newer version.
+- Archiving from a form with unsaved changes discards them, and the confirmation says so.
+- The long press in Recibo offers "Editar categoría" only; archiving is inside the form.
+- One existing assertion changed on purpose: a form showing a taken name used to keep
+  its button on, and now keeps it off.
+- Texts that were not agreed beforehand are listed in the pull request.
+
+**Not delivered here, and where it goes**
+
+- Archive and unarchive across a month boundary in the installed app: that needs
+  simulated financial time (SELLO-024). The approved cases AR01 to AR06 are covered
+  against a real database by `MonthlyBudgetHistoryTest` since SELLO-013.
+- The dismissible announcement: SELLO-023.
+
+### Delivery evidence
+- **Revision:** branch `sello-020-category-management`, cut from `main` at `59021f6` after SELLO-019 merged. Tested snapshot is commit `2fec907`: the gate ran on the working tree that became that commit, with only this ticket's status and evidence text, the retained report and regenerated board views added afterwards, all of which the input fingerprint excludes by design. `main` had not moved when the pull request was opened.
+- **Requirement mapping:** Current-month changes never mutate prior limits; rename keeps identity; archived history stays readable → `CategoryManagementJourneyTest.renamingAndRaisingTheLimitKeepsTheSameCategoryItsExpensesAndLastMonthsFigures` (same identifier under the new name, both expenses still attached, last month still 100.000 less 20.000 = 80.000, the approved H01) and `nameIconAndLimitAreThreeChangesEachAgainstTheVersionTheOneBeforeLeft` (the current month sends `SetDefaultLimit`). Archive removes the category from new entries without cascading; no aggregate delete → `archivingTheOnlyCategoryKeepsItsHistoryAndSendsAnotarBackToCreatingOne` (row, limit and both expenses stored after archiving; Anotar opens the prerequisite form); no delete action exists. AR01 to AR06, consequences before confirmation, archived rows visible → the rules are `MonthlyBudgetHistoryTest` and `CategoryBudgetPolicyTest` since SELLO-013, unchanged; the confirmation is `beforeArchivingItSaysWhatStaysWhatStopsAndFromWhen`, `whenTheExpensesCouldNotBeCountedNoNumberIsGiven`, `beforeUnarchivingItSaysWhetherTheBudgetComesBack` and `anArchivedCategoryIsOfferedToUnarchiveAndToldWhetherItsBudgetComesBack`. Draft conflict with reload or retry; "Guardar cambios" needs a confirmed receipt → `aCategoryChangedMeanwhileStopsTheFormUntilThePersonChooses`, `keepingTheDraftReadsTheCategoryAgainAndSavesOverItsNewVersion`, `discardingTheDraftStartsAgainFromWhatTheCategoryIsNow`, `anUnknownOutcomeIsLookedUpAndNeverSentAgain`, `whenALaterChangeFailsItSaysWhatWasSavedAndTheNextAttemptSendsOnlyTheRest`. Removing the last active category returns Anotar to the prerequisite → the archive journey. Previous months' limits can be corrected, with retained help; the historical editor names the month and scope; a confirmed save explains the refreshed totals → `aFinishedMonthSaysItsLimitCanStillBeCorrected`, `fromAFinishedMonthItNamesThatMonthAndSaysNothingElseChanges`, `fromAFinishedMonthOnlyThatMonthsLimitIsChangedAndTheNoticeNamesIt`, and in the installed app `aFinishedMonthsLimitIsCorrectedWithoutTouchingThisMonth` (90.000 less 20.000 = 70.000 there, this month still 90.000 left). Long-press actions have accessible equivalents → `aCellOffersItsActionsByLongPressAndByNameAndPressingStillOnlyOpens`, `aLongPressOrAScreenReaderActionOnACategoryOffersToEditItAndPressingStillOpensIt`, and the header button. Owner's addition, a taken name said before saving → `aNameAnotherCategoryHasIsSaidWhileTypingBeforeAnythingIsSent`, `aNameThatIsAlreadyTakenIsSaidWhileTypingBeforeAnyAttemptToSave`, `aNameAnotherCategoryHasIsSaidOnTheFieldAndCannotBeSaved`. Process restoration → `afterTheProcessWasKilledMidSaveTheOutcomeIsLookedUpAndTheDraftIsKept`, `aDraftRestoredAfterTheProcessWasKilledIsNotReadOverAndKeepsTheVersionItRead`.
+- **Red / Green:** each group was written before its code and seen failing, then passing. `CategoryManagementViewModelTest` 30 of 30 red against a class that did nothing, 26 green on the first implementation and 30 after the test snapshot source learned to answer a single read. The new-category taken-name case red, then green. On the emulator, with only parameters and tags in place: the design-system cell case and 20 app screen and journey cases red (three journeys among them), all green after the screens were wired. One of those 20 was an existing assertion that a form showing a taken name keeps its button on; it was changed on purpose to off, by the owner's decision. Those last four were the archive cases: the fake snapshot source refused single reads, which the test set-up had not needed before.
+- **Gate results:** local `./scripts/verify-ticket SELLO-020 --gate G2 --retain` passed: 434 host tests (284 app, 101 domain, 37 design-system, 9 data, 3 catalog), 429 device tests on an API 30 emulator (185 app, 155 data, 79 design-system, 10 catalog), ktlint, architecture rules, lint with 0 errors and 29 warnings, the same number as before. The run before it failed on ktlint alone, three lines one character too long, with every test passing; I had started it without reading the style check's output. No command, schema, dependency, lock file or permission changed.
+- **Quality run:** run 20261012T223116Z-fcd49908; SELLO-020 G2 passed; HEAD 59021f6, inputs sha256 0a1152e58313; report docs/planning/mvp/quality-reports/SELLO-020.json sha256 dd8640cfe94bb8d80e9d14f49172277f77ebdf6370d7d0bd843116ae0c899223
+- **Device / Artifact:** the debug app on an API 30 emulator (320×640 at density 1; Cobalto light, font scale 1.0), 2026-10-12, a build of the working tree before the commit, driven by a throwaway device test that was not committed, on synthetic data. [The long-press menu in Recibo](../../../testing/evidence/SELLO-020/01-recibo-menu.png), [the detail with "Editar categoría"](../../../testing/evidence/SELLO-020/02-detail.png), [the form on a category](../../../testing/evidence/SELLO-020/03-edit.png), [a taken name said while typing](../../../testing/evidence/SELLO-020/04-name-taken.png), [which months the limit is for](../../../testing/evidence/SELLO-020/05-limit-scope.png), [the archive question](../../../testing/evidence/SELLO-020/06-archive-question.png) and [the detail after saving](../../../testing/evidence/SELLO-020/07-updated.png). Not executed by hand or on a device: TalkBack and twice the font size, which the ticket's tests name and which are covered only by semantics assertions and existing large-font tests of the same form; archive and unarchive across a month boundary in the installed app; the process being killed with the form open; a wide window; a phone-sized screen.
+- **Review:** executor self-review of the diff, captures, reports and logs. The merge of this ticket's pull request is the project owner's acceptance, including the listed choices and what is not delivered here; the pull request and its checks are that record. No independent technical review.
+
 ## SELLO-021 — Ship income recording, history and guarded correction workflows
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-012, SELLO-015, SELLO-008, SELLO-019, SELLO-004
 - **Gate:** G2
 
@@ -220,11 +373,77 @@ Create/run `IncomeCommandContractTest`, `*IncomeFormViewModelTest` and IncomeJou
 G2. Verify create/list/edit/stale-delete/undo/restart, cross-type isolation and exact
 source/date/receipt values through real Room, not a fake summary seed.
 
+### Execution progress
+2026-10-12: started on branch `sello-021-income` after SELLO-020 merged. Delivered in
+two pull requests, as agreed with the project owner; the ticket stays In Progress
+until the second.
+
+**Decisions taken with the project owner before any code**
+
+- Two pull requests: storage and commands first, then the screens.
+- Income is started from a "Gasto / Ingreso" choice at the top of the entry form, as
+  the design reference shows; the dock still opens an expense.
+- There is one offer to undo, shared by expenses and income: a new deletion of either
+  kind makes the previous one final.
+- The form's preview of the month's income is left out until Resumen exists (SELLO-022).
+- Approved by the project owner on 2026-10-13: follow the design's Resumen → Entró
+  entry point. The screens pull request adds a minimal working Resumen with shared
+  month selection, the real income total and navigation to income history. This is
+  an explicit exception to deferring the Resumen destination until SELLO-022;
+  no placeholder totals, charts or disabled controls ship. Full Resumen remains
+  SELLO-022, and Recibo stays independent of income.
+
+**First pull request: storage and commands, no screens**
+
+- Schema version 3 with a tested migration: `deleted_income`.
+- `IncomeCommands` (create, edit, delete, restore, `undoOffer`, `find`) with their
+  receipts, and `IncomeReads` (one income, a month's pages, a month's exact total).
+- The offer to undo moved out of the expense commands into one `UndoWindow` shared by
+  both workflows; the expense contract tests pass unchanged over it.
+- Nothing in the app calls the new commands yet, so every existing journey is as it was.
+- Verified with the ticket's G2 gate on an API 30 emulator, on the working tree that
+  became the commit: run 20261012T235803Z-66aab8c3 passed. Its report is not
+  retained; the run that counts as Delivery evidence is the one made when the ticket
+  is proposed Done.
+
+**Choices made while implementing, for review**
+
+- Income has its own ordering sequence, separate from the expenses'.
+- An edit that changes nothing is refused by the command, and the date is checked only
+  when an edit changes it, both as decided for expenses.
+- A month's income total is read in the storage adapter with the domain's exact sum;
+  no budget policy is involved.
+
+**Second pull request: complete income screens**
+
+- Income entry/receipt, bounded monthly history, guarded edit/delete and the shared
+  six-second undo offer now use the actual commands and read ports.
+- Gasto / Ingreso preserves each draft; the dock remains expense-first. The approved
+  minimal Resumen shows the selected month's real income total and opens history.
+- Restored drafts retain generation/version and operation IDs. Unknown outcomes are
+  recovered before leaving or sending another write; receipt reads cannot claim an
+  unreadable record is an empty success.
+- Added catalog income controls, debug-only adaptive/theme previews, screen/journey
+  tests and the isolated verification recipe in `docs/testing/SELLO-021-income.md`.
+- Full Resumen and the form's month preview remain SELLO-022. The future sandbox
+  session/script runner remains SELLO-024/025; its income scenario is documented,
+  not implemented as a competing engine. No further SELLO-021 PR is planned.
+
+### Delivery evidence
+- **Revision:** clean commit `f966253a01051b29ec1c0cb6e9ce58db107a1603` on `sello-021-income-screens`, stacked on the open storage/commands PR #42 (`sello-021-income`, `107ed1b`). Only proposed status, this progress/evidence, the retained report and generated board views are added after the run; these are excluded bookkeeping inputs, not untested code changes.
+- **Requirement mapping:** exact positive COP, original-input/source/date/note validation, duplicate submit and receipt feedback → `IncomeFormViewModelTest` and `IncomeFormScreenTest`; real-Room atomicity, versions, cancellation, cross-type isolation and bounded exact reads → `IncomeCommandContractTest`. Shared six-second real-time undo, expiry after process restart, durable compensation and newer-deletion replacement → its U01–U05 cases and `ExpenseCorrectionsTest`. Historical affected-month guidance and stale-generation/version fencing → `IncomeFormViewModelTest`. Paging, typed errors and exact total independent of the first page → `IncomeHistoryViewModelTest`; real create/edit/delete/undo/reopen and preserved kind-switch drafts → `IncomeJourneyTest`. Minimal Resumen/shared month/error semantics → `ResumenViewModelTest` and `ShellOnDeviceTest.resumenKeepsTheSharedMonthThroughRecreationAndBackReturnsToRecibo`.
+- **Red / Green:** the initial form/coordinator stub produced 18 intended failures in 39 selected tests; history produced two intended Loading-versus-Ready failures. Added regression tests failed for migration of a draft into a replacement generation, uncertain deletion reported incorrectly, a false receipt-details error for a note-less income, and discarding an unknown save's recovery ID; each passed after its cause was fixed. Focused green: `./gradlew :app:testDebugUnitTest --tests '*Income*ViewModelTest' --tests '*ResumenViewModelTest' --tests '*ExpenseCorrectionsTest' :catalog:testDebugUnitTest :app:ktlintCheck :catalog:ktlintCheck`; four income screen/journey device tests passed. Final navigation-focused host tests and nine shell/four paper device tests also passed.
+- **Device / Artifact:** isolated synthetic API-30 AVD `sello021_api30`, `emulator-5580`, dedicated adb server 5038; no personal phone was used. Actual Home → background process kill → Recents restored a 5,000 COP draft in a new PID (2479 ended, 4683 restored). Submission yielded one income row, one create receipt and zero expense rows, independently checked in SQLite; no false receipt-read error. Activity recreation and database reopen are separately covered by automated tests. Four-theme/wide previews are configured debug-only, not claimed as manually executed device coverage.
+- **Gate results:** `./scripts/verify-ticket SELLO-021 --retain` passed all six checks: board validation/tests, quality-runner tests, architecture, host and API-30 device gates. Host: 465 tests; device: 460 tests; zero failures/errors/skipped tests. Debug app/catalog and release app assembled; lint has zero errors and 29 warnings, reported without baselines or suppression. Kotlin/JDK Unsafe deprecation warnings occurred in focused compilation; no toolchain change was made.
+- **Quality run:** run 20261013T192812Z-6f9e0e6d; SELLO-021 G2 passed; HEAD f966253, inputs sha256 b86a620d6356; report docs/planning/mvp/quality-reports/SELLO-021.json sha256 d275d978cb5df90151c0e481c6fad4fcb66222724d7aa6291460f45e8175d987
+- **Earlier failures:** run `20261013T191959Z-04ceb838` was not retained: two obsolete single-tab assertions were updated for the approved working tabs; an unchanged design-system 48 dp assertion rounded to 47.999992 dp at custom 240 dpi. The final gate passed at standard 320 dpi, 640×1280 pixels, with no weakened design-system checks. One focused command incorrectly supplied cross-module class filters; corrected module-specific commands passed. No failed run is offered as completion evidence.
+- **Review:** self-review completed for module boundaries, exact inputs, generation/version guards, unknown-outcome IDs, shared undo, privacy and deferred scope. Done is proposed on this branch only. Storage PR #42 merged into `main` on 2026-10-13 as `8dd8e38`; screens PR #43 now targets `main`. The project owner's merge of #43 is independent acceptance. Updating the branch with `main` changed only this bookkeeping, not the tested inputs. No owner acceptance, merge or hosted CI pass for the screens PR is claimed here.
+
 ## SELLO-022 — Deliver basic Resumen with exact actuals and history charts
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-014, SELLO-018, SELLO-021, SELLO-009, SELLO-004
 - **Gate:** G2
 
@@ -296,6 +515,47 @@ Create/run `*ResumenSnapshotTest`, `*ResumenRenderModelTest` and ResumenJourneyT
 G2. Compare independently totaled Room rows with slips/chart/selected text, test
 tab/month restoration and read faults, and record every exposed link's real destination.
 
+### Execution progress
+2026-10-13: started from merged SELLO-021 on `main` at `71d1a32`, on branch
+`sello-022-resumen`. The owner approved two PRs: consistent data/calculations first,
+then screens/charts. SELLO-022 stays In Progress until the second is accepted.
+
+The first PR adds a consumer-shaped Resumen snapshot without changing Recibo's
+existing snapshot contract. Selected-month budgets, income, expenses and up to twelve
+months of spending history are read in one transaction, then calculated in domain.
+Current/future/past cutoffs, original category identities, exact daily/cumulative
+amounts and historical limits remain explicit. No schema or dependency change is
+planned. Snapshot observation cost will be measured before adding UI consumers;
+sharing observations is not assumed necessary and SELLO-055 is not silently folded in.
+
+Necessary read-boundary adjustment: the closed-database test exposed Room reporting
+the base Android `SQLException`, not only `SQLiteException`. The shared read helper
+will recognize that database exception as a typed unavailable read, while preserving
+cancellation and leaving command/unknown-write handling unchanged. Both Resumen and
+the existing income read port are covered by the regression test.
+
+Part 1 implementation now supplies exact income/net flow/allocation, actual budget
+verdict, daily/cumulative values and bounded monthly history with historical limits.
+The live UI is unchanged. Domain tests prove I01/G01/G02 and cutoff/overflow cases;
+real-Room tests cover concurrent commits, malformed rows, reopen, paging, cancellation
+and computation outside the transaction. Two active observers measured two initial
+calculations plus two after one commit; this is work-count evidence, not a latency
+benchmark. The screens PR will observe once for all its slips/charts and bind that
+observation to its lifecycle; no cross-port cache or SELLO-055 work is included.
+Actual Room closure cancels an observation's scope: that cancellation must propagate,
+while direct closed-storage read errors remain typed. The focused check distinguishes
+the two rather than treating cancellation as a successful zero or a retryable read.
+
+**First PR verification — partial ticket, not final acceptance**
+
+- Tested clean commit `857815780231b0ea7b68f9cc52a5c5f576b4f071`, based on merged `main` at `71d1a32`. Only this verification text, the retained report and regenerated board views follow the tested revision; no code changes follow it. SELLO-022 remains In Progress; all UI/accessible selection/navigation acceptance belongs to the second PR.
+- Meaningful red→green: `ResumenSnapshotTest` ran nine tests against the failing policy stub, with eight intended failures; all nine now pass. The nine initial real-Room contracts failed against the missing reader (including seven value/failure assertions; missing observation/computation work also timed out). After implementation, a real closed-storage `SQLException` still escaped; its regression passed after broadening the shared read helper's database-exception handling. Fourteen final Room contracts pass, including two-observer work counts, cancellation, first-read failures and 501 expenses plus 501 incomes beyond the storage page.
+- Focused green: `./gradlew :data:ktlintCheck :domain:ktlintCheck :domain:test :data:testDebugUnitTest :data:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.data.ResumenSnapshotContractTest`. The first style invocation raced formatting/check tasks, and a subsequent new long assertion was wrapped; no style rule was disabled. An experimental closed-observer assertion wrongly expected a retryable failure when Room had canceled its own scope; the final test requires propagated cancellation, preserving the architecture contract.
+- Integrated `./scripts/verify-ticket SELLO-022 --retain` passed all six checks: board validation/tests, quality-runner tests, architecture, host and API-30 device gates. Host: 474 tests; device: 474 tests; zero failures, errors or skipped tests. App debug/release and catalog debug assemble; lint has zero errors and 29 warnings. Focused compilation also reports Kotlin/JDK Unsafe deprecation warnings; no toolchain, schema, permissions or dependency changes were made.
+- Part 1 quality run: run `20261013T202758Z-8cf82d18`; SELLO-022 G2 passed; HEAD `8578157`; inputs sha256 `e809b7cceed3ca73a4e838da5d7d84c3f11dd5278628dbec42119ea0b5574858`; report `docs/planning/mvp/quality-reports/SELLO-022.json`, sha256 `e63f59353e7df2374f37fa1674b6749c93fe07a30d7067cc5c92e4352c6f4eed`. The final screens PR must replace this with a fresh run for its complete inputs before proposing Done.
+- Device: isolated synthetic API-30 AVD `sello021_api30`, serial `emulator-5580`, separate adb server 5038, 640×1280 pixels at standard 320 dpi. No personal phone/history was used. Executed tests prove database reopen and read/clock/dispatcher contracts; no new UI, manual process-death journey, TalkBack session or four-theme Resumen screen coverage is claimed here.
+- Self-review: reviewed exact sums/cutoffs, actual-versus-projected standing, signed allocation, historical budget identity, transaction/revision consistency, injected computation, cancellation, typed read failures, module boundaries and the unchanged existing UI. Independent review/hosted CI are not claimed; the owner reviews the first PR's foundation, and the second PR carries final ticket acceptance. The runbook is `docs/testing/SELLO-022-resumen.md`.
+
 ## SELLO-023 — Ship persisted appearance, ordering and essential settings
 
 - **Type:** Story
@@ -345,6 +605,16 @@ Preferences should not make settings a financial transaction coordinator. Use
 neutral contracts from SELLO-005, theme from SELLO-006, real categories and approved
 D06/D09. Read [settings](../../../design/sello-spec.html#s-config), architecture §§2/7
 and the guide's DataStore source. Rate/currency/notification settings are not MVP.
+
+Carried over from SELLO-019 (2026-10-12, project owner): the dismissible first-time
+announcement that a past expense can be corrected (D04/H06) needs a remembered
+"seen" preference, so it is delivered here. SELLO-019 ships the guidance that is
+shown in context every time.
+
+Carried over from SELLO-020 (2026-10-12, project owner) for the same reason: the
+dismissible announcement that a previous month's limit can be corrected. SELLO-020
+ships the help that stays in view; this ticket adds the announcement and remembers
+that it was dismissed, for both.
 
 ### Implementation plan
 1. Define typed theme/ink/order/direction preferences and stable codecs in data;

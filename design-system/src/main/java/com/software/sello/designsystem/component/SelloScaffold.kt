@@ -49,6 +49,7 @@ enum class Blotter(val height: Dp) { None(0.dp), Short(100.dp), Tall(132.dp) }
  * never over it. In a short or expanded window a rail at the leading edge carries the
  * [navigation] and the dock's "+", and [secondaryPane], if given, sits beside [content];
  * each pane scrolls on its own. Both bottom controls step aside for the system keyboard.
+ * A [notice] is drawn over the bottom of the content, above the dock, and moves nothing.
  * The scaffold holds no state: selection, the month and what a pane shows are the app's.
  *
  * @param blotterScroll how far, in pixels, the content has scrolled. The band shrinks
@@ -69,6 +70,7 @@ fun SelloScaffold(
     navigation: SelloNavigation? = null,
     dock: SelloDock? = null,
     windowInsets: WindowInsets = WindowInsets.safeDrawing,
+    notice: (@Composable () -> Unit)? = null,
     secondaryPane: (@Composable (PaddingValues) -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
@@ -165,6 +167,19 @@ fun SelloScaffold(
                                 .testTag(SCAFFOLD_PRIMARY_TAG)
                         ) { content(padding) }
                     }
+                    if (notice != null) {
+                        // Over the content, so what it says never moves what is under it.
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(
+                                    start = ContentMargin,
+                                    end = ContentMargin,
+                                    bottom = NoticeGap + bottomInset
+                                )
+                                .testTag(SCAFFOLD_NOTICE_TAG)
+                        ) { notice() }
+                    }
                 }
                 if (showDock) {
                     EntryDock(
@@ -235,9 +250,11 @@ private fun TopBar(
 
 private val TopBarHeight = 50.dp
 private val ContentMargin = 12.dp
+private val NoticeGap = 8.dp
 
 const val SCAFFOLD_RAIL_TAG = "sello:scaffold:rail"
 const val SCAFFOLD_BAR_TAG = "sello:scaffold:bar"
 const val SCAFFOLD_DOCK_TAG = "sello:scaffold:dock"
+const val SCAFFOLD_NOTICE_TAG = "sello:scaffold:notice"
 const val SCAFFOLD_PRIMARY_TAG = "sello:scaffold:primary"
 const val SCAFFOLD_SECONDARY_TAG = "sello:scaffold:secondary"

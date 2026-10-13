@@ -2,6 +2,7 @@ package com.software.sello.catalog
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import com.software.sello.catalog.components.ActionLineExample
 import com.software.sello.catalog.components.AmountKeypadExample
 import com.software.sello.catalog.components.ButtonExample
 import com.software.sello.catalog.components.CategoryCellExample
@@ -17,12 +18,14 @@ import com.software.sello.catalog.components.ExpenseEntryExample
 import com.software.sello.catalog.components.FieldPillExample
 import com.software.sello.catalog.components.FormFieldExample
 import com.software.sello.catalog.components.IconChoiceExample
+import com.software.sello.catalog.components.IncomeEntryExample
 import com.software.sello.catalog.components.KeyValueExample
 import com.software.sello.catalog.components.LeaderLineExample
 import com.software.sello.catalog.components.LineChartExample
 import com.software.sello.catalog.components.MoneyTextExample
 import com.software.sello.catalog.components.MonthSwitcherExample
 import com.software.sello.catalog.components.NavigationBarExample
+import com.software.sello.catalog.components.NoticeExample
 import com.software.sello.catalog.components.ScaffoldExample
 import com.software.sello.catalog.components.SlipExample
 import com.software.sello.catalog.components.SlipSkeletonExample
@@ -110,6 +113,11 @@ val catalogExamples: List<CatalogExample> = listOf(
         R.string.catalog_example_leader_line
     ) { LeaderLineExample() },
     CatalogExample(
+        "paper.action-line",
+        CatalogGroup.Paper,
+        R.string.catalog_example_action_line
+    ) { ActionLineExample() },
+    CatalogExample(
         "paper.total-line",
         CatalogGroup.Paper,
         R.string.catalog_example_total_line
@@ -185,6 +193,11 @@ val catalogExamples: List<CatalogExample> = listOf(
         R.string.catalog_example_expense_entry
     ) { ExpenseEntryExample() },
     CatalogExample(
+        "inputs.income-entry",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_income_entry
+    ) { IncomeEntryExample() },
+    CatalogExample(
         "navigation.scaffold",
         CatalogGroup.Navigation,
         R.string.catalog_example_scaffold,
@@ -230,6 +243,11 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Feedback,
         R.string.catalog_example_error_slip
     ) { ErrorSlipExample() },
+    CatalogExample(
+        "feedback.notice",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_notice
+    ) { NoticeExample() },
     CatalogExample(
         "feedback.slip-skeleton",
         CatalogGroup.Feedback,

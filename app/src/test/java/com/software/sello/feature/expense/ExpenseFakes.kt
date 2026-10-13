@@ -7,6 +7,9 @@ import com.software.sello.domain.model.CategoryName
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.IconKey
+import com.software.sello.domain.model.Income
+import com.software.sello.domain.model.IncomeId
+import com.software.sello.domain.model.IncomeSource
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.MonthlySnapshot
 import com.software.sello.domain.model.Note
@@ -21,15 +24,32 @@ import com.software.sello.domain.policy.CategoryInMonth
 import com.software.sello.domain.policy.MonthBudgetState
 import com.software.sello.domain.policy.MonthlyBudgetPolicy
 import com.software.sello.domain.port.CommittedExpense
+import com.software.sello.domain.port.CommittedIncome
 import com.software.sello.domain.port.CreateExpense
+import com.software.sello.domain.port.CreateIncome
+import com.software.sello.domain.port.DeleteExpense
+import com.software.sello.domain.port.DeleteIncome
+import com.software.sello.domain.port.EditExpense
+import com.software.sello.domain.port.EditIncome
 import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseCursor
 import com.software.sello.domain.port.ExpensePage
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialDay
+import com.software.sello.domain.port.IncomeCommandOutcome
+import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.IncomeCursor
+import com.software.sello.domain.port.IncomeMonth
+import com.software.sello.domain.port.IncomeMonthState
+import com.software.sello.domain.port.IncomePage
+import com.software.sello.domain.port.IncomeReads
+import com.software.sello.domain.port.IncomeUndoOffer
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.RestoreExpense
+import com.software.sello.domain.port.RestoreIncome
 import com.software.sello.domain.port.SnapshotState
+import com.software.sello.domain.port.UndoOffer
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
@@ -113,30 +133,62 @@ class HandSnapshots : MonthlySnapshots {
         of(snapshot.month).value = SnapshotState.Ready(snapshot)
     }
 
+    /** One read: the month as it was last published, or a failure when it never was. */
     override suspend fun read(month: YearMonth): Outcome<MonthlySnapshot, SnapshotFailure> =
-        error("the form observes; it does not read once")
+        when (val state = of(month).value) {
+            is SnapshotState.Ready -> Outcome.Success(state.snapshot)
+            else -> Outcome.Failure(SnapshotFailure.Storage(StorageFailure.Unavailable("unread")))
+        }
 
     override fun observe(month: YearMonth): Flow<SnapshotState> =
         of(month).onStart { observed += month }
 }
 
-/** Commands a test scripts: what `create` and `find` answer, and what they were sent. */
+/**
+ * Commands a test scripts: what each one answers, and what it was sent. Unless told
+ * otherwise every command commits.
+ */
 class HandExpenseCommands : ExpenseCommands {
     val created = mutableListOf<CreateExpense>()
+    val edited = mutableListOf<EditExpense>()
+    val deleted = mutableListOf<DeleteExpense>()
+    val restored = mutableListOf<RestoreExpense>()
     val looked = mutableListOf<OperationId>()
     var answer: (CreateExpense) -> ExpenseCommandOutcome =
         { ExpenseCommandOutcome.Committed(committed(it.operationId), replayed = false) }
+    var editAnswer: (EditExpense) -> ExpenseCommandOutcome = {
+        ExpenseCommandOutcome.Committed(
+            committed(it.operationId, it.expenseId, OperationKind.EditExpense),
+            replayed = false
+        )
+    }
+    var deleteAnswer: (DeleteExpense) -> ExpenseCommandOutcome = {
+        ExpenseCommandOutcome.Committed(
+            committed(it.operationId, it.expenseId, OperationKind.DeleteExpense),
+            replayed = false
+        )
+    }
+    var restoreAnswer: (RestoreExpense) -> ExpenseCommandOutcome = {
+        ExpenseCommandOutcome.Committed(
+            committed(it.operationId, expenseId(900), OperationKind.RestoreExpense),
+            replayed = false
+        )
+    }
     var found: (
         OperationId
     ) -> Outcome<CommittedExpense?, StorageFailure> = { Outcome.Success(null) }
 
-    /** When set, `create` waits here: the save is in flight. */
+    /** What [undoOffer] answers: the adapter's own knowledge of the deletion on offer. */
+    var offer: () -> UndoOffer? = { null }
+
+    /** When set, every command waits here: the save is in flight. */
     var hold: CompletableDeferred<Unit>? = null
 
-    fun committed(operation: OperationId, expense: Int = 900) = CommittedExpense(
-        OperationReceipt(operation, OperationKind.CreateExpense, 1, 1, Instant.EPOCH),
-        expenseId(expense)
-    )
+    fun committed(operation: OperationId, expense: Int = 900) =
+        committed(operation, expenseId(expense), OperationKind.CreateExpense)
+
+    fun committed(operation: OperationId, expense: ExpenseId, kind: OperationKind) =
+        CommittedExpense(OperationReceipt(operation, kind, 1, 1, Instant.EPOCH), expense)
 
     override suspend fun create(command: CreateExpense): ExpenseCommandOutcome {
         created += command
@@ -150,6 +202,26 @@ class HandExpenseCommands : ExpenseCommands {
         looked += operationId
         return found(operationId)
     }
+
+    override suspend fun edit(command: EditExpense): ExpenseCommandOutcome {
+        edited += command
+        hold?.await()
+        return editAnswer(command)
+    }
+
+    override suspend fun delete(command: DeleteExpense): ExpenseCommandOutcome {
+        deleted += command
+        hold?.await()
+        return deleteAnswer(command)
+    }
+
+    override suspend fun restore(command: RestoreExpense): ExpenseCommandOutcome {
+        restored += command
+        hold?.await()
+        return restoreAnswer(command)
+    }
+
+    override fun undoOffer(): UndoOffer? = offer()
 }
 
 /** What "storage" holds, set by the test. */
@@ -195,4 +267,138 @@ class HandExpenseReads : ExpenseReads {
             ?.let { ExpenseCursor(it.date, it.sequence) }
         return Outcome.Success(ExpensePage(page, next))
     }
+}
+
+fun incomeId(number: Int) = (IncomeId.of(uuid(number)) as Outcome.Success).value
+
+fun storedIncome(
+    number: Int,
+    date: String,
+    amount: Long,
+    source: IncomeSource = IncomeSource.Salary,
+    note: String? = null
+) = Income(
+    incomeId(number),
+    LocalDate.parse(date),
+    number.toLong(),
+    pesos(amount),
+    source,
+    (Note.of(note) as Outcome.Success).value,
+    version = 1,
+    createdAt = Instant.EPOCH,
+    updatedAt = Instant.EPOCH
+)
+
+/** Income commands a test scripts. Unless told otherwise every command commits. */
+class HandIncomeCommands : IncomeCommands {
+    val created = mutableListOf<CreateIncome>()
+    val edited = mutableListOf<EditIncome>()
+    val deleted = mutableListOf<DeleteIncome>()
+    val restored = mutableListOf<RestoreIncome>()
+    val looked = mutableListOf<OperationId>()
+    var createAnswer: (CreateIncome) -> IncomeCommandOutcome =
+        { IncomeCommandOutcome.Committed(committed(it.operationId, incomeId(900)), false) }
+    var editAnswer: (EditIncome) -> IncomeCommandOutcome =
+        { IncomeCommandOutcome.Committed(committed(it.operationId, it.incomeId), false) }
+    var deleteAnswer: (DeleteIncome) -> IncomeCommandOutcome =
+        { IncomeCommandOutcome.Committed(committed(it.operationId, it.incomeId), false) }
+    var restoreAnswer: (RestoreIncome) -> IncomeCommandOutcome =
+        { IncomeCommandOutcome.Committed(committed(it.operationId, incomeId(900)), false) }
+    var found: (
+        OperationId
+    ) -> Outcome<CommittedIncome?, StorageFailure> = { Outcome.Success(null) }
+    var offer: () -> IncomeUndoOffer? = { null }
+    var hold: CompletableDeferred<Unit>? = null
+
+    fun committed(operation: OperationId, income: IncomeId = incomeId(900)) = CommittedIncome(
+        OperationReceipt(operation, OperationKind.CreateIncome, 1, 1, Instant.EPOCH),
+        income
+    )
+
+    override suspend fun create(command: CreateIncome): IncomeCommandOutcome {
+        created += command
+        hold?.await()
+        return createAnswer(command)
+    }
+
+    override suspend fun edit(command: EditIncome): IncomeCommandOutcome {
+        edited += command
+        hold?.await()
+        return editAnswer(command)
+    }
+
+    override suspend fun delete(command: DeleteIncome): IncomeCommandOutcome {
+        deleted += command
+        hold?.await()
+        return deleteAnswer(command)
+    }
+
+    override suspend fun restore(command: RestoreIncome): IncomeCommandOutcome {
+        restored += command
+        hold?.await()
+        return restoreAnswer(command)
+    }
+
+    override fun undoOffer(): IncomeUndoOffer? = offer()
+
+    override suspend fun find(operationId: OperationId): Outcome<CommittedIncome?, StorageFailure> {
+        looked += operationId
+        return found(operationId)
+    }
+}
+
+/** What "storage" holds of income, set by the test. A month's total is published by hand. */
+class HandIncomeReads : IncomeReads {
+    val stored = mutableMapOf<IncomeId, Income>()
+    var failure: StorageFailure? = null
+    val pages = mutableListOf<Pair<IncomeCursor?, Int>>()
+    val observed = mutableListOf<YearMonth>()
+    private val months = mutableMapOf<YearMonth, MutableStateFlow<IncomeMonthState>>()
+
+    fun of(month: YearMonth) = months.getOrPut(month) { MutableStateFlow(IncomeMonthState.Loading) }
+
+    /** Publishes [month] as storage would after a change: the exact total of what is stored. */
+    fun publish(month: YearMonth, generation: Long = 1, revision: Long = 1) {
+        val incomes = stored.values.filter { YearMonth.from(it.date) == month }
+        of(month).value = IncomeMonthState.Ready(
+            IncomeMonth(
+                month,
+                generation,
+                revision,
+                Money.cop(incomes.sumOf { it.amount.money.minorUnits }),
+                incomes.size
+            )
+        )
+    }
+
+    override suspend fun byId(id: IncomeId): Outcome<Income?, StorageFailure> =
+        failure?.let { Outcome.Failure(it) } ?: Outcome.Success(stored[id])
+
+    override suspend fun inMonth(
+        month: YearMonth,
+        after: IncomeCursor?,
+        limit: Int
+    ): Outcome<IncomePage, StorageFailure> {
+        pages += after to limit
+        failure?.let { return Outcome.Failure(it) }
+        val newestFirst = stored.values.filter { YearMonth.from(it.date) == month }
+            .sortedWith(compareByDescending<Income> { it.date }.thenByDescending { it.sequence })
+            .filter {
+                after == null || it.date < after.date ||
+                    (it.date == after.date && it.sequence < after.sequence)
+            }
+        val page = newestFirst.take(limit)
+        val next = page.lastOrNull()?.takeIf { newestFirst.size > limit }
+            ?.let { IncomeCursor(it.date, it.sequence) }
+        return Outcome.Success(IncomePage(page, next))
+    }
+
+    override suspend fun month(month: YearMonth): Outcome<IncomeMonth, StorageFailure> =
+        when (val state = of(month).value) {
+            is IncomeMonthState.Ready -> Outcome.Success(state.month)
+            else -> Outcome.Failure(StorageFailure.Unavailable("unread"))
+        }
+
+    override fun observeMonth(month: YearMonth): Flow<IncomeMonthState> =
+        of(month).onStart { observed += month }
 }

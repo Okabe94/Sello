@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.Expense
+import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.MonthlySnapshot
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.port.ExpenseCursor
@@ -12,6 +13,8 @@ import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.SnapshotState
 import com.software.sello.navigation.MonthSession
+import com.software.sello.presentation.corrections.DeleteResult
+import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import java.time.YearMonth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,6 +28,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * One category in the selected month. Its figures come from the same shared snapshot
@@ -42,7 +46,8 @@ class CategoryDetailViewModel(
     session: MonthSession,
     private val snapshots: MonthlySnapshots,
     private val expenses: ExpenseReads,
-    private val money: MoneyFormatter
+    private val money: MoneyFormatter,
+    private val corrections: ExpenseCorrections
 ) : ViewModel() {
     private val render = ReciboRenderModel(money)
     private val category = MutableStateFlow<String?>(null)
@@ -62,6 +67,17 @@ class CategoryDetailViewModel(
 
     private var kept: Kept? = null
 
+    /**
+     * The version of each listed expense and the history they were listed from: what a
+     * deletion asked for from a row is checked against, so a row that is out of date
+     * is refused, not deleted as something it no longer is.
+     */
+    private class Listed(val generation: Long, val versions: Map<String, Long>)
+
+    private var listed = Listed(0, emptyMap())
+    private val deleting = mutableSetOf<String>()
+    private val deleteProblem = MutableStateFlow<DeleteProblem?>(null)
+
     val state: StateFlow<CategoryDetailState> =
         combine(session.selectedMonth, category, attempt) { month, id, _ -> Shown(month, id) }
             .flatMapLatest { shown ->
@@ -72,6 +88,15 @@ class CategoryDetailViewModel(
                     shown.categoryId == null -> flowOf(CategoryDetailState.Closed)
                     id == null -> flowOf(CategoryDetailState.Gone)
                     else -> snapshots.observe(shown.month).flatMapLatest { detail(it, shown, id) }
+                }
+            }
+            .combine(deleteProblem) { state, problem ->
+                if (state is CategoryDetailState.Ready) {
+                    state.copy(
+                        deleteProblem = problem
+                    )
+                } else {
+                    state
                 }
             }
             .stateIn(
@@ -96,6 +121,34 @@ class CategoryDetailViewModel(
                 if (list is ExpenseListState.Rows && list.more && idle) {
                     pagesWanted.update { it + 1 }
                 }
+            }
+
+            is CategoryDetailAction.Delete -> delete(action.expenseId)
+        }
+    }
+
+    private fun delete(expenseId: String) {
+        val from = listed
+        val version = from.versions[expenseId] ?: return
+        val id = (ExpenseId.of(expenseId) as? Outcome.Success)?.value ?: return
+        if (!deleting.add(expenseId)) return
+        deleteProblem.value = null
+        viewModelScope.launch {
+            try {
+                deleteProblem.value = when (corrections.delete(id, version, from.generation)) {
+                    // The row leaves with the next read of the month, like any change.
+                    DeleteResult.Deleted -> null
+
+                    DeleteResult.Gone -> DeleteProblem.Gone
+
+                    DeleteResult.Changed -> DeleteProblem.Changed
+
+                    DeleteResult.DataChanged -> DeleteProblem.DataChanged
+
+                    DeleteResult.Failed -> DeleteProblem.Failed
+                }
+            } finally {
+                deleting -= expenseId
             }
         }
     }
@@ -147,6 +200,7 @@ class CategoryDetailViewModel(
      */
     private fun list(id: CategoryId, snapshot: MonthlySnapshot): Flow<ExpenseListState> = flow {
         val rows = ArrayList<ExpenseRow>()
+        val versions = HashMap<String, Long>()
         var pages = 0
         var next: ExpenseCursor? = null
         pagesWanted.collect { wanted ->
@@ -166,6 +220,8 @@ class CategoryDetailViewModel(
                     return@collect
                 }
                 rows += read.expenses.map { row(it, snapshot) }
+                versions += read.expenses.associate { it.id.value to it.version }
+                listed = Listed(snapshot.generation, versions.toMap())
                 next = read.next
                 pages += step
                 emit(

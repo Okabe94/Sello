@@ -4418,7 +4418,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-014, SELLO-018, SELLO-021, SELLO-009, SELLO-004
 - **Gate:** G2
 
@@ -4490,6 +4490,47 @@ Create/run `*ResumenSnapshotTest`, `*ResumenRenderModelTest` and ResumenJourneyT
 G2. Compare independently totaled Room rows with slips/chart/selected text, test
 tab/month restoration and read faults, and record every exposed link's real destination.
 
+### Execution progress
+2026-10-13: started from merged SELLO-021 on `main` at `71d1a32`, on branch
+`sello-022-resumen`. The owner approved two PRs: consistent data/calculations first,
+then screens/charts. SELLO-022 stays In Progress until the second is accepted.
+
+The first PR adds a consumer-shaped Resumen snapshot without changing Recibo's
+existing snapshot contract. Selected-month budgets, income, expenses and up to twelve
+months of spending history are read in one transaction, then calculated in domain.
+Current/future/past cutoffs, original category identities, exact daily/cumulative
+amounts and historical limits remain explicit. No schema or dependency change is
+planned. Snapshot observation cost will be measured before adding UI consumers;
+sharing observations is not assumed necessary and SELLO-055 is not silently folded in.
+
+Necessary read-boundary adjustment: the closed-database test exposed Room reporting
+the base Android `SQLException`, not only `SQLiteException`. The shared read helper
+will recognize that database exception as a typed unavailable read, while preserving
+cancellation and leaving command/unknown-write handling unchanged. Both Resumen and
+the existing income read port are covered by the regression test.
+
+Part 1 implementation now supplies exact income/net flow/allocation, actual budget
+verdict, daily/cumulative values and bounded monthly history with historical limits.
+The live UI is unchanged. Domain tests prove I01/G01/G02 and cutoff/overflow cases;
+real-Room tests cover concurrent commits, malformed rows, reopen, paging, cancellation
+and computation outside the transaction. Two active observers measured two initial
+calculations plus two after one commit; this is work-count evidence, not a latency
+benchmark. The screens PR will observe once for all its slips/charts and bind that
+observation to its lifecycle; no cross-port cache or SELLO-055 work is included.
+Actual Room closure cancels an observation's scope: that cancellation must propagate,
+while direct closed-storage read errors remain typed. The focused check distinguishes
+the two rather than treating cancellation as a successful zero or a retryable read.
+
+**First PR verification — partial ticket, not final acceptance**
+
+- Tested clean commit `857815780231b0ea7b68f9cc52a5c5f576b4f071`, based on merged `main` at `71d1a32`. Only this verification text, the retained report and regenerated board views follow the tested revision; no code changes follow it. SELLO-022 remains In Progress; all UI/accessible selection/navigation acceptance belongs to the second PR.
+- Meaningful red→green: `ResumenSnapshotTest` ran nine tests against the failing policy stub, with eight intended failures; all nine now pass. The nine initial real-Room contracts failed against the missing reader (including seven value/failure assertions; missing observation/computation work also timed out). After implementation, a real closed-storage `SQLException` still escaped; its regression passed after broadening the shared read helper's database-exception handling. Fourteen final Room contracts pass, including two-observer work counts, cancellation, first-read failures and 501 expenses plus 501 incomes beyond the storage page.
+- Focused green: `./gradlew :data:ktlintCheck :domain:ktlintCheck :domain:test :data:testDebugUnitTest :data:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.software.sello.data.ResumenSnapshotContractTest`. The first style invocation raced formatting/check tasks, and a subsequent new long assertion was wrapped; no style rule was disabled. An experimental closed-observer assertion wrongly expected a retryable failure when Room had canceled its own scope; the final test requires propagated cancellation, preserving the architecture contract.
+- Integrated `./scripts/verify-ticket SELLO-022 --retain` passed all six checks: board validation/tests, quality-runner tests, architecture, host and API-30 device gates. Host: 474 tests; device: 474 tests; zero failures, errors or skipped tests. App debug/release and catalog debug assemble; lint has zero errors and 29 warnings. Focused compilation also reports Kotlin/JDK Unsafe deprecation warnings; no toolchain, schema, permissions or dependency changes were made.
+- Part 1 quality run: run `20261013T202758Z-8cf82d18`; SELLO-022 G2 passed; HEAD `8578157`; inputs sha256 `e809b7cceed3ca73a4e838da5d7d84c3f11dd5278628dbec42119ea0b5574858`; report `docs/planning/mvp/quality-reports/SELLO-022.json`, sha256 `e63f59353e7df2374f37fa1674b6749c93fe07a30d7067cc5c92e4352c6f4eed`. The final screens PR must replace this with a fresh run for its complete inputs before proposing Done.
+- Device: isolated synthetic API-30 AVD `sello021_api30`, serial `emulator-5580`, separate adb server 5038, 640×1280 pixels at standard 320 dpi. No personal phone/history was used. Executed tests prove database reopen and read/clock/dispatcher contracts; no new UI, manual process-death journey, TalkBack session or four-theme Resumen screen coverage is claimed here.
+- Self-review: reviewed exact sums/cutoffs, actual-versus-projected standing, signed allocation, historical budget identity, transaction/revision consistency, injected computation, cancellation, typed read failures, module boundaries and the unchanged existing UI. Independent review/hosted CI are not claimed; the owner reviews the first PR's foundation, and the second PR carries final ticket acceptance. The runbook is `docs/testing/SELLO-022-resumen.md`.
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes
@@ -4557,7 +4598,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1005,Highest,Backlog,sello-022
+",1005,Highest,In Progress,sello-022
 23,Story,"SELLO-023 — Ship persisted appearance, ordering and essential settings","Local ID: SELLO-023
 Epic: SELLO-E05
 Increment: MVP

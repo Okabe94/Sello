@@ -1,0 +1,22 @@
+package com.software.sello.domain.port
+
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.ResumenSnapshot
+import com.software.sello.domain.model.SnapshotFailure
+import java.time.YearMonth
+import kotlinx.coroutines.flow.Flow
+
+sealed interface ResumenSnapshotState {
+    data object Loading : ResumenSnapshotState
+
+    data class Ready(val snapshot: ResumenSnapshot) : ResumenSnapshotState
+
+    data class Failed(val failure: SnapshotFailure, val lastGood: ResumenSnapshot?) :
+        ResumenSnapshotState
+}
+
+interface ResumenSnapshots {
+    suspend fun read(month: YearMonth): Outcome<ResumenSnapshot, SnapshotFailure>
+
+    fun observe(month: YearMonth): Flow<ResumenSnapshotState>
+}

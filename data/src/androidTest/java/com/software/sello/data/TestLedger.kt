@@ -9,6 +9,7 @@ import com.software.sello.data.repository.RoomFinancialProfileStore
 import com.software.sello.data.repository.RoomIncomeCommands
 import com.software.sello.data.repository.RoomIncomeReads
 import com.software.sello.data.repository.RoomMonthlySnapshots
+import com.software.sello.data.repository.RoomResumenSnapshots
 import com.software.sello.data.repository.UndoWindow
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
@@ -34,6 +35,7 @@ import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
+import com.software.sello.domain.port.ResumenSnapshots
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -87,6 +89,7 @@ class TestLedger(
     lateinit var expenses: ExpenseCommands
     lateinit var reads: CategoryReads
     lateinit var snapshots: MonthlySnapshots
+    lateinit var resumen: ResumenSnapshots
     lateinit var expenseReads: ExpenseReads
     lateinit var incomes: IncomeCommands
     lateinit var incomeReads: IncomeReads
@@ -102,6 +105,7 @@ class TestLedger(
         incomeReads = RoomIncomeReads(database)
         reads = RoomCategoryReads(database)
         snapshots = RoomMonthlySnapshots(database, clock, computation)
+        resumen = RoomResumenSnapshots(database, clock, computation)
         expenseReads = RoomExpenseReads(database)
     }
 

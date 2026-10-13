@@ -443,7 +443,7 @@ until the second.
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-014, SELLO-018, SELLO-021, SELLO-009, SELLO-004
 - **Gate:** G2
 
@@ -514,6 +514,37 @@ scope/examples I01/G01, and architecture §4. Detailed comparisons/records/expor
 Create/run `*ResumenSnapshotTest`, `*ResumenRenderModelTest` and ResumenJourneyTest;
 G2. Compare independently totaled Room rows with slips/chart/selected text, test
 tab/month restoration and read faults, and record every exposed link's real destination.
+
+### Execution progress
+2026-10-13: started from merged SELLO-021 on `main` at `71d1a32`, on branch
+`sello-022-resumen`. The owner approved two PRs: consistent data/calculations first,
+then screens/charts. SELLO-022 stays In Progress until the second is accepted.
+
+The first PR adds a consumer-shaped Resumen snapshot without changing Recibo's
+existing snapshot contract. Selected-month budgets, income, expenses and up to twelve
+months of spending history are read in one transaction, then calculated in domain.
+Current/future/past cutoffs, original category identities, exact daily/cumulative
+amounts and historical limits remain explicit. No schema or dependency change is
+planned. Snapshot observation cost will be measured before adding UI consumers;
+sharing observations is not assumed necessary and SELLO-055 is not silently folded in.
+
+Necessary read-boundary adjustment: the closed-database test exposed Room reporting
+the base Android `SQLException`, not only `SQLiteException`. The shared read helper
+will recognize that database exception as a typed unavailable read, while preserving
+cancellation and leaving command/unknown-write handling unchanged. Both Resumen and
+the existing income read port are covered by the regression test.
+
+Part 1 implementation now supplies exact income/net flow/allocation, actual budget
+verdict, daily/cumulative values and bounded monthly history with historical limits.
+The live UI is unchanged. Domain tests prove I01/G01/G02 and cutoff/overflow cases;
+real-Room tests cover concurrent commits, malformed rows, reopen, paging, cancellation
+and computation outside the transaction. Two active observers measured two initial
+calculations plus two after one commit; this is work-count evidence, not a latency
+benchmark. The screens PR will observe once for all its slips/charts and bind that
+observation to its lifecycle; no cross-port cache or SELLO-055 work is included.
+Actual Room closure cancels an observation's scope: that cancellation must propagate,
+while direct closed-storage read errors remain typed. The focused check distinguishes
+the two rather than treating cancellation as a successful zero or a retryable read.
 
 ## SELLO-023 — Ship persisted appearance, ordering and essential settings
 

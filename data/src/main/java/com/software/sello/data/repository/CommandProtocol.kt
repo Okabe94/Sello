@@ -1,5 +1,6 @@
 package com.software.sello.data.repository
 
+import android.database.SQLException
 import android.database.sqlite.SQLiteException
 import androidx.room.withTransaction
 import com.software.sello.data.local.SelloDatabase
@@ -95,7 +96,7 @@ internal suspend fun <T> reading(
     read()
 } catch (cancelled: CancellationException) {
     throw cancelled
-} catch (failure: SQLiteException) {
+} catch (failure: SQLException) {
     Outcome.Failure(StorageFailure.Unavailable(failure.javaClass.simpleName))
 } catch (failure: IllegalStateException) {
     Outcome.Failure(StorageFailure.Unavailable(failure.javaClass.simpleName))

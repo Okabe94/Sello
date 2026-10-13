@@ -319,3 +319,52 @@ fun ExpenseEntryExample() {
 }
 
 private const val ENTRY_BUSY_MILLIS = 1_200L
+
+@Composable
+fun IncomeEntryExample() {
+    var draft by remember { mutableStateOf(DraftFixture()) }
+    var source by rememberSaveable { mutableIntStateOf(0) }
+    var other by rememberSaveable { mutableStateOf("") }
+    var busy by rememberSaveable { mutableStateOf(false) }
+    Stack {
+        Caption("Estado visual sintético: el catálogo no guarda ingresos.")
+        SegmentedSwitch(listOf("Listo", "Ocupado"), if (busy) 1 else 0, { busy = it == 1 })
+        AmountEntry(draft, { draft = it }, enabled = !busy)
+        ChipFlow {
+            listOf(
+                "Salario",
+                "Freelance",
+                "Ingresos pasivos",
+                "Transferencia",
+                "Otro"
+            ).forEachIndexed {
+                    index,
+                    label
+                ->
+                SelloChip(label, source == index, { source = index }, enabled = !busy)
+            }
+        }
+        if (source == 4) {
+            FormField(
+                "¿De dónde vino?",
+                other,
+                { other = it },
+                enabled = !busy,
+                counter = "${count(other)}/24",
+                message = if (count(other) !in
+                    1..24
+                ) {
+                    FieldMessage("Escribe de 1 a 24 caracteres")
+                } else {
+                    null
+                }
+            )
+        }
+        SelloButton(
+            "Anotar ingreso",
+            {},
+            enabled = draft.amount != null && (source != 4 || count(other) in 1..24),
+            loading = busy
+        )
+    }
+}

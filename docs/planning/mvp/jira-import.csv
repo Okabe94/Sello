@@ -4288,9 +4288,12 @@ until the second.
 - There is one offer to undo, shared by expenses and income: a new deletion of either
   kind makes the previous one final.
 - The form's preview of the month's income is left out until Resumen exists (SELLO-022).
-- Still open, for the second pull request: how the list of income is reached. The
-  design reference reaches it from Resumen, which does not exist yet, and says Recibo
-  never depends on income.
+- Approved by the project owner on 2026-10-13: follow the design's Resumen → Entró
+  entry point. The screens pull request adds a minimal working Resumen with shared
+  month selection, the real income total and navigation to income history. This is
+  an explicit exception to deferring the Resumen destination until SELLO-022;
+  no placeholder totals, charts or disabled controls ship. Full Resumen remains
+  SELLO-022, and Recibo stays independent of income.
 
 **First pull request: storage and commands, no screens**
 

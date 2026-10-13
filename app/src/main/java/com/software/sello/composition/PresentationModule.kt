@@ -9,8 +9,11 @@ import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.feature.category.CategoryEditorViewModel
 import com.software.sello.feature.category.CategoryManagementViewModel
 import com.software.sello.feature.expense.ExpenseEntryViewModel
+import com.software.sello.feature.income.IncomeFormViewModel
+import com.software.sello.feature.income.IncomeHistoryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
 import com.software.sello.feature.recibo.ReciboViewModel
+import com.software.sello.feature.resumen.ResumenViewModel
 import com.software.sello.feature.startup.StartupFailureViewModel
 import com.software.sello.feature.startup.StartupRecovery
 import com.software.sello.navigation.MonthSession
@@ -33,7 +36,7 @@ fun presentationModule(): Module = module {
         val scope = CoroutineScope(
             get<CoroutineScope>().coroutineContext + get<DispatcherProvider>().main
         )
-        ExpenseCorrections(get(), get(), get(), scope)
+        ExpenseCorrections(get(), get(), get(), get(), scope)
     }
 }
 
@@ -43,6 +46,19 @@ fun presentationModule(): Module = module {
  * when the screen opens instead of silently defaulting.
  */
 fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
+    initializer { ResumenViewModel(koin.get(), koin.get(), koin.get()) }
+    initializer { IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
+    initializer {
+        IncomeFormViewModel(
+            createSavedStateHandle(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get()
+        )
+    }
     initializer { ShellViewModel(createSavedStateHandle(), koin.get(), koin.get()) }
     initializer { CorrectionsViewModel(koin.get()) }
     initializer {

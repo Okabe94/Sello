@@ -58,6 +58,7 @@
     <string name="catalog_example_switch">Switches</string>
     <string name="catalog_example_icon_choice">Elegir ícono</string>
     <string name="catalog_example_expense_entry">Entry controls together</string>
+    <string name="catalog_example_income_entry">Income controls together</string>
     <string name="catalog_example_category_circle">CategoryCircle</string>
     <string name="catalog_example_category_cell">CategoryCell</string>
     <string name="catalog_example_scaffold">SelloScaffold</string>

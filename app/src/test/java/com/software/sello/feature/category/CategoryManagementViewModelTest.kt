@@ -28,6 +28,7 @@ import com.software.sello.domain.port.SetDefaultLimit
 import com.software.sello.domain.port.SetMonthLimit
 import com.software.sello.domain.port.UnarchiveCategory
 import com.software.sello.feature.expense.HandExpenseCommands
+import com.software.sello.feature.expense.HandIncomeCommands
 import com.software.sello.feature.expense.HandSnapshots
 import com.software.sello.feature.expense.categoryIn
 import com.software.sello.feature.expense.monthOf
@@ -157,6 +158,7 @@ class CategoryManagementViewModelTest {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         notices = ExpenseCorrections(
             HandExpenseCommands(),
+            HandIncomeCommands(),
             { Duration.ZERO },
             { uuid(nextId++) },
             CoroutineScope(Dispatchers.Main)

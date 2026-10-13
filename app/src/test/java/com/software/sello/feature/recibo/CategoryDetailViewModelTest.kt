@@ -12,6 +12,7 @@ import com.software.sello.domain.port.ExpenseRejection
 import com.software.sello.domain.port.SnapshotState
 import com.software.sello.feature.expense.HandExpenseCommands
 import com.software.sello.feature.expense.HandExpenseReads
+import com.software.sello.feature.expense.HandIncomeCommands
 import com.software.sello.feature.expense.HandSnapshots
 import com.software.sello.feature.expense.categoryIn
 import com.software.sello.feature.expense.monthOf
@@ -71,6 +72,7 @@ class CategoryDetailViewModelTest {
     private fun TestScope.started(): CategoryDetailViewModel {
         val corrections = ExpenseCorrections(
             commands,
+            HandIncomeCommands(),
             // The clock moves with the test's own time, so a notice shown ends when it should.
             { testScheduler.currentTime.milliseconds },
             { uuid(nextOperation++) },

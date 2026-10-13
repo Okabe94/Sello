@@ -62,6 +62,7 @@ import com.software.sello.designsystem.component.FormField
 import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.SegmentedSwitch
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
 import com.software.sello.designsystem.component.SelloScaffold
@@ -87,7 +88,12 @@ import java.time.ZoneOffset
 
 /** Owns the view model, Back, and the one-time feedback when a receipt appears. */
 @Composable
-fun ExpenseEntryRoot(viewModels: ViewModelProvider.Factory, onClosed: () -> Unit) {
+fun ExpenseEntryRoot(
+    viewModels: ViewModelProvider.Factory,
+    onIncome: (() -> Unit)? = null,
+    onCreateCategory: (() -> Unit)? = null,
+    onClosed: () -> Unit
+) {
     val viewModel: ExpenseEntryViewModel = viewModel(factory = viewModels)
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.closed) { if (state.closed) onClosed() }
@@ -104,7 +110,13 @@ fun ExpenseEntryRoot(viewModels: ViewModelProvider.Factory, onClosed: () -> Unit
         }
     }
     BackHandler { viewModel.onAction(ExpenseEntryAction.Back) }
-    ExpenseEntryScreen(state, dateLabels(), viewModel::onAction)
+    ExpenseEntryScreen(
+        state,
+        dateLabels(),
+        viewModel::onAction,
+        onIncome = onIncome,
+        onCreateCategory = onCreateCategory
+    )
 }
 
 @Composable
@@ -112,7 +124,9 @@ fun ExpenseEntryScreen(
     state: ExpenseEntryState,
     dates: DateLabels,
     onAction: (ExpenseEntryAction) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onIncome: (() -> Unit)? = null,
+    onCreateCategory: (() -> Unit)? = null
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // Sideways or wide: the slip at the left, the keypad always in view at the right.
@@ -175,9 +189,17 @@ fun ExpenseEntryScreen(
                     )
                 }
 
-                split -> Pane(padding) { Draft(state, dates, onAction) }
+                split -> Pane(padding) { Draft(state, dates, onAction, onIncome, onCreateCategory) }
 
-                else -> Stacked(state, dates, onAction, padding, maxHeight * PINNED_SHARE)
+                else -> Stacked(
+                    state,
+                    dates,
+                    onAction,
+                    padding,
+                    maxHeight * PINNED_SHARE,
+                    onIncome,
+                    onCreateCategory
+                )
             }
         }
     }
@@ -239,14 +261,16 @@ private fun Stacked(
     dates: DateLabels,
     onAction: (ExpenseEntryAction) -> Unit,
     padding: PaddingValues,
-    pinnedMax: Dp
+    pinnedMax: Dp,
+    onIncome: (() -> Unit)?,
+    onCreateCategory: (() -> Unit)?
 ) {
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     Column(modifier = Modifier.fillMaxSize().padding(padding).imePadding()) {
         Column(
             verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
-        ) { Draft(state, dates, onAction) }
+        ) { Draft(state, dates, onAction, onIncome, onCreateCategory) }
         // Above the keys, never between them and the button: the keys are held from
         // the bottom, so what is said here comes and goes without moving one of them.
         Said(state)
@@ -290,8 +314,25 @@ private fun ControlsPane(
 private fun Draft(
     state: ExpenseEntryState,
     dates: DateLabels,
-    onAction: (ExpenseEntryAction) -> Unit
+    onAction: (ExpenseEntryAction) -> Unit,
+    onIncome: (() -> Unit)?,
+    onCreateCategory: (() -> Unit)?
 ) {
+    if (!state.editing && onIncome != null) {
+        SegmentedSwitch(
+            listOf(stringResource(R.string.entry_expense), stringResource(R.string.entry_income)),
+            0,
+            { if (it == 1 && state.editable) onIncome() },
+            Modifier.testTag("entry.kind")
+        )
+    }
+    if (!state.editing && state.categories.isEmpty() && onCreateCategory != null) {
+        SelloButton(
+            stringResource(R.string.recibo_create_categories),
+            onCreateCategory,
+            enabled = state.editable
+        )
+    }
     val day = dates.day(state.date, state.today)
     Slip(modifier = Modifier.fillMaxWidth().testTag(ENTRY_SLIP_TAG)) {
         Text(

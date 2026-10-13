@@ -81,9 +81,15 @@ class ExpenseFormViewModelTest {
         clock,
         { uuid(nextId++) },
         money,
-        ExpenseCorrections(commands, {
-            Duration.ZERO
-        }, { uuid(nextId++) }, CoroutineScope(Dispatchers.Main))
+        ExpenseCorrections(
+            commands,
+            HandIncomeCommands(),
+            {
+                Duration.ZERO
+            },
+            { uuid(nextId++) },
+            CoroutineScope(Dispatchers.Main)
+        )
     )
 
     /** A form over a month with the given categories, already read. */

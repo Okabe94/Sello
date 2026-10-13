@@ -67,6 +67,7 @@ class ExpenseEditViewModelTest {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         corrections = ExpenseCorrections(
             commands,
+            HandIncomeCommands(),
             { Duration.ZERO },
             { uuid(nextId++) },
             CoroutineScope(Dispatchers.Main)

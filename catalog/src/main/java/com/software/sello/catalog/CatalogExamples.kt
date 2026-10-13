@@ -18,6 +18,7 @@ import com.software.sello.catalog.components.ExpenseEntryExample
 import com.software.sello.catalog.components.FieldPillExample
 import com.software.sello.catalog.components.FormFieldExample
 import com.software.sello.catalog.components.IconChoiceExample
+import com.software.sello.catalog.components.IncomeEntryExample
 import com.software.sello.catalog.components.KeyValueExample
 import com.software.sello.catalog.components.LeaderLineExample
 import com.software.sello.catalog.components.LineChartExample
@@ -191,6 +192,11 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Inputs,
         R.string.catalog_example_expense_entry
     ) { ExpenseEntryExample() },
+    CatalogExample(
+        "inputs.income-entry",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_income_entry
+    ) { IncomeEntryExample() },
     CatalogExample(
         "navigation.scaffold",
         CatalogGroup.Navigation,

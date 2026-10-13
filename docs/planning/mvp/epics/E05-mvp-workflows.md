@@ -310,7 +310,7 @@ adds no command, schema, dependency or permission.
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-012, SELLO-015, SELLO-008, SELLO-019, SELLO-004
 - **Gate:** G2
 
@@ -413,6 +413,31 @@ until the second.
   when an edit changes it, both as decided for expenses.
 - A month's income total is read in the storage adapter with the domain's exact sum;
   no budget policy is involved.
+
+**Second pull request: complete income screens**
+
+- Income entry/receipt, bounded monthly history, guarded edit/delete and the shared
+  six-second undo offer now use the actual commands and read ports.
+- Gasto / Ingreso preserves each draft; the dock remains expense-first. The approved
+  minimal Resumen shows the selected month's real income total and opens history.
+- Restored drafts retain generation/version and operation IDs. Unknown outcomes are
+  recovered before leaving or sending another write; receipt reads cannot claim an
+  unreadable record is an empty success.
+- Added catalog income controls, debug-only adaptive/theme previews, screen/journey
+  tests and the isolated verification recipe in `docs/testing/SELLO-021-income.md`.
+- Full Resumen and the form's month preview remain SELLO-022. The future sandbox
+  session/script runner remains SELLO-024/025; its income scenario is documented,
+  not implemented as a competing engine. No further SELLO-021 PR is planned.
+
+### Delivery evidence
+- **Revision:** clean commit `f966253a01051b29ec1c0cb6e9ce58db107a1603` on `sello-021-income-screens`, stacked on the open storage/commands PR #42 (`sello-021-income`, `107ed1b`). Only proposed status, this progress/evidence, the retained report and generated board views are added after the run; these are excluded bookkeeping inputs, not untested code changes.
+- **Requirement mapping:** exact positive COP, original-input/source/date/note validation, duplicate submit and receipt feedback → `IncomeFormViewModelTest` and `IncomeFormScreenTest`; real-Room atomicity, versions, cancellation, cross-type isolation and bounded exact reads → `IncomeCommandContractTest`. Shared six-second real-time undo, expiry after process restart, durable compensation and newer-deletion replacement → its U01–U05 cases and `ExpenseCorrectionsTest`. Historical affected-month guidance and stale-generation/version fencing → `IncomeFormViewModelTest`. Paging, typed errors and exact total independent of the first page → `IncomeHistoryViewModelTest`; real create/edit/delete/undo/reopen and preserved kind-switch drafts → `IncomeJourneyTest`. Minimal Resumen/shared month/error semantics → `ResumenViewModelTest` and `ShellOnDeviceTest.resumenKeepsTheSharedMonthThroughRecreationAndBackReturnsToRecibo`.
+- **Red / Green:** the initial form/coordinator stub produced 18 intended failures in 39 selected tests; history produced two intended Loading-versus-Ready failures. Added regression tests failed for migration of a draft into a replacement generation, uncertain deletion reported incorrectly, a false receipt-details error for a note-less income, and discarding an unknown save's recovery ID; each passed after its cause was fixed. Focused green: `./gradlew :app:testDebugUnitTest --tests '*Income*ViewModelTest' --tests '*ResumenViewModelTest' --tests '*ExpenseCorrectionsTest' :catalog:testDebugUnitTest :app:ktlintCheck :catalog:ktlintCheck`; four income screen/journey device tests passed. Final navigation-focused host tests and nine shell/four paper device tests also passed.
+- **Device / Artifact:** isolated synthetic API-30 AVD `sello021_api30`, `emulator-5580`, dedicated adb server 5038; no personal phone was used. Actual Home → background process kill → Recents restored a 5,000 COP draft in a new PID (2479 ended, 4683 restored). Submission yielded one income row, one create receipt and zero expense rows, independently checked in SQLite; no false receipt-read error. Activity recreation and database reopen are separately covered by automated tests. Four-theme/wide previews are configured debug-only, not claimed as manually executed device coverage.
+- **Gate results:** `./scripts/verify-ticket SELLO-021 --retain` passed all six checks: board validation/tests, quality-runner tests, architecture, host and API-30 device gates. Host: 465 tests; device: 460 tests; zero failures/errors/skipped tests. Debug app/catalog and release app assembled; lint has zero errors and 29 warnings, reported without baselines or suppression. Kotlin/JDK Unsafe deprecation warnings occurred in focused compilation; no toolchain change was made.
+- **Quality run:** run 20261013T192812Z-6f9e0e6d; SELLO-021 G2 passed; HEAD f966253, inputs sha256 b86a620d6356; report docs/planning/mvp/quality-reports/SELLO-021.json sha256 d275d978cb5df90151c0e481c6fad4fcb66222724d7aa6291460f45e8175d987
+- **Earlier failures:** run `20261013T191959Z-04ceb838` was not retained: two obsolete single-tab assertions were updated for the approved working tabs; an unchanged design-system 48 dp assertion rounded to 47.999992 dp at custom 240 dpi. The final gate passed at standard 320 dpi, 640×1280 pixels, with no weakened design-system checks. One focused command incorrectly supplied cross-module class filters; corrected module-specific commands passed. No failed run is offered as completion evidence.
+- **Review:** self-review completed for module boundaries, exact inputs, generation/version guards, unknown-outcome IDs, shared undo, privacy and deferred scope. Done is proposed on this branch only. The project owner's merge of the screens pull request from `sello-021-income-screens` onto `sello-021-income` is independent acceptance; review/merge storage PR #42 first. No owner acceptance, merge or hosted CI pass for the screens PR is claimed here.
 
 ## SELLO-022 — Deliver basic Resumen with exact actuals and history charts
 

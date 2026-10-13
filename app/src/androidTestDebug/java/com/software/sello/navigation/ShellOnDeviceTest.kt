@@ -110,9 +110,32 @@ class ShellOnDeviceTest {
         rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
         rule.onNodeWithText(title(current)).assertIsDisplayed()
         rule.onNodeWithText(context.getString(R.string.recibo_first_run_title)).assertIsDisplayed()
-        // One tab is no tab bar. The dock to record an expense is always there.
-        rule.onNodeWithTag(SCAFFOLD_BAR_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(SCAFFOLD_BAR_TAG).assertIsDisplayed()
+        rule.onNodeWithText(context.getString(R.string.tab_recibo)).assertIsDisplayed()
+        rule.onNodeWithText(context.getString(R.string.tab_resumen)).assertIsDisplayed()
         rule.onNodeWithTag(SCAFFOLD_DOCK_TAG).assertIsDisplayed()
+        assertEquals(0, financialRows())
+    }
+
+    @Test
+    fun resumenKeepsTheSharedMonthThroughRecreationAndBackReturnsToRecibo() {
+        val app = launchToRecibo()
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
+        rule.onNodeWithContentDescription(context.getString(R.string.month_picker_previous_year))
+            .performClick()
+        val march = YearMonth.of(current.year - 1, 3)
+        rule.onNodeWithContentDescription(title(march)).performClick()
+        rule.onNodeWithText(context.getString(R.string.tab_resumen)).performClick()
+        rule.awaitTag("resumen.income")
+        rule.onNodeWithText(title(march)).assertIsDisplayed()
+
+        app.recreate()
+
+        rule.awaitTag("resumen.income")
+        rule.onNodeWithText(title(march)).assertIsDisplayed()
+        Espresso.pressBack()
+        rule.awaitTag(RECIBO_FIRST_RUN_TAG)
+        rule.onNodeWithText(title(march)).assertIsDisplayed()
         assertEquals(0, financialRows())
     }
 

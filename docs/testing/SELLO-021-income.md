@@ -55,3 +55,9 @@ zero expenses. These counts were independently checked in the debug SQLite datab
 The displayed receipt had no false details-read error. This is process-death evidence,
 not just activity recreation. The integrated gate and tested revision are recorded
 in the canonical ticket's Delivery evidence.
+
+The first integrated run also exposed two obsolete single-tab assertions, updated
+to verify the approved working tabs, and an unrelated design-system touch-target
+assertion reading 47.999992 dp at the emulator's custom 240 dpi. The final gate uses
+standard 320 dpi at 640×1280 pixels (320 dp wide). No design-system code or assertion
+is weakened; the failed run remains available as diagnostic evidence.

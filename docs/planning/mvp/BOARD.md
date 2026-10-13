@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 34/52 · **Epics Done:** 4/9
 
-Backlog: 18 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 34
+Backlog: 17 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 34
 
 [Workflow, gates and definition of done](README.md)
 
@@ -28,7 +28,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Ship income recording, history and guarded correction workflows | SELLO-E05 | P0 | G2 | None |
 
 ## Review
 
@@ -42,7 +44,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Ship income recording, history and guarded correction workflows | SELLO-E05 | P0 | G2 | None |
 | [SELLO-022](epics/E05-mvp-workflows.md#sello-022--deliver-basic-resumen-with-exact-actuals-and-history-charts) | Deliver basic Resumen with exact actuals and history charts | SELLO-E05 | P0 | G2 | [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) |
 | [SELLO-023](epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings) | Ship persisted appearance, ordering and essential settings | SELLO-E05 | P1 | G2 | None |
 | [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls) | Create isolated sandbox sessions and financial time controls | SELLO-E06 | P0 | G2 | None |
@@ -102,4 +103,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows), [SELLO-023](epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings), [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-055](epics/E11-bug-stabilization.md#sello-055--avoid-duplicate-monthly-snapshot-pipelines-in-simultaneous-views), [SELLO-060](epics/E11-bug-stabilization.md#sello-060--make-first-slice-navigation-motion-consistent-and-accessible)
+[SELLO-023](epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings), [SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-055](epics/E11-bug-stabilization.md#sello-055--avoid-duplicate-monthly-snapshot-pipelines-in-simultaneous-views), [SELLO-060](epics/E11-bug-stabilization.md#sello-060--make-first-slice-navigation-motion-consistent-and-accessible)

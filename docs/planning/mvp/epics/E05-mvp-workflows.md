@@ -310,7 +310,7 @@ adds no command, schema, dependency or permission.
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-012, SELLO-015, SELLO-008, SELLO-019, SELLO-004
 - **Gate:** G2
 
@@ -372,6 +372,44 @@ There is no bank/capture import to reinterpret as income.
 Create/run `IncomeCommandContractTest`, `*IncomeFormViewModelTest` and IncomeJourneyTest;
 G2. Verify create/list/edit/stale-delete/undo/restart, cross-type isolation and exact
 source/date/receipt values through real Room, not a fake summary seed.
+
+### Execution progress
+2026-10-12: started on branch `sello-021-income` after SELLO-020 merged. Delivered in
+two pull requests, as agreed with the project owner; the ticket stays In Progress
+until the second.
+
+**Decisions taken with the project owner before any code**
+
+- Two pull requests: storage and commands first, then the screens.
+- Income is started from a "Gasto / Ingreso" choice at the top of the entry form, as
+  the design reference shows; the dock still opens an expense.
+- There is one offer to undo, shared by expenses and income: a new deletion of either
+  kind makes the previous one final.
+- The form's preview of the month's income is left out until Resumen exists (SELLO-022).
+- Still open, for the second pull request: how the list of income is reached. The
+  design reference reaches it from Resumen, which does not exist yet, and says Recibo
+  never depends on income.
+
+**First pull request: storage and commands, no screens**
+
+- Schema version 3 with a tested migration: `deleted_income`.
+- `IncomeCommands` (create, edit, delete, restore, `undoOffer`, `find`) with their
+  receipts, and `IncomeReads` (one income, a month's pages, a month's exact total).
+- The offer to undo moved out of the expense commands into one `UndoWindow` shared by
+  both workflows; the expense contract tests pass unchanged over it.
+- Nothing in the app calls the new commands yet, so every existing journey is as it was.
+- Verified with the ticket's G2 gate on an API 30 emulator, on the working tree that
+  became the commit: run 20261012T235803Z-66aab8c3 passed. Its report is not
+  retained; the run that counts as Delivery evidence is the one made when the ticket
+  is proposed Done.
+
+**Choices made while implementing, for review**
+
+- Income has its own ordering sequence, separate from the expenses'.
+- An edit that changes nothing is refused by the command, and the date is checked only
+  when an edit changes it, both as decided for expenses.
+- A month's income total is read in the storage adapter with the domain's exact sum;
+  no budget policy is involved.
 
 ## SELLO-022 — Deliver basic Resumen with exact actuals and history charts
 

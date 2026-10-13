@@ -3,9 +3,10 @@
 **Owner:** SELLO-011 · Rules: [architecture](../../ARCHITECTURE.md) §§4, 5, 7.
 
 One Room database, `sello.db`, in the app's private storage, is the only place
-financial facts live. Its schema is version 2; every version is exported to
+financial facts live. Its schema is version 3; every version is exported to
 `data/schemas/com.software.sello.data.local.SelloDatabase/`. Version 2 (SELLO-019)
-added `deleted_expense` and changed nothing that version 1 held.
+added `deleted_expense` and version 3 (SELLO-021) `deleted_income`; neither changed
+anything an earlier version held.
 
 ## What is stored
 
@@ -19,6 +20,7 @@ added `deleted_expense` and changed nothing that version 1 held.
 | `income` | Effective date, sequence, amount, source key and name, note, version, audit times | `id`; unique `sequence`; read by (`effective_date`, `sequence`) |
 | `operation_receipt` | Proof that an operation committed: kind, input digest, generation, revision, subject | `operation_id` |
 | `deleted_expense` | What the last deleted expense was, column for column, with the generation and time of the deletion | `deletion_id`, the deletion's operation identifier |
+| `deleted_income` | The same for the last deleted income | `deletion_id` |
 
 There are no recurrence, goal, investment, widget or capture tables, and no
 preference such as theme or category order: those are not financial and stay out
@@ -30,14 +32,16 @@ of Room.
 - **Receipts** have no foreign key to the record they describe and hold no amount,
   name or note. That is what lets them, and the profile row, outlive a replacement
   of the financial rows without keeping erased content.
-- **`deleted_expense` is not a financial fact.** A deleted expense is gone from
-  `expense`, so no read or total can count it; this row exists only so the deletion
-  can be [undone](commands.md#editing-deleting-and-undo). There is at most one row.
-  A later deletion replaces it and opening storage removes it
+- **`deleted_expense` and `deleted_income` are not financial facts.** A deleted
+  record is gone from `expense` or `income`, so no read or total can count it; the
+  row exists only so the deletion can be
+  [undone](commands.md#editing-deleting-and-undo). Across both tables there is at
+  most one row. A later deletion of either kind replaces it and opening storage
+  removes it
   (`FinancialStorage.discardUndoCopies`, called by `openStorage`), because the time
-  to undo is counted in the process that deleted. Like a receipt it has no foreign
-  key. It is not part of a portable backup (SELLO-028), and a reset must erase it
-  with the rest (SELLO-031).
+  to undo is counted in the process that deleted. Like a receipt they have no foreign
+  key. They are not part of a portable backup (SELLO-028), and a reset must erase
+  them with the rest (SELLO-031).
 - A month with neither a `month_limit` nor an applicable `default_limit` is
   unconfigured. That is different from a finite limit of zero and from `unlimited`.
 

@@ -10,7 +10,8 @@ import org.junit.Test
 class ExportedSchemaTest {
     private val schemas = File("schemas/com.software.sello.data.local.SelloDatabase")
     private val versionOne = File(schemas, "1.json").readText()
-    private val current = File(schemas, "2.json").readText()
+    private val versionTwo = File(schemas, "2.json").readText()
+    private val current = File(schemas, "3.json").readText()
 
     private fun values(schema: String, key: String) =
         Regex("\"$key\"\\s*:\\s*\"?([\\w]+)\"?").findAll(schema).map { it.groupValues[1] }
@@ -27,9 +28,10 @@ class ExportedSchemaTest {
 
     @Test
     fun everyVersionThatShippedIsStillExported() {
-        assertEquals(listOf("1.json", "2.json"), schemas.list()!!.sorted())
+        assertEquals(listOf("1.json", "2.json", "3.json"), schemas.list()!!.sorted())
         assertEquals(listOf("1"), values(versionOne, "version").toList())
-        assertEquals(listOf("2"), values(current, "version").toList())
+        assertEquals(listOf("2"), values(versionTwo, "version").toList())
+        assertEquals(listOf("3"), values(current, "version").toList())
     }
 
     @Test
@@ -39,12 +41,20 @@ class ExportedSchemaTest {
 
     @Test
     fun versionTwoAddsOnlyTheTableForDeletedExpenses() {
-        assertEquals(mvpTables + "deleted_expense", values(current, "tableName").toSet())
+        assertEquals(mvpTables + "deleted_expense", values(versionTwo, "tableName").toSet())
+    }
+
+    @Test
+    fun versionThreeAddsOnlyTheTableForDeletedIncome() {
+        assertEquals(
+            mvpTables + "deleted_expense" + "deleted_income",
+            values(current, "tableName").toSet()
+        )
     }
 
     @Test
     fun noForeignKeyCascadesOrDetaches() {
-        for (schema in listOf(versionOne, current)) {
+        for (schema in listOf(versionOne, versionTwo, current)) {
             val actions = (values(schema, "onDelete") + values(schema, "onUpdate")).toList()
 
             assertEquals(6, actions.size)

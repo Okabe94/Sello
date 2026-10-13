@@ -5,6 +5,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.data.local.Migration1To2
+import com.software.sello.data.local.Migration2To3
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.repository.RoomFinancialProfileStore
@@ -117,27 +118,78 @@ class ExportedSchemaOnDeviceTest {
     }
 
     @Test
-    fun aVersionOneDatabaseOpenedByThisBuildIsUpgradedAndReadsTheSameProfile() = runBlocking {
-        versionOneWithHistory()
+    fun upgradingFromVersionTwoKeepsEveryRowAndAddsOnlyTheEmptyTableForDeletedIncome() {
+        val tables = versionOneTables + "deleted_expense"
+        fun SupportSQLiteDatabase.rowsOf() = tables.associateWith { table ->
+            query("SELECT * FROM $table").use { cursor ->
+                buildList {
+                    while (cursor.moveToNext()) {
+                        add(
+                            (0 until cursor.columnCount).joinToString("|") {
+                                cursor.getString(it) ?: "null"
+                            }
+                        )
+                    }
+                }
+            }
+        }
+        val before = helper.createDatabase(name, 2).use { exported ->
+            exported.execSQL(
+                "INSERT INTO profile (id, financial_zone, generation, revision, created_at) " +
+                    "VALUES (1, 'America/Bogota', 4, 17, 0)"
+            )
+            exported.execSQL(
+                "INSERT INTO income VALUES ('${uuid(3)}', '2026-10-01', 2, 5200000, 'COP', " +
+                    "'other', 'Bono', 'Extra', 1, 30, 40)"
+            )
+            // What a process that ended inside the six seconds left behind.
+            exported.execSQL(
+                "INSERT INTO deleted_expense VALUES ('${uuid(
+                    9
+                )}', 4, 50, '${uuid(2)}', '${uuid(1)}', " +
+                    "'2026-10-03', 5, 48700, 'COP', 'Pan', 2, 30, 40)"
+            )
+            exported.rowsOf()
+        }
 
-        val database = openSelloDatabase(instrumentation.targetContext, Dispatchers.IO, name)
-        val profile =
-            RoomFinancialProfileStore(database) { recordedAt }.establish(ZoneId.of("Asia/Tokyo"))
-        val expenses = database.expenseDao().page("0000-01-01", "9999-12-32", "", 0, 10)
-        val version = database.openHelper.readableDatabase.version
-        database.close()
+        // Room compares the result with the exported version 3 schema and fails on any difference.
+        helper.runMigrationsAndValidate(name, 3, true, Migration2To3).use { upgraded ->
+            val kept = upgraded.query("SELECT COUNT(*) FROM deleted_income").use { count ->
+                count.moveToFirst()
+                count.getInt(0)
+            }
 
-        assertEquals(
-            Outcome.Success(FinancialProfile(ZoneId.of("America/Bogota"), 4, 17)),
-            profile
-        )
-        assertEquals(listOf(48_700L), expenses.map { it.amountMinor })
-        assertEquals(2, version)
+            assertEquals(3, before.values.sumOf { rows -> rows.size })
+            assertEquals(before, upgraded.rowsOf())
+            assertEquals(0, kept)
+        }
     }
 
     @Test
+    fun aVersionOneDatabaseOpenedByThisBuildIsUpgradedThroughEveryVersionAndReadsTheSameData() =
+        runBlocking {
+            versionOneWithHistory()
+
+            val database = openSelloDatabase(instrumentation.targetContext, Dispatchers.IO, name)
+            val profile =
+                RoomFinancialProfileStore(database) {
+                    recordedAt
+                }.establish(ZoneId.of("Asia/Tokyo"))
+            val expenses = database.expenseDao().page("0000-01-01", "9999-12-32", "", 0, 10)
+            val version = database.openHelper.readableDatabase.version
+            database.close()
+
+            assertEquals(
+                Outcome.Success(FinancialProfile(ZoneId.of("America/Bogota"), 4, 17)),
+                profile
+            )
+            assertEquals(listOf(48_700L), expenses.map { it.amountMinor })
+            assertEquals(3, version)
+        }
+
+    @Test
     fun aDatabaseBuiltFromTheExportedCurrentSchemaOpensAndKeepsItsRows() = runBlocking {
-        helper.createDatabase(name, 2).use { exported ->
+        helper.createDatabase(name, 3).use { exported ->
             exported.execSQL(
                 "INSERT INTO profile (id, financial_zone, generation, revision, created_at) " +
                     "VALUES (1, 'America/Bogota', 4, 17, 0)"

@@ -4,11 +4,13 @@ import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.entity.CategoryEntity
 import com.software.sello.data.local.entity.DefaultLimitEntity
 import com.software.sello.data.local.entity.ExpenseEntity
+import com.software.sello.data.local.entity.IncomeEntity
 import com.software.sello.data.local.entity.MonthLimitEntity
 import com.software.sello.data.mapper.decodeAll
 import com.software.sello.data.mapper.profileFrom
 import com.software.sello.data.mapper.toDomain
 import com.software.sello.domain.model.Expense
+import com.software.sello.domain.model.Income
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.policy.CategoryBudgetPolicy
@@ -93,5 +95,16 @@ internal suspend fun SelloDatabase.monthExpenses(
     val until = month.plusMonths(1).atDay(1).toString()
     return pages<ExpenseEntity> { after ->
         expenseDao().page(from, until, after?.effectiveDate.orEmpty(), after?.sequence ?: 0, PAGE)
+    }.decodeAll { it.toDomain() }
+}
+
+/** Every income dated in [month], in date then sequence order. */
+internal suspend fun SelloDatabase.monthIncomes(
+    month: YearMonth
+): Outcome<List<Income>, StorageFailure.Integrity> {
+    val from = month.atDay(1).toString()
+    val until = month.plusMonths(1).atDay(1).toString()
+    return pages<IncomeEntity> { after ->
+        incomeDao().page(from, until, after?.effectiveDate.orEmpty(), after?.sequence ?: 0, PAGE)
     }.decodeAll { it.toDomain() }
 }

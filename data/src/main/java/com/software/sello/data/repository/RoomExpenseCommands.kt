@@ -17,7 +17,6 @@ import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.policy.EffectiveDateError
 import com.software.sello.domain.policy.EffectiveDates
-import com.software.sello.domain.policy.UndoPolicy
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CommittedExpense
 import com.software.sello.domain.port.CreateExpense
@@ -30,18 +29,10 @@ import com.software.sello.domain.port.ExpenseCommandOutcome.Rejected
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseRejection
 import com.software.sello.domain.port.FinancialClock
-import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.domain.port.RestoreExpense
 import com.software.sello.domain.port.UndoOffer
 import java.time.LocalDate
-import kotlin.time.Duration
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 
 /**
  * Records, changes, removes and puts back expenses in one short transaction each:
@@ -50,29 +41,20 @@ import kotlinx.coroutines.withContext
  *
  * [audit] stamps the rows and the receipt with real time. [clock] is only asked which
  * day it is, to refuse a future date; simulated financial time never reaches a timestamp.
- * [monotonic] measures the time a deletion can be undone, and nothing else.
  *
- * The offer to undo is held here, in memory, so one instance must serve the whole
- * process. That is what makes it end with the process: a new one has no offer.
+ * The offer to undo is [undo]'s, shared with every other workflow that can delete.
  */
-class RoomExpenseCommands(
+class RoomExpenseCommands internal constructor(
     private val database: SelloDatabase,
     private val audit: AuditClock,
     private val clock: FinancialClock,
     private val ids: RecordIdSource,
-    private val monotonic: MonotonicClock
+    private val undo: UndoWindow
 ) : ExpenseCommands {
-    /** The deletion that can be undone and the clock reading taken when it committed. */
-    private class Pending(val offer: UndoOffer, val deletedAt: Duration)
-
-    @Volatile
-    private var pending: Pending? = null
-
-    /** One deletion or undo at a time, so [pending] always names the deletion that committed last. */
-    private val oneAtATime = Mutex()
-
-    override fun undoOffer(): UndoOffer? =
-        pending?.takeIf { UndoPolicy.canUndo(it.deletedAt, monotonic.elapsed()) }?.offer
+    override fun undoOffer(): UndoOffer? = undo.offered(UndoWindow.Kind.Expense)?.let { offer ->
+        (ExpenseId.of(offer.subjectId) as? Outcome.Success)
+            ?.let { UndoOffer(offer.deletionId, it.value, offer.until) }
+    }
 
     override suspend fun create(command: CreateExpense): ExpenseCommandOutcome =
         run(command.operationId) { decide(command) }
@@ -80,20 +62,18 @@ class RoomExpenseCommands(
     override suspend fun edit(command: EditExpense): ExpenseCommandOutcome =
         run(command.operationId) { decide(command) }
 
-    override suspend fun delete(command: DeleteExpense): ExpenseCommandOutcome = withTheOffer {
+    override suspend fun delete(command: DeleteExpense): ExpenseCommandOutcome = undo.changing {
         val outcome = run(command.operationId) { decide(command) }
         // A replay is the original deletion, so it never starts the time again.
         if (outcome is Committed && !outcome.replayed) {
-            val deletedAt = monotonic.elapsed()
-            val until = deletedAt + UndoPolicy.WINDOW
-            pending = Pending(UndoOffer(command.operationId, command.expenseId, until), deletedAt)
+            undo.opened(UndoWindow.Kind.Expense, command.operationId, command.expenseId.value)
         }
         outcome
     }
 
-    override suspend fun restore(command: RestoreExpense): ExpenseCommandOutcome = withTheOffer {
+    override suspend fun restore(command: RestoreExpense): ExpenseCommandOutcome = undo.changing {
         val outcome = run(command.operationId) { decide(command) }
-        if (outcome is Committed && !outcome.replayed) pending = null
+        if (outcome is Committed && !outcome.replayed) undo.closed()
         outcome
     }
 
@@ -104,20 +84,6 @@ class RoomExpenseCommands(
         is CommandRun.Finished -> run.value
         is CommandRun.RolledBack -> failed(run.failure)
         CommandRun.Unknown -> OutcomeUnknown(operationId)
-    }
-
-    /**
-     * Runs a deletion or an undo together with its change to [pending]. Like the
-     * transaction inside it, it is checked for cancellation before and after and never
-     * stopped in between: a deletion that committed always leaves its offer behind.
-     */
-    private suspend fun withTheOffer(
-        change: suspend () -> ExpenseCommandOutcome
-    ): ExpenseCommandOutcome {
-        currentCoroutineContext().ensureActive()
-        val outcome = withContext(NonCancellable) { oneAtATime.withLock { change() } }
-        currentCoroutineContext().ensureActive()
-        return outcome
     }
 
     private fun failed(failure: StorageFailure) = Rejected(ExpenseRejection.StorageFailed(failure))
@@ -279,7 +245,7 @@ class RoomExpenseCommands(
             }
 
             val now = audit.now()
-            database.deletedExpenseDao().clear()
+            database.discardKeptCopies()
             database.deletedExpenseDao().insert(
                 DeletedExpenseEntity(
                     deletionId = command.operationId.value,
@@ -315,10 +281,8 @@ class RoomExpenseCommands(
         val kind = OperationKind.RestoreExpense
         val digest = inputDigest(command)
         return starting(command.operationId, command.generation, kind, digest) { profile ->
-            val offered = pending
-            val inTime = offered != null &&
-                offered.offer.deletionId == command.deletionId &&
-                UndoPolicy.canUndo(offered.deletedAt, monotonic.elapsed())
+            val inTime =
+                undo.offered(UndoWindow.Kind.Expense)?.deletionId == command.deletionId
             if (!inTime) return Rejected(ExpenseRejection.UndoExpired)
             val kept = database.deletedExpenseDao().find(command.deletionId.value)
                 ?: return Rejected(ExpenseRejection.UndoExpired)

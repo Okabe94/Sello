@@ -8,6 +8,7 @@ import com.software.sello.data.mapper.toDomain
 import com.software.sello.data.mapper.toEntity
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomFinancialProfileStore
+import com.software.sello.data.repository.UndoWindow
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.Money
@@ -80,7 +81,7 @@ class ExpenseCommandContractTest {
 
     private fun open() {
         database = files.open()
-        commands = RoomExpenseCommands(database, { audit }, clock, ids) { 5.hours }
+        commands = RoomExpenseCommands(database, { audit }, clock, ids, UndoWindow { 5.hours })
     }
 
     /** A new installation with one category, "Mercado", number 1. */

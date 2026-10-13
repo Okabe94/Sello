@@ -51,7 +51,7 @@ class FinancialStorageOnDeviceTest {
     fun startupCreatedTheRealDatabaseWithExactlyOneProfile() {
         assertTrue(file.exists())
         val zone = stored { database ->
-            assertEquals(2, database.version)
+            assertEquals(3, database.version)
             assertEquals(1, database.count("profile"))
             database.rawQuery("SELECT financial_zone FROM profile WHERE id = 1", null).use {
                 it.moveToFirst()
@@ -122,12 +122,19 @@ class FinancialStorageOnDeviceTest {
                 "'2026-10-03', 1, 48700, 'COP', NULL, 1, 0, 0)"
         )
 
+        TestData.execute(
+            "INSERT INTO deleted_income VALUES ('00000000-0000-4000-8000-000000000004', 1, 0, " +
+                "'00000000-0000-4000-8000-000000000005', '2026-10-03', 1, 150000, 'COP', " +
+                "'salary', NULL, NULL, 1, 0, 0)"
+        )
+
         val opened = openStorage(context, ZoneId.of("Pacific/Kiritimati"), koin.get(), koin.get())
 
         assertTrue("$opened", opened is Outcome.Success)
         (opened as Outcome.Success).value.storage.close()
         assertEquals(0L, stored { it.count("deleted_expense") })
-        assertEquals(0L, stored { it.count("expense") })
+        assertEquals(0L, stored { it.count("deleted_income") })
+        assertEquals(0L, stored { it.count("expense") + it.count("income") })
     }
 
     @Test
@@ -139,7 +146,8 @@ class FinancialStorageOnDeviceTest {
             "expense",
             "income",
             "operation_receipt",
-            "deleted_expense"
+            "deleted_expense",
+            "deleted_income"
         )
 
         val counts = stored { database -> tables.associateWith { database.count(it) } }

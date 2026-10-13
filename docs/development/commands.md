@@ -81,7 +81,8 @@ does not change exactly one row.
 `MonotonicClock` reading at which it stops being so: `UndoPolicy.WINDOW`, six
 seconds, after the deletion committed. At six seconds exactly it has ended.
 
-- The offer is held in memory by `RoomExpenseCommands`, of which the process has one.
+- The offer is held in memory by `UndoWindow`, of which storage has one, shared by
+  the expense and income workflows.
   Nothing a screen does (rotation, leaving and returning) touches it, and a replay
   of the deletion does not start it again. `FinancialClock` and `AuditClock` are
   never consulted, so simulated financial time cannot shorten or extend it.
@@ -101,6 +102,34 @@ seconds, after the deletion committed. At six seconds exactly it has ended.
   when the caller never heard the result.
 - When a deletion ends as `OutcomeUnknown` no offer is made. If `find` then shows
   that it committed, it stands.
+
+## Income
+
+`IncomeCommands` and `RoomIncomeCommands` (SELLO-021) record, edit, delete and restore
+income by exactly the steps above, with their own kinds (`income.create`,
+`income.edit`, `income.delete`, `income.restore`), input identities and typed
+rejections. An income has an amount, a source, a date and an optional note; it has no
+category.
+
+- **Nothing is shared with expenses but the steps.** Income has its own table, its own
+  ordering sequence and its own kept copy. No income command reads or writes an
+  expense, a category or a limit, and a month's budget figures never include income.
+  A receipt of one kind is not found by the other's `find`.
+- **The source is a stable key** (`salary`, `freelance`, `passive_income`, `transfer`,
+  `other`). Only `other` carries a name, which is free text beside the key and never
+  becomes a key. Both are part of the input identity, so the same operation with
+  another source is a conflict.
+- **The date rules are the expense's:** not after the financial day when recording, and
+  checked on an edit only when the edit changes it.
+- **There is one offer to undo, not one per kind.** `UndoWindow` holds it for both
+  workflows. Deleting an income makes an earlier deletion of an expense final and the
+  other way round, and each workflow's `undoOffer()` answers only for its own kind.
+  Everything under [the six seconds](#the-six-seconds) holds for income as written.
+
+`IncomeReads` lists a month's income newest first in bounded pages, reads one income,
+and gives a month's exact total and count at one revision (`month`, and `observeMonth`
+after every committed change). A month without income is a total of zero; an income
+that cannot be read fails the month, it is never left out.
 
 ## Guarantees and how they are kept
 
@@ -128,5 +157,4 @@ seconds, after the deletion committed. At six seconds exactly it has ended.
   beyond the 100.000-record backup bound. Totals are checked where they are
   computed (SELLO-014).
 - `Committed` has no follow-up state because nothing follows a save yet.
-- Only expenses can be edited, deleted and restored. Categories' own history and
-  income follow in SELLO-020 and SELLO-021.
+- No screen records or shows income yet; those arrive with the rest of SELLO-021.

@@ -6,7 +6,10 @@ import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomExpenseReads
 import com.software.sello.data.repository.RoomFinancialProfileStore
+import com.software.sello.data.repository.RoomIncomeCommands
+import com.software.sello.data.repository.RoomIncomeReads
 import com.software.sello.data.repository.RoomMonthlySnapshots
+import com.software.sello.data.repository.UndoWindow
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryName
@@ -27,6 +30,8 @@ import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialDay
+import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
 import java.time.Instant
@@ -83,12 +88,18 @@ class TestLedger(
     lateinit var reads: CategoryReads
     lateinit var snapshots: MonthlySnapshots
     lateinit var expenseReads: ExpenseReads
+    lateinit var incomes: IncomeCommands
+    lateinit var incomeReads: IncomeReads
 
     /** A fresh handle on the same file, as after a process restart. */
     fun open() {
         database = files.open()
         categories = RoomCategoryCommands(database, { audit }, clock, ids)
-        expenses = RoomExpenseCommands(database, auditClock, clock, ids) { elapsed }
+        // One offer to undo for everything opened on this handle, as storage has.
+        val undo = UndoWindow { elapsed }
+        expenses = RoomExpenseCommands(database, auditClock, clock, ids, undo)
+        incomes = RoomIncomeCommands(database, auditClock, clock, ids, undo)
+        incomeReads = RoomIncomeReads(database)
         reads = RoomCategoryReads(database)
         snapshots = RoomMonthlySnapshots(database, clock, computation)
         expenseReads = RoomExpenseReads(database)

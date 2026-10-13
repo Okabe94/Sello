@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.software.sello.data.local.dao.CategoryDao
 import com.software.sello.data.local.dao.DeletedExpenseDao
+import com.software.sello.data.local.dao.DeletedIncomeDao
 import com.software.sello.data.local.dao.ExpenseDao
 import com.software.sello.data.local.dao.IncomeDao
 import com.software.sello.data.local.dao.LimitDao
@@ -14,6 +15,7 @@ import com.software.sello.data.local.dao.ProfileDao
 import com.software.sello.data.local.entity.CategoryEntity
 import com.software.sello.data.local.entity.DefaultLimitEntity
 import com.software.sello.data.local.entity.DeletedExpenseEntity
+import com.software.sello.data.local.entity.DeletedIncomeEntity
 import com.software.sello.data.local.entity.ExpenseEntity
 import com.software.sello.data.local.entity.IncomeEntity
 import com.software.sello.data.local.entity.MonthLimitEntity
@@ -24,7 +26,7 @@ import kotlin.coroutines.CoroutineContext
 /**
  * The financial database. Version 1 is the first schema; every later change raises
  * the version, exports its schema to `data/schemas` and ships a tested migration.
- * Version 2 added `deleted_expense`.
+ * Version 2 added `deleted_expense`; version 3 added `deleted_income`.
  */
 @Database(
     entities = [
@@ -35,9 +37,10 @@ import kotlin.coroutines.CoroutineContext
         ExpenseEntity::class,
         IncomeEntity::class,
         OperationReceiptEntity::class,
-        DeletedExpenseEntity::class
+        DeletedExpenseEntity::class,
+        DeletedIncomeEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class SelloDatabase : RoomDatabase() {
@@ -54,6 +57,8 @@ abstract class SelloDatabase : RoomDatabase() {
     abstract fun operationReceiptDao(): OperationReceiptDao
 
     abstract fun deletedExpenseDao(): DeletedExpenseDao
+
+    abstract fun deletedIncomeDao(): DeletedIncomeDao
 
     companion object {
         const val FILE_NAME = "sello.db"
@@ -75,6 +80,6 @@ internal fun openSelloDatabase(
 ): SelloDatabase =
     Room.databaseBuilder(context.applicationContext, SelloDatabase::class.java, fileName)
         .openHelperFactory(NonDestructiveOpenHelperFactory())
-        .addMigrations(Migration1To2)
+        .addMigrations(Migration1To2, Migration2To3)
         .setQueryCoroutineContext(queries)
         .build()

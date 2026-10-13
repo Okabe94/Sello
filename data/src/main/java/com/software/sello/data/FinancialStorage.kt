@@ -9,7 +9,11 @@ import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomExpenseReads
 import com.software.sello.data.repository.RoomFinancialProfileStore
+import com.software.sello.data.repository.RoomIncomeCommands
+import com.software.sello.data.repository.RoomIncomeReads
 import com.software.sello.data.repository.RoomMonthlySnapshots
+import com.software.sello.data.repository.UndoWindow
+import com.software.sello.data.repository.discardKeptCopies
 import com.software.sello.data.repository.reading
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
@@ -20,6 +24,8 @@ import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
@@ -43,7 +49,27 @@ class FinancialStorage internal constructor(
         clock: FinancialClock,
         ids: RecordIdSource,
         monotonic: MonotonicClock
-    ): ExpenseCommands = RoomExpenseCommands(database, audit, clock, ids, monotonic)
+    ): ExpenseCommands = RoomExpenseCommands(database, audit, clock, ids, undoWindow(monotonic))
+
+    /**
+     * The income workflow. It shares the one offer to undo with the expense workflow:
+     * a deletion of either kind makes an earlier one of either kind final.
+     */
+    fun incomeCommands(
+        audit: AuditClock,
+        clock: FinancialClock,
+        ids: RecordIdSource,
+        monotonic: MonotonicClock
+    ): IncomeCommands = RoomIncomeCommands(database, audit, clock, ids, undoWindow(monotonic))
+
+    val incomeReads: IncomeReads = RoomIncomeReads(database)
+
+    /** One offer to undo for the whole storage, whichever workflow asks for it first. */
+    private var undo: UndoWindow? = null
+
+    @Synchronized
+    private fun undoWindow(monotonic: MonotonicClock): UndoWindow =
+        undo ?: UndoWindow(monotonic).also { undo = it }
 
     fun categoryCommands(
         audit: AuditClock,
@@ -69,7 +95,7 @@ class FinancialStorage internal constructor(
      * and changes no figure: a deleted expense was already gone.
      */
     suspend fun discardUndoCopies(): Outcome<Unit, StorageFailure> = reading {
-        database.deletedExpenseDao().clear()
+        database.discardKeptCopies()
         Outcome.Success(Unit)
     }
 

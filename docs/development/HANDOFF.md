@@ -42,9 +42,9 @@ open a category to see its figures and its expenses, correct an expense or delet
 it and undo that for six seconds, rename a category, change its icon and its limit
 for this month onwards or for one finished month, archive and unarchive it, look at earlier months, and find all of it again after the process is killed or the app restarted.
 
-What does not exist: income, Resumen, settings, the sandbox, backup,
-restore and reset. The schema, now version 2, has an `income` table and no code that
-writes to it.
+What does not exist: screens for income (its commands and reads do, since
+SELLO-021's first part), Resumen, settings, the sandbox, backup,
+restore and reset. The schema is version 3.
 
 ## What is next
 

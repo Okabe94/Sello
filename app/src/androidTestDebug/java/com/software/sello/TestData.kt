@@ -26,6 +26,7 @@ object TestData {
             tables.forEach { database.execSQL("DELETE FROM $it") }
             // Not a financial record: only what an undo would put back.
             database.execSQL("DELETE FROM deleted_expense")
+            database.execSQL("DELETE FROM deleted_income")
             database.execSQL("UPDATE profile SET revision = 0")
             database.setTransactionSuccessful()
         } finally {

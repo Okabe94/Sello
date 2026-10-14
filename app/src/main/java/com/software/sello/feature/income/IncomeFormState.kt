@@ -90,6 +90,9 @@ data class IncomeFormState(
     val closed: Boolean = false,
     /** A recorded income is being corrected, not a new one written. */
     val editing: Boolean = false,
+    val monthPreview: MoneyTextValue? = null,
+    val previewLoading: Boolean = false,
+    val previewUnavailable: Boolean = false,
     /** Months other than the current one whose income saving or deleting would change. */
     val pastMonths: List<YearMonth> = emptyList()
 ) {

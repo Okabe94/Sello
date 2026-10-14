@@ -15,6 +15,9 @@ data object ReciboRoute
 data object ResumenRoute
 
 @Serializable
+data class ResumenCategoryRoute(val categoryId: String)
+
+@Serializable
 data object IncomeHistoryRoute
 
 @Serializable

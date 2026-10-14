@@ -441,6 +441,27 @@ fun ColumnsChartExample() {
 
 @Composable
 fun LineChartExample() {
+    val days = listOf("1 oct", "2 oct", "3 oct")
+    val cumulative = listOf(10_000L, 25_000L, 30_000L)
+    val points = days.mapIndexed { index, day ->
+        ChartPoint(day, day, cumulative[index], "$day, ${copFixture(cumulative[index]).spoken}")
+    }
+    SelectableChart(
+        "Así crecen tus gastos",
+        points,
+        days.zip(cumulative).toMap(),
+        "chart:cumulative"
+    ) {
+            selected,
+            onSelect
+        ->
+        LineChart(
+            points,
+            "Gasto acumulado: 10.000, 25.000 y 30.000 pesos.",
+            selectedId = selected,
+            onSelect = onSelect
+        )
+    }
     SelectableChart(
         question = "El día con más gasto",
         points = weekdayPoints(),

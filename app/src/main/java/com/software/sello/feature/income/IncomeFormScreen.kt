@@ -228,6 +228,15 @@ private fun IncomeDraft(state: IncomeFormState, onAction: (IncomeFormAction) -> 
             )
         }
     }
+    state.monthPreview?.let { preview ->
+        Slip(Modifier.testTag("income.monthPreview")) {
+            Text(stringResource(R.string.income_month_preview))
+            MoneyText(preview, style = MoneyStyle.Title)
+            Text(stringResource(R.string.income_preview_explanation))
+        }
+    }
+    if (state.previewLoading) SlipSkeleton(Modifier.testTag("income.previewLoading"))
+    if (state.previewUnavailable) Text(stringResource(R.string.income_preview_unavailable))
     if (state.needsOtherName) {
         FormField(
             stringResource(R.string.income_source_name),

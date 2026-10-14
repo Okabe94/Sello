@@ -46,11 +46,12 @@ fun presentationModule(): Module = module {
  * when the screen opens instead of silently defaulting.
  */
 fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
-    initializer { ResumenViewModel(koin.get(), koin.get(), koin.get()) }
+    initializer { ResumenViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get()) }
     initializer { IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
     initializer {
         IncomeFormViewModel(
             createSavedStateHandle(),
+            koin.get(),
             koin.get(),
             koin.get(),
             koin.get(),

@@ -13,6 +13,7 @@ import com.software.sello.domain.model.TextError
 import com.software.sello.domain.model.TransactionAmountError
 import com.software.sello.domain.policy.AmountDraft
 import com.software.sello.domain.policy.AmountDraftError
+import com.software.sello.domain.policy.IncomePreviewPolicy
 import com.software.sello.domain.port.CreateIncome
 import com.software.sello.domain.port.DeleteIncome
 import com.software.sello.domain.port.EditIncome
@@ -23,6 +24,8 @@ import com.software.sello.domain.port.IncomeMonthState
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.IncomeRejection
 import com.software.sello.domain.port.RecordIdSource
+import com.software.sello.domain.port.ResumenSnapshotState
+import com.software.sello.domain.port.ResumenSnapshots
 import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import java.time.LocalDate
@@ -34,6 +37,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -44,6 +48,7 @@ class IncomeFormViewModel(
     private val saved: SavedStateHandle,
     private val commands: IncomeCommands,
     private val reads: IncomeReads,
+    snapshots: ResumenSnapshots,
     private val clock: FinancialClock,
     private val ids: RecordIdSource,
     private val money: MoneyFormatter,
@@ -108,16 +113,45 @@ class IncomeFormViewModel(
     ) { month, _ -> month }.flatMapLatest(reads::observeMonth)
         .stateIn(viewModelScope, SharingStarted.Eagerly, IncomeMonthState.Loading)
 
+    private val previewSnapshot = combine(draft, progress, clock.today, month) {
+            draft,
+            progress,
+            today,
+            month
+        ->
+        if (!editing && month is IncomeMonthState.Ready &&
+            draft.amount.toTransactionAmount() is Outcome.Success &&
+            !progress.busy && !progress.generationChanged && progress.receipt == null &&
+            draft.date <= today.date
+        ) {
+            YearMonth.from(draft.date) to progress.attempt
+        } else {
+            null
+        }
+    }.distinctUntilChanged().flatMapLatest { selection ->
+        selection?.let { snapshots.observe(it.first) } ?: flowOf(ResumenSnapshotState.Loading)
+    }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ResumenSnapshotState.Loading)
+
     val state: StateFlow<IncomeFormState> = combine(
         draft,
         progress,
         month,
-        clock.today
-    ) { draft, progress, month, today -> render(draft, progress, month, today.date) }
+        clock.today,
+        previewSnapshot
+    ) { draft, progress, month, today, preview ->
+        render(draft, progress, month, today.date, preview)
+    }
         .stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
-            render(draft.value, progress.value, month.value, clock.today.value.date)
+            render(
+                draft.value,
+                progress.value,
+                month.value,
+                clock.today.value.date,
+                previewSnapshot.value
+            )
         )
 
     init {
@@ -470,7 +504,8 @@ class IncomeFormViewModel(
         draft: Draft,
         progress: Progress,
         month: IncomeMonthState,
-        today: LocalDate
+        today: LocalDate,
+        previewState: ResumenSnapshotState
     ): IncomeFormState {
         val amount = (draft.amount.toTransactionAmount() as? Outcome.Success)?.value
         val source = source(draft)
@@ -481,6 +516,19 @@ class IncomeFormViewModel(
         }
         val noteProblem = (Note.of(draft.note) as? Outcome.Failure)?.error?.let(::textProblem)
         val waiting = editing && progress.original == null && progress.error == null
+        val snapshot = (previewState as? ResumenSnapshotState.Ready)?.snapshot
+        val canPreview = !editing && amount != null && month is IncomeMonthState.Ready &&
+            !progress.busy && !progress.generationChanged && progress.receipt == null &&
+            draft.date <= today
+        val matchingSnapshot = canPreview && snapshot != null &&
+            snapshot.budget.generation == month.month.generation &&
+            snapshot.budget.revision == month.month.revision &&
+            snapshot.budget.asOf == today && YearMonth.from(draft.date) == snapshot.budget.month
+        val preview = if (matchingSnapshot) {
+            IncomePreviewPolicy.preview(snapshot, amount)
+        } else {
+            null
+        }
         return IncomeFormState(
             loading =
                 progress.receipt == null && !progress.loadFailed &&
@@ -534,6 +582,13 @@ class IncomeFormViewModel(
             receipt = progress.receipt,
             closed = progress.closed,
             editing = editing,
+            monthPreview = (preview as? Outcome.Success)?.value?.let(money::format),
+            previewLoading = canPreview && (
+                previewState is ResumenSnapshotState.Loading ||
+                    (previewState is ResumenSnapshotState.Ready && !matchingSnapshot)
+                ),
+            previewUnavailable = canPreview &&
+                (preview is Outcome.Failure || previewState is ResumenSnapshotState.Failed),
             pastMonths = progress.original?.let {
                 listOf(YearMonth.from(it.draft.date), YearMonth.from(draft.date)).distinct()
                     .filter { month -> month != YearMonth.from(today) }

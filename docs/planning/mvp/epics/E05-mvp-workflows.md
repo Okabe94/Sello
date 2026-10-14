@@ -443,7 +443,7 @@ until the second.
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-014, SELLO-018, SELLO-021, SELLO-009, SELLO-004
 - **Gate:** G2
 
@@ -555,6 +555,36 @@ the two rather than treating cancellation as a successful zero or a retryable re
 - Part 1 quality run: run `20261013T202758Z-8cf82d18`; SELLO-022 G2 passed; HEAD `8578157`; inputs sha256 `e809b7cceed3ca73a4e838da5d7d84c3f11dd5278628dbec42119ea0b5574858`; report `docs/planning/mvp/quality-reports/SELLO-022.json`, sha256 `e63f59353e7df2374f37fa1674b6749c93fe07a30d7067cc5c92e4352c6f4eed`. The final screens PR must replace this with a fresh run for its complete inputs before proposing Done.
 - Device: isolated synthetic API-30 AVD `sello021_api30`, serial `emulator-5580`, separate adb server 5038, 640×1280 pixels at standard 320 dpi. No personal phone/history was used. Executed tests prove database reopen and read/clock/dispatcher contracts; no new UI, manual process-death journey, TalkBack session or four-theme Resumen screen coverage is claimed here.
 - Self-review: reviewed exact sums/cutoffs, actual-versus-projected standing, signed allocation, historical budget identity, transaction/revision consistency, injected computation, cancellation, typed read failures, module boundaries and the unchanged existing UI. Independent review/hosted CI are not claimed; the owner reviews the first PR's foundation, and the second PR carries final ticket acceptance. The runbook is `docs/testing/SELLO-022-resumen.md`.
+
+**Second pull request: complete Resumen screens**
+
+Part 1 merged through #44. Branch `sello-022-resumen-screens` now includes current
+`main`; its pull request contains only the remaining screens and charts work.
+The screens use one lifecycle-bound Resumen observation, emphasize actual cash
+flow, keep signed allocation secondary, and label actual standing separately from
+estimated projection. Exact chart selections expire after three seconds and are
+restored by source ID, never chart coordinates. Category source links reuse the
+existing detail/history screen through a restored identifier-only route. Daily,
+monthly and category charts reuse catalog primitives; no comparison, export,
+recurrence or Patrimonio destination is added. Final tests and the retained gate are
+recorded below; Done is proposed by the screens pull request.
+
+The completed local screens input also fences the optional income preview by the
+income month's exact revision. A Resumen read failure, including one with last-good
+data, leaves the existing income command eligible and a regression test submits it
+through to the stored receipt. The actual-spend verdict now uses the shared large
+stamp, and short phone-width windows keep one scrollable column; two panes start at
+600 dp. The real journey selects daily and monthly chart source IDs and compares
+their displayed 30,000 COP values with independently queried Room totals.
+
+### Delivery evidence
+- **Revision:** clean commit `bfe1abd76383ba27d4465c341a824b536b1364b8` on `sello-022-resumen-screens`, including current `main`. The retained report records no dirty paths and input fingerprint `365d3cc9698e66fa74d070b80a45049489d0fb55a5354338e7aa0defb7ea593d`. Only this evidence, the retained report and regenerated board views follow the run; those bookkeeping files are excluded inputs.
+- **Requirement mapping:** same-transaction/revision exact figures, I01/G01/G02, cutoffs, overflow and read failures → `ResumenSnapshotTest` and `ResumenSnapshotContractTest`; cash-flow/allocation separation and exact accessible series → `ResumenRenderModelTest`; saved selections, stale/empty states and expiry → `ResumenViewModelTest`; all four themes, large figures/type, source IDs, actual-verdict stamp and compact/expanded layout → `ResumenScreenTest`; real entry, exact SQL totals, both chart selections, source routes, recreation and relaunch → `ResumenJourneyTest`; tab/month/back restoration → `ShellOnDeviceTest`; optional exact preview, revision fencing and nonblocking failed preview writes → `IncomeFormViewModelTest`.
+- **Red / Green:** the same-revision preview regression failed by showing a stale 1,000,000 COP total, then passed after adding the revision fence and loading state. The four theme checks failed on the missing actual-verdict stamp, and the short compact-window check failed on two narrow panes; all 11 screen tests passed after the stamp and 600 dp Resumen split boundary. The first clean merged G2 run `20261014T023406Z-f8d378ee` was not retained: the required 640-pixel profile exposed two reachability assertions that checked offscreen content before scrolling and an 840 dp fixture clamped by the phone root. After preserving the exact assertions while scrolling to reachable content and enforcing the fixture size, all 36 focused device tests passed. The optional-failure test performs the command and verifies the read-back receipt; its first assertion compared the receipt's string ID with the typed ID and was corrected without changing product code. Focused green: host `*Resumen*Test`, `*IncomeFormViewModelTest`, `ResumenSnapshotTest` plus app ktlint; device `ResumenScreenTest`, `ResumenJourneyTest`, `IncomeJourneyTest` and `ShellOnDeviceTest`, 23 tests with zero failures or skips.
+- **Device / Artifact:** isolated synthetic API-30 AVD `sello022_api30`, `emulator-5580`; no physical phone or personal history was used. The real UI journey stored 150,000 income and 30,000 expense, displayed 120,000 net flow and 50,000 allocation, selected daily/monthly 30,000 chart values, opened category history, recreated and relaunched. Separately, the verified debug APK restored the active Resumen tab through Home → background `am kill` → Recents: PID 11230 was confirmed gone and PID 11513 restored `Ingresos menos gastos`. The first kill was issued before Home finished backgrounding and left PID 11230 alive, so it was discarded and repeated after the activity entered the background. Automated semantics executed all four themes and the constrained 840 dp layout. No manual TalkBack session or screenshots are claimed.
+- **Gate results:** `./scripts/verify-ticket SELLO-022 --retain` passed all six checks: board validation/tests, quality-runner tests, architecture, host and API-30 device gates. Host: 488 tests; device: 486 tests; zero failures, errors or skipped tests. Debug app/catalog and release app assembled; lint has zero errors and 30 warnings. The JBR spawn helper initially prevented test JVM startup; rerunning with its recommended `-Djdk.lang.Process.launchMechanism=FORK` completed every focused and integrated test without a toolchain change. A passing API-31 run `20261014T020311Z-b579a521` was superseded because the ticket recipe requires API 30.
+- **Quality run:** run 20261014T024136Z-568331b4; SELLO-022 G2 passed; HEAD bfe1abd, inputs sha256 365d3cc9698e; report docs/planning/mvp/quality-reports/SELLO-022.json sha256 90d99ecf67ab43fbf18344b2f175ff0c3fe7ee8c974601c0e3434d05989c28bd
+- **Review:** self-review completed for exact money/source agreement, revision/generation/date fencing, typed failures, optional-preview isolation, accessible selection, adaptive layout, restored navigation, privacy and deferred scope. Done is proposed by [PR #45](https://github.com/Okabe94/Sello/pull/45); its merge is the designated owner's independent acceptance under `QUALITY_FLOW.md`. No owner approval, hosted CI pass or merge is claimed.
 
 ## SELLO-023 — Ship persisted appearance, ordering and essential settings
 

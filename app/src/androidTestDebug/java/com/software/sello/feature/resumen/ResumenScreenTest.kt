@@ -3,7 +3,7 @@ package com.software.sello.feature.resumen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -64,7 +64,7 @@ class ResumenScreenTest {
                 SelloTheme(ink = ink, darkTheme = dark, reducedMotion = true) {
                     Box(
                         if (width != null && height != null) {
-                            Modifier.size(width, height)
+                            Modifier.requiredSize(width, height)
                         } else {
                             Modifier.fillMaxSize()
                         }

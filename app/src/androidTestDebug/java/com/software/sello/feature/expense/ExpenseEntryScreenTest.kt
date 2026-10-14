@@ -131,11 +131,11 @@ class ExpenseEntryScreenTest {
     fun thePreviewIsLabelledAsOneAndSaysHowFarOverACategoryWouldGo() {
         show(complete)
 
-        rule.onNodeWithText("Vista previa, si lo anotas").assertIsDisplayed()
-        rule.onNodeWithText("Te quedarán").assertIsDisplayed()
-        rule.onNodeWithContentDescription("888.500 pesos").assertIsDisplayed()
-        rule.onNodeWithText("En Alimentación te pasas por").assertIsDisplayed()
-        rule.onNodeWithContentDescription("12.300 pesos").assertIsDisplayed()
+        rule.onNodeWithText("Vista previa, si lo anotas").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Te quedarán").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithContentDescription("888.500 pesos").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("En Alimentación te pasas por").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithContentDescription("12.300 pesos").performScrollTo().assertIsDisplayed()
     }
 
     @Test

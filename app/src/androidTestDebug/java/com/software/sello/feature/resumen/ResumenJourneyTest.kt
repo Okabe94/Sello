@@ -92,7 +92,7 @@ class ResumenJourneyTest {
         rule.awaitTag("income.history")
         Espresso.pressBack()
         rule.awaitTag("resumen.flow")
-        rule.onNodeWithContentDescription("120.000 pesos").assertIsDisplayed()
+        rule.onNodeWithContentDescription("120.000 pesos").performScrollTo().assertIsDisplayed()
         rule.onNodeWithContentDescription("50.000 pesos").performScrollTo().assertIsDisplayed()
         assertEquals(listOf("150000"), TestData.rows("SELECT SUM(amount_minor) FROM income"))
         assertEquals(listOf("30000"), TestData.rows("SELECT SUM(amount_minor) FROM expense"))

@@ -130,7 +130,16 @@ object MonthlyBudgetPolicy {
             val shown = !line.category.archived ||
                 line.state is MonthBudgetState.Limited ||
                 of.isNotEmpty()
-            if (shown) lines += CategoryMonth(line.category, line.state, spent, budget, of.size)
+            if (shown) {
+                lines += CategoryMonth(
+                    category = line.category,
+                    state = line.state,
+                    spent = spent,
+                    budget = budget,
+                    expenseCount = of.size,
+                    newestExpenseAddition = of.maxOfOrNull { it.createdAt }
+                )
+            }
         }
 
         val spent = when (val total = total(counted.map { it.amount.money })) {

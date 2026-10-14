@@ -6,6 +6,9 @@ import com.software.sello.domain.model.Category
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryMonth
 import com.software.sello.domain.model.CategoryName
+import com.software.sello.domain.model.CategoryOrder
+import com.software.sello.domain.model.CategoryOrderDirection
+import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.IconKey
 import com.software.sello.domain.model.Money
@@ -15,7 +18,10 @@ import com.software.sello.domain.model.OverallBudget
 import com.software.sello.domain.model.SnapshotFailure
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.policy.MonthBudgetState
+import com.software.sello.domain.port.CategoryOrderingPreferences
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.PreferenceRead
+import com.software.sello.domain.port.PreferenceWrite
 import com.software.sello.domain.port.SnapshotState
 import com.software.sello.navigation.HandFinancialClock
 import com.software.sello.navigation.HandMonotonicClock
@@ -67,6 +73,7 @@ class ReciboViewModelTest {
     }
 
     private val snapshots = HandSnapshots()
+    private val orderings = HandOrderings()
     private val labels = object : MoneyLabels {
         override fun amount(currency: Currency, digits: String, isOne: Boolean) = "$digits pesos"
 
@@ -82,7 +89,7 @@ class ReciboViewModelTest {
     fun resetDispatcher() = Dispatchers.resetMain()
 
     private fun TestScope.started(): Pair<ReciboViewModel, Job> {
-        val viewModel = ReciboViewModel(session, snapshots, MoneyFormatter(labels))
+        val viewModel = ReciboViewModel(session, snapshots, orderings, MoneyFormatter(labels))
         // Something has to be watching for the state to be kept up to date.
         val watching =
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -209,4 +216,46 @@ class ReciboViewModelTest {
             (viewModel.state.value as ReciboState.Month).summary.figure.amount
         )
     }
+
+    @Test
+    fun changingThePersistedOrderReordersTheSameSelectedMonth() = runTest {
+        val (viewModel) = started()
+        val base = snapshot(october, 9_000, categories = 2)
+        val ordered = base.copy(
+            categories = listOf(
+                base.categories[0].copy(expenseCount = 1),
+                base.categories[1].copy(expenseCount = 2)
+            )
+        )
+        snapshots.of(october).value = SnapshotState.Ready(ordered)
+
+        assertEquals(
+            listOf("00000000-0000-4000-8000-000000000001", "00000000-0000-4000-8000-000000000000"),
+            (viewModel.state.value as ReciboState.Month).categories.map { it.id }
+        )
+
+        orderings.state.value = PreferenceRead.Ready(
+            CategoryOrderingPreference(CategoryOrder.Alphabetical, CategoryOrderDirection.Ascending)
+        )
+
+        assertEquals(
+            listOf("00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"),
+            (viewModel.state.value as ReciboState.Month).categories.map { it.id }
+        )
+    }
+}
+
+private class HandOrderings : CategoryOrderingPreferences {
+    val state = MutableStateFlow<PreferenceRead<CategoryOrderingPreference>>(
+        PreferenceRead.Ready(CategoryOrderingPreference())
+    )
+
+    override fun observeCategoryOrdering(): Flow<PreferenceRead<CategoryOrderingPreference>> = state
+
+    override suspend fun setCategoryOrder(order: CategoryOrder): PreferenceWrite =
+        PreferenceWrite.Saved
+
+    override suspend fun setCategoryOrderDirection(
+        direction: CategoryOrderDirection
+    ): PreferenceWrite = PreferenceWrite.Saved
 }

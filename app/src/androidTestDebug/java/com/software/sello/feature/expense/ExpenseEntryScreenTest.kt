@@ -38,6 +38,7 @@ class ExpenseEntryScreenTest {
     val rule = createComposeRule()
 
     private val actions = mutableListOf<ExpenseEntryAction>()
+    private var pastExpenseAnnouncementDismissed = 0
     private val today = LocalDate.of(2026, 10, 9)
     private val food = EntryCategory("a", "Alimentación", "restaurant")
     private val coffee = EntryCategory("b", "Café", "local_cafe")
@@ -60,12 +61,22 @@ class ExpenseEntryScreenTest {
         )
     )
 
-    private fun show(state: ExpenseEntryState, fontScale: Float = 1f) {
+    private fun show(
+        state: ExpenseEntryState,
+        fontScale: Float = 1f,
+        showPastExpenseAnnouncement: Boolean = false
+    ) {
         rule.setContent {
             val density = LocalDensity.current.density
             CompositionLocalProvider(LocalDensity provides Density(density, fontScale)) {
                 SelloTheme(reducedMotion = true) {
-                    ExpenseEntryScreen(state, dateLabels(), { actions += it })
+                    ExpenseEntryScreen(
+                        state = state,
+                        dates = dateLabels(),
+                        onAction = { actions += it },
+                        showPastExpenseAnnouncement = showPastExpenseAnnouncement,
+                        dismissPastExpenseAnnouncement = { pastExpenseAnnouncementDismissed++ }
+                    )
                 }
             }
         }
@@ -354,6 +365,22 @@ class ExpenseEntryScreenTest {
 
         rule.onNodeWithText("Corregir este gasto cambia las cifras de septiembre.")
             .performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun firstTimePastExpenseNoticeCanBeDismissedWithoutRemovingThePermanentGuidance() {
+        show(
+            state = correcting.copy(pastMonths = listOf(java.time.YearMonth.of(2026, 9))),
+            showPastExpenseAnnouncement = true
+        )
+
+        rule.onNodeWithTag(ENTRY_PAST_MONTHS_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag(ENTRY_PAST_EXPENSE_ANNOUNCEMENT_TAG)
+            .performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Entendido").performScrollTo().performClick()
+
+        assertEquals(1, pastExpenseAnnouncementDismissed)
+        rule.onNodeWithTag(ENTRY_PAST_MONTHS_TAG).assertIsDisplayed()
     }
 
     @Test

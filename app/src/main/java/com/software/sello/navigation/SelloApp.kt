@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -64,6 +65,9 @@ import com.software.sello.feature.recibo.ReciboScreen
 import com.software.sello.feature.recibo.ReciboState
 import com.software.sello.feature.recibo.ReciboViewModel
 import com.software.sello.feature.resumen.ResumenRoot
+import com.software.sello.feature.settings.SettingsRoot
+import com.software.sello.presentation.corrections.CorrectionAnnouncementState
+import com.software.sello.presentation.corrections.CorrectionAnnouncementsViewModel
 import com.software.sello.presentation.corrections.CorrectionNotice
 import com.software.sello.presentation.corrections.CorrectionsViewModel
 import com.software.sello.presentation.date.dateLabels
@@ -82,6 +86,8 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { shell.onAction(ShellAction.EnteredBackground) }
     val corrections: CorrectionsViewModel = viewModel(factory = viewModels)
     val notice by corrections.notice.collectAsStateWithLifecycle()
+    val announcements: CorrectionAnnouncementsViewModel = viewModel(factory = viewModels)
+    val announcementState by announcements.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
         shell.onAction(ShellAction.ReturnedToForeground)
         corrections.returned()
@@ -121,7 +127,15 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 onShell = shell::onAction,
                 notice = notice,
                 onUndo = corrections::undo,
+                announcements = announcementState,
+                onDismissPastLimit = if (announcementState.failure == null) {
+                    announcements::dismissPastLimit
+                } else {
+                    announcements::retry
+                },
+                announcementFailed = announcementState.failure != null,
                 tabs = tabs,
+                onOpenSettings = { navigation.navigate(SettingsRoute) { launchSingleTop = true } },
                 onEditExpense = { id ->
                     navigation.navigate(ExpenseEditRoute(id)) { launchSingleTop = true }
                 },
@@ -170,9 +184,31 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                     onEditExpense = { navigation.navigate(ExpenseEditRoute(it)) },
                     onEditCategory = {
                         navigation.navigate(CategoryEditRoute(id, state.selectedMonth.toString()))
-                    }
+                    },
+                    showPastLimitAnnouncement = !announcementState.loading &&
+                        !announcementState.preference.pastLimitSeen,
+                    onDismissPastLimitAnnouncement = if (announcementState.failure == null) {
+                        announcements::dismissPastLimit
+                    } else {
+                        announcements::retry
+                    },
+                    announcementBusy = announcementState.busy,
+                    announcementFailed = announcementState.failure != null
                 )
             }
+        }
+        composable<SettingsRoute> {
+            ShellScreen(
+                state = state,
+                names = monthNames(),
+                onAction = shell::onAction,
+                navigation = null,
+                onBack = { navigation.popBackStack() },
+                screenTitle = stringResource(R.string.settings_title)
+            ) { padding ->
+                SettingsRoot(viewModels, padding)
+            }
+            BackHandler(enabled = !state.monthPickerOpen) { navigation.popBackStack() }
         }
         composable<IncomeHistoryRoute> {
             val model: IncomeHistoryViewModel = viewModel(factory = viewModels)
@@ -201,7 +237,14 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
             EntryDestination(
                 viewModels,
                 startsWithIncome = true,
-                onCreateCategory = { navigation.navigate(CategoryEditorRoute()) }
+                onCreateCategory = { navigation.navigate(CategoryEditorRoute()) },
+                announcements = announcementState,
+                onDismissPastExpense = if (announcementState.failure == null) {
+                    announcements::dismissPastExpense
+                } else {
+                    announcements::retry
+                },
+                announcementFailed = announcementState.failure != null
             ) { navigation.popBackStack() }
         }
         composable<IncomeEditRoute> {
@@ -240,7 +283,14 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
             EntryDestination(
                 viewModels,
                 startsWithIncome = false,
-                onCreateCategory = { navigation.navigate(CategoryEditorRoute()) }
+                onCreateCategory = { navigation.navigate(CategoryEditorRoute()) },
+                announcements = announcementState,
+                onDismissPastExpense = if (announcementState.failure == null) {
+                    announcements::dismissPastExpense
+                } else {
+                    announcements::retry
+                },
+                announcementFailed = announcementState.failure != null
             ) {
                 val onEntry =
                     navigation.currentBackStackEntry?.destination?.hasRoute<ExpenseEntryRoute>()
@@ -249,7 +299,16 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
         }
         // The same form: the route's identifier makes it correct that expense.
         composable<ExpenseEditRoute> {
-            ExpenseEntryRoot(viewModels) {
+            ExpenseEntryRoot(
+                viewModels = viewModels,
+                announcements = announcementState,
+                onDismissPastExpense = if (announcementState.failure == null) {
+                    announcements::dismissPastExpense
+                } else {
+                    announcements::retry
+                },
+                announcementFailed = announcementState.failure != null
+            ) {
                 val onEdit =
                     navigation.currentBackStackEntry?.destination?.hasRoute<ExpenseEditRoute>()
                 if (onEdit == true) navigation.popBackStack()
@@ -297,7 +356,11 @@ private fun ReciboDestination(
     onShell: (ShellAction) -> Unit,
     notice: CorrectionNotice?,
     onUndo: () -> Unit,
+    announcements: CorrectionAnnouncementState,
+    onDismissPastLimit: () -> Unit,
+    announcementFailed: Boolean,
     tabs: SelloNavigation,
+    onOpenSettings: () -> Unit,
     onEditExpense: (String) -> Unit,
     onEditCategory: (String) -> Unit,
     onCreateCategory: () -> Unit
@@ -323,6 +386,17 @@ private fun ReciboDestination(
             onAction = onShell,
             notice = notice?.let { { CorrectionNoticeBar(it, onUndo) } },
             navigation = tabs,
+            actions = {
+                IconButton(
+                    onClick = onOpenSettings,
+                    modifier = Modifier.testTag(SETTINGS_ACTION_TAG)
+                ) {
+                    Icon(
+                        SelloIcon.Settings.painter(),
+                        contentDescription = stringResource(R.string.settings_open)
+                    )
+                }
+            },
             detail = shownId?.let { id ->
                 ShellDetail(title) { padding ->
                     CategoryDetailScreen(
@@ -334,7 +408,12 @@ private fun ReciboDestination(
                         onRecordHere = { onShell(ShellAction.StartEntryIn(id)) },
                         contentPadding = padding,
                         onEditExpense = onEditExpense,
-                        onEditCategory = { onEditCategory(id) }
+                        onEditCategory = { onEditCategory(id) },
+                        showPastLimitAnnouncement = !announcements.loading &&
+                            !announcements.preference.pastLimitSeen,
+                        onDismissPastLimitAnnouncement = onDismissPastLimit,
+                        announcementBusy = announcements.busy,
+                        announcementFailed = announcementFailed
                     )
                 }
             }
@@ -396,6 +475,7 @@ fun ShellScreen(
     navigation: SelloNavigation? = null,
     onBack: (() -> Unit)? = null,
     screenTitle: String? = null,
+    actions: @Composable RowScope.() -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
@@ -452,6 +532,7 @@ fun ShellScreen(
                         }
                     }
                 },
+                actions = actions,
                 titleContent = {
                     val label = if (screenTitle == null) {
                         title
@@ -511,6 +592,9 @@ private fun EntryDestination(
     viewModels: ViewModelProvider.Factory,
     startsWithIncome: Boolean,
     onCreateCategory: () -> Unit,
+    announcements: CorrectionAnnouncementState,
+    onDismissPastExpense: () -> Unit,
+    announcementFailed: Boolean,
     onClosed: () -> Unit
 ) {
     var income by rememberSaveable { mutableStateOf(startsWithIncome) }
@@ -521,10 +605,15 @@ private fun EntryDestination(
             viewModels,
             onIncome = { income = true },
             onCreateCategory = onCreateCategory,
+            announcements = announcements,
+            onDismissPastExpense = onDismissPastExpense,
+            announcementFailed = announcementFailed,
             onClosed = onClosed
         )
     }
 }
+
+const val SETTINGS_ACTION_TAG = "navigation:settings"
 
 /**
  * What is said about the last correction. Only a deletion that can still be undone

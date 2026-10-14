@@ -109,7 +109,8 @@ fun SegmentedSwitch(
     options: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     val colors = SelloTheme.colors
     BoxWithConstraints(
@@ -137,7 +138,11 @@ fun SegmentedSwitch(
                         .weight(1f)
                         .heightIn(min = SegmentHeight)
                         .clip(SegmentShape)
-                        .selectable(selected, role = Role.RadioButton) { onSelect(index) }
+                        .selectable(
+                            selected = selected,
+                            enabled = enabled,
+                            role = Role.RadioButton
+                        ) { onSelect(index) }
                 ) {
                     Text(
                         text = option,

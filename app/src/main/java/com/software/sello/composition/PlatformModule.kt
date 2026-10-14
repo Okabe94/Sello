@@ -63,5 +63,6 @@ fun productionModules(
     androidModule(context),
     platformModule(financialZone),
     storageModule(storage),
+    preferencesModule(),
     presentationModule()
 )

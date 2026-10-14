@@ -1,6 +1,8 @@
 package com.software.sello.domain.policy
 
 import com.software.sello.domain.model.CategoryMonth
+import com.software.sello.domain.model.CategoryOrder
+import com.software.sello.domain.model.CategoryOrderDirection
 
 /**
  * The order categories are shown in (decision D06). Only the default order exists so
@@ -11,10 +13,51 @@ import com.software.sello.domain.model.CategoryMonth
  * by identifier, so the result never depends on the order rows were read in.
  */
 object CategoryOrderPolicy {
-    fun mostUsed(categories: List<CategoryMonth>): List<CategoryMonth> = categories.sortedWith(
-        compareBy<CategoryMonth> { it.budget == null }
-            .thenByDescending { it.expenseCount }
-            .thenBy { it.category.name.uniquenessKey }
-            .thenBy { it.category.id.value }
-    )
+    fun mostUsed(categories: List<CategoryMonth>): List<CategoryMonth> =
+        order(categories, CategoryOrder.MostUsed, CategoryOrderDirection.Descending)
+
+    /**
+     * D06 in one comparator: finite categories before unlimited ones, categories without
+     * selected-month expenses last inside either partition, then the selected metric.
+     * Direction never reverses those partitions or the deterministic name/ID tie-break.
+     */
+    fun order(
+        categories: List<CategoryMonth>,
+        order: CategoryOrder,
+        direction: CategoryOrderDirection
+    ): List<CategoryMonth> = categories.sortedWith { left, right ->
+        compareValues(left.budget == null, right.budget == null)
+            .takeUnless { it == 0 }
+            ?: compareValues(left.expenseCount == 0, right.expenseCount == 0)
+                .takeUnless { it == 0 }
+            ?: metric(left, right, order, direction).takeUnless { it == 0 }
+            ?: left.category.name.uniquenessKey.compareTo(right.category.name.uniquenessKey)
+                .takeUnless { it == 0 }
+            ?: left.category.id.value.compareTo(right.category.id.value)
+    }
+
+    private fun metric(
+        left: CategoryMonth,
+        right: CategoryMonth,
+        order: CategoryOrder,
+        direction: CategoryOrderDirection
+    ): Int {
+        val compared = when (order) {
+            CategoryOrder.MostUsed -> left.expenseCount.compareTo(right.expenseCount)
+
+            CategoryOrder.Alphabetical ->
+                left.category.name.uniquenessKey.compareTo(right.category.name.uniquenessKey)
+
+            CategoryOrder.AmountSpent -> left.spent.minorUnits.compareTo(right.spent.minorUnits)
+
+            CategoryOrder.Limit -> (left.budget?.limit?.minorUnits ?: 0L)
+                .compareTo(right.budget?.limit?.minorUnits ?: 0L)
+
+            CategoryOrder.LatestExpenseAdded -> compareValues(
+                left.newestExpenseAddition,
+                right.newestExpenseAddition
+            )
+        }
+        return if (direction == CategoryOrderDirection.Descending) -compared else compared
+    }
 }

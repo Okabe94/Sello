@@ -33,6 +33,7 @@ class CatalogExamplesTest {
                 "inputs.field-pill",
                 "inputs.form-field",
                 "inputs.switch",
+                "inputs.settings-controls",
                 "inputs.icon-choice",
                 "inputs.expense-entry",
                 "inputs.income-entry",

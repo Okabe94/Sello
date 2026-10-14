@@ -220,6 +220,50 @@ fun SwitchExample() {
     }
 }
 
+/** The actual controls combined as Settings uses them, with catalog-local state only. */
+@Composable
+fun SettingsControlsExample() {
+    var theme by rememberSaveable { mutableIntStateOf(0) }
+    var ink by rememberSaveable { mutableStateOf("Cobalto") }
+    var order by rememberSaveable { mutableStateOf("Más usadas") }
+    var direction by rememberSaveable { mutableIntStateOf(0) }
+    Slip(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md)) {
+            Caption("Tema")
+            SegmentedSwitch(
+                listOf("Sistema", "Claro", "Oscuro"),
+                theme,
+                { theme = it },
+                modifier = Modifier.testTag("settings-controls:theme")
+            )
+            Caption("Tinta")
+            ChipFlow(modifier = Modifier.testTag("settings-controls:ink")) {
+                listOf("Cobalto", "Violeta").forEach { choice ->
+                    SelloChip(choice, selected = ink == choice, onClick = { ink = choice })
+                }
+            }
+            Caption("Orden de categorías")
+            ChipFlow(modifier = Modifier.testTag("settings-controls:order")) {
+                listOf(
+                    "Más usadas",
+                    "Alfabético",
+                    "Monto gastado",
+                    "Límite",
+                    "Último gasto agregado"
+                ).forEach { choice ->
+                    SelloChip(choice, selected = order == choice, onClick = { order = choice })
+                }
+            }
+            SegmentedSwitch(
+                listOf("Mayor a menor", "Menor a mayor"),
+                direction,
+                { direction = it },
+                modifier = Modifier.testTag("settings-controls:direction")
+            )
+        }
+    }
+}
+
 /** One icon chosen, one tapped changes it, and a disabled copy that ignores taps. */
 @Composable
 fun IconChoiceExample() {

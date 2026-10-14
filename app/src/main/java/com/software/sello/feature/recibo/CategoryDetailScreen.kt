@@ -36,6 +36,7 @@ import com.software.sello.designsystem.component.LineAction
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SelloButton
+import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
 import com.software.sello.designsystem.theme.SelloTheme
@@ -60,7 +61,11 @@ fun CategoryDetailScreen(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     onEditExpense: (String) -> Unit = {},
-    onEditCategory: () -> Unit = {}
+    onEditCategory: () -> Unit = {},
+    showPastLimitAnnouncement: Boolean = false,
+    onDismissPastLimitAnnouncement: () -> Unit = {},
+    announcementBusy: Boolean = false,
+    announcementFailed: Boolean = false
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
@@ -109,6 +114,27 @@ fun CategoryDetailScreen(
                         color = SelloTheme.colors.inkSoft,
                         modifier = Modifier.testTag(CATEGORY_DETAIL_PAST_HELP_TAG)
                     )
+                    if (showPastLimitAnnouncement) {
+                        SelloNotice(
+                            message = stringResource(
+                                if (announcementFailed) {
+                                    R.string.correction_announcement_failed
+                                } else {
+                                    R.string.past_limit_announcement
+                                }
+                            ),
+                            actionLabel = stringResource(
+                                if (announcementFailed) {
+                                    R.string.correction_announcement_retry
+                                } else {
+                                    R.string.correction_announcement_dismiss
+                                }
+                            ),
+                            onAction = onDismissPastLimitAnnouncement,
+                            busy = announcementBusy,
+                            modifier = Modifier.testTag(CATEGORY_DETAIL_PAST_LIMIT_ANNOUNCEMENT_TAG)
+                        )
+                    }
                 }
                 Expenses(state, months, dates, onAction, onRecordHere, onEditExpense)
             }
@@ -332,6 +358,7 @@ const val CATEGORY_DETAIL_EMPTY_TAG = "detail:empty"
 const val CATEGORY_DETAIL_MORE_TAG = "detail:more"
 const val CATEGORY_DETAIL_EDIT_TAG = "detail:edit-category"
 const val CATEGORY_DETAIL_PAST_HELP_TAG = "detail:past-help"
+const val CATEGORY_DETAIL_PAST_LIMIT_ANNOUNCEMENT_TAG = "detail:past-limit-announcement"
 const val CATEGORY_DETAIL_HINT_TAG = "detail:hint"
 const val CATEGORY_DETAIL_DELETE_PROBLEM_TAG = "detail:delete-problem"
 const val CATEGORY_DETAIL_MORE_FAILED_TAG = "detail:more-failed"

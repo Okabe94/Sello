@@ -3754,7 +3754,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 1005,Epic,SELLO-E05 — Complete everyday MVP workflows,"Local ID: SELLO-E05
 Increment: MVP
 Goal: Complete maintainable expense/income history and an honest monthly summary.
-Exit: Edits/deletes/undo, category/budget management, income, basic Resumen and preferences all work after restart and preserve prior history.",,Highest,In Progress,sello-e05
+Exit: Edits/deletes/undo, category/budget management, income, basic Resumen and preferences all work after restart and preserve prior history.",,Highest,Done,sello-e05
 19,Story,"SELLO-019 — Implement expense edits, deletion and guarded six-second undo","Local ID: SELLO-019
 Epic: SELLO-E05
 Increment: MVP
@@ -4638,7 +4638,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Story
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-006, SELLO-015, SELLO-020, SELLO-004
 - **Gate:** G2
 
@@ -4717,6 +4717,43 @@ Create/run `*PreferencesCodecTest`, `*CategoryOrderingTest` and SettingsJourneyT
 G2. Inject DataStore failure, verify changed theme/restart/order and untouched actual
 financial rows/drafts; test every approved ordering metric with explicit fixtures.
 
+### Delivery evidence
+
+- **Revision:** tested snapshot is the uncommitted `sello-023-settings` working tree
+  on `d49f155e36e76eff76edc12b2a6f7b75ad38e65d`; it is identified exactly by the
+  retained input fingerprint below. The commit and pull request follow this evidence;
+  no claim is made that the gate tested a clean commit.
+- **Requirement mapping:** `DataStoreUserPreferencesTest` and
+  `DataStoreUserPreferencesPersistenceTest` prove stable codes, defaults, invalid/
+  unavailable reads and real-file reopen persistence; `CategoryOrderPolicyTest`
+  exercises D06/O01–O14 selected-month metrics, direction, finite/unlimited
+  partitions, ties, backdating, edits, deletion and restored original creation times.
+  `SettingsViewModelTest`, `AppearanceThemeTest`,
+  `CorrectionAnnouncementsViewModelTest`, screen tests and `SettingsJourneyTest`
+  prove narrow ports, immediate theme mapping, persisted announcements, Recibo gear,
+  back navigation, unchanged Room rows/selected month and cold activity restart.
+- **Red / Green:** `CategoryOrderPolicyTest.latestAdditionUsesOriginalCreationTimeAndReversesOnlyThatMetric`
+  failed as intended at line 203 when the policy was temporarily changed to ignore
+  descending direction, then passed after the D06 comparator was restored. The new
+  catalog example also exposed its deliberately stable-ID contract in the full gate;
+  that expectation was updated and the repeat gate passed.
+- **Gate results:** `./scripts/verify-ticket SELLO-023 --retain` passed all six
+  checks: board validation/tests, quality-runner tests, architecture, host and API-30
+  device gates. Host: 506 tests; device: 491 tests; zero failures, errors or skips.
+  Debug/release app and debug catalog assembled; lint had zero errors and 30 existing
+  warnings. Kotlin/JDK emitted `Unsafe` deprecation warnings during focused checks.
+- **Quality run:** run 20261014T151936Z-7918f591; SELLO-023 G2 passed; HEAD d49f155, inputs sha256 91748865f8170150a172aedf4941f8fd68ff78c8275fd5809d096281a3d01c0c; report docs/planning/mvp/quality-reports/SELLO-023.json sha256 deb8ac7c353a41eb5066619e1f4dc123fe734a9b945d9b206832653a0dde734b
+- **Device / Artifact:** isolated synthetic API-30 AVD `sello023_api30run`, serial
+  `emulator-5580`; no personal history or physical device was used. The real journey
+  opens Recibo's gear, changes settings, returns with the selected month and stored
+  figures intact, relaunches to prove Dark/Violeta and alphabetical ascending order,
+  and the device suite verifies persisted preferences and correction-announcement UI.
+  No manual TalkBack session, physical-device test or hosted CI run is claimed.
+- **Review:** executor self-review covered DataStore/Room separation, stable codecs,
+  cancellation/failure paths, D06 partition/tie behavior, no-draft route recreation,
+  catalog/release boundaries and the exact retained report. This branch proposes Done;
+  the pull request's merge is the designated owner acceptance under `QUALITY_FLOW.md`.
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes
@@ -4784,7 +4821,7 @@ export PATH=""$JAVA_HOME/bin:$PATH""
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1005,High,Backlog,sello-023
+",1005,High,Done,sello-023
 1006,Epic,SELLO-E06 — Debug live-testing sandbox,"Local ID: SELLO-E06
 Increment: MVP
 Goal: Explore time-sensitive financial behavior safely through the actual app pipeline.

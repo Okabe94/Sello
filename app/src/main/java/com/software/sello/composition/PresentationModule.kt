@@ -14,10 +14,13 @@ import com.software.sello.feature.income.IncomeHistoryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
 import com.software.sello.feature.recibo.ReciboViewModel
 import com.software.sello.feature.resumen.ResumenViewModel
+import com.software.sello.feature.settings.AppearanceViewModel
+import com.software.sello.feature.settings.SettingsViewModel
 import com.software.sello.feature.startup.StartupFailureViewModel
 import com.software.sello.feature.startup.StartupRecovery
 import com.software.sello.navigation.MonthSession
 import com.software.sello.navigation.ShellViewModel
+import com.software.sello.presentation.corrections.CorrectionAnnouncementsViewModel
 import com.software.sello.presentation.corrections.CorrectionsViewModel
 import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
@@ -46,6 +49,8 @@ fun presentationModule(): Module = module {
  * when the screen opens instead of silently defaulting.
  */
 fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
+    initializer { AppearanceViewModel(koin.get()) }
+    initializer { SettingsViewModel(koin.get(), koin.get()) }
     initializer { ResumenViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get()) }
     initializer { IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
     initializer {
@@ -62,6 +67,7 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     }
     initializer { ShellViewModel(createSavedStateHandle(), koin.get(), koin.get()) }
     initializer { CorrectionsViewModel(koin.get()) }
+    initializer { CorrectionAnnouncementsViewModel(koin.get()) }
     initializer {
         CategoryManagementViewModel(
             createSavedStateHandle(),
@@ -74,7 +80,7 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
             koin.get()
         )
     }
-    initializer { ReciboViewModel(koin.get(), koin.get(), koin.get()) }
+    initializer { ReciboViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
     initializer {
         CategoryDetailViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
     }

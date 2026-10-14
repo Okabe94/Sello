@@ -145,7 +145,6 @@ synthetic history because exact populated history/relaunch is already exercised 
 real journey. Automated screen semantics cover all four themes, 2× type and the
 constrained 840 dp layout. No manual TalkBack session or screenshots are claimed.
 
-The retained final G2 run is `20261014T021735Z-93a3887a`: 488 host tests and 486
-device tests passed with zero failures, errors or skips; lint reported zero errors
-and 30 warnings. Its device is API 30. A passing API-31 run was superseded to match
-the runbook exactly. The report is `docs/planning/mvp/quality-reports/SELLO-022.json`.
+The canonical ticket and retained `docs/planning/mvp/quality-reports/SELLO-022.json`
+record the final G2 run on the merged revision. It uses API 30. The earlier passing
+API-31 run was superseded to match this runbook exactly.

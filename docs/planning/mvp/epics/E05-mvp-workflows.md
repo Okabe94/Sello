@@ -558,8 +558,8 @@ the two rather than treating cancellation as a successful zero or a retryable re
 
 **Second pull request: complete Resumen screens**
 
-Owner authorized starting the screens while #44 is reviewed. Branch
-`sello-022-resumen-screens` is stacked on #44; it does not modify the first PR.
+Part 1 merged through #44. Branch `sello-022-resumen-screens` now includes current
+`main`; its pull request contains only the remaining screens and charts work.
 The screens use one lifecycle-bound Resumen observation, emphasize actual cash
 flow, keep signed allocation secondary, and label actual standing separately from
 estimated projection. Exact chart selections expire after three seconds and are

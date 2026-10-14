@@ -30,6 +30,23 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ResumenSnapshotTest {
+    @Test
+    fun incomePreviewIsExactAndNeverWrapsAnOverflowingMonth() {
+        val snapshot = read(incomes = listOf(income(1, 150_000))).valueOrFail()
+        assertEquals(
+            Money.cop(175_000),
+            IncomePreviewPolicy.preview(snapshot, amount(25_000)).valueOrFail()
+        )
+        assertEquals(
+            SnapshotFailure.Unrepresentable,
+            IncomePreviewPolicy.preview(
+                snapshot.copy(income = Money.cop(Long.MAX_VALUE)),
+                amount(1)
+            ).errorOrFail()
+        )
+        assertEquals(Money.cop(150_000), snapshot.income)
+    }
+
     private val october = YearMonth.of(2026, 10)
     private val recorded = Instant.parse("2026-10-09T15:04:05Z")
     private val today = FinancialDay(LocalDate.of(2026, 10, 9), ZoneId.of("America/Bogota"))

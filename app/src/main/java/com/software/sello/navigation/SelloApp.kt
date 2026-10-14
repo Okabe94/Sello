@@ -63,8 +63,7 @@ import com.software.sello.feature.recibo.ReciboAction
 import com.software.sello.feature.recibo.ReciboScreen
 import com.software.sello.feature.recibo.ReciboState
 import com.software.sello.feature.recibo.ReciboViewModel
-import com.software.sello.feature.resumen.ResumenScreen
-import com.software.sello.feature.resumen.ResumenViewModel
+import com.software.sello.feature.resumen.ResumenRoot
 import com.software.sello.presentation.corrections.CorrectionNotice
 import com.software.sello.presentation.corrections.CorrectionsViewModel
 import com.software.sello.presentation.date.dateLabels
@@ -135,8 +134,6 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
             ) { navigation.navigate(CategoryEditorRoute()) }
         }
         composable<ResumenRoute> {
-            val model: ResumenViewModel = viewModel(factory = viewModels)
-            val summary by model.state.collectAsStateWithLifecycle()
             ShellScreen(
                 state,
                 monthNames(),
@@ -144,11 +141,38 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 navigation = tabs,
                 notice = notice?.let { { CorrectionNoticeBar(it, corrections::undo) } }
             ) { padding ->
-                ResumenScreen(summary, model::onAction, {
+                ResumenRoot(viewModels, {
                     navigation.navigate(IncomeHistoryRoute)
+                }, { id -> navigation.navigate(ResumenCategoryRoute(id)) }, {
+                    navigation.navigate(ExpenseEntryRoute())
                 }, padding)
             }
             BackHandler(enabled = !state.monthPickerOpen) { tabs.onSelect("recibo") }
+        }
+        composable<ResumenCategoryRoute> { entry ->
+            val id = entry.toRoute<ResumenCategoryRoute>().categoryId
+            val detail: CategoryDetailViewModel = viewModel(factory = viewModels)
+            val detailState by detail.state.collectAsStateWithLifecycle()
+            LaunchedEffect(id) { detail.onAction(CategoryDetailAction.Show(id)) }
+            ShellScreen(
+                state,
+                monthNames(),
+                shell::onAction,
+                onBack = { navigation.popBackStack() },
+                screenTitle = stringResource(R.string.category_detail_title_fallback),
+                notice = notice?.let { { CorrectionNoticeBar(it, corrections::undo) } }
+            ) { padding ->
+                CategoryDetailScreen(
+                    state = detailOf(id, detailState), months = monthNames(), dates = dateLabels(),
+                    showName = true, onAction = detail::onAction,
+                    onRecordHere = { navigation.navigate(ExpenseEntryRoute(id)) },
+                    contentPadding = padding,
+                    onEditExpense = { navigation.navigate(ExpenseEditRoute(it)) },
+                    onEditCategory = {
+                        navigation.navigate(CategoryEditRoute(id, state.selectedMonth.toString()))
+                    }
+                )
+            }
         }
         composable<IncomeHistoryRoute> {
             val model: IncomeHistoryViewModel = viewModel(factory = viewModels)

@@ -7,18 +7,23 @@ import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.Income
 import com.software.sello.domain.model.IncomeSource
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.ResumenSnapshot
+import com.software.sello.domain.model.SnapshotFailure
 import com.software.sello.domain.model.SourceName
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.IncomeCommandOutcome
 import com.software.sello.domain.port.IncomeCommandOutcome.Rejected
 import com.software.sello.domain.port.IncomeMonthState
 import com.software.sello.domain.port.IncomeRejection
+import com.software.sello.domain.port.ResumenSnapshotState
+import com.software.sello.domain.port.ResumenSnapshots
 import com.software.sello.feature.expense.HandExpenseCommands
 import com.software.sello.feature.expense.HandIncomeCommands
 import com.software.sello.feature.expense.HandIncomeReads
 import com.software.sello.feature.expense.incomeId
 import com.software.sello.feature.expense.storedIncome
 import com.software.sello.feature.expense.uuid
+import com.software.sello.feature.resumen.resumenSnapshot
 import com.software.sello.navigation.HandFinancialClock
 import com.software.sello.presentation.corrections.CorrectionNotice
 import com.software.sello.presentation.corrections.ExpenseCorrections
@@ -31,6 +36,9 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -87,7 +95,50 @@ class IncomeFormViewModelTest {
     private fun shown(digits: String) = MoneyTextValue(MoneySign.None, "", digits, "$digits pesos")
 
     private fun form(saved: SavedStateHandle = SavedStateHandle()) =
-        IncomeFormViewModel(saved, commands, reads, clock, { uuid(nextId++) }, money, corrections)
+        IncomeFormViewModel(saved, commands, reads, snapshots, clock, {
+            uuid(nextId++)
+        }, money, corrections)
+
+    private val previewOverride = MutableStateFlow<ResumenSnapshotState?>(null)
+    private val previewRevision = MutableStateFlow<Long?>(null)
+    private val snapshots = object : ResumenSnapshots {
+        override suspend fun read(month: YearMonth): Outcome<ResumenSnapshot, SnapshotFailure> =
+            error("The form observes")
+
+        override fun observe(month: YearMonth) = combine(
+            reads.observeMonth(month),
+            clock.today,
+            previewOverride,
+            previewRevision
+        ) { state, today, override, revision ->
+            when {
+                override != null -> override
+
+                state is IncomeMonthState.Loading -> ResumenSnapshotState.Loading
+
+                state is IncomeMonthState.Failed -> ResumenSnapshotState.Failed(
+                    SnapshotFailure.Storage(state.failure),
+                    null
+                )
+
+                state is IncomeMonthState.Ready -> {
+                    val original = resumenSnapshot(income = state.month.total.minorUnits)
+                    ResumenSnapshotState.Ready(
+                        original.copy(
+                            budget = original.budget.copy(
+                                month = month,
+                                asOf = today.date,
+                                generation = state.month.generation,
+                                revision = revision ?: state.month.revision
+                            )
+                        )
+                    )
+                }
+
+                else -> error("Unknown income state")
+            }
+        }
+    }
 
     /** A new-income form with the month already read. */
     private fun ready(saved: SavedStateHandle = SavedStateHandle()): IncomeFormViewModel {
@@ -97,6 +148,87 @@ class IncomeFormViewModelTest {
 
     private fun editing(income: Income = logo) =
         SavedStateHandle(mapOf(IncomeFormViewModel.KEY_EDITED_INCOME to income.id.value))
+
+    @Test
+    fun newIncomePreviewIsExactAndCorrectingDoesNotCountTheIncomeTwice() {
+        reads.stored[logo.id] = logo
+        val model = ready()
+        model.onAction(IncomeFormAction.Paste("150000"))
+        assertEquals(shown("1.000.000"), model.state.value.monthPreview)
+        assertEquals(1, reads.stored.size)
+        val edit = ready(editing())
+        edit.onAction(IncomeFormAction.Paste("150000"))
+        assertEquals(null, edit.state.value.monthPreview)
+    }
+
+    @Test
+    fun invalidOrFutureDraftsAndReadFailuresNeverClaimAUsablePreview() {
+        val model = ready()
+        model.onAction(IncomeFormAction.Paste("0"))
+        assertEquals(null, model.state.value.monthPreview)
+        model.onAction(IncomeFormAction.Paste("150000"))
+        clock.goTo("2026-10-21")
+        assertEquals(null, model.state.value.monthPreview)
+        clock.goTo("2026-10-22")
+        reads.of(october).value = IncomeMonthState.Failed(StorageFailure.Unavailable("test"), null)
+        assertEquals(null, model.state.value.monthPreview)
+        assertTrue(model.state.value.loadFailed)
+    }
+
+    @Test
+    fun anOverflowingMonthHasAnExplicitUnavailablePreviewInsteadOfAWrappedTotal() {
+        val model = ready()
+        reads.of(october).value = IncomeMonthState.Ready(
+            com.software.sello.domain.port.IncomeMonth(
+                october,
+                7,
+                3,
+                com.software.sello.domain.model.Money.cop(Long.MAX_VALUE),
+                1
+            )
+        )
+        model.onAction(IncomeFormAction.Paste("1"))
+        assertEquals(null, model.state.value.monthPreview)
+        assertTrue(model.state.value.previewUnavailable)
+    }
+
+    @Test
+    fun anUnavailableOptionalPreviewDoesNotBreakTheExistingIncomeWriteJourney() {
+        val model = ready()
+        model.onAction(IncomeFormAction.Paste("150000"))
+        previewOverride.value = ResumenSnapshotState.Failed(
+            SnapshotFailure.Unrepresentable,
+            resumenSnapshot(income = 900_000)
+        )
+        assertFalse(model.state.value.loadFailed)
+        assertTrue(model.state.value.canSubmit)
+        assertEquals(null, model.state.value.monthPreview)
+        assertTrue(model.state.value.previewUnavailable)
+
+        reads.stored[incomeId(900)] =
+            storedIncome(900, "2026-10-22", 150_000, IncomeSource.Salary)
+        model.onAction(IncomeFormAction.Submit)
+
+        assertEquals(1, commands.created.size)
+        assertEquals(incomeId(900).value, model.state.value.receipt?.incomeId)
+    }
+
+    @Test
+    fun previewWaitsUntilIncomeAndSummaryAreFromTheSameRevision() {
+        reads.stored[logo.id] = logo
+        previewRevision.value = 0
+        val model = ready()
+
+        model.onAction(IncomeFormAction.Paste("150000"))
+
+        assertNull(model.state.value.monthPreview)
+        assertTrue(model.state.value.previewLoading)
+
+        previewRevision.value = null
+
+        assertEquals(shown("1.000.000"), model.state.value.monthPreview)
+        assertFalse(model.state.value.previewLoading)
+    }
 
     /** The form opened on [income], with it in storage and its months read. */
     private fun opened(

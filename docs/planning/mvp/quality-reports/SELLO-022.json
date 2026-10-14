@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "run_id": "20261013T202758Z-8cf82d18",
+  "run_id": "20261014T021735Z-93a3887a",
   "ticket": "SELLO-022",
   "gate": {
     "required": "G2",
@@ -9,23 +9,51 @@
   "outcome": "passed",
   "failures": [],
   "warnings": [
-    "gradle-host: 29 lint warnings"
+    "gradle-host: 30 lint warnings",
+    "tested an uncommitted working tree, not a clean commit"
   ],
   "snapshot": {
-    "head": "857815780231b0ea7b68f9cc52a5c5f576b4f071",
-    "dirty": false,
-    "dirty_files": [],
+    "head": "2481673f8d6cef1ed2bde210174fda315931a0ac",
+    "dirty": true,
+    "dirty_files": [
+      "app/src/androidTestDebug/java/com/software/sello/feature/resumen/ResumenJourneyTest.kt",
+      "app/src/androidTestDebug/java/com/software/sello/feature/resumen/ResumenScreenTest.kt",
+      "app/src/debug/java/com/software/sello/feature/resumen/ResumenPreviews.kt",
+      "app/src/main/java/com/software/sello/composition/PresentationModule.kt",
+      "app/src/main/java/com/software/sello/composition/StorageModule.kt",
+      "app/src/main/java/com/software/sello/feature/income/IncomeFormScreen.kt",
+      "app/src/main/java/com/software/sello/feature/income/IncomeFormState.kt",
+      "app/src/main/java/com/software/sello/feature/income/IncomeFormViewModel.kt",
+      "app/src/main/java/com/software/sello/feature/resumen/ResumenRenderModel.kt",
+      "app/src/main/java/com/software/sello/feature/resumen/ResumenRoot.kt",
+      "app/src/main/java/com/software/sello/feature/resumen/ResumenScreen.kt",
+      "app/src/main/java/com/software/sello/feature/resumen/ResumenState.kt",
+      "app/src/main/java/com/software/sello/feature/resumen/ResumenViewModel.kt",
+      "app/src/main/java/com/software/sello/navigation/Routes.kt",
+      "app/src/main/java/com/software/sello/navigation/SelloApp.kt",
+      "app/src/main/res/values/strings.xml",
+      "app/src/test/java/com/software/sello/feature/income/IncomeFormViewModelTest.kt",
+      "app/src/test/java/com/software/sello/feature/resumen/ResumenRenderModelTest.kt",
+      "app/src/test/java/com/software/sello/feature/resumen/ResumenViewModelTest.kt",
+      "catalog/src/main/java/com/software/sello/catalog/components/StructureExamples.kt",
+      "docs/planning/mvp/epics/E05-mvp-workflows.md",
+      "docs/planning/mvp/jira-import.csv",
+      "docs/planning/mvp/quality-reports/SELLO-022.json",
+      "docs/testing/SELLO-022-resumen.md",
+      "domain/src/main/kotlin/com/software/sello/domain/policy/IncomePreviewPolicy.kt",
+      "domain/src/test/kotlin/com/software/sello/domain/policy/ResumenSnapshotTest.kt"
+    ],
     "fingerprint": {
       "algorithm": "sha256",
-      "value": "e809b7cceed3ca73a4e838da5d7d84c3f11dd5278628dbec42119ea0b5574858",
-      "files": 607
+      "value": "9efceb4ea3f1b3b641755631dc20340a3f5fb92f5a699962c8b058d590153332",
+      "files": 615
     },
     "acceptance": "83e7493aa857d9b3be238624ca61d74d6c34273a1978b36951d95ab79f15285f"
   },
   "environment": {
     "os": "Linux x86_64",
-    "python": "3.14.7",
-    "java": "openjdk version \"25.0.2\" 2026-01-20",
+    "python": "3.14.8",
+    "java": "Picked up JAVA_TOOL_OPTIONS: -Djdk.lang.Process.launchMechanism=FORK",
     "git": "git version 2.56.0",
     "gradle": "9.5.0",
     "agp": "9.3.3",
@@ -43,44 +71,44 @@
       "name": "board-check",
       "command": "python3 docs/planning/mvp/board.py --check --skip-evidence",
       "log": "board-check.log",
-      "started_at": "2026-10-13T20:27:58+00:00",
+      "started_at": "2026-10-14T02:17:35+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-13T20:27:58+00:00"
+      "finished_at": "2026-10-14T02:17:35+00:00"
     },
     {
       "name": "board-tests",
       "command": "python3 -m unittest discover -s docs/planning/mvp -p test_board.py",
       "log": "board-tests.log",
-      "started_at": "2026-10-13T20:27:58+00:00",
+      "started_at": "2026-10-14T02:17:35+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-13T20:27:58+00:00"
+      "finished_at": "2026-10-14T02:17:35+00:00"
     },
     {
       "name": "quality-tests",
       "command": "python3 -m unittest discover -s scripts/quality -p test_*.py",
       "log": "quality-tests.log",
-      "started_at": "2026-10-13T20:27:58+00:00",
+      "started_at": "2026-10-14T02:17:35+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-13T20:28:01+00:00"
+      "finished_at": "2026-10-14T02:17:38+00:00"
     },
     {
       "name": "architecture",
       "command": "python3 scripts/quality/architecture.py",
       "log": "architecture.log",
-      "started_at": "2026-10-13T20:28:01+00:00",
+      "started_at": "2026-10-14T02:17:38+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-13T20:28:01+00:00"
+      "finished_at": "2026-10-14T02:17:38+00:00"
     },
     {
       "name": "gradle-host",
       "command": "./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue",
       "log": "gradle-host.log",
-      "started_at": "2026-10-13T20:28:01+00:00",
+      "started_at": "2026-10-14T02:17:38+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-13T20:28:24+00:00",
+      "finished_at": "2026-10-14T02:17:39+00:00",
       "results": {
-        "suites": 48,
-        "tests": 474,
+        "suites": 49,
+        "tests": 488,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -88,25 +116,25 @@
       "lint": {
         "reports": 4,
         "errors": 0,
-        "warnings": 29
+        "warnings": 30
       }
     },
     {
       "name": "gradle-device",
       "command": "./gradlew :data:connectedDebugAndroidTest :design-system:connectedDebugAndroidTest :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest --continue",
       "log": "gradle-device.log",
-      "started_at": "2026-10-13T20:28:24+00:00",
+      "started_at": "2026-10-14T02:17:39+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-13T20:33:45+00:00",
+      "finished_at": "2026-10-14T02:25:19+00:00",
       "results": {
         "suites": 4,
-        "tests": 474,
+        "tests": 486,
         "failures": 0,
         "errors": 0,
         "skipped": 0
       }
     }
   ],
-  "started_at": "2026-10-13T20:27:58+00:00",
-  "finished_at": "2026-10-13T20:33:45+00:00"
+  "started_at": "2026-10-14T02:17:35+00:00",
+  "finished_at": "2026-10-14T02:25:19+00:00"
 }

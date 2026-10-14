@@ -17,6 +17,7 @@ import com.software.sello.domain.port.FinancialProfileStore
 import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.ResumenSnapshots
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import org.koin.core.module.Module
@@ -69,6 +70,9 @@ fun storageModule(storage: FinancialStorage): Module = module {
     single<CategoryReads> { storage.categoryReads }
     single<MonthlySnapshots> {
         storage.monthlySnapshots(get(), get<DispatcherProvider>().default)
+    }
+    single<ResumenSnapshots> {
+        storage.resumenSnapshots(get(), get<DispatcherProvider>().default)
     }
     single<ExpenseReads> { storage.expenseReads }
     single<IncomeCommands> { storage.incomeCommands(get(), get(), get(), get()) }

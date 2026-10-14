@@ -25,8 +25,14 @@ import com.software.sello.domain.port.PreferenceWrite
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 
 /**
  * The sole owner of Sello's nonfinancial preferences. Financial values deliberately
@@ -36,6 +42,8 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
     AppearancePreferences,
     CategoryOrderingPreferences,
     CorrectionAnnouncementPreferences {
+    private val readAttempt = MutableStateFlow(0L)
+
     constructor(context: Context, scope: CoroutineScope) : this(
         PreferenceDataStoreFactory.create(
             scope = scope,
@@ -72,34 +80,52 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
     override suspend fun dismissPastLimitAnnouncement(): PreferenceWrite =
         write { this[PAST_LIMIT_SEEN] = true }
 
-    private fun <T> observe(decoder: (Preferences) -> Decoded<T>): Flow<PreferenceRead<T>> = flow {
-        var lastGood: T? = null
-        try {
-            data.data.collect { stored ->
-                when (val decoded = decoder(stored)) {
-                    is Decoded.Value -> {
-                        lastGood = decoded.value
-                        emit(PreferenceRead.Ready(decoded.value))
-                    }
+    /**
+     * A failed DataStore collection ends, so keep the public flow alive around each attempt.
+     * A new observer (including an explicit screen retry) or a successful write reconnects every
+     * active consumer, including the app-wide theme and Recibo ordering collectors.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun <T> observe(decoder: (Preferences) -> Decoded<T>): Flow<PreferenceRead<T>> =
+        readAttempt
+            .onStart { advanceReadAttempt() }
+            .flatMapLatest { observeOnce(decoder) }
+            .distinctUntilChanged()
 
-                    Decoded.Invalid -> emit(
-                        PreferenceRead.Failed(PreferenceFailure.InvalidValue, lastGood)
-                    )
+    private fun <T> observeOnce(decoder: (Preferences) -> Decoded<T>): Flow<PreferenceRead<T>> =
+        flow {
+            var lastGood: T? = null
+            try {
+                data.data.collect { stored ->
+                    when (val decoded = decoder(stored)) {
+                        is Decoded.Value -> {
+                            lastGood = decoded.value
+                            emit(PreferenceRead.Ready(decoded.value))
+                        }
+
+                        Decoded.Invalid -> emit(
+                            PreferenceRead.Failed(PreferenceFailure.InvalidValue, lastGood)
+                        )
+                    }
                 }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: IOException) {
+                emit(PreferenceRead.Failed(PreferenceFailure.Unavailable, lastGood))
+            } catch (_: ClassCastException) {
+                emit(PreferenceRead.Failed(PreferenceFailure.InvalidValue, lastGood))
             }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (_: IOException) {
-            emit(PreferenceRead.Failed(PreferenceFailure.Unavailable, lastGood))
-        } catch (_: ClassCastException) {
-            emit(PreferenceRead.Failed(PreferenceFailure.InvalidValue, lastGood))
         }
+
+    private fun advanceReadAttempt() {
+        readAttempt.update { current -> if (current == Long.MAX_VALUE) 0L else current + 1L }
     }
 
     private suspend fun write(
         change: androidx.datastore.preferences.core.MutablePreferences.() -> Unit
     ): PreferenceWrite = try {
         data.edit(change)
+        advanceReadAttempt()
         PreferenceWrite.Saved
     } catch (cancelled: CancellationException) {
         throw cancelled

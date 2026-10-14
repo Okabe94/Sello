@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "run_id": "20261014T151936Z-7918f591",
+  "run_id": "20261014T233049Z-75ea0aa4",
   "ticket": "SELLO-023",
   "gate": {
     "required": "G2",
@@ -13,59 +13,15 @@
     "tested an uncommitted working tree, not a clean commit"
   ],
   "snapshot": {
-    "head": "d49f155e36e76eff76edc12b2a6f7b75ad38e65d",
+    "head": "a7f834338555a5da170f2ebfbe6270c60790a2e4",
     "dirty": true,
     "dirty_files": [
-      "app/gradle.lockfile",
-      "app/src/androidTestDebug/java/com/software/sello/feature/expense/ExpenseEntryScreenTest.kt",
-      "app/src/androidTestDebug/java/com/software/sello/feature/recibo/CategoryDetailScreenTest.kt",
-      "app/src/androidTestDebug/java/com/software/sello/feature/settings/SettingsJourneyTest.kt",
-      "app/src/main/java/com/software/sello/MainActivity.kt",
-      "app/src/main/java/com/software/sello/composition/PlatformModule.kt",
-      "app/src/main/java/com/software/sello/composition/PreferencesModule.kt",
-      "app/src/main/java/com/software/sello/composition/PresentationModule.kt",
-      "app/src/main/java/com/software/sello/feature/expense/ExpenseEntryScreen.kt",
-      "app/src/main/java/com/software/sello/feature/recibo/CategoryDetailScreen.kt",
-      "app/src/main/java/com/software/sello/feature/recibo/ReciboRenderModel.kt",
-      "app/src/main/java/com/software/sello/feature/recibo/ReciboViewModel.kt",
-      "app/src/main/java/com/software/sello/feature/settings/AppearanceTheme.kt",
-      "app/src/main/java/com/software/sello/feature/settings/AppearanceViewModel.kt",
-      "app/src/main/java/com/software/sello/feature/settings/SettingsScreen.kt",
-      "app/src/main/java/com/software/sello/feature/settings/SettingsViewModel.kt",
-      "app/src/main/java/com/software/sello/navigation/Routes.kt",
-      "app/src/main/java/com/software/sello/navigation/SelloApp.kt",
-      "app/src/main/java/com/software/sello/presentation/corrections/CorrectionAnnouncementsViewModel.kt",
-      "app/src/main/res/values/strings.xml",
-      "app/src/test/java/com/software/sello/feature/recibo/ReciboViewModelTest.kt",
-      "app/src/test/java/com/software/sello/feature/settings/AppearanceThemeTest.kt",
-      "app/src/test/java/com/software/sello/feature/settings/SettingsViewModelTest.kt",
-      "app/src/test/java/com/software/sello/presentation/corrections/CorrectionAnnouncementsViewModelTest.kt",
-      "catalog/src/main/java/com/software/sello/catalog/CatalogExamples.kt",
-      "catalog/src/main/java/com/software/sello/catalog/components/InputExamples.kt",
-      "catalog/src/main/res/values/strings.xml",
-      "catalog/src/test/java/com/software/sello/catalog/CatalogExamplesTest.kt",
-      "data/build.gradle.kts",
-      "data/gradle.lockfile",
-      "data/src/androidTest/java/com/software/sello/data/preferences/DataStoreUserPreferencesPersistenceTest.kt",
       "data/src/main/kotlin/com/software/sello/data/preferences/DataStoreUserPreferences.kt",
-      "data/src/test/kotlin/com/software/sello/data/preferences/DataStoreUserPreferencesTest.kt",
-      "design-system/src/main/java/com/software/sello/designsystem/component/Switches.kt",
-      "docs/planning/mvp/BOARD.md",
-      "docs/planning/mvp/ROADMAP.md",
-      "docs/planning/mvp/epics/E05-mvp-workflows.md",
-      "docs/planning/mvp/jira-import.csv",
-      "docs/planning/mvp/quality-reports/SELLO-023.json",
-      "domain/src/main/kotlin/com/software/sello/domain/model/MonthlySnapshot.kt",
-      "domain/src/main/kotlin/com/software/sello/domain/model/UserPreferences.kt",
-      "domain/src/main/kotlin/com/software/sello/domain/policy/CategoryOrderPolicy.kt",
-      "domain/src/main/kotlin/com/software/sello/domain/policy/MonthlyBudgetPolicy.kt",
-      "domain/src/main/kotlin/com/software/sello/domain/port/UserPreferences.kt",
-      "domain/src/test/kotlin/com/software/sello/domain/policy/CategoryOrderPolicyTest.kt",
-      "gradle/libs.versions.toml"
+      "data/src/test/kotlin/com/software/sello/data/preferences/DataStoreUserPreferencesTest.kt"
     ],
     "fingerprint": {
       "algorithm": "sha256",
-      "value": "91748865f8170150a172aedf4941f8fd68ff78c8275fd5809d096281a3d01c0c",
+      "value": "59c00ddb7f44159d3e55b12efb088faa6022cfda55eef02595360c0213e644b8",
       "files": 633
     },
     "acceptance": "8375e4ceed385356ca7c2d94f4948c1b2209d74e395df0e7437539a198db7809"
@@ -91,44 +47,44 @@
       "name": "board-check",
       "command": "python3 docs/planning/mvp/board.py --check --skip-evidence",
       "log": "board-check.log",
-      "started_at": "2026-10-14T15:19:36+00:00",
+      "started_at": "2026-10-14T23:30:49+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-14T15:19:36+00:00"
+      "finished_at": "2026-10-14T23:30:49+00:00"
     },
     {
       "name": "board-tests",
       "command": "python3 -m unittest discover -s docs/planning/mvp -p test_board.py",
       "log": "board-tests.log",
-      "started_at": "2026-10-14T15:19:36+00:00",
+      "started_at": "2026-10-14T23:30:49+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-14T15:19:36+00:00"
+      "finished_at": "2026-10-14T23:30:49+00:00"
     },
     {
       "name": "quality-tests",
       "command": "python3 -m unittest discover -s scripts/quality -p test_*.py",
       "log": "quality-tests.log",
-      "started_at": "2026-10-14T15:19:36+00:00",
+      "started_at": "2026-10-14T23:30:49+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-14T15:19:39+00:00"
+      "finished_at": "2026-10-14T23:30:52+00:00"
     },
     {
       "name": "architecture",
       "command": "python3 scripts/quality/architecture.py",
       "log": "architecture.log",
-      "started_at": "2026-10-14T15:19:39+00:00",
+      "started_at": "2026-10-14T23:30:52+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-14T15:19:39+00:00"
+      "finished_at": "2026-10-14T23:30:52+00:00"
     },
     {
       "name": "gradle-host",
       "command": "./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue",
       "log": "gradle-host.log",
-      "started_at": "2026-10-14T15:19:39+00:00",
+      "started_at": "2026-10-14T23:30:52+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-14T15:19:43+00:00",
+      "finished_at": "2026-10-14T23:31:24+00:00",
       "results": {
         "suites": 53,
-        "tests": 506,
+        "tests": 508,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -143,9 +99,9 @@
       "name": "gradle-device",
       "command": "./gradlew :data:connectedDebugAndroidTest :design-system:connectedDebugAndroidTest :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest --continue",
       "log": "gradle-device.log",
-      "started_at": "2026-10-14T15:19:43+00:00",
+      "started_at": "2026-10-14T23:31:24+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-14T15:24:26+00:00",
+      "finished_at": "2026-10-14T23:36:08+00:00",
       "results": {
         "suites": 4,
         "tests": 491,
@@ -155,6 +111,6 @@
       }
     }
   ],
-  "started_at": "2026-10-14T15:19:36+00:00",
-  "finished_at": "2026-10-14T15:24:26+00:00"
+  "started_at": "2026-10-14T23:30:49+00:00",
+  "finished_at": "2026-10-14T23:36:08+00:00"
 }

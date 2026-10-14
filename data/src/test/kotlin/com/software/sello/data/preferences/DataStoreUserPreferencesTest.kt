@@ -16,14 +16,22 @@ import com.software.sello.domain.port.PreferenceFailure
 import com.software.sello.domain.port.PreferenceRead
 import com.software.sello.domain.port.PreferenceWrite
 import java.io.IOException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DataStoreUserPreferencesTest {
     private class HandDataStore(initial: Preferences = emptyPreferences()) :
         DataStore<Preferences> {
@@ -41,6 +49,20 @@ class DataStoreUserPreferencesTest {
         override suspend fun updateData(
             transform: suspend (t: Preferences) -> Preferences
         ): Preferences = throw IOException("not writable")
+    }
+
+    private class OnceUnavailableDataStore : DataStore<Preferences> {
+        private val values = MutableStateFlow<Preferences>(emptyPreferences())
+        private var reads = 0
+
+        override val data: Flow<Preferences> = flow {
+            if (reads++ == 0) throw IOException("temporarily unreadable")
+            emitAll(values)
+        }
+
+        override suspend fun updateData(
+            transform: suspend (t: Preferences) -> Preferences
+        ): Preferences = transform(values.value).also { values.value = it }
     }
 
     @Test
@@ -131,5 +153,78 @@ class DataStoreUserPreferencesTest {
             PreferenceWrite.Failed(PreferenceFailure.Unavailable),
             preferences.setTheme(ThemePreference.Light)
         )
+    }
+
+    @Test
+    fun aSuccessfulWriteReconnectsAConsumerAfterATemporaryReadFailure() = runTest {
+        val preferences = DataStoreUserPreferences(OnceUnavailableDataStore())
+        val observed = mutableListOf<PreferenceRead<AppearancePreference>>()
+        val collecting = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            preferences.observeAppearance().take(2).toList(observed)
+        }
+        runCurrent()
+
+        assertEquals(
+            listOf(
+                PreferenceRead.Failed<AppearancePreference>(
+                    PreferenceFailure.Unavailable,
+                    null
+                )
+            ),
+            observed
+        )
+
+        assertEquals(PreferenceWrite.Saved, preferences.setTheme(ThemePreference.Dark))
+        runCurrent()
+
+        assertEquals(
+            listOf(
+                PreferenceRead.Failed<AppearancePreference>(
+                    PreferenceFailure.Unavailable,
+                    null
+                ),
+                PreferenceRead.Ready(AppearancePreference(theme = ThemePreference.Dark))
+            ),
+            observed
+        )
+        collecting.join()
+    }
+
+    @Test
+    fun aRetryingObserverReconnectsTheConsumerThatAppliesTheAppTheme() = runTest {
+        val preferences = DataStoreUserPreferences(OnceUnavailableDataStore())
+        val appThemeReads = mutableListOf<PreferenceRead<AppearancePreference>>()
+        val appTheme = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            preferences.observeAppearance().take(2).toList(appThemeReads)
+        }
+        runCurrent()
+
+        assertEquals(
+            listOf(
+                PreferenceRead.Failed<AppearancePreference>(
+                    PreferenceFailure.Unavailable,
+                    null
+                )
+            ),
+            appThemeReads
+        )
+
+        assertEquals(
+            PreferenceRead.Ready(AppearancePreference()),
+            preferences.observeAppearance().first()
+        )
+        runCurrent()
+
+        assertEquals(
+            listOf(
+                PreferenceRead.Failed<AppearancePreference>(
+                    PreferenceFailure.Unavailable,
+                    null
+                ),
+                PreferenceRead.Ready(AppearancePreference())
+            ),
+            appThemeReads
+        )
+        appTheme.join()
     }
 }

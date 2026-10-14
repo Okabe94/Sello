@@ -47,8 +47,14 @@ class CategoryDetailScreenTest {
     private var recordHere = 0
     private val edited = mutableListOf<String>()
     private var editCategory = 0
+    private var pastLimitAnnouncementDismissed = 0
 
-    private fun show(state: CategoryDetailState, fontScale: Float = 1f, showName: Boolean = false) {
+    private fun show(
+        state: CategoryDetailState,
+        fontScale: Float = 1f,
+        showName: Boolean = false,
+        showPastLimitAnnouncement: Boolean = false
+    ) {
         rule.setContent {
             val density = LocalDensity.current.density
             CompositionLocalProvider(LocalDensity provides Density(density, fontScale)) {
@@ -62,7 +68,9 @@ class CategoryDetailScreenTest {
                         onRecordHere = { recordHere++ },
                         contentPadding = PaddingValues(12.dp),
                         onEditExpense = { edited += it },
-                        onEditCategory = { editCategory++ }
+                        onEditCategory = { editCategory++ },
+                        showPastLimitAnnouncement = showPastLimitAnnouncement,
+                        onDismissPastLimitAnnouncement = { pastLimitAnnouncementDismissed++ }
                     )
                 }
             }
@@ -532,5 +540,21 @@ class CategoryDetailScreenTest {
             "Octubre ya terminó. Su límite aún se puede corregir en Editar categoría, " +
                 "sin cambiar los demás meses."
         ).assertExists()
+    }
+
+    @Test
+    fun firstTimePastLimitNoticeCanBeDismissedWithoutRemovingThePermanentGuidance() {
+        show(
+            state = ready(ExpenseListState.Empty).copy(today = LocalDate.of(2026, 11, 3)),
+            showPastLimitAnnouncement = true
+        )
+
+        rule.onNodeWithTag(CATEGORY_DETAIL_PAST_HELP_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag(CATEGORY_DETAIL_PAST_LIMIT_ANNOUNCEMENT_TAG)
+            .performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Entendido").performScrollTo().performClick()
+
+        assertEquals(1, pastLimitAnnouncementDismissed)
+        rule.onNodeWithTag(CATEGORY_DETAIL_PAST_HELP_TAG).assertIsDisplayed()
     }
 }

@@ -5,16 +5,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.software.sello.composition.SelloApplication
 import com.software.sello.composition.StartupState
 import com.software.sello.composition.startupFailureViewModels
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.feature.settings.AppearanceViewModel
+import com.software.sello.feature.settings.asSelloTheme
 import com.software.sello.feature.startup.StartupFailureRoot
 import com.software.sello.navigation.SelloAppRoot
 import com.software.sello.navigation.ShellAction
@@ -32,13 +36,22 @@ class MainActivity : ComponentActivity() {
         // Only a fresh start carries a link to act on; a restored one already did.
         if (savedInstanceState == null) open(intent)
         setContent {
-            SelloTheme {
-                val state by startup.state.collectAsStateWithLifecycle()
-                when (val now = state) {
-                    // The app is shown only on data that opened.
-                    is StartupState.Ready -> if (!startingOver) SelloAppRoot(now.viewModels)
+            val state by startup.state.collectAsStateWithLifecycle()
+            when (val now = state) {
+                // The app is shown only on data that opened. Recomposition changes its
+                // tokens without replacing any saved route, draft or financial view model.
+                is StartupState.Ready -> {
+                    val appearance: AppearanceViewModel = viewModel(factory = now.viewModels)
+                    val preference by appearance.state.collectAsStateWithLifecycle()
+                    val theme = preference.appearance.asSelloTheme(isSystemInDarkTheme())
+                    SelloTheme(ink = theme.ink, darkTheme = theme.dark) {
+                        if (!startingOver) SelloAppRoot(now.viewModels)
+                    }
+                }
 
-                    is StartupState.Failed -> StartupFailureRoot(
+                // The graph cannot be opened here, so its persisted preference is unavailable.
+                is StartupState.Failed -> SelloTheme {
+                    StartupFailureRoot(
                         viewModels = remember { startupFailureViewModels(startup) },
                         onStartedOver = ::startOver
                     )

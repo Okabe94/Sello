@@ -56,6 +56,7 @@
     <string name="catalog_example_field_pill">FieldPill</string>
     <string name="catalog_example_form_field">FormField</string>
     <string name="catalog_example_switch">Switches</string>
+    <string name="catalog_example_settings_controls">Settings controls</string>
     <string name="catalog_example_icon_choice">Elegir ícono</string>
     <string name="catalog_example_expense_entry">Entry controls together</string>
     <string name="catalog_example_income_entry">Income controls together</string>

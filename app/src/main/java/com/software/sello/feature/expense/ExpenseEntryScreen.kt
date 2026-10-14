@@ -65,6 +65,7 @@ import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SegmentedSwitch
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
+import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
@@ -79,6 +80,7 @@ import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.model.Note
 import com.software.sello.presentation.category.CategoryIcons
+import com.software.sello.presentation.corrections.CorrectionAnnouncementState
 import com.software.sello.presentation.date.DateLabels
 import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.month.monthNames
@@ -92,6 +94,9 @@ fun ExpenseEntryRoot(
     viewModels: ViewModelProvider.Factory,
     onIncome: (() -> Unit)? = null,
     onCreateCategory: (() -> Unit)? = null,
+    announcements: CorrectionAnnouncementState = CorrectionAnnouncementState(loading = false),
+    onDismissPastExpense: () -> Unit = {},
+    announcementFailed: Boolean = false,
     onClosed: () -> Unit
 ) {
     val viewModel: ExpenseEntryViewModel = viewModel(factory = viewModels)
@@ -115,7 +120,13 @@ fun ExpenseEntryRoot(
         dateLabels(),
         viewModel::onAction,
         onIncome = onIncome,
-        onCreateCategory = onCreateCategory
+        onCreateCategory = onCreateCategory,
+        showPastExpenseAnnouncement = !announcements.loading &&
+            state.editing && state.pastMonths.isNotEmpty() &&
+            !announcements.preference.pastExpenseSeen,
+        dismissPastExpenseAnnouncement = onDismissPastExpense,
+        announcementBusy = announcements.busy,
+        announcementFailed = announcementFailed
     )
 }
 
@@ -126,7 +137,11 @@ fun ExpenseEntryScreen(
     onAction: (ExpenseEntryAction) -> Unit,
     modifier: Modifier = Modifier,
     onIncome: (() -> Unit)? = null,
-    onCreateCategory: (() -> Unit)? = null
+    onCreateCategory: (() -> Unit)? = null,
+    showPastExpenseAnnouncement: Boolean = false,
+    dismissPastExpenseAnnouncement: () -> Unit = {},
+    announcementBusy: Boolean = false,
+    announcementFailed: Boolean = false
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // Sideways or wide: the slip at the left, the keypad always in view at the right.
@@ -189,7 +204,19 @@ fun ExpenseEntryScreen(
                     )
                 }
 
-                split -> Pane(padding) { Draft(state, dates, onAction, onIncome, onCreateCategory) }
+                split -> Pane(padding) {
+                    Draft(
+                        state,
+                        dates,
+                        onAction,
+                        onIncome,
+                        onCreateCategory,
+                        showPastExpenseAnnouncement,
+                        dismissPastExpenseAnnouncement,
+                        announcementBusy,
+                        announcementFailed
+                    )
+                }
 
                 else -> Stacked(
                     state,
@@ -198,7 +225,11 @@ fun ExpenseEntryScreen(
                     padding,
                     maxHeight * PINNED_SHARE,
                     onIncome,
-                    onCreateCategory
+                    onCreateCategory,
+                    showPastExpenseAnnouncement,
+                    dismissPastExpenseAnnouncement,
+                    announcementBusy,
+                    announcementFailed
                 )
             }
         }
@@ -263,14 +294,30 @@ private fun Stacked(
     padding: PaddingValues,
     pinnedMax: Dp,
     onIncome: (() -> Unit)?,
-    onCreateCategory: (() -> Unit)?
+    onCreateCategory: (() -> Unit)?,
+    showPastExpenseAnnouncement: Boolean,
+    dismissPastExpenseAnnouncement: () -> Unit,
+    announcementBusy: Boolean,
+    announcementFailed: Boolean
 ) {
     val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     Column(modifier = Modifier.fillMaxSize().padding(padding).imePadding()) {
         Column(
             verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
-        ) { Draft(state, dates, onAction, onIncome, onCreateCategory) }
+        ) {
+            Draft(
+                state,
+                dates,
+                onAction,
+                onIncome,
+                onCreateCategory,
+                showPastExpenseAnnouncement,
+                dismissPastExpenseAnnouncement,
+                announcementBusy,
+                announcementFailed
+            )
+        }
         // Above the keys, never between them and the button: the keys are held from
         // the bottom, so what is said here comes and goes without moving one of them.
         Said(state)
@@ -316,7 +363,11 @@ private fun Draft(
     dates: DateLabels,
     onAction: (ExpenseEntryAction) -> Unit,
     onIncome: (() -> Unit)?,
-    onCreateCategory: (() -> Unit)?
+    onCreateCategory: (() -> Unit)?,
+    showPastExpenseAnnouncement: Boolean,
+    dismissPastExpenseAnnouncement: () -> Unit,
+    announcementBusy: Boolean,
+    announcementFailed: Boolean
 ) {
     if (!state.editing && onIncome != null) {
         SegmentedSwitch(
@@ -414,6 +465,27 @@ private fun Draft(
                 isError = false
             ),
             Modifier.testTag(ENTRY_PAST_MONTHS_TAG)
+        )
+    }
+    if (showPastExpenseAnnouncement) {
+        SelloNotice(
+            message = stringResource(
+                if (announcementFailed) {
+                    R.string.correction_announcement_failed
+                } else {
+                    R.string.past_expense_announcement
+                }
+            ),
+            actionLabel = stringResource(
+                if (announcementFailed) {
+                    R.string.correction_announcement_retry
+                } else {
+                    R.string.correction_announcement_dismiss
+                }
+            ),
+            onAction = dismissPastExpenseAnnouncement,
+            busy = announcementBusy,
+            modifier = Modifier.testTag(ENTRY_PAST_EXPENSE_ANNOUNCEMENT_TAG)
         )
     }
     FormField(
@@ -699,3 +771,4 @@ const val ENTRY_RECEIPT_TAG = "expense-entry:receipt"
 const val ENTRY_DONE_TAG = "expense-entry:done"
 const val ENTRY_DELETE_TAG = "expense-entry:delete"
 const val ENTRY_PAST_MONTHS_TAG = "expense-entry:past-months"
+const val ENTRY_PAST_EXPENSE_ANNOUNCEMENT_TAG = "expense-entry:past-expense-announcement"

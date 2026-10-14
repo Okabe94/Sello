@@ -14,6 +14,10 @@ data object ReciboRoute
 @Serializable
 data object ResumenRoute
 
+/** Nonfinancial controls reachable from Recibo's settings action. */
+@Serializable
+data object SettingsRoute
+
 @Serializable
 data class ResumenCategoryRoute(val categoryId: String)
 

@@ -27,6 +27,7 @@ import com.software.sello.catalog.components.MonthSwitcherExample
 import com.software.sello.catalog.components.NavigationBarExample
 import com.software.sello.catalog.components.NoticeExample
 import com.software.sello.catalog.components.ScaffoldExample
+import com.software.sello.catalog.components.SettingsControlsExample
 import com.software.sello.catalog.components.SlipExample
 import com.software.sello.catalog.components.SlipSkeletonExample
 import com.software.sello.catalog.components.StampExample
@@ -182,6 +183,11 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Inputs,
         R.string.catalog_example_switch
     ) { SwitchExample() },
+    CatalogExample(
+        "inputs.settings-controls",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_settings_controls
+    ) { SettingsControlsExample() },
     CatalogExample(
         "inputs.icon-choice",
         CatalogGroup.Inputs,

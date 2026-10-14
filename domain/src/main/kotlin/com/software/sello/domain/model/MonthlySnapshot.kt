@@ -2,6 +2,7 @@ package com.software.sello.domain.model
 
 import com.software.sello.domain.policy.MonthBudgetState
 import java.math.BigInteger
+import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -79,7 +80,9 @@ data class CategoryMonth(
     val state: MonthBudgetState,
     val spent: Money,
     val budget: LimitedBudget?,
-    val expenseCount: Int
+    val expenseCount: Int,
+    /** Newest original addition in the selected month, never an edit/update time. */
+    val newestExpenseAddition: Instant? = null
 )
 
 /**

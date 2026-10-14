@@ -4,6 +4,8 @@ import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.Category
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryName
+import com.software.sello.domain.model.CategoryOrder
+import com.software.sello.domain.model.CategoryOrderDirection
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.IconKey
@@ -48,20 +50,25 @@ class CategoryOrderPolicyTest {
     private val all = listOf(art, transport, coffee, food)
 
     /** [count] expenses in [category] adding up to [total], dated in [month]. */
-    private fun spending(category: CategoryInMonth, month: YearMonth, count: Int, total: Long) =
-        List(count) {
-            Expense(
-                ExpenseId.of(uuid(next)).valueOrFail(),
-                category.category.id,
-                month.atDay(1 + it),
-                (next++).toLong(),
-                TransactionAmount.of(Money.cop(total / count)).valueOrFail(),
-                note = null,
-                version = 1,
-                createdAt = Instant.EPOCH,
-                updatedAt = Instant.EPOCH
-            )
-        }
+    private fun spending(
+        category: CategoryInMonth,
+        month: YearMonth,
+        count: Int,
+        total: Long,
+        firstAddedAt: Instant = Instant.EPOCH
+    ) = List(count) {
+        Expense(
+            ExpenseId.of(uuid(next)).valueOrFail(),
+            category.category.id,
+            month.atDay(1 + it),
+            (next++).toLong(),
+            TransactionAmount.of(Money.cop(total / count)).valueOrFail(),
+            note = null,
+            version = 1,
+            createdAt = firstAddedAt.plusSeconds(it.toLong()),
+            updatedAt = Instant.EPOCH
+        )
+    }
 
     private fun order(
         month: YearMonth,
@@ -76,6 +83,26 @@ class CategoryOrderPolicyTest {
             categories = categories,
             expenses = expenses
         ).valueOrFail().categories
+    ).map { it.category.name.value }
+
+    private fun orderBy(
+        metric: CategoryOrder,
+        direction: CategoryOrderDirection,
+        month: YearMonth,
+        expenses: List<Expense>,
+        categories: List<CategoryInMonth> = all,
+        day: LocalDate = LocalDate.of(2026, 10, 31)
+    ) = CategoryOrderPolicy.order(
+        MonthlyBudgetPolicy.snapshot(
+            month,
+            FinancialDay(day, ZoneId.of("America/Bogota")),
+            generation = 1,
+            revision = 1,
+            categories = categories,
+            expenses = expenses
+        ).valueOrFail().categories,
+        metric,
+        direction
     ).map { it.category.name.value }
 
     private val october = YearMonth.of(2026, 10)
@@ -137,6 +164,170 @@ class CategoryOrderPolicyTest {
         assertEquals(
             listOf("Alimentación", "Café", "Transporte", "Música", "Arte"),
             order(october, expenses, all + music)
+        )
+    }
+
+    @Test
+    fun everyMetricUsesTheSelectedMonthAndKeepsUnlimitedCategoriesLast() {
+        val expenses = spending(food, october, 2, 30_000) +
+            spending(coffee, october, 3, 15_000) +
+            spending(transport, october, 1, 40_000) +
+            spending(art, october, 8, 80_000)
+
+        assertEquals(
+            listOf("Alimentación", "Café", "Transporte", "Arte"),
+            orderBy(CategoryOrder.Alphabetical, CategoryOrderDirection.Ascending, october, expenses)
+        )
+        assertEquals(
+            listOf("Transporte", "Café", "Alimentación", "Arte"),
+            orderBy(
+                CategoryOrder.Alphabetical,
+                CategoryOrderDirection.Descending,
+                october,
+                expenses
+            )
+        )
+        assertEquals(
+            listOf("Transporte", "Alimentación", "Café", "Arte"),
+            orderBy(CategoryOrder.AmountSpent, CategoryOrderDirection.Descending, october, expenses)
+        )
+        assertEquals(
+            listOf("Transporte", "Alimentación", "Café", "Arte"),
+            orderBy(CategoryOrder.Limit, CategoryOrderDirection.Descending, october, expenses)
+        )
+    }
+
+    @Test
+    fun latestAdditionUsesOriginalCreationTimeAndReversesOnlyThatMetric() {
+        val expenses = spending(food, october, 2, 30_000, Instant.parse("2026-10-03T12:00:00Z")) +
+            spending(coffee, october, 3, 15_000, Instant.parse("2026-10-05T12:00:00Z")) +
+            spending(transport, october, 1, 40_000, Instant.parse("2026-10-04T12:00:00Z")) +
+            spending(art, october, 8, 80_000, Instant.parse("2026-10-06T12:00:00Z"))
+
+        assertEquals(
+            listOf("Café", "Transporte", "Alimentación", "Arte"),
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Descending,
+                october,
+                expenses
+            )
+        )
+        assertEquals(
+            listOf("Alimentación", "Transporte", "Café", "Arte"),
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Ascending,
+                october,
+                expenses
+            )
+        )
+    }
+
+    @Test
+    fun backdatedAdditionsBelongToTheirEffectiveMonthButKeepTheirRealAdditionTime() {
+        val september = YearMonth.of(2026, 9)
+        val expenses = spending(food, september, 1, 10_000, Instant.parse("2026-09-25T12:00:00Z")) +
+            spending(transport, september, 1, 20_000, Instant.parse("2026-09-27T12:00:00Z")) +
+            spending(food, september, 1, 5_000, Instant.parse("2026-10-07T12:00:00Z")) +
+            spending(art, september, 1, 60_000, Instant.parse("2026-10-06T12:00:00Z"))
+
+        assertEquals(
+            listOf("Alimentación", "Transporte", "Café", "Arte"),
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Descending,
+                september,
+                expenses
+            )
+        )
+    }
+
+    @Test
+    fun deletionFallsBackToTheNextAdditionAndNoExpenseRowsStayLastWhenReversed() {
+        val base = spending(food, october, 1, 30_000, Instant.parse("2026-10-03T12:00:00Z")) +
+            spending(coffee, october, 3, 15_000, Instant.parse("2026-10-01T12:00:00Z")) +
+            spending(transport, october, 1, 40_000, Instant.parse("2026-10-04T12:00:00Z"))
+        val afterNewestCoffeeDeleted = base.filterNot {
+            it.categoryId == coffee.category.id &&
+                it.createdAt == Instant.parse("2026-10-03T12:00:02Z")
+        }
+        val afterAllCoffeeDeleted = afterNewestCoffeeDeleted.filterNot {
+            it.categoryId == coffee.category.id
+        }
+
+        assertEquals(
+            listOf("Transporte", "Alimentación", "Café", "Arte"),
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Descending,
+                october,
+                afterNewestCoffeeDeleted
+            )
+        )
+        assertEquals(
+            listOf("Alimentación", "Transporte", "Café", "Arte"),
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Ascending,
+                october,
+                afterAllCoffeeDeleted
+            )
+        )
+    }
+
+    @Test
+    fun financialTimeAndAReopenedFixtureDoNotTurnExistingExpensesIntoNewAdditions() {
+        val fixture = spending(food, october, 1, 30_000, Instant.parse("2026-10-03T12:00:00Z")) +
+            spending(coffee, october, 1, 15_000, Instant.parse("2026-10-05T12:00:00Z")) +
+            spending(transport, october, 1, 40_000, Instant.parse("2026-10-04T12:00:00Z"))
+        val expected = listOf("Café", "Transporte", "Alimentación", "Arte")
+
+        assertEquals(
+            expected,
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Descending,
+                october,
+                fixture,
+                day = LocalDate.of(2026, 10, 9)
+            )
+        )
+        assertEquals(
+            expected,
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Descending,
+                october,
+                fixture
+            )
+        )
+    }
+
+    @Test
+    fun equalNewestAdditionsUseAlphabeticalThenIdTiesInEitherDirection() {
+        val tie = Instant.parse("2026-10-05T12:00:00Z")
+        val expenses = spending(food, october, 1, 30_000, tie) +
+            spending(coffee, october, 1, 15_000, tie) +
+            spending(transport, october, 1, 40_000, Instant.parse("2026-10-04T12:00:00Z"))
+
+        assertEquals(
+            listOf("Alimentación", "Café", "Transporte", "Arte"),
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Descending,
+                october,
+                expenses
+            )
+        )
+        assertEquals(
+            listOf("Transporte", "Alimentación", "Café", "Arte"),
+            orderBy(
+                CategoryOrder.LatestExpenseAdded,
+                CategoryOrderDirection.Ascending,
+                october,
+                expenses
+            )
         )
     }
 }

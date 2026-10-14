@@ -2,6 +2,7 @@ package com.software.sello.feature.recibo
 
 import com.software.sello.domain.model.BudgetStanding
 import com.software.sello.domain.model.CategoryMonth
+import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.LimitedBudget
 import com.software.sello.domain.model.MonthlySnapshot
 import com.software.sello.domain.model.OverallBudget
@@ -18,25 +19,37 @@ import com.software.sello.presentation.money.MoneyFormatter
  * judged here, so the two screens cannot disagree with each other or with the rules.
  */
 class ReciboRenderModel(private val money: MoneyFormatter) {
-    fun recibo(state: SnapshotState): ReciboState = when (state) {
+    fun recibo(
+        state: SnapshotState,
+        ordering: CategoryOrderingPreference = CategoryOrderingPreference()
+    ): ReciboState = when (state) {
         SnapshotState.Loading -> ReciboState.Loading
 
-        is SnapshotState.Ready -> month(state.snapshot, stale = false)
+        is SnapshotState.Ready -> month(state.snapshot, stale = false, ordering)
 
-        is SnapshotState.Failed -> state.lastGood?.let { month(it, stale = true) }
+        is SnapshotState.Failed -> state.lastGood?.let { month(it, stale = true, ordering) }
             ?: ReciboState.Failed
     }
 
-    private fun month(snapshot: MonthlySnapshot, stale: Boolean): ReciboState =
-        if (snapshot.categories.isEmpty()) {
-            ReciboState.FirstRun
-        } else {
-            ReciboState.Month(summary(snapshot), categories(snapshot), stale)
-        }
+    private fun month(
+        snapshot: MonthlySnapshot,
+        stale: Boolean,
+        ordering: CategoryOrderingPreference
+    ): ReciboState = if (snapshot.categories.isEmpty()) {
+        ReciboState.FirstRun
+    } else {
+        ReciboState.Month(summary(snapshot), categories(snapshot, ordering), stale)
+    }
 
     /** The month's categories in the order they are shown. */
-    fun categories(snapshot: MonthlySnapshot): List<ReciboCategory> =
-        CategoryOrderPolicy.mostUsed(snapshot.categories).map(::category)
+    fun categories(
+        snapshot: MonthlySnapshot,
+        ordering: CategoryOrderingPreference = CategoryOrderingPreference()
+    ): List<ReciboCategory> = CategoryOrderPolicy.order(
+        snapshot.categories,
+        ordering.order,
+        ordering.direction
+    ).map(::category)
 
     private fun summary(snapshot: MonthlySnapshot): ReciboSummary =
         when (val overall = snapshot.overall) {

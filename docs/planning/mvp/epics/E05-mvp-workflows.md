@@ -703,5 +703,7 @@ financial rows/drafts; test every approved ordering metric with explicit fixture
   No manual TalkBack session, physical-device test or hosted CI run is claimed.
 - **Review:** executor self-review covered DataStore/Room separation, stable codecs,
   cancellation/failure paths, D06 partition/tie behavior, no-draft route recreation,
-  catalog/release boundaries and the exact retained report. This branch proposes Done;
-  the pull request's merge is the designated owner acceptance under `QUALITY_FLOW.md`.
+  catalog/release boundaries and the exact retained report. Done is proposed by
+  [PR #46](https://github.com/Okabe94/Sello/pull/46); its merge is the designated
+  owner acceptance under `QUALITY_FLOW.md`. No owner approval, merge or hosted CI
+  pass is claimed.

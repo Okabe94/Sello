@@ -390,3 +390,37 @@ svg.icon{width:1.72em;height:1.72em;fill:currentColor;flex:none;vertical-align:m
 .plan-foot{margin:8px 0 0;font-size:.8em;color:var(--soft)}
 .plan-total{border-top:2px solid var(--ink);margin-top:4px;padding-top:2px}
 .leader.strong b,.leader.strong span{font-weight:900}
+
+/* ---------- Tab title (screens not tied to a month) ---------- */
+.tab-title{margin:0;font-size:1.5em;font-weight:800;letter-spacing:-.02em;color:#fff}
+.top-actions{display:flex}
+
+
+/* ---------- Metas: v1.1 stamp cards ---------- */
+.goals-band{display:grid;gap:2px;padding:0 16px 14px;color:#fff}
+.goals-band span{font-size:.93em;opacity:.85}
+.goals-band b{font-size:2.6em;font-weight:900;letter-spacing:-.04em;line-height:1.05}
+.goals-band small{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:.9em}
+.goals-band small .icon{width:1.3em;height:1.3em;background:var(--gain);color:#fff;border-radius:50%;padding:2px}
+.app[data-theme=dark] .goals-band small .icon{color:#06175c}
+.goal-card{display:block;width:100%;border:0;background:none;padding:0;text-align:left;color:var(--ink);font:inherit}
+.v1-head{display:flex;align-items:center;gap:8px}
+.v1-head .icon{width:1.5em;height:1.5em;color:var(--gain)}
+.v1-head b{flex:1;font-size:1.08em;font-weight:800}
+.v1-pct{font-size:1.5em;font-weight:900;letter-spacing:-.02em}
+.v1-saved{display:block;font-size:2.15em;font-weight:900;letter-spacing:-.035em;line-height:1.1;margin-top:8px}
+.v1-meta{display:flex;justify-content:space-between;align-items:center;font-size:.86em;color:var(--soft);margin:2px 0 8px}
+.v1-meta span:last-child{display:inline-flex;align-items:center;gap:4px}
+.v1-meta .icon{width:1.2em;height:1.2em}
+.v1-track{display:block;height:9px;border-radius:99px;background:var(--dim);overflow:hidden}
+.v1-track i{display:block;height:100%;background:var(--gain)}
+.v1-places{display:flex;justify-content:space-between;gap:6px;margin:12px 0 0}
+.v1-place{width:60px;height:60px;border-radius:50%;border:2px dashed var(--outline);display:grid;place-items:center;font-family:Stencil,Schibsted,sans-serif;font-size:.92em;color:var(--soft);text-align:center;line-height:1.05}
+.v1-place.done{border:2.5px solid var(--gain);color:var(--gain);box-shadow:inset 0 0 0 3px var(--paper),inset 0 0 0 4.5px var(--gain);transform:rotate(-8deg)}
+.v1-done .goal-card{display:flex;align-items:center;gap:10px}
+.v1-done .goal-card>.icon{width:1.5em;height:1.5em;color:var(--ink)}
+.v1-done .goal-card>span:not(.stamp){flex:1;display:grid}
+.v1-done small{color:var(--soft);font-size:.86em}
+.v1-done .stamp{font-size:.95em}
+.primary.goal{background:var(--gain);color:#fff}
+.app[data-theme=dark] .primary.goal{color:#06231a}

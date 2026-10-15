@@ -22,13 +22,14 @@ synthetic.
 | [Expense and income entry](entry.html) | Locked 2026-10-15 |
 | [Resumen](resumen.html) | Locked 2026-10-15 |
 | [Income](income.html) | Locked 2026-10-15 |
-| Metas | Next |
+| [Metas](metas.html) | Tab locked 2026-10-15; goal detail, Aportar/Retirar, create and celebrations next |
 | Inversiones | Pending |
 
 ## Recibo / Home
 
 **Order, top to bottom:** month bar → answer slip → review invitation (early month
-only) → goal → categories. Anotar is a full-width button on a dock above the tabs.
+only) → goal → categories. Anotar is a full-width button on a dock above the tabs; it is
+the same on every tab except Metas (see Metas).
 
 **Answer slip**
 
@@ -197,6 +198,31 @@ goal or investment records never do.
 disclaimer under the big number, the equation layout for the plan box and a
 six-month income chart.
 
+## Metas
+
+The v1.1 Metas screen, kept close to the original on purpose, in its own tab.
+
+- **Top bar:** title **Metas**, **+** to create a goal, settings. Goals are not tied to a
+  month, so there is no month bar.
+- **Band:** "Guardado en metas" with the total of active goals (never investments) and
+  "+ 350.000 en octubre" for this month's contributions.
+- **One pinked stamp card per goal, highest completion first:** icon and name, the
+  percentage, the saved amount large, "de 3.000.000" and 🏁 target date (or "Sin fecha"),
+  a green progress bar and four stamp places (25 %, 50 %, 75 %, Meta). Reached places
+  are solid green tilted stamps; the rest are dashed. No dates under the stamps, so no
+  projected months. Tapping a card opens the goal.
+- **No Aportar on the cards.** On this tab the dock becomes **Aportar a una meta**, green
+  with the flag icon, so it cannot be mistaken for Anotar; it asks which goal. Recording
+  an expense is not offered from Metas: switching to spending here is a change of
+  context (owner decision).
+- **Completed goals** stay at the bottom as pinked rows: icon, name, "400.000, 30 sep" and
+  a green **LOGRADA** stamp.
+- **States:** no goals (v1.1's four empty stamp places, "Ponle nombre a algo que
+  quieras", Crear una meta), loading, failed read (never "no goals").
+
+**Rejected during the review:** compact pills, a percentage-led card in brand blue, an
+"En Recibo" tag, Aportar on every card and a global Anotar dock on Metas.
+
 ## Changes to record in the decision documents
 
 These Home choices replace working wording in
@@ -219,3 +245,6 @@ These Home choices replace working wording in
 - Resumen: the hero is the same-days comparison instead of SELLO-022's net-flow
   emphasis; net flow (Ingresos menos gastos) moves to the income slip right below.
   This changes the delivered presentation, not the financial meaning.
+- Metas: milestones stay at 25 / 50 / 75 % and the goal, as in v1.1, without projected
+  dates; goals are ordered by highest completion. This settles the thresholds and list
+  order left open in the [Metas brief](../screen-briefs/goals.md).

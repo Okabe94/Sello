@@ -21,8 +21,8 @@ synthetic.
 | [Recibo / Home](home.html) | Locked 2026-10-15 (past-month state added with Resumen) |
 | [Expense and income entry](entry.html) | Locked 2026-10-15 |
 | [Resumen](resumen.html) | Locked 2026-10-15 |
-| Income | Next |
-| Metas | Pending |
+| [Income](income.html) | Locked 2026-10-15 |
+| Metas | Next |
 | Inversiones | Pending |
 
 ## Recibo / Home
@@ -164,6 +164,38 @@ which days → one suggestion. The month in progress is never projected.
 **Rejected during the review:** the sentence-only hero, income at the bottom or as a
 single line, the dashed-proposal and question-with-choices suggestions, and bringing
 back the range sheet.
+
+## Income
+
+A screen opened from Resumen's income slip: back arrow, title **Ingresos de octubre**,
+the usual tabs and a dock labelled **Anotar ingreso**. It is planning from the
+person's own records, never a bank balance. Only category budgets assign income;
+goal or investment records never do.
+
+**Order, top to bottom:** hero → plan box (only with expected income) → suggestion
+(only while something is unassigned) → this month's income.
+
+- **Hero:** "Entró en octubre" and the recorded total as the big number. Under the
+  tear line, a split bar (solid: in category budgets; striped: unassigned) and two
+  receipt lines: **En presupuestos de categorías** and **Sin asignar**. A negative
+  unassigned amount is signed and red, followed by the two facts behind it
+  ("Tus presupuestos suman 2.800.000; anotaste 2.000.000."), with no suggestion.
+- **Suggestion:** the Resumen tinted note: "1.000.000 de lo que entró aún no tiene un
+  presupuesto. Podrías darle un destino: ahorro, ocio o una reserva, con su propia
+  categoría." → **Asignar a una categoría ›**. Not shown for a closed month.
+- **Plan del mes** (future, once recurring income exists): a dashed box with
+  "Incluye lo que esperas recibir", receipt lines **Anotado**, **Esperado** (softer),
+  a total rule, **Planeado** and **Sin asignar en el plan** in bold, then each expected
+  income as a dashed chip (📅 Salario · vie 30 oct · 1.000.000) and "Lo esperado pasa a
+  anotado cuando lo registras." Expected money never enters recorded totals.
+- **Lo que entró:** each income with source, date, note and amount, tap to edit; no
+  divider under the last entry; a total line with a solid rule.
+- **States:** no income ("Sello funciona sin ingresos"), loading, failed read (never
+  zero), a past month (the shared ribbon, no suggestion).
+
+**Rejected during the review:** leading with the unassigned amount, a balance
+disclaimer under the big number, the equation layout for the plan box and a
+six-month income chart.
 
 ## Changes to record in the decision documents
 

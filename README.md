@@ -5,9 +5,15 @@ a deliberately smaller, tested MVP and the Sello visual language.
 
 ## Start here
 
+- [Current app experience baseline](docs/development/current-app-experience.md):
+  the implemented screens, navigation, behavior, adaptive layout and component
+  families to use as the starting point for UI/UX work.
+- [Current navigation graph](docs/development/navigation-graph.md): the visual route
+  map, screen composable hierarchy and navigation test coverage.
 - [Architecture and guardrails](ARCHITECTURE.md): ownership, financial/recovery
   contracts, technologies, MVP scope and developer tooling requirements.
-- [MVP Kanban board](docs/planning/mvp/BOARD.md): eight epics and 36 scoped tickets.
+- [MVP Kanban board](docs/planning/mvp/BOARD.md): canonical implementation status
+  and scoped tickets.
 - [Post-MVP roadmap board](docs/planning/mvp/ROADMAP.md): signed carryover (seven
   dependency-linked tasks) and legacy data import (one), separate from MVP release acceptance.
 - [Delivery workflow and gates](docs/planning/mvp/README.md): dependencies,
@@ -35,11 +41,12 @@ a deliberately smaller, tested MVP and the Sello visual language.
 - [Local visual reference](docs/design/README.md): Sello snapshot and provenance.
 - [Inspected baseline](docs/planning/mvp/BASELINE.md): what actually builds today.
 
-The app is still the generated greeting and the catalog an empty shell. The
-foundation epic delivered the module boundaries (`:domain`, `:data`,
-`:design-system`, `:app`, `:catalog`), debug/catalog identities, quality gates with
-CI, and injected clocks with a Koin composition root. Financial features, the
-live-testing sandbox and catalog components are planned, not implemented.
+The app currently implements Recibo and Resumen tabs, expense and income
+entry/history, category and limit management, corrections with guarded undo,
+persisted appearance/order settings, adaptive navigation and unreadable-storage
+startup recovery. The component catalog is populated. Backup/restore/reset and the
+live-testing sandbox are not yet customer-facing capabilities; see the current app
+baseline and board for the exact boundary.
 
 ## Local host verification (G1)
 

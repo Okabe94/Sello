@@ -18,10 +18,10 @@ synthetic.
 
 | Screen | State |
 | --- | --- |
-| [Recibo / Home](home.html) | Locked 2026-10-15 |
+| [Recibo / Home](home.html) | Locked 2026-10-15 (past-month state added with Resumen) |
 | [Expense and income entry](entry.html) | Locked 2026-10-15 |
-| Resumen | Next |
-| Income | Pending |
+| [Resumen](resumen.html) | Locked 2026-10-15 |
+| Income | Next |
 | Metas | Pending |
 | Inversiones | Pending |
 
@@ -62,6 +62,11 @@ the goal. Only shown when Metas ships.
 **Categories:** unchanged circle grid. A category shows only its own remainder;
 reserved payments are not shown inside categories. Overruns use the signed red
 remainder.
+
+**A past month:** the big number is what was left when the month closed, with a line
+such as `Mes cerrado · gastaste 920.000 de 1.000.000.` Stamp **Cumplido** (gain) when it
+closed within the limit, **Excedido** when it went over. No per-day line, no reserved
+payments and no goal pill; categories show that month's final remainders.
 
 **Review invitation:** one dashed-outline line, for example
 `Ver cómo cerraste octubre ›`. Never a stack of cards.
@@ -119,6 +124,47 @@ in gain green with a `+`.
 note closes, no `000`), the four-column pad, darker-paper and outlined delete keys, the
 paper-slip note dialog, and placing the note beside the date or under the amount.
 
+## Shared: the selected month
+
+Recibo and Resumen share one selected month, chosen in the month bar. There is no
+range sheet (3, 6, 12 months, year, all): the MVP never shipped it and it has no ticket.
+While the selected month is not the current one, every tab screen shows the same
+ribbon under the month bar: 📅 **Estás viendo septiembre** with a **Volver a octubre**
+button that returns to the current month in one tap.
+
+## Resumen
+
+**Order, top to bottom:** hero → income → month by month → where the money goes →
+which days → one suggestion. The month in progress is never projected.
+
+- **Hero:** "¿Cómo va este mes?". The big number is the difference with the same days
+  of the previous month (**50.000** "menos que en septiembre", ↓ 11,1 % al mismo día del
+  mes). Under the tear line, "Del 1 al 22 de cada mes" and two bars on the same scale
+  with exact amounts. Up and down use the same neutral ink and arrow: spending more is
+  a fact, not a failure. A past month asks "¿Cómo cerró septiembre?" and compares full
+  months.
+- **Income** (right after the hero): Ingresos anotados, Ingresos menos gastos and Sin
+  asignar a categorías as receipt lines, then **Ver ingresos y su destino ›**.
+- **Mes a mes:** "Un mes normal" (average of the full months shown) first, then
+  v1.1 columns: past months in `pastBar`, the month in progress striped and marked
+  `*`, one dashed limit line, values printed only on the highest and current
+  columns. Tapping a column gives its exact value.
+- **¿Dónde se va?** categories ranked by actual spending with share bars, exact
+  amounts, a total line and access to each category.
+- **¿Qué días gastas más?** the answer first ("Los sábados", the average), then the
+  weekday columns.
+- **Suggestion:** at most one, as a tinted note (`brandSoft`, light-bulb circle,
+  "Una sugerencia", × to dismiss). The evidence is written as a plain fact; the advice
+  starts with "Podrías…" and ends in one action, e.g. **Ajustar el presupuesto de
+  Café ›**. Eligibility rules (how many months, how often) are not approved; the
+  "3 of 4 months" example is illustrative.
+- **States:** first month (says what is missing, shows only real figures, no
+  comparison or suggestion), no expenses, loading, failed read (never zero).
+
+**Rejected during the review:** the sentence-only hero, income at the bottom or as a
+single line, the dashed-proposal and question-with-choices suggestions, and bringing
+back the range sheet.
+
 ## Changes to record in the decision documents
 
 These Home choices replace working wording in
@@ -135,3 +181,9 @@ These Home choices replace working wording in
   and the conditional pad wording in the philosophy and the
   [entry brief](../screen-briefs/entry.md). The note uses a composer docked to the
   keyboard rather than a centred dialog.
+- Past-month status: **Cumplido** for a month that closed within its limit,
+  **Excedido** for one that went over. This settles the past-month copy left open in
+  ADR 0012 (v1.1 used "Bajo el límite" / "Pasado").
+- Resumen: the hero is the same-days comparison instead of SELLO-022's net-flow
+  emphasis; net flow (Ingresos menos gastos) moves to the income slip right below.
+  This changes the delivered presentation, not the financial meaning.

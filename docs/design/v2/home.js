@@ -10,6 +10,7 @@ const SPEND = {
   over:     { Hogar: 400000, Comida: 230000, Transporte: 120000, Café: 90000, Salud: 60000, Ocio: 110000, Ropa: 70000 },
   equal:    { Hogar: 400000, Comida: 200000, Transporte: 100000, Café: 90000, Salud: 60000, Ocio: 100000, Ropa: 50000 },
   saved:    { Hogar: 200000, Comida: 128700, Transporte: 40000, Café: 60000, Salud: 0, Ocio: 20000, Ropa: 0 },
+  past:     { Hogar: 400000, Comida: 210000, Transporte: 95000, Café: 70000, Salud: 40000, Ocio: 75000, Ropa: 30000 },
   early:    { Hogar: 0, Comida: 40000, Transporte: 20000, Café: 0, Salud: 0, Ocio: 0, Ropa: 0 },
 };
 const GOAL = { name: "Viaje a la costa", icon: "flight", pct: 57 };
@@ -17,6 +18,7 @@ const GOAL = { name: "Viaje a la costa", icon: "flight", pct: 57 };
 // Budget status stamps (owner-picked wording).
 const STAMPS = {
   ok:    ["Al día", ""],           // spending below the limit
+  done:  ["Cumplido", ""],         // a closed month that ended below the limit (proposal, needs confirmation)
   equal: ["Al límite", "neutral"],  // spending exactly equal to the limit
   over:  ["Excedido", "loss"],      // spending above the limit
   tight: ["Sin margen", "neutral"], // planned payments use up exactly what is left
@@ -35,6 +37,8 @@ const SCENES = {
   short:    { spend: "tight", label: "Falta para tus pagos", hero: 50000, status: "short", daily: 0, days: 10, reserved: 150000, payments: 1, left: 100000, action: "Ajustar presupuesto" },
   over:     { spend: "over", label: "Restante del presupuesto", hero: -80000, status: "over", daily: 0, days: 10, action: "Ajustar presupuesto" },
   equal:    { spend: "equal", label: "Restante del presupuesto", hero: 0, status: "equal", daily: 0, days: 10 },
+  // September, closed: 1.000.000 − 920.000. No per-day line, no reservations, no goal.
+  past:     { spend: "past", month: "Septiembre", current: "octubre", label: "Restante del presupuesto", hero: 80000, status: "done", closed: "Mes cerrado · gastaste 920.000 de 1.000.000.", mvp: true },
   nolimit:  { spend: "paid", label: "Has gastado este mes", hero: 600000, status: "none", unlimited: true },
   early:    { spend: "early", month: "Noviembre", label: "Restante del presupuesto", hero: 740000, status: "ok", daily: 26400, days: 28, reserved: 200000, payments: 1, invite: true },
   today:    { spend: "reserved", label: "Restante del presupuesto", hero: 600000, status: "ok", daily: 60000, days: 10, mvp: true },
@@ -44,6 +48,7 @@ const payments = n => n === 1 ? "1 pago previsto" : `${n} pagos previstos`;
 function answer(s) {
   const long = fmt(s.hero).length > 8;
   let h = `<section class="slip pinked" aria-label="Tu mes"><div class="answer-head"><span class="label">${s.label}</span>${stamp(s.status)}</div><div class="hero ${long ? "long" : ""}">${money(s.hero)}</div>`;
+  if (s.closed) h += `<p class="closed-note">${s.closed}</p>`;
   if (s.status === "short") h += `<p class="answer-note">Quedan ${fmt(s.left)} y tus pagos previstos suman ${fmt(s.reserved)}.</p>`;
   if (s.daily !== undefined || s.reserved) {
     h += `<div class="tear" aria-hidden="true"></div>`;
@@ -76,12 +81,6 @@ function homeBody(s) {
   return b + categoryGrid(s);
 }
 
-function shell({ month = "Octubre", body, tabs, toast }) {
-  const all = [["receipt_long", "Recibo"], ["insights", "Resumen"], ["flag", "Metas"], ["account_balance", "Inversiones"]].slice(0, tabs);
-  const nav = all.map(([ic, t], i) => `<button ${i === 0 ? 'aria-current="page"' : ""}><span class="pill">${icon(ic)}</span><span class="t">${t}</span></button>`).join("");
-  return `<div class="top">${statusbar()}<div class="topbar"><button class="month" aria-label="Cambiar mes, ${month} 2026">${month}<small>2026</small>${icon("keyboard_arrow_down")}</button><button class="icon-btn" aria-label="Configuración">${icon("settings")}</button></div></div><main class="content">${body}</main><div class="bottom"><div class="dock"><button class="primary">${icon("add")}Anotar</button></div><nav class="nav">${nav}</nav><div class="gesture"></div></div>${toast ? `<div class="toast" role="status">${icon("check")}${toast}</div>` : ""}`;
-}
-
 function special(kind) {
   if (kind === "loading") return `<div role="status" aria-label="Cargando"><section class="slip"><div class="skel" style="width:45%"></div><div class="skel big"></div><div class="skel" style="width:60%"></div></section><section class="slip"><div class="skel" style="width:35%"></div><div class="skel"></div><div class="skel"></div></section></div>`;
   if (kind === "empty") return `<section class="slip empty">${icon("receipt_long")}<h2>Dale forma a tu mes</h2><p>Crea una categoría para lo que importa: la casa, la comida, el ocio o tu ahorro.</p><button class="outline-btn">Crear categoría</button></section>`;
@@ -99,6 +98,7 @@ const STATES = [
   { title: "Al límite · spending equals the limit", scene: "equal" },
   { title: "Sin límite · no finite limits", scene: "nolimit" },
   { title: "Early month · review invitation", scene: "early" },
+  { title: "A past month · September", scene: "past" },
   { title: "Today's scope · no Metas, no recurrence", scene: "today", tabs: 2 },
   { title: "First use", special: "empty" },
   { title: "Loading", special: "loading" },
@@ -113,7 +113,7 @@ function render() {
     const s = d.scene ? SCENES[d.scene] : null;
     const body = d.special ? special(d.special) : homeBody(s);
     const scale = d.large ? 2 : Number(o.scale);
-    return `<div class="frame-card"><h3>${d.title}</h3><div class="phone"><div class="app ${scale >= 1.6 ? "large" : ""}" data-ink="${o.ink}" data-theme="${o.theme}" style="--scale:${scale}">${shell({ month: s?.month, body, tabs: d.tabs ?? Number(o.tabs), toast: s?.toast })}</div></div></div>`;
+    return `<div class="frame-card"><h3>${d.title}</h3><div class="phone"><div class="app ${scale >= 1.6 ? "large" : ""}" data-ink="${o.ink}" data-theme="${o.theme}" style="--scale:${scale}">${appShell({ month: s?.month, body, tabs: d.tabs ?? Number(o.tabs), toast: s?.toast, active: 0, current: s?.current })}</div></div></div>`;
   }).join("");
 }
 document.querySelectorAll(".controls select").forEach(s => s.addEventListener("change", render));

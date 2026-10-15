@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 37/52 · **Epics Done:** 5/9
+**Tickets Done:** 37/61 · **Epics Done:** 5/10
 
-Backlog: 15 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 37
+Backlog: 24 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 37
 
 [Workflow, gates and definition of done](README.md)
 
@@ -21,6 +21,7 @@ Backlog: 15 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 37
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Backlog | 0/5 |
 | [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | Backlog | 0/4 |
 | [SELLO-E11](epics/E11-bug-stabilization.md) | Address the collected first-slice correctness, availability, accessibility and measured scaling findings without weakening financial contracts. | In Progress | 14/16 |
+| [SELLO-E12](epics/E12-coherent-experience.md) | Restore a coherent answer-first Sello experience across Recibo, detail, entry, confirmation, Resumen and Configuración while preserving exact financial truth, accessibility and approved navigation contracts. | Backlog | 0/9 |
 
 ## Ready
 
@@ -57,6 +58,15 @@ No tickets.
 | [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | Accept the complete MVP and prepare release handoff | SELLO-E08 | P0 | G3 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety), [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) |
 | [SELLO-055](epics/E11-bug-stabilization.md#sello-055--avoid-duplicate-monthly-snapshot-pipelines-in-simultaneous-views) | Avoid duplicate monthly snapshot pipelines in simultaneous views | SELLO-E11 | P2 | G2 | None |
 | [SELLO-060](epics/E11-bug-stabilization.md#sello-060--make-first-slice-navigation-motion-consistent-and-accessible) | Make first-slice navigation motion consistent and accessible | SELLO-E11 | P2 | G2 | None |
+| [SELLO-061](epics/E12-coherent-experience.md#sello-061--ratify-the-experience-architecture-and-contested-contracts) | Ratify the experience architecture and contested contracts | SELLO-E12 | P1 | G2 | None |
+| [SELLO-062](epics/E12-coherent-experience.md#sello-062--rework-shell-context-navigation-and-entry-structure) | Rework shell context, navigation and entry structure | SELLO-E12 | P1 | G2 | [SELLO-061](epics/E12-coherent-experience.md#sello-061--ratify-the-experience-architecture-and-contested-contracts) |
+| [SELLO-063](epics/E12-coherent-experience.md#sello-063--keep-recibo-actions-and-category-states-reachable) | Keep Recibo actions and category states reachable | SELLO-E12 | P2 | G2 | None |
+| [SELLO-064](epics/E12-coherent-experience.md#sello-064--revise-category-browsing-and-transaction-interactions) | Revise category browsing and transaction interactions | SELLO-E12 | P2 | G2 | [SELLO-061](epics/E12-coherent-experience.md#sello-061--ratify-the-experience-architecture-and-contested-contracts), [SELLO-063](epics/E12-coherent-experience.md#sello-063--keep-recibo-actions-and-category-states-reachable) |
+| [SELLO-065](epics/E12-coherent-experience.md#sello-065--fix-expense-and-income-entry-layout-date-and-contrast-defects) | Fix expense and income entry layout, date and contrast defects | SELLO-E12 | P1 | G2 | None |
+| [SELLO-066](epics/E12-coherent-experience.md#sello-066--unify-post-save-confirmation-without-losing-commit-truth) | Unify post-save confirmation without losing commit truth | SELLO-E12 | P2 | G2 | [SELLO-061](epics/E12-coherent-experience.md#sello-061--ratify-the-experience-architecture-and-contested-contracts), [SELLO-065](epics/E12-coherent-experience.md#sello-065--fix-expense-and-income-entry-layout-date-and-contrast-defects) |
+| [SELLO-067](epics/E12-coherent-experience.md#sello-067--redesign-resumen-around-the-approved-monthly-question) | Redesign Resumen around the approved monthly question | SELLO-E12 | P1 | G2 | [SELLO-061](epics/E12-coherent-experience.md#sello-061--ratify-the-experience-architecture-and-contested-contracts), [SELLO-062](epics/E12-coherent-experience.md#sello-062--rework-shell-context-navigation-and-entry-structure), [SELLO-065](epics/E12-coherent-experience.md#sello-065--fix-expense-and-income-entry-layout-date-and-contrast-defects), [SELLO-066](epics/E12-coherent-experience.md#sello-066--unify-post-save-confirmation-without-losing-commit-truth) |
+| [SELLO-068](epics/E12-coherent-experience.md#sello-068--apply-coherent-ui-hierarchy-and-shared-visual-patterns) | Apply coherent UI hierarchy and shared visual patterns | SELLO-E12 | P2 | G2 | [SELLO-063](epics/E12-coherent-experience.md#sello-063--keep-recibo-actions-and-category-states-reachable), [SELLO-064](epics/E12-coherent-experience.md#sello-064--revise-category-browsing-and-transaction-interactions), [SELLO-065](epics/E12-coherent-experience.md#sello-065--fix-expense-and-income-entry-layout-date-and-contrast-defects), [SELLO-066](epics/E12-coherent-experience.md#sello-066--unify-post-save-confirmation-without-losing-commit-truth), [SELLO-067](epics/E12-coherent-experience.md#sello-067--redesign-resumen-around-the-approved-monthly-question) |
+| [SELLO-069](epics/E12-coherent-experience.md#sello-069--prove-integrated-adaptive-accessibility-and-navigation-acceptance) | Prove integrated adaptive, accessibility and navigation acceptance | SELLO-E12 | P2 | G2 | [SELLO-062](epics/E12-coherent-experience.md#sello-062--rework-shell-context-navigation-and-entry-structure), [SELLO-063](epics/E12-coherent-experience.md#sello-063--keep-recibo-actions-and-category-states-reachable), [SELLO-064](epics/E12-coherent-experience.md#sello-064--revise-category-browsing-and-transaction-interactions), [SELLO-065](epics/E12-coherent-experience.md#sello-065--fix-expense-and-income-entry-layout-date-and-contrast-defects), [SELLO-066](epics/E12-coherent-experience.md#sello-066--unify-post-save-confirmation-without-losing-commit-truth), [SELLO-067](epics/E12-coherent-experience.md#sello-067--redesign-resumen-around-the-approved-monthly-question), [SELLO-068](epics/E12-coherent-experience.md#sello-068--apply-coherent-ui-hierarchy-and-shared-visual-patterns) |
 
 ## Done
 
@@ -102,4 +112,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-028](epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-055](epics/E11-bug-stabilization.md#sello-055--avoid-duplicate-monthly-snapshot-pipelines-in-simultaneous-views), [SELLO-060](epics/E11-bug-stabilization.md#sello-060--make-first-slice-navigation-motion-consistent-and-accessible)
+[SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-028](epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-055](epics/E11-bug-stabilization.md#sello-055--avoid-duplicate-monthly-snapshot-pipelines-in-simultaneous-views), [SELLO-060](epics/E11-bug-stabilization.md#sello-060--make-first-slice-navigation-motion-consistent-and-accessible), [SELLO-061](epics/E12-coherent-experience.md#sello-061--ratify-the-experience-architecture-and-contested-contracts), [SELLO-063](epics/E12-coherent-experience.md#sello-063--keep-recibo-actions-and-category-states-reachable), [SELLO-065](epics/E12-coherent-experience.md#sello-065--fix-expense-and-income-entry-layout-date-and-contrast-defects)

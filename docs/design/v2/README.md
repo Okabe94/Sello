@@ -19,8 +19,8 @@ synthetic.
 | Screen | State |
 | --- | --- |
 | [Recibo / Home](home.html) | Locked 2026-10-15 |
-| Expense and income entry | Next: compare the fixed pad with the system keyboard |
-| Resumen | Pending |
+| [Expense and income entry](entry.html) | Locked 2026-10-15 |
+| Resumen | Next |
 | Income | Pending |
 | Metas | Pending |
 | Inversiones | Pending |
@@ -71,6 +71,54 @@ tabs and large text), reserved amount inside a category, receipt-line, column an
 sentence layouts for the lower half, and the other goal looks (ticket stub, ink pill,
 punch card, goal stamp, coupon).
 
+## Expense and income entry
+
+**Order, top to bottom:** ✕ and the Gasto/Ingreso switch → amount slip (pinked edge,
+label and date pill on top, category circle beside the amount) → category or source
+chips → note row → **Anotar gasto / Anotar ingreso** → Sello pad. The amount, Anotar
+and the pad never move; only the chips and note area scroll. Income shows the amount
+in gain green with a `+`.
+
+- **Amount entry:** always the Sello pad, ready the moment the form opens. The system
+  keyboard is never used for amounts. Pad: the familiar 3 × 4 layout (1–9, then `000`,
+  `0`, delete), 44dp keys with 4dp gaps (48dp touch pitch), 192dp in total.
+- **Delete key:** soft brand tint (`brandSoft` with `onBrandSoft` icon) so it stands
+  apart from the digits. Long press clears the whole amount and says so to TalkBack.
+- **Amount size steps down as digits are added**, so the full amount always stays on
+  one line and is never cut or wrapped:
+
+  | Digits | Size (normal phone) | Narrow window (≈320dp) |
+  | --- | --- | --- |
+  | Up to 6 | 45sp (full size) | 45sp |
+  | 7–9 | 35sp | 31sp |
+  | 10–12 | 26sp | 21sp |
+
+  Twelve digits is the maximum. A 13th key press shakes the amount, changes nothing and
+  shows **Máximo 12 dígitos** in red in place of the "Gasto en pesos" label until the
+  next valid key, so no line is reserved and nothing moves. On Android this is
+  auto-sized text with these steps as the allowed sizes.
+- **Category:** none selected when the form opens, so Anotar waits for one. Opening
+  from a category ("Anotar aquí") pre-selects it.
+- **Chips:** v1.1 SelloChip shape (36dp, 10dp corners, 1.5dp outline). At most two
+  rows on any screen size; more chips scroll sideways with a 16dp fade at the edge.
+- **Note:** its own row under the chips ("Agregar nota", or the note with Editar).
+  It opens a composer docked to the top of the text keyboard (like a chat box),
+  showing what the note belongs to, a ✓ to finish and Cancelar. Over 60 characters:
+  the text is kept, the box and counter turn red and ✓ is disabled. The Otro income
+  source name uses the same composer.
+- **Saving:** no receipt screen. While saving, the button shows a spinner and
+  "Guardando…" and everything else is locked. A definite failure says
+  **No se guardó. Tu borrador sigue aquí.** and keeps the draft. An unknown outcome
+  says **Aún no sabemos si se guardó. Compruébalo antes de volver a anotar.** and its
+  only action is **Comprobar si se guardó** (same operation, no second write).
+- **Saved:** the form closes and Home shows a short confirmation above Anotar, for
+  example **Gasto anotado: 48.700 en Comida**, with the numbers already updated. Ink
+  background, paper text, as v1.1's notice. No undo for new entries.
+
+**Rejected during the review:** the system keyboard for amounts (layout jumps after the
+note closes, no `000`), the four-column pad, darker-paper and outlined delete keys, the
+paper-slip note dialog, and placing the note beside the date or under the amount.
+
 ## Changes to record in the decision documents
 
 These Home choices replace working wording in
@@ -82,3 +130,8 @@ These Home choices replace working wording in
 - Over-the-limit and shortfall link: **Ajustar presupuesto** (was Revisar presupuesto).
 - Per-day line wording: **por día** (was "Puedes usar … al día", which clashed with
   the Al día stamp).
+- Entry: the Sello pad is the confirmed way to type amounts. This replaces the
+  system-keyboard default in [ADR 0011](../../decisions/0011-goal-centered-design.md)
+  and the conditional pad wording in the philosophy and the
+  [entry brief](../screen-briefs/entry.md). The note uses a composer docked to the
+  keyboard rather than a centred dialog.

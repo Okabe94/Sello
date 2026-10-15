@@ -1,11 +1,6 @@
 // Sello v2 · Home (locked 2026-10-15). All figures are synthetic, hand-authored fixtures
 // (COP, no symbol). Financial date 2026-10-22, 10 days left including today, unless noted.
 
-const fmt = n => (n < 0 ? "−" : "") + Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-const spoken = n => (n < 0 ? "menos " : "") + fmt(Math.abs(n)) + " pesos";
-const icon = (name, cls = "") => `<svg class="icon ${cls}" aria-hidden="true"><use href="#i-${name}"></use></svg>`;
-const money = (n, cls = "") => `<span class="money ${n < 0 ? "neg" : ""} ${cls}" aria-label="${spoken(n)}">${fmt(n)}</span>`;
-
 const ICONS = { Hogar: "home", Comida: "restaurant", Transporte: "directions_bus", Café: "local_cafe", Salud: "medical_services", Ocio: "theaters", Ropa: "checkroom" };
 const LIMITS = { Hogar: 400000, Comida: 200000, Transporte: 100000, Café: 50000, Salud: 80000, Ocio: 100000, Ropa: 70000 }; // 1.000.000
 const SPEND = {
@@ -14,6 +9,7 @@ const SPEND = {
   tight:    { Hogar: 300000, Comida: 200000, Transporte: 100000, Café: 90000, Salud: 60000, Ocio: 100000, Ropa: 50000 },
   over:     { Hogar: 400000, Comida: 230000, Transporte: 120000, Café: 90000, Salud: 60000, Ocio: 110000, Ropa: 70000 },
   equal:    { Hogar: 400000, Comida: 200000, Transporte: 100000, Café: 90000, Salud: 60000, Ocio: 100000, Ropa: 50000 },
+  saved:    { Hogar: 200000, Comida: 128700, Transporte: 40000, Café: 60000, Salud: 0, Ocio: 20000, Ropa: 0 },
   early:    { Hogar: 0, Comida: 40000, Transporte: 20000, Café: 0, Salud: 0, Ocio: 0, Ropa: 0 },
 };
 const GOAL = { name: "Viaje a la costa", icon: "flight", pct: 57 };
@@ -33,6 +29,8 @@ const stamp = key => `<span class="stamp ${STAMPS[key][1]}">${STAMPS[key][0]}</s
 const SCENES = {
   reserved: { spend: "reserved", label: "Restante del presupuesto", hero: 400000, status: "ok", daily: 40000, days: 10, reserved: 200000, payments: 1 },
   paid:     { spend: "paid", label: "Restante del presupuesto", hero: 400000, status: "ok", daily: 40000, days: 10 },
+  // After recording 48.700 in Comida on the default scene: 400.000 − 48.700; per day floor(351.300 / 10) to COP 50.
+  saved:    { spend: "saved", label: "Restante del presupuesto", hero: 351300, status: "ok", daily: 35100, days: 10, reserved: 200000, payments: 1, toast: "Gasto anotado: 48.700 en Comida" },
   tight:    { spend: "tight", label: "Restante del presupuesto", hero: 0, status: "tight", daily: 0, days: 10, reserved: 100000, payments: 1 },
   short:    { spend: "tight", label: "Falta para tus pagos", hero: 50000, status: "short", daily: 0, days: 10, reserved: 150000, payments: 1, left: 100000, action: "Ajustar presupuesto" },
   over:     { spend: "over", label: "Restante del presupuesto", hero: -80000, status: "over", daily: 0, days: 10, action: "Ajustar presupuesto" },
@@ -78,10 +76,10 @@ function homeBody(s) {
   return b + categoryGrid(s);
 }
 
-function shell({ month = "Octubre", body, tabs }) {
+function shell({ month = "Octubre", body, tabs, toast }) {
   const all = [["receipt_long", "Recibo"], ["insights", "Resumen"], ["flag", "Metas"], ["account_balance", "Inversiones"]].slice(0, tabs);
   const nav = all.map(([ic, t], i) => `<button ${i === 0 ? 'aria-current="page"' : ""}><span class="pill">${icon(ic)}</span><span class="t">${t}</span></button>`).join("");
-  return `<div class="top"><div class="statusbar"><span>9:41</span><span>▲ ● ▮</span></div><div class="topbar"><button class="month" aria-label="Cambiar mes, ${month} 2026">${month}<small>2026</small>${icon("keyboard_arrow_down")}</button><button class="icon-btn" aria-label="Configuración">${icon("settings")}</button></div></div><main class="content">${body}</main><div class="bottom"><div class="dock"><button class="primary">${icon("add")}Anotar</button></div><nav class="nav">${nav}</nav><div class="gesture"></div></div>`;
+  return `<div class="top">${statusbar()}<div class="topbar"><button class="month" aria-label="Cambiar mes, ${month} 2026">${month}<small>2026</small>${icon("keyboard_arrow_down")}</button><button class="icon-btn" aria-label="Configuración">${icon("settings")}</button></div></div><main class="content">${body}</main><div class="bottom"><div class="dock"><button class="primary">${icon("add")}Anotar</button></div><nav class="nav">${nav}</nav><div class="gesture"></div></div>${toast ? `<div class="toast" role="status">${icon("check")}${toast}</div>` : ""}`;
 }
 
 function special(kind) {
@@ -94,6 +92,7 @@ function special(kind) {
 const STATES = [
   { title: "Default · a payment is reserved", scene: "reserved" },
   { title: "Reserved payment recorded", scene: "paid" },
+  { title: "After saving · brief confirmation", scene: "saved" },
   { title: "Sin margen · payments use up what is left", scene: "tight" },
   { title: "Revisar · payments are more than what is left", scene: "short" },
   { title: "Excedido · over the limit", scene: "over" },
@@ -114,7 +113,7 @@ function render() {
     const s = d.scene ? SCENES[d.scene] : null;
     const body = d.special ? special(d.special) : homeBody(s);
     const scale = d.large ? 2 : Number(o.scale);
-    return `<div class="frame-card"><h3>${d.title}</h3><div class="phone"><div class="app ${scale >= 1.6 ? "large" : ""}" data-ink="${o.ink}" data-theme="${o.theme}" style="--scale:${scale}">${shell({ month: s?.month, body, tabs: d.tabs ?? Number(o.tabs) })}</div></div></div>`;
+    return `<div class="frame-card"><h3>${d.title}</h3><div class="phone"><div class="app ${scale >= 1.6 ? "large" : ""}" data-ink="${o.ink}" data-theme="${o.theme}" style="--scale:${scale}">${shell({ month: s?.month, body, tabs: d.tabs ?? Number(o.tabs), toast: s?.toast })}</div></div></div>`;
   }).join("");
 }
 document.querySelectorAll(".controls select").forEach(s => s.addEventListener("change", render));

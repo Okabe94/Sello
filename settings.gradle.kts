@@ -28,4 +28,4 @@ include(":catalog")
 include(":data")
 include(":design-system")
 include(":domain")
- 
+include(":prototype")

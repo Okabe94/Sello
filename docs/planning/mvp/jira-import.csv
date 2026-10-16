@@ -46,8 +46,8 @@ builds/launches. Missing approvals keep this ticket out of Done.
 ### Context and starting points
 The design contains sample amounts and legacy migration hints, not approved new
 financial policies. Without this task, separate actors will choose different pace,
-budget history and reset semantics. Read [decision inputs](../DECISION_INPUTS.md),
-[baseline](../BASELINE.md), architecture §§1/4/7/9 and the
+budget history and reset semantics. Read [ADR 0001](../../../decisions/0001-mvp-contract.md),
+architecture §§1/4/7/9 and the
 [local design](../../../design/sello-spec.html#build). No predecessor implementation exists.
 
 ### Implementation plan
@@ -411,9 +411,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -430,21 +430,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -515,7 +509,7 @@ assembly separately and arrange smoke evidence before concluding launch acceptan
 
 ### Context and starting points
 The scaffold currently builds, but its mixed versions, JDK daemon criteria and SDK
-targets have not been declared supported. Read [baseline](../BASELINE.md),
+targets have not been declared supported. Read
 [tool commands](../EXECUTION_GUIDE.md#tools-and-host-verification), the catalog,
 wrapper, `gradle.properties`, daemon criteria and `app/build.gradle.kts`.
 
@@ -614,9 +608,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -633,21 +627,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -788,9 +776,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -807,21 +795,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -1034,9 +1016,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -1053,21 +1035,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -1211,9 +1187,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -1230,21 +1206,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -1391,9 +1361,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -1410,21 +1380,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -1587,9 +1551,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -1606,21 +1570,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -1769,9 +1727,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -1788,21 +1746,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -1955,9 +1907,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -1974,21 +1926,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -2152,9 +2098,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -2171,21 +2117,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -2355,9 +2295,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -2374,21 +2314,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -2538,9 +2472,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -2557,21 +2491,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -2736,9 +2664,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -2755,21 +2683,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -2933,9 +2855,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -2952,21 +2874,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -3134,9 +3050,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -3153,21 +3069,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -3318,9 +3228,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -3337,21 +3247,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -3505,9 +3409,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -3524,21 +3428,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -3691,9 +3589,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -3710,21 +3608,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -3934,9 +3826,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -3953,21 +3845,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -4143,9 +4029,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -4162,21 +4048,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -4349,9 +4229,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -4368,21 +4248,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -4569,9 +4443,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -4588,21 +4462,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -4770,9 +4638,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -4789,21 +4657,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -4918,9 +4780,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -4937,21 +4799,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -5020,7 +4876,7 @@ update in actual Recibo/Resumen; ordinary manual workflows still work.
 ### Context and starting points
 A seeded graph is useful only when it exercises the same writes/calculations as
 manual use. Inputs are real expense/income/summary ports and the isolated session
-from SELLO-024. Read [G01](../DECISION_INPUTS.md#exact-baseline-examples), architecture
+from SELLO-024. Read [G01](../../../testing/mvp-financial-examples.md#history-income-and-graph-reconciliation--d04d06), architecture
 §9 and recovery-case checklist; no recurrence port exists in MVP.
 
 ### Implementation plan
@@ -5056,9 +4912,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -5075,21 +4931,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -5192,9 +5042,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -5211,21 +5061,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -5330,9 +5174,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -5349,21 +5193,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -5480,9 +5318,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -5499,21 +5337,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -5622,9 +5454,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -5641,21 +5473,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -5739,7 +5565,7 @@ preferences, with partial settings progress visibly recoverable until complete.
 Restore spans two stores, so a boolean success/failure hides committed-data versus
 pending-settings state. Use validated import plans from SELLO-028, document picker
 from SELLO-029 and generation/receipt/prefs contracts. Read architecture §§5/7,
-approved D09 and [recovery cases](../DECISION_INPUTS.md#recovery-cases-to-turn-into-tests).
+approved D09 and [recovery cases](../../../testing/mvp-financial-examples.md#recovery-contracts-to-instantiate-in-downstream-tests--d07d09).
 
 ### Implementation plan
 1. Add choose/read/private-stage/validate flow; persist owned staging ID/format/counts/
@@ -5778,9 +5604,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -5797,21 +5623,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -5928,9 +5748,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -5947,21 +5767,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -6073,9 +5887,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -6092,21 +5906,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -6213,9 +6021,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -6232,21 +6040,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -6349,9 +6151,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -6368,21 +6170,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -6455,7 +6251,7 @@ financial history and recoverable files. Reports support the final acceptance de
 Debug responsiveness and unshrunk DI do not establish release behavior. Inputs are
 approved D10 targets/device profile, all recovery/privacy/a11y evidence and actual
 signing access. Read architecture §10, source-library shrinking/signing docs and
-[baseline](../BASELINE.md)'s currently unoptimized release configuration.
+the currently unoptimized release configuration in `app/build.gradle.kts`.
 
 ### Implementation plan
 1. Create `docs/testing/performance-profile.md` with reviewed targets, device/API,
@@ -6494,9 +6290,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -6513,21 +6309,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -6640,9 +6430,9 @@ Shared definition of done and gates:
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -6659,21 +6449,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH=""$JAVA_HOME/bin:$PATH""
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then

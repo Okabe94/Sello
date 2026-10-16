@@ -171,7 +171,7 @@ financial history and recoverable files. Reports support the final acceptance de
 Debug responsiveness and unshrunk DI do not establish release behavior. Inputs are
 approved D10 targets/device profile, all recovery/privacy/a11y evidence and actual
 signing access. Read architecture §10, source-library shrinking/signing docs and
-[baseline](../BASELINE.md)'s currently unoptimized release configuration.
+the currently unoptimized release configuration in `app/build.gradle.kts`.
 
 ### Implementation plan
 1. Create `docs/testing/performance-profile.md` with reviewed targets, device/API,

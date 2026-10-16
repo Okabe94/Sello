@@ -88,8 +88,8 @@ assigned gate after focused tests, not only the example command shown in a ticke
 Use an Android emulator/device matching SELLO-001/002's approved API matrix. If
 T3 device tools are available, list/open a suitable device first; otherwise use
 Android Studio's AVD manager and `adb devices`. Set `ANDROID_SERIAL` when multiple
-devices exist. Never wipe or seed personal production data. Release QA uses an
-explicitly isolated synthetic test installation; sandbox scenarios use debug only.
+devices exist. Device permissions follow [AGENTS.md](../../../AGENTS.md#tests-and-verification).
+Release QA uses an isolated synthetic test installation; sandbox scenarios use debug only.
 
 ```bash
 adb devices
@@ -118,6 +118,23 @@ For an instrumented class selector use the actual configured test package:
   in-memory fakes cannot prove durable receipts/migration/rollback.
 - **Visual evidence:** record build, API, window size, theme/font scale and scenario.
   A screenshot confirms the shown state, not all financial/device acceptance.
+
+### Device test notes
+
+- Wait for observable UI/data conditions with the existing `Waits.kt` helpers;
+  asynchronous updates need condition-based waits, not immediate reads or sleeps.
+- After typing, use the `press()` semantics helper and hide the keyboard during
+  cleanup so it cannot interfere with the next test.
+- Tests in one process share database and month state. Reset both using
+  `TestData.reset()` and `TestCommands.showCurrentMonth()` where applicable.
+  Seed histories through `TestCommands` so normal observers see the writes.
+- For a test window larger than the display, check node existence and bounds;
+  off-screen content need not satisfy a visibility assertion.
+- Device runs cover Android API availability that host-JDK tests cannot prove.
+  System dialogs can steal focus and Back presses; inspect focus before diagnosing
+  an app failure.
+- For saved-task restoration, return with the same launcher intent or through
+  Recents. A different launch can create a second task and test a different journey.
 
 ## Contract and failure checklist
 

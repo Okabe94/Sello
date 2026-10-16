@@ -113,14 +113,16 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 retiring pace-based home judgment. The D03 calculations, thresholds and worked
 examples below describe the delivered financial contract and remain in force until
 explicitly replaced through scoped implementation with approved independent examples.
-[ADR 0012](docs/decisions/0012-budget-guidance-contract.md) records partial owner
-confirmation of factual status/tone and a headline after upcoming-payment reservation,
+[ADR 0012](docs/decisions/0012-budget-guidance-contract.md) records approved
+factual status/tone and a headline after upcoming-payment reservation,
 with the reserved amount at lower priority, planned versus recorded income, and
 category-only allocation. An equal reserved-to-recorded payment leaves the headline
 unchanged; omit reservation context when none remains. Goal/investment records do
-not independently allocate income; users can budget those purposes through categories. The complete classifier,
-commitment lifecycle and future-income planning boundaries remain open. Do not
-invent those rules while changing presentation; see the
+not independently allocate income; users can budget those purposes through categories.
+The target zero-budget/zero-spending status is Al día. For an overrun with upcoming
+payments still reserved, Revisar takes priority; once recorded, use Excedido if
+spending exceeds the limit. Recurrence and expected-income lifecycle details are
+deferred beyond MVP. Remaining implementation inputs are listed in the
 [open decisions](docs/design/philosophy.md#open-implementation-decisions).
 
 - **MUST** represent money as checked `Long` minor units + currency: COP scale 0;

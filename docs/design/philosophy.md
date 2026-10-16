@@ -203,25 +203,19 @@ target-date or spending-plan adjustments while recognizing what is already saved
 
 ## Open implementation decisions
 
-The [step 2 financial decision record](../decisions/0012-budget-guidance-contract.md)
-collects concrete alternatives, synthetic worked examples and the owner's partial
-confirmations. It does not yet define a complete replacement for delivered calculations.
+The [financial decision record](../decisions/0012-budget-guidance-contract.md)
+holds approved definitions and synthetic examples, marking cases not separately
+reviewed. Replacement calculations are not yet implemented.
 
-- Complete the D03 replacement and its worked current/past/no-limit/zero/overrun
-  examples. BG1 confirms uplifting positive wording (Al día as working copy),
-  neutral Al límite, Excedido and Sin límite for the presented states.
-  BG2 confirms a positive headline after reservations, lower-priority reserved
-  amount and neutral Sin margen when reservations leave zero free margin.
-  The presented commitment shortfall uses Revisar, the exact budget gap and
-  zero daily allowance, independently of income. An equal reserved-to-recorded
-  payment leaves the headline unchanged and removes reservation context when none
-  remains. Other precedence and boundary cases still need review; no new
-  pace/percentage thresholds are approved.
-- Define upcoming-commitment reservation exactly once, its period boundaries and
-  relation to recorded expenses; preserve exact money, day inclusion and rounding
-  unless separately changed. Expected recurring income informs a clearly labeled
-  plan and is replaced once by its recorded occurrence. Define its detailed
-  occurrence/month-planning lifecycle without implying a verified account balance.
+- Implement the D03 replacement through scoped work and independent examples.
+  ADR 0012 defines factual statuses, including Al día for zero budget/zero spending,
+  signed remainders and the approved COP-50 daily-guide rounding example. No new
+  pace/percentage warning thresholds are approved.
+- Recurrence is outside MVP. Its target reserves upcoming payments once, keeps
+  reservation context secondary and hides it when none remains. An equal payment
+  leaves the headline unchanged. For an overrun with payments still reserved,
+  Revisar takes priority; once recorded, use Excedido if spending exceeds the limit.
+  Detailed reservation and expected-income lifecycle rules belong to later work.
 - Design allocation advice around the confirmed category-only rule: assigning income
   requires a category-budget change. Recording a contribution only updates goal or
   investment tracking. Keep the suggested saving action honest about these effects.

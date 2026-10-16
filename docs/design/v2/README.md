@@ -221,8 +221,10 @@ The v1.1 Metas screen, kept close to the original on purpose, in its own tab.
   context (owner decision).
 - **Completed goals** stay at the bottom as pinked rows: icon, name, "400.000, 30 sep" and
   a green **LOGRADA** stamp.
-- **States:** no goals (v1.1's four empty stamp places, "Ponle nombre a algo que
-  quieras", Crear una meta), loading, failed read (never "no goals").
+- **States:** no goals (v1.1's four empty stamp places and "Ponle nombre a algo que
+  quieras"; the dock becomes **Crear una meta**, the one main action, with no button in
+  the card, since there is nothing to contribute to yet), loading, failed read (never
+  "no goals").
 
 **Goal detail** (v1.1's "Detalle de meta", opened by tapping a goal):
 
@@ -243,7 +245,9 @@ The v1.1 Metas screen, kept close to the original on purpose, in its own tab.
 - **After a withdrawal below an earned stamp,** the stamp stays, faded, with "El sello del
   50 % sigue siendo tuyo: lo lograste en octubre." Percentage and bar show the honest
   figure; the next stamp to earn is the first one not yet earned.
-- **Completed goal:** four stamps, "Meta lograda el 30 sep", no dock and no star.
+- **Completed goal (read-only):** four stamps, "Meta lograda el 30 sep" and the history.
+  No edit, no Aportar dock, no Retirar dinero and no star. Its only action is a red
+  **Borrar esta meta** card at the bottom, with the same confirm slip as editing.
 - Removed from v1.1: "Llegas en …", "Al mes …" and "Cada mes aportas más" (projections).
 
 **Aportar / Retirar** reuses the locked entry screen almost unchanged: pinked amount slip,
@@ -308,6 +312,10 @@ Reduced motion keeps the same text and final picture without movement or confett
   name, the amount between dashed rules, date and number of aportes); paper chads fall
   (holes, teeth, strips). **Listo** and **Ver mi meta**. The plate is a rectangle that grows
   with its content: long names wrap, long amounts step down like the entry amount.
+- **Deshacer:** after **Listo** the person is back where they tapped Marcar como lograda,
+  the goal is a Lograda row and a toast says "Celular nuevo, meta lograda. Deshacer" for
+  about 10 seconds (longer with TalkBack). Deshacer returns the goal to 100 % waiting; once
+  the toast is gone the goal is final. There is no later reopening.
 - **Revisiting a completed goal:** it opens on its slip and the LOGRADA stamp lands once per
   visit; in Metas the Lograda stamps land as the rows scroll into view.
 
@@ -357,3 +365,6 @@ These Home choices replace working wording in
   This reverses the automatic completion recorded in the
   [Metas brief](../screen-briefs/goals.md) and
   [ADR 0011](../../decisions/0011-goal-centered-design.md).
+- A completed goal is read-only (no edit, contributions or withdrawals; it can only be
+  deleted). Marking a goal as lograda can be undone only from the toast right after the
+  celebration; there is no reopening workflow.

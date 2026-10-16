@@ -32,6 +32,7 @@ function hero(s, o = {}) {
 
 // "Show on Recibo": a small star pill in the band, under the goal's name (owner pick Q3).
 const bandPill = on => `<div class="band-pin"><button class="pin-band ${on ? "on" : ""}" aria-pressed="${on}">${icon(on ? "star" : "star_outline")}${on ? "En tu Recibo" : "Mostrar en Recibo"}</button></div>`;
+const danger = `<section class="slip danger"><h2>Borrar esta meta</h2><p>Se borran la meta y sus <b>6 movimientos</b>. Esto no se puede deshacer.</p><button class="outline-btn loss wide">Borrar meta</button></section>`;
 const facts = (s, o = {}) => `<section class="slip"><div class="leader"><span>Meta</span><i class="dots"></i><b>${money(GOAL.target)}</b></div><div class="leader"><span>Fecha objetivo</span><i class="dots"></i><b>${GOAL.date}</b></div><div class="leader"><span>Desde</span><i class="dots"></i><b>${GOAL.since}</b></div></section>`;
 
 function chart() {
@@ -50,17 +51,18 @@ function movements(s, o = {}) {
     const sub = stamp ? `<small class="ms-line">Ganaste el sello del ${stamp}</small>` : "";
     return `<div class="mov-row ${dir === "out" ? "out" : ""} ${last}">${mark}<span><b>${kind}</b><small>${date}${note ? ` · ${note}` : ""}</small>${sub}</span><b>${dir === "out" ? "−" : "+"}${fmt(Math.abs(n))}</b></div>`;
   }).join("");
-  return `<section class="slip"><div class="mov-head"><h2 class="q" style="margin:0">Movimientos</h2><button class="text-btn">Retirar dinero</button></div>${rows}<button class="text-btn">Ver los ${s.withdrawal ? 7 : 6}${icon("chevron_right")}</button></section>`;
+  return `<section class="slip"><div class="mov-head"><h2 class="q" style="margin:0">Movimientos</h2>${s.done ? "" : `<button class="text-btn">Retirar dinero</button>`}</div>${rows}<button class="text-btn">Ver los ${s.withdrawal ? 7 : 6}${icon("chevron_right")}</button></section>`;
 }
 
 function body(scene, { state } = {}, o = {}) {
   if (state === "loading") return `<div role="status" aria-label="Cargando"><section class="slip"><div class="skel" style="width:40%"></div><div class="skel big"></div><div class="skel"></div></section></div>`;
   if (state === "failed") return `<section class="slip empty">${icon("error")}<h2>No pudimos leer esta meta</h2><p>Tus registros siguen guardados. Vuelve a intentarlo.</p><button class="outline-btn">Reintentar</button></section>`;
   const s = SCENES[scene];
-  return hero(s, o) + (s.done ? "" : facts(s, o)) + chart() + movements(s, o);
+  // A completed goal is read-only: no edit, no Aportar or Retirar; deleting is its only action.
+  return hero(s, o) + (s.done ? "" : facts(s, o)) + chart() + movements(s, o) + (s.done ? danger : "");
 }
 
-const frame = (o, html, { tall = false, done = false, title = GOAL.name, featured = true, pin = true } = {}) => `<div class="phone ${tall ? "tall" : ""}"><div class="app" data-ink="${o.ink}" data-theme="${o.theme}">${subShell({ title, body: html, active: 2, dock: done ? "" : "Aportar a esta meta", dockClass: "goal", action: ["edit_note", "Editar meta"], band: done || !pin ? "" : bandPill(featured) })}</div></div>`;
+const frame = (o, html, { tall = false, done = false, title = GOAL.name, featured = true, pin = true } = {}) => `<div class="phone ${tall ? "tall" : ""}"><div class="app" data-ink="${o.ink}" data-theme="${o.theme}">${subShell({ title, body: html, active: 2, dock: done ? "" : "Aportar a esta meta", dockClass: "goal", action: done ? undefined : ["edit_note", "Editar meta"], band: done || !pin ? "" : bandPill(featured) })}</div></div>`;
 const card = (title, note, inner) => `<div class="frame-card"><h3>${title}</h3><p>${note}</p>${inner}</div>`;
 
 function render() {
@@ -72,7 +74,7 @@ function render() {
     card("While another goal is on Recibo", "Outlined pill with an empty star: tapping it moves Home’s goal here.", frame(o, body("normal", {}, o), { featured: false })));
   set("states",
     card("After a withdrawal", "The 50 % stamp stays, faded, with one line saying it is still yours. Progress shows the honest 43 %; the next stamp to earn is 75 %.", frame(o, body("keep", {}, o))) +
-    card("Completed goal", "Four stamps, “Meta lograda el 30 sep”. No Aportar dock and no star; the history stays.", frame(o, body("done", {}, o), { done: true, title: "Vacunas de Luna" })) +
+    card("Completed goal", "Read-only: four stamps, “Meta lograda el 30 sep”, the history stays. No edit, no Aportar dock, no Retirar and no star; Borrar esta meta (with the confirm slip) is its only action.", frame(o, body("done", {}, o), { done: true, title: "Vacunas de Luna", tall: true })) +
     card("Loading", "Skeleton slip.", frame(o, body("normal", { state: "loading" }, o), { pin: false })) +
     card("Failed read", "Never shown as an empty goal.", frame(o, body("normal", { state: "failed" }, o), { pin: false })));
 }

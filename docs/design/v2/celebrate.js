@@ -10,6 +10,7 @@
 // + 250.000 = 1.560.000 (52 %); 1.440.000 left; 75 % (2.250.000) is 690.000 away.
 // 100 %: Celular nuevo had 1.050.000 (87 %); + 150.000 = 1.200.000 of 1.200.000.
 // Metas band then: 1.200.000 + 1.710.000 + 300.000 = 3.210.000; October 350.000 + 150.000 = 500.000.
+// Once Celular nuevo is lograda the band counts active goals only: 1.710.000 + 300.000 = 2.010.000.
 // Big moment: Vacunas de Luna, 400.000 in 4 aportes, marked lograda on mar 30 sep 2026.
 
 const VIAJE = { name: "Viaje a la costa", icon: "flight", saved: 1710000, target: 3000000, pct: 57, date: "dic 2026" };
@@ -83,6 +84,10 @@ const pin = `<div class="band-pin"><button class="pin-band on" aria-pressed="tru
 const detail = (o, body, extra = "", { title = VIAJE.name, dock = "Aportar a esta meta", band = pin, done = false } = {}) => app(o, subShell({ title, body, active: 2, dock, dockClass: "goal", action: done ? undefined : ["edit_note", "Editar meta"], band }) + extra);
 const metasTab = (o, body, band, extra = "") => app(o, appShell({ title: "Metas", addLabel: "Crear una meta", body, tabs: 3, active: 2, band, dock: "Aportar a una meta", dockClass: "goal" }) + extra);
 const toast = text => `<div class="toast" role="status">${icon("check")}${text}</div>`;
+// After Listo: the goal is lograda, with a short Deshacer. About 10 s (longer with TalkBack);
+// once it is gone the goal is final. Deshacer only returns the goal to "100 %, waiting".
+const undoToast = text => `<div class="toast" role="status">${icon("check")}<span>${text}</span><button class="undo">Deshacer</button></div>`;
+const logradaRow = (g, when) => `<section class="slip pinked v1-done"><button class="goal-card">${icon(g.icon)}<span><b>${g.name}</b><small>${fmt(g.target)}, ${when}</small></span><span class="stamp">Lograda</span></button></section>`;
 const card = (title, note, inner) => `<div class="frame-card"><h3>${title}</h3><p>${note}</p>${inner}</div>`;
 
 function render() {
@@ -102,6 +107,7 @@ function render() {
     card("1 · The stamps", "Starts on the desk: the four stamps land one by one in the middle of the screen, Meta last (frozen here before the flood).", app(o, bigMoment(LUNA), "phase1")) +
     card("2 · Lograda (live)", "Green floods out of the Meta stamp, the stamps rise, ¡Lo lograste! and the plate is stamped; paper chads fall. Use Replay.", app(o, bigMoment(LUNA))) +
     card("Long name and long amount", "The plate is a rectangle, not a circle: the name wraps to two lines and the amount steps down like the entry amount.", app(reduced, bigMoment(LONG))) +
+    card("After Listo: Deshacer", "Back where Marcar como lograda was tapped. The goal is now a Lograda row; the toast offers Deshacer for about 10 seconds, then the goal is final.", metasTab(o, metasCard(VIAJE) + metasCard(CURSO) + logradaRow(CELULAR, "16 oct") + logradaRow(LUNA, "30 sep"), metasBand(2010000, 500000), undoToast("Celular nuevo, meta lograda."))) +
     card("Reduced motion", "No landing, flood or chads: the final screen appears with a short fade. TalkBack reads “Meta lograda: Vacunas de Luna, 400.000 pesos”.", app(reduced, bigMoment(LUNA))));
   set("revisit",
     card("Opening a completed goal", "The goal opens on its slip and LOGRADA lands once per visit. In Metas, the Lograda stamps on the rows land as they scroll into view.", detail(o, lograda(), "", { title: LUNA.name, dock: "", band: "", done: true })));

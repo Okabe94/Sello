@@ -614,3 +614,5 @@ svg.icon{width:1.72em;height:1.72em;fill:currentColor;flex:none;vertical-align:m
 .app.reduced *,.app.reduced *::after{animation:none!important}
 .app.reduced .celebrate,.app.reduced .ticket-wrap{animation:fade .15s both!important}
 .app.reduced .confetti{display:none}
+.toast .undo{margin-left:auto;min-height:44px;padding:0 4px;border:0;background:none;color:var(--brandsoft);font-weight:800;flex:none}
+.toast span{min-width:0}

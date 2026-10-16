@@ -81,6 +81,7 @@ were delivered. Retired IDs must not be reused.
 | [SELLO-E06](epics/E06-live-testing.md) | Isolated time travel, repeatable histories and recovery exploration | SELLO-024–027 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Portable backups, resumable restore, safe reset and privacy boundaries | SELLO-028–032 |
 | [SELLO-E08](epics/E08-release.md) | Executed device, recovery, performance and production-release evidence | SELLO-033–036 |
+| [SELLO-E12](epics/E12-v2-recibo.md) | Recibo status, answer slip, frame and save feedback matching Sello v2 | SELLO-061–069 |
 
 An epic is Done only when all child tickets are Done and its integrated outcome
 works. Foundation tasks do not masquerade as user features; each still has a

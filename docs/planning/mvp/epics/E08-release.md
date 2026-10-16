@@ -9,7 +9,7 @@
 - **Type:** Task
 - **Priority:** P0
 - **Status:** Backlog
-- **Depends on:** SELLO-018, SELLO-019, SELLO-020, SELLO-021, SELLO-022, SELLO-023, SELLO-009, SELLO-004
+- **Depends on:** SELLO-018, SELLO-019, SELLO-020, SELLO-021, SELLO-022, SELLO-023, SELLO-009, SELLO-063, SELLO-064, SELLO-065, SELLO-066, SELLO-067, SELLO-004
 - **Gate:** G2
 
 ### Outcome
@@ -42,6 +42,9 @@ Component-level previews cannot prove complete forms/navigation usable on actual
 devices. Inputs are completed daily-use routes, approved D10 matrix and the catalog.
 Read [Sello v2](../../../design/v2/README.md) (large text, reduced motion, exact spoken amounts), the v1.1 [a11y](../../../design/sello-spec.html#a11y) section, adaptive/navigation guidance and
 [process-restoration procedure](../EXECUTION_GUIDE.md#device-and-process-restoration).
+
+From SELLO-E12 (2026-10-16): the journeys include the v2 Recibo delivered by
+SELLO-061–069, so this ticket starts after that epic.
 
 ### Implementation plan
 1. Create `docs/testing/ui-acceptance-matrix.md` listing build/API/window/font/theme/

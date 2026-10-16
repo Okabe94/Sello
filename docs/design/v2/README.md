@@ -23,7 +23,7 @@ synthetic.
 | [Resumen](resumen.html) | Locked 2026-10-15 |
 | [Income](income.html) | Locked 2026-10-15 |
 | [Metas](metas.html) · [goal detail](goal.html) · [Aportar/Retirar](aportar.html) · [create a goal](create.html) · [celebrations](celebrate.html) | Locked 2026-10-16 |
-| Inversiones | Pending |
+| [Inversiones](inversiones.html) | Locked 2026-10-16 (Later increment) |
 
 ## Recibo / Home
 
@@ -345,6 +345,61 @@ All four notes are now applied in the mockups (2026-10-16).
 - **No-goals dock:** with no goals, the dock is **Crear una meta**, never an invitation to
   contribute before a goal exists.
 
+## Inversiones
+
+The fourth tab, for the Later increment. It answers "¿Cómo van mis inversiones?". Gain
+follows the architecture: value + withdrawals + dividends − contributions; the percentage
+is that gain over contributions since the first contribution (simple gain, not IRR), one
+decimal. Nothing is fetched or verified; every value shows when it was recorded. COP only:
+no benchmark, value target, interest accrual or exchange rates (still open policies).
+
+- **Top bar:** title **Inversiones**, **+** to add an investment, settings. No month bar.
+- **Answer slip (pinked, as on Recibo):** "Tus inversiones valen" with a **Gana** /
+  **Pierde** stamp, the value as the big number in ink, then the signed return in green or
+  red with an arrow and pesos ("▲ +5,6 % · +2.066.000 de ganancia", "En total, desde mar
+  2025"). Under the tear: Aportaste, Retiraste, Dividendos y rentas and Ganancia as
+  receipt lines, and a quiet footnote "Valores anotados entre el 12 jun y el 14 oct ›".
+- **Dónde está, de mayor a menor:** the income split bar with one shade of the ink per
+  investment, then a row per investment: icon in its shade, name, description and "valor
+  del 12 jun", value and signed %. Tapping a row opens it.
+- **An investment without a recorded value:** no message on the overview (owner decision).
+  Its row says **Sin valor** and "aportaste 2.000.000"; it is left out of the bar and the
+  total, never counted as 0.
+- **Dock:** **Anotar movimiento** in ink, so it is distinct from Anotar (brand) and the
+  Metas dock (green). With no investments it becomes **Agregar inversión**; the empty
+  slip has no button and no chart.
+- **States:** total in loss (Pierde, plain figures, no advice), loading, failed read
+  (never zero or "no investments").
+
+**Investment detail:** ← name, edit. The same slip ("Vale", stamp, value, signed return,
+"Valor anotado el 9 oct · desde mar 2025", the breakdown) with **Anotar el valor de hoy**;
+a chart of recorded values only, as dots joined by a thin line, with a dashed step line
+for what was put in (contributions minus withdrawals); then Movimientos (Valor de hoy,
+Dividendo, Aporte, Retiro). Dock: Anotar movimiento.
+
+**Anotar movimiento** reuses the locked entry screen: pinked amount slip, Sello pad, the
+action above the pad, note row, one plain fact and no live preview.
+
+- Top bar: ✕ and **Movimiento**. The type is a row of chips, **Aporte · Valor de hoy ·
+  Retiro · Dividendo o renta**, above the investment chips (one row each).
+- Aporte "+", Valor de hoy without a sign (it replaces the last value, it is not added),
+  Retiro "−", Dividendo o renta "+" (counts in the gain, not in the value). Buttons in
+  ink: Anotar aporte / valor / retiro / dividendo.
+- A withdrawal is limited to the last recorded value: above it the label becomes "Más de
+  lo que vale (5.242.000)" in red and the button waits; the fact offers **Anotar el valor
+  de hoy** first.
+- Opened from an investment it is chosen; from the dock none is, and the button waits.
+
+**Agregar / editar inversión** follows Crear meta in ink: name (40 characters), an
+optional description, an icon; **Primer aporte** as the big number with its date; **Vale
+hoy** with **Lo mismo que aporté** (default) or **Otro valor**, so a new investment
+starts with a recorded value. Editing changes name, description and icon only; movements
+are edited from their list. **Borrar esta inversión** is its own card with the confirm slip.
+
+**Rejected during the review:** the Metas-band overview with one ticket per investment,
+a message on the overview for an investment without a value, a four-way switch in the
+top bar, a type pill with a sheet, and withdrawals above the last recorded value.
+
 ## Changes to record in the decision documents
 
 These Home choices replace working wording in
@@ -385,3 +440,10 @@ These Home choices replace working wording in
 - A completed goal is read-only (no edit, contributions or withdrawals; it can only be
   deleted). Marking a goal as lograda can be undone only from the toast right after the
   celebration; there is no reopening workflow.
+- Inversiones: the overview leads with value, a Gana / Pierde stamp and the signed simple
+  return since the first contribution; each value shows its recording date; an
+  investment without a value is left out of the total with only its row saying so; a
+  withdrawal is limited to the last recorded value; a new investment's first value
+  defaults to its first contribution. This settles presentation choices left open in the
+  [Inversiones brief](../screen-briefs/investments.md); ledger, periods, dividends
+  policy and FX stay open.

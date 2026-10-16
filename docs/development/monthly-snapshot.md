@@ -1,6 +1,6 @@
 # Monthly snapshot
 
-**Owner:** SELLO-014 · Decisions: [D03, D04, D07](../decisions/0001-mvp-contract.md) ·
+Decisions: [D03, D04, D07](../decisions/0001-mvp-contract.md) ·
 Examples: [financial examples](../testing/mvp-financial-examples.md) ·
 Rules: [architecture](../../ARCHITECTURE.md) §§4, 5, 6.
 
@@ -35,8 +35,8 @@ day `asOf` it was worked out for, including when it is kept as `lastGood`.
   `spent`, `remaining` (negative when overspent, never clamped), the standing, and
   the daily allowance in the current month.
 - `categories`: each with its limit state, its `spent`, how many expenses make that
-  up (`expenseCount`) and, when it has a finite limit, its own budget and standing. An archived category is listed only in months
-  where it has a limit or spending.
+  up (`expenseCount`) and, when it has a finite limit, its own budget and standing.
+  An archived category is listed only in months where it has a limit or spending.
 
 A category over its limit does not reduce the overall allowance by more than what
 it actually spent: the overall figures use overall limits and overall spending.
@@ -55,8 +55,12 @@ floating-point number and SQL does no sums.
 | Available days | `N − d + 1`, today included |
 | Daily allowance | `50 × floor(max(remaining, 0) / (50 × available days))`. Rounded down to 50 pesos. Current month only. The only figure rounded this way |
 
-`OnTrack`, `Tight`, `Over` are Al día, Justo, Pasado; `WithinLimit` is Bajo el
-límite. Labels and colours belong to presentation.
+On Recibo, `OnTrack`, `Tight`, `Over` read Al día, Justo, Pasado; a past month
+reads Bajo el límite or Sobre el límite. Labels and colours belong to presentation.
+
+These are the rules in the code today. [ADR 0012](../decisions/0012-budget-guidance-contract.md)
+approves the statuses and daily guidance that replace them; until a scoped change
+implements those, keep these calculations and their tests.
 
 A total that does not fit an exact amount is `SnapshotFailure.Unrepresentable`. A
 month after the current one is `FutureMonth`. A damaged row is `Storage(Integrity)`.
@@ -83,8 +87,9 @@ informational, not a target): reading 7 / 20 / 131 ms and working out 1.4 / 2.8 
 19 ms for 100 / 1,000 / 10,000 expenses. Targets and a real device belong to
 SELLO-035. The screens still format the result on the main thread.
 
-## Not here yet
+## Around it
 
-- Income, net flow and "por asignar": added with income (SELLO-021, SELLO-022).
-- Per-day series for charts: SELLO-022. They must come from the same expenses.
-- Recurring charges are zero because recurrence does not exist in the MVP.
+- Income, net flow, "por asignar" and the per-day and monthly series are in
+  `ResumenSnapshot`, worked out by `ResumenPolicy` around this snapshot. The series
+  come from the same expenses.
+- Recurrence is outside the MVP, so nothing is reserved for upcoming payments.

@@ -56,7 +56,7 @@ new category is untouched by it. It is titled "Editar categoría" and its button
 
 **Which month's limit.** The form shows and changes the limit of the month it was
 opened from, and always says so under the field. The dismissible first-time
-announcement that past limits can be corrected is on Recibo and category detail.
+announcement that past limits can be corrected is on category detail.
 
 | Opened from | The limit typed | Command |
 | --- | --- | --- |

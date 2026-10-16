@@ -1,23 +1,24 @@
 # Anotar: recording an expense
 
 **Owner:** SELLO-017 · Decisions: [D03, D05](../decisions/0001-mvp-contract.md) ·
-Design: [Sello v2 entry](../design/v2/entry.html) (delivered from v1.1 [Anotar](../design/sello-spec.html#s-anotar)) · Builds on
-[commands](commands.md), the [monthly snapshot](monthly-snapshot.md) and the
-[app shell](app-shell.md).
+Design: [Sello v2 entry](../design/v2/entry.html) · Builds on [commands](commands.md),
+the [monthly snapshot](monthly-snapshot.md) and the [app shell](app-shell.md).
 
-The first screen that writes money. Its rule: what is shown as saved is only ever
-what storage confirmed.
+Its rule: what is shown as saved is only ever what storage confirmed.
+
+This file describes the form as built. The approved v2 entry design is not
+implemented yet; it opens with no category chosen, edits the note in a composer
+docked above the keyboard, and replaces the receipt with a short confirmation on Home.
 
 ## Getting there
 
-- The **dock** on Recibo ("Anotar un gasto"). With no category that can take an
-  expense it opens the [category editor](category-editor.md) with the reason, and
-  after the category is created goes on to the entry form with it chosen.
-- A **link**, `sello://anotar?categoria=<identifier>&monto=<amount>`, declared in
-  the manifest for apps on the device (not for web pages). It follows the same path.
-- The route is `ExpenseEntryRoute(categoryId, amount)`. Both are hints for the draft
-  from outside the form; the form checks them like any input and drops what is not
-  valid. Neither is a record or a result.
+- The **dock** ("Anotar un gasto") on every shell screen, and the
+  [`sello://anotar` link](app-shell.md#routes-and-links). With no category that can
+  take an expense they open the [category editor](category-editor.md) with the reason,
+  then continue here with the new category chosen.
+- **"Anotar aquí"** on a category's detail, and Resumen's empty-history action.
+- The route is `ExpenseEntryRoute(categoryId, amount)`. Both are draft hints; the form
+  checks them like any input and drops what is not valid.
 
 ## The draft
 
@@ -30,8 +31,8 @@ what storage confirmed.
 
 The button is off until there is an amount, a category and a valid note. A missing
 category or a note to correct is said in a line above the keypad; a missing amount
-is not, because the slip already shows "Sin monto". The button is read aloud as the whole sentence: "Anotar
-gasto de 48.700 pesos en Alimentación".
+is not, because the slip already shows "Sin monto". The button is read aloud as the
+whole sentence: "Anotar gasto de 48.700 pesos en Alimentación".
 
 ## The preview
 
@@ -91,7 +92,8 @@ titled "Editar gasto", its button is "Guardar cambios" and the top bar has "Borr
   category is.
 - **Other months are named before saving.** When the expense is recorded in, or the
   draft would move it to, a month that is not the current one, a line under the date
-  says "Corregir este gasto cambia las cifras de septiembre." (or of two months).
+  says "Corregir este gasto cambia las cifras de septiembre." (or of two months). The
+  dismissible first-time announcement that past expenses can be corrected also shows.
 - **No preview.** The preview adds the draft to the month, and a recorded expense is
   already in it.
 - **"Borrar" deletes at once**, through `ExpenseCorrections`, and returns to the list,
@@ -103,8 +105,6 @@ titled "Editar gasto", its button is "Guardar cambios" and the top bar has "Borr
 | The expense no longer exists | "Este gasto ya no existe…" | The same |
 | Storage failed, a future date, a category that stopped taking expenses, data replaced | The same reasons as when recording, worded "El gasto quedó como estaba" | The draft is kept |
 | Deleting failed | "No se pudo borrar. El gasto sigue anotado." | The form stays open |
-
-Back with a change asks "¿Descartar los cambios?".
 
 ## Layout
 
@@ -122,14 +122,14 @@ below them. Two limits: in a window too short for the message and the keys toget
 the top row is partly covered while the message shows, and at twice the font size
 the two-line "Comprobar si se guardó" button lifts the keys, which are off then.
 
-Back with an amount or a note typed asks "¿Descartar este gasto?". On the receipt
-it simply leaves. While saving it does nothing.
+## Leaving
+
+Back with an amount or a note typed asks "¿Descartar este gasto?"; when correcting,
+a change asks "¿Descartar los cambios?". On the receipt it simply leaves. While saving
+it does nothing.
 
 ## Not here yet
 
-- Income, "Anotar varios" and repeating expenses: SELLO-021 and after the MVP.
-- Undo after recording a new expense. The reference offers it; only a deletion can be
-  undone today.
-- The dismissible first-time announcement that past expenses can be corrected: SELLO-023.
+- Batch or repeating entry: none in the MVP.
 - The date picker is the platform's, tinted with Sello's colours, not a Sello component.
-- Opening as a sheet with the dock morphing into the slip, and the print-feed motion.
+- Opening as a sheet with the dock morphing into the slip.

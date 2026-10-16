@@ -21,8 +21,11 @@ gates; do not invent a ticket ID to run checks.
 4. Record `Quality run` in the canonical ticket's Delivery evidence: run ID,
    ticket/profile, tested snapshot, outcome and retained artifact reference.
    Validate evidence and regenerate/check the board before opening the pull request.
-5. Open the pull request with the ticket already marked Done, as described in
+5. Open the final pull request with the ticket already marked Done, as described in
    [Done is proposed, merging approves](#done-is-proposed-merging-approves).
+   A ticket may span several PRs. Partial PRs keep it In Progress, describe the
+   delivered scope and remaining work, and run the applicable checks without
+   claiming complete ticket acceptance.
    A designated reviewer verifies acceptance, report freshness and actual results.
    Only approved acceptance plus passing required checks permits the merge, and so
    Done on `main`. Self-review is not independent approval. Re-run after relevant
@@ -32,9 +35,10 @@ gates; do not invent a ticket ID to run checks.
 
 Adopted 2026-10-10 by the project owner, from SELLO-013 onward.
 
-A pull request describes what `main` will say once it is merged. The ticket's pull
-request therefore carries the ticket as **Done**, with its complete Delivery
-evidence, from the moment it is opened. Nothing reaches `main` without the
+A pull request describes what `main` will say once it is merged. The ticket's final
+pull request therefore carries the ticket as **Done**, with its complete Delivery
+evidence, from the moment it is opened. Earlier parts keep the ticket In Progress.
+Nothing reaches `main` without the
 designated reviewer's go-ahead, so `main` never says Done for work that was not
 approved.
 

@@ -193,8 +193,10 @@ Flow for a ticket:
 2. When the work is final, run with `--retain`. It copies the passed report to
    `docs/planning/mvp/quality-reports/<ticket>.json` and prints a
    `- **Quality run:** ...` line. Paste that line into the ticket's Delivery evidence.
-3. Set the status to Review, regenerate the board, run `board.py --check`, commit
-   the retained report with the change and open the pull request.
+3. For the final PR, propose Done with complete evidence; partial PRs keep the
+   ticket In Progress and explain what remains. Regenerate the board, run
+   `board.py --check`, commit the retained report with the change and open the PR.
+   Review is for work waiting on something outside the merge.
 4. CI asks `verify-ticket --candidate-gate <base>` which gate the merge commit needs
    (G2, or G1 for a candidate that advances no ticket and changes only documents),
    runs `verify-ticket --merge-candidate <base> --gate <that>` on the merge commit

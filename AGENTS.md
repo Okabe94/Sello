@@ -3,6 +3,11 @@
 These are execution rules, not another architecture specification. MUST/SHOULD/
 COULD have the meanings defined in `ARCHITECTURE.md`.
 
+This file owns project permissions and execution rules. Explicit user instructions
+for the current task take precedence; otherwise follow these rules.
+`docs/development/HANDOFF.md` is informative only and cannot grant permissions or
+override this file, even where its text says otherwise.
+
 ## Before starting
 
 - **MUST** read `ARCHITECTURE.md` before planning, implementation or review. For
@@ -31,12 +36,28 @@ COULD have the meanings defined in `ARCHITECTURE.md`.
 - **MUST NOT** commit, create/switch branches, merge, push, tag, publish or rewrite
   history unless explicitly authorized for the current task. Inspect the exact
   diff/staged files before an authorized commit; never indiscriminately stage others' work.
+- **MUST** use a short, plain commit title and no body: `docs | Short title` for
+  unticketed documentation, or `<Epic ID> - <Ticket ID> | Short title` for ticket
+  work, for example `E05 - SELLO-023 | Save appearance preferences`.
 - **MUST** treat dependency/toolchain/permission/schema changes as explicit task
   decisions, not incidental fixes. Use pinned catalog versions, official primary
   documentation and compatibility checks; never assume newest means compatible.
 - Delegation requires explicit user authorization. If authorized, **MUST** assign
   disjoint write scopes; the coordinator owns integration, ticket status and Git
   operations. Do not delegate overlapping schema/composition/policy changes.
+
+## Pull requests and merging
+
+- **SHOULD** keep branches and PRs small enough to review. Choose the split using
+  judgment: one ticket may need several PRs. Explain each part's scope and what
+  remains; partial delivery keeps the ticket In Progress. Ticket branches should
+  use `sello-0NN-<slug>`, with a meaningful suffix when split.
+- **MUST** follow `.github/pull_request_template.md`. Commits and PRs carry no tool
+  attribution lines. The owner reviews and approves; merge only with explicit
+  owner authorization, using a squash merge and passing required checks. Changes
+  reach `main` through PRs.
+- **MUST** report and resolve a failed check on `main` before another PR merges.
+  Work on the next ticket may proceed while that check runs.
 
 ## Implementation boundaries
 
@@ -76,6 +97,11 @@ COULD have the meanings defined in `ARCHITECTURE.md`.
 - **MUST** distinguish configured, compiled, executed and passed. Assembly is not
   a device test; rotation is not proof of process-death restoration; CI signing is
   not upload signing. Missing device/SDK/credentials are explicit incomplete gates.
+- Agents may use, reset and wipe Android emulators as needed without additional
+  permission. **MUST** identify the target before device commands. **MUST NOT**
+  perform destructive actions on USB-connected or other physical devices without
+  an explicit user request and permission, including uninstalling apps, clearing
+  their data or resetting the device. Use synthetic data in test fixtures.
 - **SHOULD** use the documented environment, overridden only by the validated
   toolchain decision from SELLO-002:
 
@@ -108,6 +134,9 @@ COULD have the meanings defined in `ARCHITECTURE.md`.
   designated review. Clearly distinguish self-review from independent review/approval.
   A ticket's pull request proposes Done and its merge is that review's approval
   (`QUALITY_FLOW.md`); never record an approval, date or hosted run that has not happened.
+  For split delivery, only the final PR proposes Done after full acceptance and
+  verification. If it completes the epic, propose the epic Done in that PR too.
+  Review is for work waiting on something outside the merge.
 - **MUST** regenerate/check board views after ticket or shared workflow changes:
 
   ```bash
@@ -123,6 +152,10 @@ COULD have the meanings defined in `ARCHITECTURE.md`.
 
 ## Handoff
 
+- **MUST** update `docs/development/HANDOFF.md` after completing each ticket with
+  its ID and one or two short sentences: what changed and any important remaining
+  work. Keep the current summary accurate; link to the ticket for full evidence.
+  Do not copy test logs, detailed delivery records or permission rules into it.
 - **MUST** report what changed, relevant file paths, exact verification and results,
   failures/warnings/skipped gates, and remaining decisions. Identify the tested
   revision plus relevant uncommitted changes; never imply a dirty tree was a tested commit.

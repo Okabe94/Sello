@@ -1,14 +1,20 @@
 # Handoff — SELLO-019 onward
 
+> **Informative only.** This file describes completed work and development context.
+> It grants no permissions and sets no working rules, even where text below says
+> otherwise. [AGENTS.md](../../AGENTS.md) is the source of project permissions and
+> execution rules. Follow the user's current instructions; otherwise follow
+> AGENTS.md. Permission statements in this handoff do not authorize any action.
+
 **Snapshot:** 2026-10-11, after SELLO-018 merged. Epics E01–E04 are Done.
 This is a starting-state guide, not a second architecture or permission to bypass
 ticket dependencies. Verify current HEAD, Git status, code and ticket status first;
 where this file and the code disagree, the code and the canonical tickets win.
 
-**Bug backlog (2026-10-11):** [SELLO-E11](../planning/mvp/epics/E11-bug-stabilization.md)
-consolidates the UX reports, technical assessment and the two layout/motion defects
-below, with severity order and original-ID mappings. All fixes remain Backlog;
-[preserved source reports and evidence](../planning/bugs/README.md) are historical.
+**Planning update (2026-10-16):** the owner retired the stale bug archive and its
+stabilization epic. Retired IDs mentioned below identify historical work, not
+current assignments; see the
+[planning retirement note](../planning/mvp/README.md#retired-stabilization-planning).
 
 ## Read before editing
 
@@ -87,10 +93,9 @@ Decided by the project owner; none of this is waived by a later ticket.
 - **Roles:** the agent implements, the owner reviews and approves. Explanations are
   in plain language, and choices the agent made are listed for the owner in the
   ticket's Execution progress.
-- **One branch and one pull request per ticket** (`sello-0NN-<slug>`). The agent may
-  branch, commit, push and open the pull request without asking. Merging waits for
-  the owner's explicit approval and is a squash merge. `main` is protected: pull
-  requests only, with a passing `quality` check.
+- Branch/PR scope and Git permissions are defined in
+  [AGENTS.md](../../AGENTS.md#pull-requests-and-merging). A ticket can span several
+  PRs; its full outcome is recorded only after the final part is complete.
 - **Done is proposed in the pull request** ([quality flow](../planning/mvp/QUALITY_FLOW.md#done-is-proposed-merging-approves)):
   the ticket is already Done with full Delivery evidence when the pull request
   opens, and the merge is the approval. On the **last ticket of an epic the epic is
@@ -234,9 +239,11 @@ export JAVA_HOME=/opt/android-studio/jbr
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
 ```
 
-Use a dedicated synthetic AVD (API 30, port 5580); never wipe or reuse the owner's
-device or emulator. Do not rely on anything in `/tmp`, another session's emulator or
-helper scripts: they do not survive a restart, and the AVD may need recreating.
+Device permissions are defined in [AGENTS.md](../../AGENTS.md#tests-and-verification).
+Emulators can be used, reset and wiped as needed. Destructive actions on USB or
+other physical devices require an explicit user request and permission.
+The documented synthetic AVD uses API 30 and port 5580. Temporary files and helper
+scripts may not survive a restart; inspect the available environment first.
 
 Lessons from the device tests so far:
 
@@ -263,5 +270,5 @@ Lessons from the device tests so far:
 The owner handles physical-device testing and release building, signing and key
 custody; the APK is private. Epic files are the canonical ticket source; board and
 CSV views are generated (`python3 docs/planning/mvp/board.py`, then `--check`).
-Preserve other people's work, including uncommitted files. This handoff grants no
-Git or review waiver beyond what "How the work is done" states.
+Project permissions and working rules are defined only in
+[AGENTS.md](../../AGENTS.md), subject to the user's current instructions.

@@ -22,7 +22,7 @@ synthetic.
 | [Expense and income entry](entry.html) | Locked 2026-10-15 |
 | [Resumen](resumen.html) | Locked 2026-10-15 |
 | [Income](income.html) | Locked 2026-10-15 |
-| [Metas](metas.html) · [goal detail](goal.html) | Tab and goal detail locked 2026-10-15; Aportar/Retirar, create and celebrations next |
+| [Metas](metas.html) · [goal detail](goal.html) · [Aportar/Retirar](aportar.html) | Locked 2026-10-15; create a goal and celebrations next |
 | Inversiones | Pending |
 
 ## Recibo / Home
@@ -242,6 +242,21 @@ The v1.1 Metas screen, kept close to the original on purpose, in its own tab.
 - **Completed goal:** four stamps, "Meta lograda el 30 sep", no dock and no star.
 - Removed from v1.1: "Llegas en …", "Al mes …" and "Cada mes aportas más" (projections).
 
+**Aportar / Retirar** reuses the locked entry screen almost unchanged: pinked amount slip,
+Sello pad, chips in at most two rows, note row and composer, the action fixed above the pad,
+no live preview, and the same saving / rejected / unknown-outcome / restore behaviour.
+
+- The **Aportar / Retirar** switch replaces Gasto / Ingreso.
+- **Aportar:** green amount with "+", the goal's icon in a green circle, a green **Aportar**
+  button. Opened from a goal, that goal is chosen; opened from the Metas tab dock, no goal
+  is chosen and Aportar waits. Goal chips follow the tab's order and show their %. One
+  plain fact under the chips: "Llevas 1.710.000 guardados en esta meta."
+- **Retirar:** ink amount with "−" and a neutral **Registrar retiro** (using savings is not
+  a failure). A withdrawal is limited to what the goal has saved; above that the label
+  becomes "Más de lo guardado (1.710.000)" in red and the button waits.
+- No "Sello only tracks progress" disclaimer: Sello connects to no bank, so there is no
+  room for confusion (owner decision).
+
 **Rejected during the review:** compact pills, a percentage-led card in brand blue, an
 "En Recibo" tag, Aportar on every card, a global Anotar dock on Metas, a "Mostrar en
 Recibo" toggle, a star in the top bar or a chip in the main card, a separate stamp line in
@@ -271,5 +286,6 @@ These Home choices replace working wording in
   This changes the delivered presentation, not the financial meaning.
 - Metas: milestones stay at 25 / 50 / 75 % and the goal, as in v1.1, without projected
   dates; goals are ordered by highest completion; an earned stamp is kept after a
-  withdrawal. This settles the thresholds, list order and withdrawal question left open in
-  the [Metas brief](../screen-briefs/goals.md).
+  withdrawal; a withdrawal is limited to what the goal has saved. This settles the
+  thresholds, list order and withdrawal questions left open in the
+  [Metas brief](../screen-briefs/goals.md).

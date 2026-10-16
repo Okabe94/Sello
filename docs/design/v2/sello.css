@@ -456,3 +456,9 @@ svg.icon{width:1.72em;height:1.72em;fill:currentColor;flex:none;vertical-align:m
 .pin-band{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0 12px 0 8px;border-radius:99px;border:1.5px solid rgba(255,255,255,.6);background:none;color:#fff;font-weight:800;font-size:.86em}
 .pin-band .icon{width:1.3em;height:1.3em}
 .pin-band.on{background:rgba(255,255,255,.18);border-color:transparent}
+
+/* ---------- Aportar / Retirar ---------- */
+.amount-value.goal-in{color:var(--gain)}
+.goal-chip-pct{font-weight:800;opacity:.75;margin-left:2px}
+.goal-fact{margin:10px 2px 0;font-size:.86em;color:var(--soft)}
+.goal-fact b{color:var(--ink)}

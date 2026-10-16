@@ -48,7 +48,7 @@ MVP renews configured monthly budgets without carryover and retains historical r
 ## Post-MVP follow-up
 
 [ROADMAP.md](ROADMAP.md) tracks SELLO-E09/037–043 separately from the original eight
-MVP epics/36 tickets and the E11 stabilization backlog. Its seven tickets cover
+MVP epics/36 tickets and the E11/E12 MVP backlogs. Its seven tickets cover
 approved policy, exact domain replay,
 transactional storage, portable recovery, accessible opt-in UI, live scenarios and
 integrated release. SELLO-037 depends on SELLO-036 Done; every successor inherits
@@ -77,6 +77,22 @@ See [preserved reports and evidence](../bugs/README.md). E01–E08 remain the or
 delivery plan; E09/E10 remain post-MVP, and E11 expands the MVP board to nine epics
 and 52 tickets without changing existing ticket statuses or acceptance.
 
+## Coherent experience redesign backlog
+
+[SELLO-E12](epics/E12-coherent-experience.md) holds nine MVP decision, redesign and
+integrated-acceptance tickets (`SELLO-061`–`SELLO-069`), registered 2026-10-15 from
+the owner's [`ui_issues.md`](../../../ui_issues.md), the approved Sello design and
+architecture, merged PR 47's current-experience/navigation inventory, and a synthetic
+[emulator evidence package](../ui-ux/README.md). The package distinguishes reproduced
+defects from subjective redesign requests and conflicts with approved contracts.
+The epic sorts its children into severity-ordered actual-bug, feature-change-request
+and UI-change-request lanes; reproduced presentation alone is not mislabeled as a bug
+when adopting the requested behavior first needs a product decision.
+SELLO-061 must ratify category-progress meaning, Resumen's question, income placement,
+receipt lifecycle and keypad strategy before dependent changes. All children remain
+Backlog/G2; no product decision, implementation, device acceptance or review is
+claimed. E12 expands the MVP board to ten epics and 61 tickets.
+
 ## Epics and accountable outcomes
 
 | Epic | Outcome | Tickets |
@@ -90,6 +106,7 @@ and 52 tickets without changing existing ticket statuses or acceptance.
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Portable backups, resumable restore, safe reset and privacy boundaries | SELLO-028–032 |
 | [SELLO-E08](epics/E08-release.md) | Executed device, recovery, performance and production-release evidence | SELLO-033–036 |
 | [SELLO-E11](epics/E11-bug-stabilization.md) | Severity-ordered first-slice correctness, accessibility and measured performance stabilization | SELLO-045–060 |
+| [SELLO-E12](epics/E12-coherent-experience.md) | Decision-gated coherent design, UI/UX and navigation remediation with integrated accessibility acceptance | SELLO-061–069 |
 
 An epic is Done only when all child tickets are Done and its integrated outcome
 works. Foundation tasks do not masquerade as user features; each still has a
@@ -218,8 +235,8 @@ python3 -m unittest discover -s docs/planning/mvp -p test_board.py
 The generator checks IDs, required ticket/executor-brief sections, dependency existence/cycles,
 active/ready status prerequisites, and required completion-evidence fields. CSV includes
 scope in each description. The same commands also regenerate/check `ROADMAP.md`,
-`roadmap-jira-import.csv` and `roadmap-dependency-links.csv`. MVP exports include nine
-epics/52 tickets; roadmap exports contain only post-MVP issues, while their links
+`roadmap-jira-import.csv` and `roadmap-dependency-links.csv`. MVP exports include ten
+epics/61 tickets; roadmap exports contain only post-MVP issues, while their links
 can reference MVP prerequisites. Import MVP issues first and map both sets' local
 IDs when applying roadmap dependency links; no hosted import has been performed.
 CSV includes

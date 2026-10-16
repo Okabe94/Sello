@@ -1,6 +1,6 @@
 # Sello — architectural guardrails
 
-**Status:** proposed implementation baseline · **Updated:** 2026-10-13
+**Status:** proposed implementation baseline · **Updated:** 2026-10-15
 
 **MUST** is mandatory; **SHOULD** is the default, with a documented reason to
 deviate; **COULD** is optional, justified by a shipped capability or measured need.
@@ -27,15 +27,19 @@ Sello is an offline-first, local-only Android financial app, Spanish first
   see [carryover direction](docs/decisions/0002-signed-carryover-direction.md).
 - **MUST NOT** implement widgets/Glance, notification ingestion, capture inboxes,
   merchant parsers, or notification-listener services. Outgoing alerts are different.
-- **SHOULD** launch with two complete tabs, Recibo and Resumen; add Patrimonio when
-  Metas ships, then its Inversiones switch when investments ship. This is an explicit
-  MVP exception to the three-tab design, not a disabled-tab implementation.
+- **SHOULD** launch with two complete tabs, Recibo and Resumen, then give Metas a
+  primary destination when it ships. Add a distinct Inversiones destination when
+  investments ship. Prefer three equally clear destinations where feasible;
+  **MUST NOT** exceed four or expose unfinished tabs. This replaces the reference's
+  three-tab ceiling and mandatory Patrimonio switch; see [ADR 0011](docs/decisions/0011-goal-centered-design.md).
 - **MUST**, for the owner-approved SELLO-021 entry-point exception, expose only
   working income totals/history navigation in the initial Resumen tab, with shared
   month and truthful loading/error states. Full Resumen remains SELLO-022; no dummy
   sections or disabled controls. See [ADR 0010](docs/decisions/0010-income-resumen-entry.md).
-- **MUST** start with Anotar → persisted receipt → Recibo, including recovery,
-  accessibility, and CI. Backup/restore/reset must be complete before MVP release.
+- **MUST** retain the Anotar → persisted operation receipt → Recibo financial
+  journey, including recovery, accessibility, and CI. The operation receipt does
+  not require a separate confirmation screen; ordinary saves use brief feedback
+  in the new design direction. Backup/restore/reset must be complete before MVP release.
 - **MUST** build the live-testing sandbox and component catalog alongside the
   first slice, extending their scenarios/examples as each capability ships (§9).
 - **MUST** harvest legacy requirements, counterexamples, and reviewed algorithms,
@@ -109,6 +113,20 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 
 ## 4. Financial contracts
 
+**Design transition:** [ADR 0011](docs/decisions/0011-goal-centered-design.md) approves
+retiring pace-based home judgment. The D03 calculations, thresholds and worked
+examples below describe the delivered financial contract and remain in force until
+explicitly replaced through scoped implementation with approved independent examples.
+[ADR 0012](docs/decisions/0012-budget-guidance-contract.md) records partial owner
+confirmation of factual status/tone and a headline after upcoming-payment reservation,
+with the reserved amount at lower priority, planned versus recorded income, and
+category-only allocation. An equal reserved-to-recorded payment leaves the headline
+unchanged; omit reservation context when none remains. Goal/investment records do
+not independently allocate income; users can budget those purposes through categories. The complete classifier,
+commitment lifecycle and future-income planning boundaries remain open. Do not
+invent those rules while changing presentation; see the
+[open decisions](docs/design/philosophy.md#open-implementation-decisions).
+
 - **MUST** represent money as checked `Long` minor units + currency: COP scale 0;
   USD/EUR/GBP scale 2. Use exact widened intermediate sums and decimal rates with
   explicit units. Round conversion once at destination scale (`HALF_UP` default).
@@ -136,12 +154,12 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 | Budget | `remaining = month limits − effective expenses`; unlimited-category spending still counts. No limits means “Has gastado / Sin límite”. Preserve each month's limits; later edits must not rewrite prior months. |
 | Allowance/projection | Days available include today; allowance is `max(remaining − recurringDue, 0) / availableDays`. Projection is `spent + recurringDue + variableDailyPace × remainingDays`; recurring charges are excluded from variable pace and never counted twice. MVP recurringDue is genuinely zero. |
 | Verdict | Current: Al día at projected ≤95%; Justo above 95% through 100%; Pasado if actual or projected exceeds limit. Past: actuals only, no allowance. Recibo's forecast and Resumen's actual-spend verdict must be labeled distinctly. |
-| Income allocation | `destined = limits + goal contributions + investment contributions`; income minus destined is planning capacity, **not account balance**. Expenses are not added a second time. |
+| Income allocation | `destined = sum(configured finite category limits)`; recorded income minus destined is planning capacity, **not account balance**. Goal/investment records do not independently allocate income. A user-created saving/investment category counts by its limit like any other category. Expenses are not subtracted again. This category-only rule supersedes the previous future contribution sum; see ADR 0012 BG4. |
 | Recorded net flow | Monthly recorded income minus recorded expenses; not an account balance including opening funds or unrecorded activity. |
 | Goals | Contributions are historical records, not bank transfers. Derive milestone dates from actual crossings; projected dates require explicit assumptions. |
 | Investments | Stable `(effectiveDate, logicalSequence)` replay. `totalGain = currentValue + withdrawals + dividends − contributions`; percentage is simple gain, not IRR. Zero contributions yields undefined percentage. Recorded value, accrual, and benchmarks have distinct provenance. |
 
-- **MUST**, for the approved COP MVP, derive variable pace from recorded spending
+- **MUST**, while the delivered D03 model is in use, derive variable pace from recorded spending
   divided by elapsed day-of-month including today; projection uses future days
   excluding today and is an estimate even on day 1. Round the displayed daily
   planning allowance **down to multiples of COP 50**, not recorded money or remaining
@@ -155,10 +173,13 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 - **MUST** distinguish Ingresos menos gastos, Restante del presupuesto and Por
   asignar al presupuesto (MVP income minus configured limits), replacing ambiguous
   Sin destinar wording. Do not subtract expenses again from allocation or call any
-  figure a verified account balance/generic Disponible. **SHOULD** emphasize recorded
-  net flow in Resumen, remaining/allowance in Recibo and allocation as secondary planning.
-- **MUST** approve worked day-cutoff/short-month/projection examples before MVP
-  forecasts. Freeze 95%/100% boundary tests. Before investments, separately approve
+  figure a verified account balance/generic Disponible. **SHOULD** emphasize
+  remaining/allowance in Recibo and keep allocation clearly identified as planning.
+  Resumen's new hierarchy supports historical understanding and adjustments; its
+  delivered net-flow figure retains the same financial meaning.
+- **MUST** approve worked day-cutoff/short-month/projection examples for any
+  forecast still used. Retain existing 95%/100% boundary coverage until the reviewed
+  replacement policy is implemented. Before investments, separately approve
   annual-rate convention and dated-cash-flow examples; nominal and effective rates
   cannot be mixed. Estimates never silently become recorded financial movements.
 - **MUST** distinguish explicit zero budgets from unlimited categories. Allow
@@ -223,10 +244,22 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
   success stamps require a confirmed receipt, and edits do not celebrate creation.
 - **MUST** centralize theme, paper, stamps, money, inputs, charts, and feedback.
   Features map domain models to presentation primitives for design-system APIs.
-- **MUST** preserve answer-first paper, one large verdict stamp, category circles,
-  no home pace graph/shadows/warning cards; Cobalto/Violeta × light/dark, Sistema
-  default, bundled Schibsted Grotesk/Saira Stencil One and Material Symbols Rounded.
-  Colors/type/spacing/motion come from tokens, copy from resources/plurals.
+- **MUST** apply the [design philosophy](docs/design/philosophy.md): lead home with
+  budget margin after upcoming-payment reservations, show the reserved amount at
+  lower priority and keep overall allowance secondary. Keep essential controls visible
+  and stable, make amount entry immediately available and use brief confirmed-save
+  feedback. The owner reopened the system-keyboard default for a compact fixed-pad
+  candidate and selected a note dialog; compare the alternatives before affected
+  implementation, preserving stable controls and accessible native input.
+  Keep home's content restrained; detailed suggestions belong in Resumen. When
+  Metas ships, include a compact user-chosen goal, defaulting to the active goal
+  with highest completion percentage. Financial replacements require §4's approvals.
+- **MUST** preserve answer-first paper, category circles, no home pace graph/shadows/
+  warning cards; Cobalto/Violeta × light/dark, Sistema default, bundled Schibsted
+  Grotesk/Saira Stencil One and Material Symbols Rounded. Use stamps with a clear
+  purpose and at most one large budget verdict; goal milestones/completion may earn
+  dedicated celebrations, respecting reduced motion. Colors/type/spacing/motion come
+  from tokens, copy from resources/plurals. Keep exact overrun facts and neutral copy.
 - **MUST** keep full exact amounts on slips/lists and accessible labels; abbreviate
   only chart axes. Respect reduced motion, ≥12sp text, ≥48dp hit targets, contrast,
   keyboard/Switch Access/TalkBack, and font scales 1.0/1.3/2.0 from the first slice.
@@ -380,10 +413,17 @@ Integration references: [build variants/source sets][build-variants] and
 
 ## References and precedence
 
-Visual authority: **Sello v1.1, 2026-10-08**, excluding widgets. Its tokens,
-components, and layouts guide implementation; legacy routes, migration hints,
-sample figures, and Kotlin sketches are not a new-app schema or financial oracle.
-This document's explicit scope/financial/safety rules override those sketches.
+Product/design direction: [Sello design philosophy](docs/design/philosophy.md),
+recorded 2026-10-15, with the explicit supersessions and transition in
+[ADR 0011](docs/decisions/0011-goal-centered-design.md). The visual authority is
+[Sello v2](docs/design/v2/README.md) ([ADR 0013](docs/decisions/0013-sello-v2-design.md)),
+with the [screen/interaction briefs](docs/design/screen-briefs/README.md) holding the
+intent and open policy behind it. The unchanged **Sello v1.1,
+2026-10-08** snapshot, excluding widgets, remains the visual authority for tokens,
+components and layouts v2 does not show. Legacy routes, migration hints, sample figures and
+Kotlin sketches are not a new-app schema or financial oracle. This document's
+explicit scope/financial/safety rules override those sketches; open replacement
+financial definitions need approval before implementation, as described in §4.
 
 - Visual reference: `/home/okabe94/.t3/worktrees/FinanceTracker/t3code-5c84db69/docs/design/ui-overhaul/sello-spec.html`
 - Historical lessons: `/home/okabe94/AndroidStudioProjects/FinanceTracker/docs/greenfield/PROJECT_LESSONS.md`

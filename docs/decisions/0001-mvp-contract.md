@@ -12,8 +12,16 @@ reviewing this draft or authorizing ticket execution is not approval of its poli
 
 ## Authority and execution boundary
 
+**Design evolution, 2026-10-15:** [ADR 0011](0011-goal-centered-design.md) and the
+[design philosophy](../design/philosophy.md) supersede the listed presentation and
+product-direction choices, including the target use of D03's forecast in home
+judgment. This record preserves the original approvals and financial examples.
+Delivered calculations remain in force until replacement policy and independent
+examples are approved and implemented; see architecture §4. No completed ticket
+acceptance is retroactively changed by this notice.
+
 [Architecture](../../ARCHITECTURE.md) owns mandatory technical contracts; the
-[design](../design/sello-spec.html) owns presentation. This record resolves product
+[design references](../design/README.md) own presentation. This record resolves product
 choices from [D01–D10](../planning/mvp/DECISION_INPUTS.md), not a second architecture.
 [Worked examples](../testing/mvp-financial-examples.md) reflect approved MVP policies
 and explicitly conditional post-MVP illustrations, not executed feature tests. No financial functionality

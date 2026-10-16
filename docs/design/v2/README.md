@@ -1,8 +1,11 @@
 # Sello v2 design
 
-**Status:** in progress. Screens are decided one at a time with the owner and then
-locked. When every screen is locked, this folder becomes the design source of truth
-and replaces the v1.1 snapshot where they differ.
+**Status:** the design source of truth since 2026-10-16
+([ADR 0013](../../decisions/0013-sello-v2-design.md)). Every screen was decided with the
+owner and locked one at a time. Where v2 and the v1.1 snapshot differ, v2 applies; what
+v2 does not show still follows v1.1. v2 is presentation, not financial specification:
+[architecture](../../../ARCHITECTURE.md) and ADRs 0001–0012 still own money, dates and
+recovery.
 
 Open the pages over HTTP from the repository root:
 
@@ -12,8 +15,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 Then visit `http://127.0.0.1:8765/docs/design/v2/home.html`. Pages use the bundled
 fonts, the colour values of `SelloColors.kt` and icons generated from
-`design-system/src/main/res/drawable`. `flag`, `close`, `trending_up`, `star` and
-`star_outline` are mock-only icons that the design system does not bundle yet. All figures are
+`design-system/src/main/res/drawable`. `flag`, `close`, `trending_up`, `trending_down`,
+`star` and `star_outline` are mock-only icons that the design system does not bundle yet. All figures are
 synthetic.
 
 | Screen | State |
@@ -24,6 +27,7 @@ synthetic.
 | [Income](income.html) | Locked 2026-10-15 |
 | [Metas](metas.html) · [goal detail](goal.html) · [Aportar/Retirar](aportar.html) · [create a goal](create.html) · [celebrations](celebrate.html) | Locked 2026-10-16 |
 | [Inversiones](inversiones.html) | Locked 2026-10-16 (Later increment) |
+| [Shared components](components.html) | Catalog of every part, with its status against `design-system` (Exists / Extend / New) |
 
 ## Recibo / Home
 
@@ -400,11 +404,10 @@ are edited from their list. **Borrar esta inversión** is its own card with the 
 a message on the overview for an investment without a value, a four-way switch in the
 top bar, a type pill with a sheet, and withdrawals above the last recorded value.
 
-## Changes to record in the decision documents
+## Changes to the decision documents
 
-These Home choices replace working wording in
-[ADR 0012](../../decisions/0012-budget-guidance-contract.md) and the
-[Home brief](../screen-briefs/home.md). Update them when the v2 spec is consolidated.
+Recorded in [ADR 0013](../../decisions/0013-sello-v2-design.md) on 2026-10-16, with
+ADR 0011, ADR 0012, the philosophy and the screen briefs updated to match.
 
 - Stamps: Límite alcanzado → **Al límite**; Sobre el límite → **Excedido**;
   Sin margen libre → **Sin margen**; Por ajustar → **Revisar**.

@@ -12,8 +12,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 Then visit `http://127.0.0.1:8765/docs/design/v2/home.html`. Pages use the bundled
 fonts, the colour values of `SelloColors.kt` and icons generated from
-`design-system/src/main/res/drawable`. `flag`, `close` and `trending_up` are
-mock-only icons that the design system does not bundle yet. All figures are
+`design-system/src/main/res/drawable`. `flag`, `close`, `trending_up`, `star` and
+`star_outline` are mock-only icons that the design system does not bundle yet. All figures are
 synthetic.
 
 | Screen | State |
@@ -22,7 +22,7 @@ synthetic.
 | [Expense and income entry](entry.html) | Locked 2026-10-15 |
 | [Resumen](resumen.html) | Locked 2026-10-15 |
 | [Income](income.html) | Locked 2026-10-15 |
-| [Metas](metas.html) | Tab locked 2026-10-15; goal detail, Aportar/Retirar, create and celebrations next |
+| [Metas](metas.html) · [goal detail](goal.html) | Tab and goal detail locked 2026-10-15; Aportar/Retirar, create and celebrations next |
 | Inversiones | Pending |
 
 ## Recibo / Home
@@ -220,8 +220,32 @@ The v1.1 Metas screen, kept close to the original on purpose, in its own tab.
 - **States:** no goals (v1.1's four empty stamp places, "Ponle nombre a algo que
   quieras", Crear una meta), loading, failed read (never "no goals").
 
+**Goal detail** (v1.1's "Detalle de meta", opened by tapping a goal):
+
+- **Top bar:** ← goal name, edit. Under the name in the band, a small star pill chooses
+  the goal shown on Recibo: **★ En tu Recibo** (filled) or **☆ Mostrar en Recibo**
+  (outlined). Only one goal can be on Recibo; choosing another moves it. Not shown on a
+  completed goal.
+- **Main card (pinked):** "Ya guardaste" and the percentage in green, the saved amount
+  large, "de 3.000.000" / "faltan 1.290.000", the green bar; under the tear line
+  **Sellos 2 de 4**, the four stamps and "🏁 Próximo sello: 75 %, faltan 540.000".
+- **Facts:** Meta, Fecha objetivo, Desde as receipt lines.
+- **Aportes por mes:** contributions per month, this month in brand.
+- **Movimientos:** contributions and withdrawals, newest first. A contribution that
+  earned a stamp shows the stamp in place of its + icon, with "Ganaste el sello del
+  50 %". **Retirar dinero** sits in this card's header; a withdrawal is its own entry and
+  the history is kept.
+- **Dock:** green **Aportar a esta meta**.
+- **After a withdrawal below an earned stamp,** the stamp stays, faded, with "El sello del
+  50 % sigue siendo tuyo: lo lograste en octubre." Percentage and bar show the honest
+  figure; the next stamp to earn is the first one not yet earned.
+- **Completed goal:** four stamps, "Meta lograda el 30 sep", no dock and no star.
+- Removed from v1.1: "Llegas en …", "Al mes …" and "Cada mes aportas más" (projections).
+
 **Rejected during the review:** compact pills, a percentage-led card in brand blue, an
-"En Recibo" tag, Aportar on every card and a global Anotar dock on Metas.
+"En Recibo" tag, Aportar on every card, a global Anotar dock on Metas, a "Mostrar en
+Recibo" toggle, a star in the top bar or a chip in the main card, a separate stamp line in
+the movement list, and taking a stamp back after a withdrawal.
 
 ## Changes to record in the decision documents
 
@@ -246,5 +270,6 @@ These Home choices replace working wording in
   emphasis; net flow (Ingresos menos gastos) moves to the income slip right below.
   This changes the delivered presentation, not the financial meaning.
 - Metas: milestones stay at 25 / 50 / 75 % and the goal, as in v1.1, without projected
-  dates; goals are ordered by highest completion. This settles the thresholds and list
-  order left open in the [Metas brief](../screen-briefs/goals.md).
+  dates; goals are ordered by highest completion; an earned stamp is kept after a
+  withdrawal. This settles the thresholds, list order and withdrawal question left open in
+  the [Metas brief](../screen-briefs/goals.md).

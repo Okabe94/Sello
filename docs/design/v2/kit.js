@@ -17,8 +17,8 @@ function appShell({ month = "Octubre", body, tabs = 3, active = 0, toast, curren
 const pastRibbon = (month, current) => `<div class="past-ribbon" role="status">${icon("event")}<span>Estás viendo <b>${month.toLowerCase()}</b></span><button>Volver a ${current}</button></div>`;
 
 // Frame for a screen pushed inside a tab: back arrow and title, same dock and tabs.
-function subShell({ title, body, tabs = 3, active = 1, dock = "Anotar", month = "Octubre", current }) {
+function subShell({ title, body, tabs = 3, active = 1, dock = "Anotar", dockClass = "", month = "Octubre", current, action, band = "" }) {
   const all = [["receipt_long", "Recibo"], ["insights", "Resumen"], ["flag", "Metas"], ["account_balance", "Inversiones"]].slice(0, tabs);
   const nav = all.map(([ic, t], i) => `<button ${i === active ? 'aria-current="page"' : ""}><span class="pill">${icon(ic)}</span><span class="t">${t}</span></button>`).join("");
-  return `<div class="top">${statusbar()}<div class="topbar sub"><button class="icon-btn" aria-label="Volver">${icon("arrow_back")}</button><h1 class="sub-title">${title}</h1></div>${current ? pastRibbon(month, current) : ""}</div><main class="content">${body}</main><div class="bottom"><div class="dock"><button class="primary">${icon("add")}${dock}</button></div><nav class="nav">${nav}</nav><div class="gesture"></div></div>`;
+  return `<div class="top">${statusbar()}<div class="topbar sub"><button class="icon-btn" aria-label="Volver">${icon("arrow_back")}</button><h1 class="sub-title">${title}</h1>${(action ? (Array.isArray(action[0]) ? action : [action]) : []).map(([ic, label, pressed]) => `<button class="icon-btn sub-action" aria-label="${label}" ${pressed !== undefined ? `aria-pressed="${pressed}"` : ""}>${icon(ic)}</button>`).join("")}</div>${current ? pastRibbon(month, current) : ""}${band}</div><main class="content">${body}</main><div class="bottom">${dock ? `<div class="dock"><button class="primary ${dockClass}">${dockClass === "goal" ? icon("flag") : icon("add")}${dock}</button></div>` : ""}<nav class="nav">${nav}</nav><div class="gesture"></div></div>`;
 }

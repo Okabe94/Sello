@@ -103,7 +103,8 @@ are not new income.
 
 Allocation suggestions must offer a user-chosen category-budget change. Recording
 a goal contribution alone cannot be described as reducing unassigned income.
-The suggestion flow still needs design when that capability is scoped.
+The suggestion creates a new category with only its limit prefilled with the
+unassigned amount.
 
 ## Worked examples
 

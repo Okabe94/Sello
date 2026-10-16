@@ -92,9 +92,8 @@ for reserved payments, shown separately at lower priority. When an equal payment
 becomes recorded, release its reservation so it is counted once. Omit reservation
 context when none remains. Income does not increase spending limits or allowance.
 
-ADR 0012 holds the confirmed scenarios and open inputs: full status precedence,
-explicit zero-limit cases, reservation matching/lifecycle, changed amounts and
-replacement rounding examples. Do not infer those rules from the mockups.
+ADR 0012 holds the confirmed scenarios and open inputs: reservation
+matching/lifecycle, changed amounts and replacement rounding examples. Do not infer those rules from the mockups.
 
 ## D04 — Budget lifecycle and historical corrections
 

@@ -99,12 +99,10 @@ review suggestion; offer goal-plan adjustments without blame.
 
 ## Open implementation decisions
 
-The [screen briefs](screen-briefs/README.md) hold questions about insight eligibility,
-repetition and insufficient-history handling; review-invitation timing;
-featured-goal ties and invalid selections;
-goal corrections and milestone replay safeguards; and investment ledger, return,
-dividend and FX policies. Recurrence lifecycle details are deferred beyond MVP.
-The allocation-suggestion flow still needs design around category-budget changes.
+The [screen briefs](screen-briefs/README.md) hold questions about review-invitation
+timing; featured-goal ties and invalid selections; goal corrections and milestone
+replay safeguards; and investment ledger, return, dividend and FX policies.
+Recurrence lifecycle details, including expected income, are deferred beyond MVP.
 
 ## Review a new screen
 

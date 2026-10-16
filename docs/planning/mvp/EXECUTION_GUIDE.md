@@ -17,8 +17,9 @@ Do not execute all tickets at once or copy a proposed API blindly over completed
 3. Make an acceptance-to-change/test checklist and identify owned files before
    editing. For new modules/symbols, paths below are target locations, not claims
    that the files already exist. Prefer established compatible names after bootstrap.
-4. For UI work, open the [local Sello reference](../../design/sello-spec.html) and
-   the exact anchors named in the ticket. Never infer money from its mockup figures.
+4. For UI work, open [Sello v2](../../design/v2/README.md) and its
+   [component catalog](../../design/v2/components.html). A ticket's v1.1 anchors apply
+   only to screens v2 does not show (ADR 0013). Never infer money from mockup figures.
 5. Use SELLO-002's [setup](../../development/setup.md) and
    [toolchain decision](../../decisions/0005-toolchain.md). The baseline commands
    below use this host's inspected paths. Record unavailable devices/keys/

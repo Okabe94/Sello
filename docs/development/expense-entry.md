@@ -1,7 +1,7 @@
 # Anotar: recording an expense
 
 **Owner:** SELLO-017 · Decisions: [D03, D05](../decisions/0001-mvp-contract.md) ·
-Design: [Anotar](../design/sello-spec.html#s-anotar) · Builds on
+Design: [Sello v2 entry](../design/v2/entry.html) (delivered from v1.1 [Anotar](../design/sello-spec.html#s-anotar)) · Builds on
 [commands](commands.md), the [monthly snapshot](monthly-snapshot.md) and the
 [app shell](app-shell.md).
 

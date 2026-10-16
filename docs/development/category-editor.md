@@ -1,7 +1,7 @@
 # First run and the category editor
 
 **Owner:** SELLO-016 · Decisions: [D04, D05](../decisions/0001-mvp-contract.md) ·
-Design: [category editor](../design/sello-spec.html#s-catform) ·
+Design: [category editor](../design/sello-spec.html#s-catform) (v1.1; not redesigned in [Sello v2](../design/v2/README.md)) ·
 Builds on [commands](commands.md), [categories and limits](categories-and-limits.md)
 and the [app shell](app-shell.md).
 

@@ -40,7 +40,7 @@ broken by layout/accessibility fixes.
 ### Context and starting points
 Component-level previews cannot prove complete forms/navigation usable on actual
 devices. Inputs are completed daily-use routes, approved D10 matrix and the catalog.
-Read [a11y](../../../design/sello-spec.html#a11y), adaptive/navigation guidance and
+Read [Sello v2](../../../design/v2/README.md) (large text, reduced motion, exact spoken amounts), the v1.1 [a11y](../../../design/sello-spec.html#a11y) section, adaptive/navigation guidance and
 [process-restoration procedure](../EXECUTION_GUIDE.md#device-and-process-restoration).
 
 ### Implementation plan

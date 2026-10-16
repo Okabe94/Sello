@@ -56,6 +56,9 @@ those definitions and open inputs.
 
 ## Remaining work
 
+- SELLO-061–069 ([E12](../planning/mvp/epics/E12-v2-recibo.md)): the current focus.
+  Brings Recibo to the v2 design: factual status, answer slip, categories card,
+  month ribbon, dock and tabs, and brief save feedback.
 - SELLO-024–027: sandbox sessions, seeded scenarios and recovery diagnostics.
   A controlled debug financial clock exists; the full sandbox tools do not.
 - SELLO-028–032: backup, restore, reset and their privacy verification. Restore
@@ -65,8 +68,9 @@ those definitions and open inputs.
 - Goal/investment features, recurrence and other deferred capabilities remain
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
-The [board](../planning/mvp/BOARD.md) currently lists SELLO-024, SELLO-028 and
-SELLO-033 without unmet ticket dependencies. Their other prerequisites remain in
+The [board](../planning/mvp/BOARD.md) currently lists SELLO-024 and SELLO-028 without
+unmet ticket dependencies, plus the E12 starting tickets (SELLO-061, 063, 065, 068
+and 069); SELLO-033 now waits for E12. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
 ## Detail references

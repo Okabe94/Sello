@@ -1,6 +1,6 @@
 # Sello — architectural guardrails
 
-**Status:** proposed implementation baseline · **Updated:** 2026-10-15
+**Status:** proposed implementation baseline · **Updated:** 2026-10-16
 
 **MUST** is mandatory; **SHOULD** is the default, with a documented reason to
 deviate; **COULD** is optional, justified by a shipped capability or measured need.
@@ -32,10 +32,6 @@ Sello is an offline-first, local-only Android financial app, Spanish first
   investments ship. Prefer three equally clear destinations where feasible;
   **MUST NOT** exceed four or expose unfinished tabs. This replaces the reference's
   three-tab ceiling and mandatory Patrimonio switch; see [ADR 0011](docs/decisions/0011-goal-centered-design.md).
-- **MUST**, for the owner-approved SELLO-021 entry-point exception, expose only
-  working income totals/history navigation in the initial Resumen tab, with shared
-  month and truthful loading/error states. Full Resumen remains SELLO-022; no dummy
-  sections or disabled controls. See [ADR 0010](docs/decisions/0010-income-resumen-entry.md).
 - **MUST** retain the Anotar → persisted operation receipt → Recibo financial
   journey, including recovery, accessibility, and CI. The operation receipt does
   not require a separate confirmation screen; ordinary saves use brief feedback

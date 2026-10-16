@@ -22,7 +22,7 @@ synthetic.
 | [Expense and income entry](entry.html) | Locked 2026-10-15 |
 | [Resumen](resumen.html) | Locked 2026-10-15 |
 | [Income](income.html) | Locked 2026-10-15 |
-| [Metas](metas.html) · [goal detail](goal.html) · [Aportar/Retirar](aportar.html) · [create a goal](create.html) | Locked 2026-10-15; celebrations next |
+| [Metas](metas.html) · [goal detail](goal.html) · [Aportar/Retirar](aportar.html) · [create a goal](create.html) · [celebrations](celebrate.html) | Locked 2026-10-16 |
 | Inversiones | Pending |
 
 ## Recibo / Home
@@ -287,12 +287,38 @@ no live preview, and the same saving / rejected / unknown-outcome / restore beha
   costa?", **Cancelar** and a red **Borrar**.
 - Automatic monthly contributions wait for recurrence.
 
+**Celebrations** play only after a confirmed save; an uncertain outcome never celebrates.
+Reduced motion keeps the same text and final picture without movement or confetti.
+
+- **Earning a stamp, from the goal (S1):** back on the goal, the stamp lands in its place
+  with an ink ring; the save toast adds "Ganaste el sello del 50 %". One haptic tap.
+- **Earning a stamp, from Metas or Recibo (S2):** the save toast becomes a paper ticket with
+  notched sides and the stamp lands on it: "Ganaste el sello del 50 % · Viaje a la costa ·
+  faltan 1.290.000 para la meta". Two stamps in one aporte share one ticket.
+- **Back above a kept stamp:** the faded stamp lights up again in place, "De vuelta en el
+  50 %". No new stamp is earned.
+- **Reaching 100 % is announced, not completed.** The Meta place waits as a green dashed
+  circle. On the goal: "Llegaste al 100 %. Márcala como lograda para ganar el último sello"
+  and a green **Marcar como lograda**; on Metas the card goes first with the same button and
+  the ticket announces it; on Recibo, the green row under the goal pill. Aportar stays
+  available until the goal is marked.
+- **Marcar como lograda opens the big moment:** on the desk the four stamps land one by one
+  in the middle of the screen, Meta last; green floods out of the Meta stamp; the stamps
+  rise, **¡Lo lograste!** appears and a rubber-stamp plate lands (META LOGRADA, icon and
+  name, the amount between dashed rules, date and number of aportes); paper chads fall
+  (holes, teeth, strips). **Listo** and **Ver mi meta**. The plate is a rectangle that grows
+  with its content: long names wrap, long amounts step down like the entry amount.
+- **Revisiting a completed goal:** it opens on its slip and the LOGRADA stamp lands once per
+  visit; in Metas the Lograda stamps land as the rows scroll into view.
+
 **Rejected during the review:** compact pills, a percentage-led card in brand blue, an
 "En Recibo" tag, Aportar on every card, a global Anotar dock on Metas, a "Mostrar en
 Recibo" toggle, a star in the top bar or a chip in the main card, a separate stamp line in
 the movement list, taking a stamp back after a withdrawal, rounding the monthly amount
 (769.300), the phone keyboard for the goal amount, Borrar meta as a link at the end of the
-form, and "Marcar como completada" (Lograda is the word Metas already uses).
+form, and "Marcar como completada" (Lograda is the word Metas already uses). For
+celebrations: one ticket everywhere, a centred milestone slip, a printed final receipt, a
+round seal (it cannot hold long names or amounts) and automatic completion at 100 %.
 
 ## Changes to record in the decision documents
 
@@ -326,3 +352,8 @@ These Home choices replace working wording in
   uses the Sello pad; deleting a goal is its own card with a confirm slip; a goal reached
   outside Sello, or one that reached 100 % off Recibo, is closed with **Marcar como
   lograda**.
+- Completion is manual: reaching 100 % announces the goal and **Marcar como lograda**
+  completes it, with the big celebration. The Meta stamp is earned when the goal is marked.
+  This reverses the automatic completion recorded in the
+  [Metas brief](../screen-briefs/goals.md) and
+  [ADR 0011](../../decisions/0011-goal-centered-design.md).

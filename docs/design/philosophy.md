@@ -18,7 +18,8 @@ measure of success; recreation is a legitimate destination for money too.
 Read this before designing a screen or extending the design system.
 [ADR 0011](../decisions/0011-goal-centered-design.md) lists the decisions this
 direction replaces and the implementation transition. The
-[v1.1 snapshot](sello-spec.html) remains the visual reference for unaffected details;
+[Sello v2](v2/README.md) is the visual reference ([ADR 0013](../decisions/0013-sello-v2-design.md));
+the [v1.1 snapshot](sello-spec.html) covers only what v2 does not show;
 [ADR 0007](../decisions/0007-no-peso-symbol.md) still governs currency display.
 [Architecture](../../ARCHITECTURE.md) owns financial, recovery, privacy and module
 contracts. The [current app baseline](../development/current-app-experience.md)

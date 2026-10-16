@@ -36,27 +36,24 @@ labeled; coverage is not blanket approval of every paragraph or implementation.
 - **Preserve:** the working motto, screen responsibilities, information priorities,
   direct primary actions, stable entry, restrained semantic color, goal celebrations,
   category-only allocation and independent goal/investment tracking.
-- **Designer owns:** final layouts, spacing, typography scale, component composition,
-  charts, adaptive treatment, final copy and concrete celebration presentation.
-- **HTML exploration:** optional context only. Its exact card arrangement, dimensions,
-  fixed dates and synthetic fixtures are not the final design.
+- **Designed in [Sello v2](../v2/README.md):** final layouts, spacing, typography scale,
+  component composition, charts, adaptive treatment, final copy and celebrations.
+- **HTML exploration:** history only; v2 replaces it.
 
 | Follow-up work | Boundary before affected implementation |
 | --- | --- |
 | Home and recurring payments | Finish status precedence, zero/past cases, reservation lifecycle and independent boundary examples. |
 | Entry | Resolve note-editor Back/dismissal/restoration and validate actual pad/IME/inset/accessibility behavior. |
 | Resumen and income | Define comparison coverage, recommendation eligibility/frequency and expected-income planning/matching. |
-| Metas | Define withdrawal bounds/corrections, exact milestone thresholds, target edits, completion reopening and Home-pin lifecycle. Preserve the confirmed ordinary completion and re-crossing behavior. |
+| Metas | v2 settles thresholds (25 / 50 / 75 % and Meta), withdrawal bounds, manual completion with Deshacer and read-only completed goals (ADR 0013). Still open: corrections, target edits and the Home-pin lifecycle. |
 | Inversiones | Later review of return periods, dated cash flows, valuation dates/sources, movement corrections, dividends and currency/rate policy. Visible valuation age does not settle those mechanics. |
 
 These are follow-up inputs, not permission to reopen the answers already recorded.
 Independent product/domain planning can continue while visual design is developed;
 final screen implementation needs its applicable reviewed design and policy inputs.
 
-The [HTML exploration](../proposals/index.html) is an optional illustration of
-some ideas. Its screenshots, dimensions, card counts, chart types and control
-placement are not implementation requirements. Further visual polishing of it is
-not a prerequisite for continuing product definition.
+The earlier [HTML exploration](../proposals/index.html) is history only. Sello v2 is the
+design to implement.
 
 ## How to continue step by step
 
@@ -117,9 +114,10 @@ Summarizing them here does not approve unresolved financial cases. The
 delivered behavior, not the target.
 
 Keep receipt paper, stamps, bold exact numbers, category circles, bundled fonts,
-and Cobalto/Violeta light/dark identity. Follow the unchanged
-[v1.1 reference](../README.md#preserved-v11-visual-reference) for unaffected visual
-foundations. The designer finalizes how those foundations express the new intent.
+and Cobalto/Violeta light/dark identity. [Sello v2](../v2/README.md) shows how those
+foundations express the new intent; the unchanged
+[v1.1 reference](../README.md#preserved-v11-visual-reference) covers only what v2 does
+not show.
 
 ## Review checkpoints
 

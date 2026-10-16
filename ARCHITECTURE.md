@@ -248,9 +248,9 @@ invent those rules while changing presentation; see the
   budget margin after upcoming-payment reservations, show the reserved amount at
   lower priority and keep overall allowance secondary. Keep essential controls visible
   and stable, make amount entry immediately available and use brief confirmed-save
-  feedback. The owner reopened the system-keyboard default for a compact fixed-pad
-  candidate and selected a note dialog; compare the alternatives before affected
-  implementation, preserving stable controls and accessible native input.
+  feedback. Amounts use the compact Sello pad and the note a composer docked to the
+  keyboard, as designed in [Sello v2](docs/design/v2/README.md) (ADR 0013), preserving
+  stable controls and accessible native input.
   Keep home's content restrained; detailed suggestions belong in Resumen. When
   Metas ships, include a compact user-chosen goal, defaulting to the active goal
   with highest completion percentage. Financial replacements require §4's approvals.
@@ -425,7 +425,8 @@ Kotlin sketches are not a new-app schema or financial oracle. This document's
 explicit scope/financial/safety rules override those sketches; open replacement
 financial definitions need approval before implementation, as described in §4.
 
-- Visual reference: `/home/okabe94/.t3/worktrees/FinanceTracker/t3code-5c84db69/docs/design/ui-overhaul/sello-spec.html`
+- Visual reference: [Sello v2](docs/design/v2/README.md) and its [component catalog](docs/design/v2/components.html)
+- v1.1 source (provenance for the snapshot): `/home/okabe94/.t3/worktrees/FinanceTracker/t3code-5c84db69/docs/design/ui-overhaul/sello-spec.html`
 - Historical lessons: `/home/okabe94/AndroidStudioProjects/FinanceTracker/docs/greenfield/PROJECT_LESSONS.md`
 - Prior proposal: `/home/okabe94/AndroidStudioProjects/FinanceTracker/docs/greenfield/ARCHITECTURE_SPEC.md`
 

@@ -1,7 +1,7 @@
 # App shell, month session and navigation
 
 **Owner:** SELLO-015 · Rules: [architecture](../../ARCHITECTURE.md) §§2, 6 ·
-Design: [structure and global behaviour](../design/sello-spec.html).
+Design: [Sello v2](../design/v2/README.md) shells and [components](../design/v2/components.html) (delivered from v1.1 [structure and global behaviour](../design/sello-spec.html)).
 
 The frame every screen sits in, and the state that belongs to the whole app instead
 of to one screen. All of it is in `:app`, package `navigation`.

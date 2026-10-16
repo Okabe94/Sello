@@ -118,7 +118,7 @@ all manual workflows remain available. Restore action stays absent until SELLO-0
 ### Context and starting points
 Returning a document URI is not a successful backup. Use SELLO-028 encoder/snapshot
 and app platform/Root contracts; read
-[backup screen](../../../design/sello-spec.html#s-respaldo), approved D08 and official
+the [Sello v2 components](../../../design/v2/components.html) and, until v2 designs it, the v1.1 [backup screen](../../../design/sello-spec.html#s-respaldo), approved D08 and official
 document-picker sources in the guide. Files may be plaintext and provider failures are real.
 
 ### Implementation plan
@@ -271,7 +271,7 @@ state. Backup/restore still works across the deliberate generation boundary.
 ### Context and starting points
 Reset is deliberate data erasure; stale recovery or undo must not recreate old money.
 Use SELLO-030 replacement/control patterns and actual workflows, but not the backup
-payload. Read [settings reset](../../../design/sello-spec.html#s-config), architecture
+payload. Read the [Sello v2 components](../../../design/v2/components.html) and, until v2 designs it, the v1.1 [settings reset](../../../design/sello-spec.html#s-config), architecture
 §5 and approved D09's preference/zone/minimal-metadata policy.
 
 From SELLO-019 and SELLO-021 (2026-10-12): reset must also erase `deleted_expense`

@@ -1,14 +1,12 @@
-# Screen exploration — optional reference
+# Screen exploration — history
 
 **2026-10-15 · History only.** The final design is [Sello v2](../v2/README.md)
 ([ADR 0013](../../decisions/0013-sello-v2-design.md)). This HTML is not a design or
 implementation specification.
 
-Continue step 3 through the [screen and interaction briefs](../screen-briefs/README.md).
-They capture intended hierarchy, interaction, tone and scenarios without treating
-these layouts as final. Preserve this exploration as a useful optional reference;
-further polishing or approving it is not required to continue the written work.
-Its exact dimensions, card arrangement and chart choices are illustrative.
+It is kept as the record of the 2026-10-15 exploration that led to the
+[screen and interaction briefs](../screen-briefs/README.md). Do not build from it;
+its dimensions, card arrangement and chart choices were illustrative.
 
 Open [the interactive review](index.html). From the repository root:
 

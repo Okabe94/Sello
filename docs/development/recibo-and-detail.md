@@ -1,8 +1,8 @@
 # Recibo and category detail
 
 **Owner:** SELLO-018 · Decisions: [D03, D06](../decisions/0001-mvp-contract.md) ·
-Design: [Recibo](../design/sello-spec.html#s-recibo),
-[Detalle de categoría](../design/sello-spec.html#s-categoria) · Builds on the
+Design: [Sello v2 Recibo](../design/v2/home.html) (delivered from v1.1 [Recibo](../design/sello-spec.html#s-recibo));
+[Detalle de categoría](../design/sello-spec.html#s-categoria) is not redesigned in v2 · Builds on the
 [monthly snapshot](monthly-snapshot.md), [Anotar](expense-entry.md) and the
 [app shell](app-shell.md).
 

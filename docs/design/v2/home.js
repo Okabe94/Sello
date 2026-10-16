@@ -39,6 +39,8 @@ const SCENES = {
   equal:    { spend: "equal", label: "Restante del presupuesto", hero: 0, status: "equal", daily: 0, days: 10 },
   // September, closed: 1.000.000 − 920.000. No per-day line, no reservations, no goal.
   past:     { spend: "past", month: "Septiembre", current: "octubre", label: "Restante del presupuesto", hero: 80000, status: "done", closed: "Mes cerrado · gastaste 920.000 de 1.000.000.", mvp: true },
+  // Celular nuevo reached 100 % from Metas while Viaje a la costa is the goal on Recibo.
+  reachedOther: { spend: "reserved", label: "Restante del presupuesto", hero: 400000, status: "ok", daily: 40000, days: 10, reserved: 200000, payments: 1, reachedGoal: ["Celular nuevo", "phone_iphone"] },
   nolimit:  { spend: "paid", label: "Has gastado este mes", hero: 600000, status: "none", unlimited: true },
   early:    { spend: "early", month: "Noviembre", label: "Restante del presupuesto", hero: 740000, status: "ok", daily: 26400, days: 28, reserved: 200000, payments: 1, invite: true },
   today:    { spend: "reserved", label: "Restante del presupuesto", hero: 600000, status: "ok", daily: 60000, days: 10, mvp: true },
@@ -78,6 +80,7 @@ function homeBody(s) {
   let b = answer(s);
   if (s.invite) b += `<button class="invite">${icon("insights")}<span>Ver cómo cerraste octubre</span>${icon("chevron_right", "chev")}</button>`;
   if (!s.mvp) b += goal();
+  if (s.reachedGoal) b += `<section class="reached" aria-label="Meta alcanzada">${icon("check")}<span><b>${s.reachedGoal[0]}</b><small>Llegó al 100 %</small></span><button>Marcar como lograda</button></section>`;
   return b + categoryGrid(s);
 }
 
@@ -99,6 +102,7 @@ const STATES = [
   { title: "Sin límite · no finite limits", scene: "nolimit" },
   { title: "Early month · review invitation", scene: "early" },
   { title: "A past month · September", scene: "past" },
+  { title: "Another goal reached 100 %", scene: "reachedOther" },
   { title: "Today's scope · no Metas, no recurrence", scene: "today", tabs: 2 },
   { title: "First use", special: "empty" },
   { title: "Loading", special: "loading" },

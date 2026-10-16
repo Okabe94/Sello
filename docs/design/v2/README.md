@@ -22,7 +22,7 @@ synthetic.
 | [Expense and income entry](entry.html) | Locked 2026-10-15 |
 | [Resumen](resumen.html) | Locked 2026-10-15 |
 | [Income](income.html) | Locked 2026-10-15 |
-| [Metas](metas.html) · [goal detail](goal.html) · [Aportar/Retirar](aportar.html) | Locked 2026-10-15; create a goal and celebrations next |
+| [Metas](metas.html) · [goal detail](goal.html) · [Aportar/Retirar](aportar.html) · [create a goal](create.html) | Locked 2026-10-15; celebrations next |
 | Inversiones | Pending |
 
 ## Recibo / Home
@@ -59,6 +59,10 @@ the same on every tab except Metas (see Metas).
 `brandSoft` up to the goal's percentage. It shows the goal's icon, name and
 percentage, and ends with a round **+** button (Aportar). Tapping the pill opens
 the goal. Only shown when Metas ships.
+
+**Another goal reached 100 %:** when a goal that is not on Recibo reaches 100 % (for
+example while the user was away), a green row appears under the pill: ✓ the goal's
+name, "Llegó al 100 %" and **Marcar como lograda**. The goal on Recibo stays in place.
 
 **Categories:** unchanged circle grid. A category shows only its own remainder;
 reserved payments are not shown inside categories. Overruns use the signed red
@@ -257,10 +261,38 @@ no live preview, and the same saving / rejected / unknown-outcome / restore beha
 - No "Sello only tracks progress" disclaimer: Sello connects to no bank, so there is no
   room for confusion (owner decision).
 
+**Create and edit a goal** (v1.1's "Nueva meta" blended with the first round):
+
+- **Top bar:** ✕ and **Nueva meta** (or **Editar meta**).
+- **Identity card:** the goal's icon in a large green circle beside **Nombre** (40
+  characters, with a counter), then a row of icons to choose from. Too long a name keeps
+  the text, turns the line red ("Máximo 40 caracteres. Tu texto sigue aquí.") and the
+  button waits.
+- **Amount card (pinked):** "Cuánto necesitas" and the amount as the big number. Tapping it
+  slides up the Sello pad with **Listo**; numbers always use the pad, text keeps the phone
+  keyboard. Under the tear line, **Para cuándo** with **Elegir mes** / **Sin fecha** chips.
+  With a date: "🏁 Son 769.231 al mes durante 26 meses." Whole pesos, never rounded
+  further (20.000.000 ÷ 26 = 769.230,77 → 769.231).
+- **Tus sellos:** the four stamps with the month each could arrive at that pace ("Si
+  aportas 769.231 cada mes": may 27, nov 27, jun 28, dic 28). These projected months appear
+  only while creating or editing, as a plan with its assumption spelled out. Without a
+  date: empty stamps and "Ponle fecha para ver cuándo podrías llegar a cada uno".
+- **Action:** green **Crear meta** (or **Guardar cambios**) with the flag; it waits for a
+  name, an icon and an amount.
+- **Editing:** earned stamps show "logrado"; the rest show their month at the new pace.
+  Two separate decisions follow, each in its own card: **¿Ya la lograste?** with
+  **Marcar como lograda** (for goals reached outside Sello), and **Borrar esta meta**, a
+  red-outlined card that says what is lost ("Se borran la meta y sus 6 movimientos. Esto no
+  se puede deshacer."). **Borrar meta** opens a confirm slip: "¿Borrar Viaje a la
+  costa?", **Cancelar** and a red **Borrar**.
+- Automatic monthly contributions wait for recurrence.
+
 **Rejected during the review:** compact pills, a percentage-led card in brand blue, an
 "En Recibo" tag, Aportar on every card, a global Anotar dock on Metas, a "Mostrar en
 Recibo" toggle, a star in the top bar or a chip in the main card, a separate stamp line in
-the movement list, and taking a stamp back after a withdrawal.
+the movement list, taking a stamp back after a withdrawal, rounding the monthly amount
+(769.300), the phone keyboard for the goal amount, Borrar meta as a link at the end of the
+form, and "Marcar como completada" (Lograda is the word Metas already uses).
 
 ## Changes to record in the decision documents
 
@@ -289,3 +321,8 @@ These Home choices replace working wording in
   withdrawal; a withdrawal is limited to what the goal has saved. This settles the
   thresholds, list order and withdrawal questions left open in the
   [Metas brief](../screen-briefs/goals.md).
+- Creating a goal: the monthly amount is shown in whole pesos, never rounded further;
+  projected stamp months appear only while creating or editing a goal; the goal amount
+  uses the Sello pad; deleting a goal is its own card with a confirm slip; a goal reached
+  outside Sello, or one that reached 100 % off Recibo, is closed with **Marcar como
+  lograda**.

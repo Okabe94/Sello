@@ -1,243 +1,112 @@
 # Sello design philosophy
 
-**Recorded:** 2026-10-15 · **Source:** project-owner interview after reviewing E01–E05
-**Status:** owner-confirmed product/design direction; implementation pending.
-The motto is working editorial wording, not final approved interface copy.
+**Updated:** 2026-10-16 · **Status:** approved design direction; implementation pending.
 
 ## Purpose and working motto
 
 **Tu presupuesto al servicio de tus metas.**
 
-Sello helps people build a realistic, predictable budget they can follow and adjust
-as their lives change. Progress means a plan that fits, a greater sense of control,
-and reaching personally meaningful savings goals. Spending less is not the universal
-measure of success; recreation is a legitimate destination for money too.
+Sello helps people build a realistic budget, adjust it as life changes and reach
+personal goals. Success means a plan that fits; recreation is a valid use of money.
+The motto is working wording, not final interface copy.
 
 ## Authority and scope
 
-Read this before designing a screen or extending the design system.
-[ADR 0011](../decisions/0011-goal-centered-design.md) lists the decisions this
-direction replaces and the implementation transition. The
-[Sello v2](v2/README.md) is the visual reference ([ADR 0013](../decisions/0013-sello-v2-design.md));
-the [v1.1 snapshot](sello-spec.html) covers only what v2 does not show;
-[ADR 0007](../decisions/0007-no-peso-symbol.md) still governs currency display.
-[Architecture](../../ARCHITECTURE.md) owns financial, recovery, privacy and module
-contracts. The [current app baseline](../development/current-app-experience.md)
-describes delivered behavior, which does not yet implement this direction.
+[Sello v2](v2/README.md) is the visual reference for screens and components;
+the [v1.1 snapshot](sello-spec.html) covers only what v2 does not show.
+[Architecture](../../ARCHITECTURE.md) owns financial, recovery, privacy and module rules.
+[ADR 0011](../decisions/0011-goal-centered-design.md) records product direction,
+[0012](../decisions/0012-budget-guidance-contract.md) defines budget and income meanings,
+and [0013](../decisions/0013-sello-v2-design.md) records the final v2 rules.
 
-This document records design intent, not a replacement financial algorithm or
-expanded MVP scope. Goals, recurrence, advanced insights and investments retain
-their delivery increments. Do not expose unfinished destinations or invented data.
-Before changing financial meaning, resolve the decisions at the end of this file
-and approve independent worked examples. Completed tickets retain their original
-acceptance and evidence; subsequent implementation needs explicitly scoped work.
-
-The final concrete design is [Sello v2](v2/README.md): every screen was reviewed and
-locked by the owner on 2026-10-15/16 ([ADR 0013](../decisions/0013-sello-v2-design.md)).
-It is the visual source of truth; the [briefs](screen-briefs/README.md) keep the intent
-and open policy behind it, and the earlier HTML exploration is history only.
+MVP has Recibo and Resumen; goals, recurrence, advanced insights and investments
+come later. Design approval does not mean implementation; see the
+[current app inventory](../development/current-app-experience.md). Replace financial
+calculations through scoped work with approved independent examples and tests.
 
 ## Principles for every screen
 
-1. **Lead with the user's room to act.** Home's largest figure is the budget margin
-   after reserving upcoming recurring payments, with the reserved amount shown at
-   lower priority. Overall daily allowance is secondary. A category overrun remains visible
-   without turning a healthy overall budget into a negative verdict or moving limits
-   automatically. Spending history stays easy to inspect. Pace extrapolation from
-   large occasional expenses must not determine home's verdict.
-2. **Give each screen a clear job.** Home answers the month's position at a glance.
-   Resumen explains patterns and supports adjustments. Metas connects the daily
-   effort to personal objectives. Inversiones explains portfolio value and return.
-3. **Keep essential actions visible and stable.** Reduce clutter through hierarchy,
-   compact controls and fewer interruptions. Explanations and occasional management
-   actions, such as editing a category, may sit deeper. Main functionality must not
-   acquire extra taps just to make a screen look sparse. Conditional content should
-   not displace the amount or the primary recording action.
-4. **Let ordinary completion keep the user moving.** Expense and income recording
-   give brief, clear feedback after a confirmed save and return to the activity.
-   They do not require a separate receipt screen and a second dismissal. Durable
-   operation receipts, uncertain-outcome recovery and protective confirmations
-   remain mandatory. A celebration never establishes whether money was saved.
-5. **Guide with evidence and care.** Suggestions explain an observed pattern and
-   offer an adaptable next step. They encourage intentional allocation and financial
-   learning without prescribing a universal savings ratio. A person chooses their
-   own goals. An unassigned amount or an adjusted plan is not a personal failure.
-6. **Make progress meaningful.** Give small celebrations for goal milestones and a
-   substantial one for completion. Preserve the value of accumulated progress when
-   the person adjusts a contribution or target date. Routine entry is brief; reaching
-   a goal earns the special moment. Every celebration respects reduced motion.
-7. **Use Sello's identity with purpose.** Keep receipt paper, stamps, bold exact
-   numbers, category circles, Cobalto/Violeta light/dark schemes and bundled type.
-   Paper and ink provide cohesion; their use should help reading and action. Keep
-   restrained semantic color, full accessible money, adaptive layouts and visible
-   keyboard/large-font controls. Existing tokens and catalog components remain the
-   starting point for new work.
+1. **Show what matters first.** Lead with the answer; keep supporting detail secondary.
+2. **Keep actions visible and stable.** Use clear hierarchy and fewer interruptions.
+   Do not hide essential controls or add steps merely to make a screen look simpler.
+3. **Make everyday recording quick.** Give brief feedback after a confirmed save
+   and return. Preserve durable receipts, recovery and protective confirmations.
+4. **Give useful, gentle guidance.** Base suggestions on relevant history and offer
+   a clear next step. Do not impose a universal savings ratio or blame for changed plans.
+5. **Celebrate meaningful progress.** Use small milestone celebrations and a larger
+   one for goal completion. Respect reduced motion and preserve honest progress.
+6. **Keep Sello's identity.** Reuse paper, stamps, category circles, bundled type
+   and Cobalto/Violeta light/dark themes through existing tokens and components.
+7. **Make meaning accessible.** Show exact amounts and use words alongside color.
+   Support large text, keyboards and different window sizes from the start.
 
 ## Screen responsibilities
 
 ### Home / Recibo
 
-Keep this the simplest screen: short, visually appealing and quickly digestible.
-Lead with remaining budget after upcoming recurring payments are reserved; inform
-about the reserved amount at lower priority. Show one overall daily allowance; do not
-split that allowance into prescribed per-category daily amounts. Users can choose
-where to spend, while each category retains its own remaining/overrun information.
-Upcoming recurring expenses must be reserved in the allowance when recurrence ships.
-These home calculations remain independent of recorded or expected income.
-Recording an already reserved expense for the same amount leaves the headline
-unchanged. Once no reservations remain, their supporting context disappears entirely;
-do not retain a “0 reserved” line. Failed reads cannot be presented as no reservations.
+Keep Home short and easy to scan. Lead with remaining budget and one secondary
+overall daily guide, independent of income and spending-pace forecasts. Categories
+keep their own remaining/overrun figures, without prescribed daily caps or automatic
+reallocation. Future payment reservations follow ADR 0012 when recurrence ships.
 
-When Metas ships, place one compact goal slip between the monthly summary and the
-categories. Show the goal's name, concise progress and visible access to **Aportar**
-and its detail. The user chooses the featured goal; until they do, default to the
-active goal with the highest completion percentage. A later automatic ranking must
-not override a user choice. Tie and eligibility details remain implementation inputs.
-
-Early in the month, a small invitation such as **Ver cómo cerraste septiembre** can
-lead to Resumen. Keep detailed advice there. The goal slip and review invitation
-must fit home's attention budget rather than start an accumulating feed of cards.
+When Metas ships, show one compact goal between the summary and categories, with
+progress, detail and Aportar access. Keep the user's selection; otherwise default
+to the active goal with the highest completion percentage. A small early-month
+invitation can lead to Resumen; keep detailed advice there and avoid a feed of cards.
 
 ### Expense and income entry
 
-One tap from home opens expense entry with the amount immediately ready. Category
-selection is fast and the prominent Add action stays in a fixed location. Income
-entry follows the same principles with its own source controls. Preserve independent
-drafts, strict original-input validation and accessible required/busy/error states.
-
-**Follow-up review:** the owner reopened the custom-pad decision because immediate,
-always-available number entry and `000` are valuable. v2 settles it: every amount uses
-a compact Sello pad (44dp keys, no live previews), text fields keep the phone keyboard
-and the note uses a composer docked to the keyboard
-([ADR 0013](../decisions/0013-sello-v2-design.md)).
-
-The owner selected a **dialog for adding a note**. Keep the main form and pad in
-place underneath it; the system text keyboard belongs to that focused editor.
-Closing the dialog returns to the same amount, category, pad and Add position.
-The draft uses the same dialog pattern for an Otro source name; that extension is
-proposed presentation. Never display both keyboards as competing main-form panels.
-Live previews cannot obscure or shift essential controls.
+One tap from Home opens expense entry with the amount ready. Keep category/source
+selection fast, the note easy to find and the main save action in a stable place.
+Amounts use the Sello pad; text uses the phone keyboard. Notes use a composer docked
+to the keyboard, returning to the same form when closed. Keep expense/income drafts
+separate, validate original input and show busy/error states. Use no live financial previews.
 
 ### Resumen
 
-Help users adjust their budget through understandable questions: is spending rising
-or falling across months; which categories repeatedly exceed their limits; and which
-weekdays carry more spending? Lead each section with its answer and supporting
-evidence, using charts where they make that evidence easier to understand.
-
-Allow one small insights section with a limited number of relevant suggestions.
-Repeated category overruns belong here; an isolated overrun in a healthy overall
-month does not require an intervention. A suggestion to budget unassigned recorded
-income toward saving or investing must use category budgets as the allocation path;
-recording goal/investment progress alone does not reduce unassigned income.
-Remaining category budget is not automatically spare money. No fixed repeat-offender
-threshold, suggestion count or review-invitation schedule was approved in the interview.
+Lead with the same-days comparison, then explain patterns and useful adjustments:
+changes across months, repeated category overruns and weekday spending. Put net
+flow in the income slip below the comparison. Keep insights few, supported by
+history and actionable; an isolated category overrun in a healthy overall month
+does not require intervention. Avoid repeating advice across screens.
 
 ### Income and allocation
 
-Help people understand how their recorded income is distributed across category
-budgets. A user can create categories for saving, investing, recreation or a reserve.
-Encourage giving every peso a purpose, including recreation
-or a reserve, while recognizing that complete allocation is an aspiration. Show
-unassigned income honestly and offer an optional category-budget adjustment path, without another
-routine post-save screen. Avoid duplicating the same advice across multiple surfaces.
-
-Recording a goal contribution counts as progress: Sello accepts what the
-user records, with no bank connection, external proof or separate transfer verification.
-It does not independently allocate income. Expected recurring income can inform
-clearly labeled plans and stays distinct from recorded income; it does not increase
-home's category budgets or allowance. Detailed occurrence/month-planning rules remain
-future work under ADR 0012.
+Show how recorded income is assigned through category budgets. Offer an optional
+budget adjustment for unassigned income, without requiring complete allocation.
+Goal/investment entries track progress separately; they do not reduce unassigned
+income. Unspent budget is not automatically spare money. Expected recurring income
+belongs to later planning work under ADR 0012.
 
 ### Metas and Inversiones
 
-Metas deserves a primary destination. Three main tabs remain preferable where
-equally clear, with four the maximum. The accepted working structure as capabilities
-ship is **Recibo / Resumen / Metas / Inversiones**. This replaces goals' required
-placement behind Patrimonio's switch. Only working destinations appear.
+Add these destinations when their features ship: four tabs at most, three preferred
+where equally clear. Goals are user-defined, accept progress without bank proof and may
+have no deadline. Keep history and completed goals accessible. Milestones, completion,
+undo and withdrawal bounds follow ADR 0013; screen visits are not milestone crossings.
 
-Goals and investments are independent tracking tools. A user may choose to represent
-the same money in both; this direction does not introduce linking, automatic
-reconciliation or a combined wealth total. Only category budgets allocate income;
-goal/investment records never create a second allocation deduction.
-
-Goals may have no target date. The owner confirmed optional deadlines and a
-withdrawal entry, preserving contribution history, when savings are used before
-completion. If a withdrawal drops progress below a milestone, the earned stamp stays,
-faded, with one line saying it is still yours; percentage and bar show the honest
-figure, without shame or dramatic loss feedback. Keep contribution/withdrawal
-history. Completed goals stay in Metas as Lograda rows, with a celebratory revisit.
-Reaching 100 % is announced; **Marcar como lograda** completes the goal and earns the
-big celebration, with a short Deshacer; a completed goal is read-only. Reaching a
-milestone again after progress fell below it lights the stamp back up; reopening or
-redrawing the same state does not count as a new crossing (v2,
-[ADR 0013](../decisions/0013-sello-v2-design.md)). Detailed withdrawal rules,
-corrections, exact replay safeguards and remaining completion lifecycle remain open
-in the [Metas brief](screen-briefs/goals.md); no automatic
-cross-tool financial operation is approved by those choices.
-
-Inversiones leads with total portfolio value, then gain/loss percentage and a
-directional arrow, with semantic color and text equivalents. Distinguish contributed
-capital from return: 100 contributed with 10 of gain means value 110 and return +10%
-in that simple case. Adding capital alone is not investment gain. Below the answer,
-provide accessible distribution, contributions/withdrawals and dividends. This is
-an initial future-feature direction, not approval of full return, FX or ledger policy.
-The owner also confirmed quiet, visible overview context about the age of recorded
-valuations. Its presentation must not imply live values or that mixed/unknown
-valuation dates are all current. Exact date sources and stale thresholds remain
-future investment policy work; see the [Inversiones brief](screen-briefs/investments.md).
+Goals and investments stay independent, even for the same money. Do not combine
+them into a wealth total or automatically create entries across tools. Inversiones
+leads with value, return and valuation age. Contributions are not gains; recorded
+values must not imply live or bank-verified balances.
 
 ## Tone and feedback examples
 
-Use short, concrete Spanish, neutral facts and a useful next step. For an overall
-overrun: **Excedido**, the exact amount above budget, and **Ajustar presupuesto**.
-The owner confirmed consistent signed remainders: an actual overall budget overrun
-of 80.000 displays **−80.000** in semantic red under **Restante del presupuesto**,
-with **Excedido**. Category deficits use the same signed/red treatment;
-a category overrun does not change a healthy overall status. Positive remaining
-amounts use the normal ink with a small positive stamp. Pair color with exact
-signed money and text; keep the rest of the screen neutral. An example suggestion is: “Transporte superó su límite en tres de los
-últimos cuatro meses. Podrías revisar su presupuesto.” Its period is illustrative,
-not an approved recommendation threshold. If a goal falls behind, offer contribution,
-target-date or spending-plan adjustments while recognizing what is already saved.
+Use short Spanish, exact facts and a useful next step. Pair signed remainders with
+words and restrained color; statuses follow ADR 0012 and currency display follows
+[ADR 0007](../decisions/0007-no-peso-symbol.md). Explain repeated overruns with a budget
+review suggestion; offer goal-plan adjustments without blame.
 
 ## Open implementation decisions
 
-The [step 2 financial decision record](../decisions/0012-budget-guidance-contract.md)
-collects concrete alternatives, synthetic worked examples and the owner's partial
-confirmations. It does not yet define a complete replacement for delivered calculations.
-
-- Complete the D03 replacement and its worked current/past/no-limit/zero/overrun
-  examples. BG1 confirms uplifting positive wording (Al día as working copy),
-  neutral Al límite, Excedido and Sin límite for the presented states.
-  BG2 confirms a positive headline after reservations, lower-priority reserved
-  amount and neutral Sin margen when reservations leave zero free margin.
-  The presented commitment shortfall uses Revisar, the exact budget gap and
-  zero daily allowance, independently of income. An equal reserved-to-recorded
-  payment leaves the headline unchanged and removes reservation context when none
-  remains. Other precedence and boundary cases still need review; no new
-  pace/percentage thresholds are approved.
-- Define upcoming-commitment reservation exactly once, its period boundaries and
-  relation to recorded expenses; preserve exact money, day inclusion and rounding
-  unless separately changed. Expected recurring income informs a clearly labeled
-  plan and is replaced once by its recorded occurrence. Define its detailed
-  occurrence/month-planning lifecycle without implying a verified account balance.
-- Design allocation advice around the confirmed category-only rule: assigning income
-  requires a category-budget change. Recording a contribution only updates goal or
-  investment tracking. Keep the suggested saving action honest about these effects.
-- Specify insight eligibility, repetition and insufficient-history handling; review
-  invitation timing; goal-default ties, completed/archived states and removed pins;
-  and milestone presentation, replay and reduced-motion behavior.
-- Refine investment performance/distribution and the final navigation/layouts when
-  their capabilities are scoped. Keep essential detail accessible for experienced
-  users and the overview understandable for newcomers.
+The [screen briefs](screen-briefs/README.md) hold questions about review-invitation
+timing; featured-goal ties and invalid selections; goal corrections and milestone
+replay safeguards; and investment ledger, return, dividend and FX policies.
+Recurrence lifecycle details, including expected income, are deferred beyond MVP.
 
 ## Review a new screen
 
-State its purpose, primary answer and obvious next action. Identify which information
-supports an actual decision, which controls are essential, and which interruptions
-earn their cost. Inspect keyboard-open, large-font and constrained-window layouts,
-as well as loading, genuine empty, failed, stale, busy and restored states. Verify
-that suggestions are supported by the available history and that exact financial
-meaning survives the visual simplification. Extend actual catalog examples when
-shared components change.
+Check its purpose, main answer and obvious next action. Review keyboard-open,
+large-font and constrained layouts, plus loading, empty, failed, stale, busy and
+restored states. Confirm exact financial meaning, supported suggestions and
+accessible controls. Extend real catalog examples when shared components change.

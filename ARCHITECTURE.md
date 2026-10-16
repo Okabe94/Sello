@@ -1,6 +1,6 @@
 # Sello — architectural guardrails
 
-**Status:** proposed implementation baseline · **Updated:** 2026-10-15
+**Status:** proposed implementation baseline · **Updated:** 2026-10-16
 
 **MUST** is mandatory; **SHOULD** is the default, with a documented reason to
 deviate; **COULD** is optional, justified by a shipped capability or measured need.
@@ -32,10 +32,6 @@ Sello is an offline-first, local-only Android financial app, Spanish first
   investments ship. Prefer three equally clear destinations where feasible;
   **MUST NOT** exceed four or expose unfinished tabs. This replaces the reference's
   three-tab ceiling and mandatory Patrimonio switch; see [ADR 0011](docs/decisions/0011-goal-centered-design.md).
-- **MUST**, for the owner-approved SELLO-021 entry-point exception, expose only
-  working income totals/history navigation in the initial Resumen tab, with shared
-  month and truthful loading/error states. Full Resumen remains SELLO-022; no dummy
-  sections or disabled controls. See [ADR 0010](docs/decisions/0010-income-resumen-entry.md).
 - **MUST** retain the Anotar → persisted operation receipt → Recibo financial
   journey, including recovery, accessibility, and CI. The operation receipt does
   not require a separate confirmation screen; ordinary saves use brief feedback
@@ -117,14 +113,16 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 retiring pace-based home judgment. The D03 calculations, thresholds and worked
 examples below describe the delivered financial contract and remain in force until
 explicitly replaced through scoped implementation with approved independent examples.
-[ADR 0012](docs/decisions/0012-budget-guidance-contract.md) records partial owner
-confirmation of factual status/tone and a headline after upcoming-payment reservation,
+[ADR 0012](docs/decisions/0012-budget-guidance-contract.md) records approved
+factual status/tone and a headline after upcoming-payment reservation,
 with the reserved amount at lower priority, planned versus recorded income, and
 category-only allocation. An equal reserved-to-recorded payment leaves the headline
 unchanged; omit reservation context when none remains. Goal/investment records do
-not independently allocate income; users can budget those purposes through categories. The complete classifier,
-commitment lifecycle and future-income planning boundaries remain open. Do not
-invent those rules while changing presentation; see the
+not independently allocate income; users can budget those purposes through categories.
+The target zero-budget/zero-spending status is Al día. For an overrun with upcoming
+payments still reserved, Revisar takes priority; once recorded, use Excedido if
+spending exceeds the limit. Recurrence and expected-income lifecycle details are
+deferred beyond MVP. Remaining implementation inputs are listed in the
 [open decisions](docs/design/philosophy.md#open-implementation-decisions).
 
 - **MUST** represent money as checked `Long` minor units + currency: COP scale 0;

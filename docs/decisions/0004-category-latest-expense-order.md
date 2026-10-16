@@ -1,32 +1,24 @@
 # 0004 — Category recency follows expense additions
 
-**Status:** Accepted product policy; implementation pending · **Date:** 2026-10-08
-**Owner/approver:** project owner (user) · **Ticket:** SELLO-001
+**Owner:** project owner (user) · **Updated:** 2026-10-16
+**Status:** approved product rule; supported by the current sorting code.
 
-## Decision and alternatives
+Último gasto agregado uses each category's newest original creation time among
+nondeleted expenses in the selected month. Editing an expense or changing a
+category or budget does not make it newer. Do not use a mutable update timestamp.
 
-During O01–O08 review, the owner changed the latest-activity option from category/
-budget configuration modification to the category most recently receiving an
-expense through addition. Expense edits are not additions. This supersedes the
-old O06 configuration-time expectation; other approved ordering rules remain.
+Backdated expenses belong to their effective month but keep their actual creation
+time. Restore preserves that time. Deleting the newest expense falls back to the
+next surviving addition. Financial-clock changes do not count as additions.
 
-Rejected: keeping configuration modification as this metric or treating any edit
-as a new expense. Latest addition must not be inferred from mutable updatedAt.
+Reversing direction compares each category's newest expense; it never switches to
+its oldest expense. Categories without eligible expenses stay last within their
+finite/unlimited group in either direction. Unlimited categories stay last overall.
+Ties use normalized name ascending, then stable category ID. The full ordering
+contract is [D06](0001-mvp-contract.md#d06--ordering).
 
-## Approved comparator and consequences
+## Verification
 
-[D06](0001-mvp-contract.md#d06--ordering) owns the approved refinement, confirmed by
-the user on 2026-10-08: Último gasto agregado uses selected-month nondeleted
-expenses and each category's newest original real creation Instant, not its newest
-effective date. Backdated additions count in their effective month; edits and
-restore preserve original addition times. Deleting the newest expense falls back
-to the next surviving addition. Categories without eligible expenses stay last
-within their finite/unlimited partition in either direction. Reverse comparison
-of the newest-per-category metric, not selection of the oldest expense. Existing
-alphabetical/stable-ID ties and unlimited-last rules are unchanged.
-
-SELLO-023 must test O01–O14 addition/edit/backdating/delete/restore/empty behavior,
-reversible direction, stable ties and unlimited-last. Financial clock stepping is
-not a new addition; fixed-scope fixtures must prove this without using live time.
-No code/schema/backup changes or independent review have occurred by recording
-this direction. Persistence/portable timestamp impacts belong to dependent tickets.
+Use controlled timestamps to cover additions, edits, backdating, deletion, restore,
+empty categories, both directions and stable ties. O01–O14 in the
+[financial examples](../testing/mvp-financial-examples.md) define expected cases.

@@ -45,7 +45,6 @@ a deliberately smaller, tested MVP and the Sello visual language.
 - [Quality flow](docs/planning/mvp/QUALITY_FLOW.md): `./scripts/verify-ticket`, the
   evidence every ticket needs and what CI enforces.
 - [Design references](docs/design/README.md): Sello v2, the v1.1 snapshot and provenance.
-- [Inspected baseline](docs/planning/mvp/BASELINE.md): what actually builds today.
 
 The app currently implements Recibo and Resumen tabs, expense and income
 entry/history, category and limit management, corrections with guarded undo,

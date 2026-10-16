@@ -165,8 +165,10 @@ which days → one suggestion. The month in progress is never projected.
 - **Suggestion:** at most one, as a tinted note (`brandSoft`, light-bulb circle,
   "Una sugerencia", × to dismiss). The evidence is written as a plain fact; the advice
   starts with "Podrías…" and ends in one action, e.g. **Ajustar el presupuesto de
-  Café ›**. Eligibility rules (how many months, how often) are not approved; the
-  "3 of 4 months" example is illustrative.
+  Café ›**. A category is eligible after going over its limit two months in a row; the
+  one with the bigger budget wins, and a dismissed suggestion may return next month
+  ([Resumen brief](../screen-briefs/summary-and-income.md)). The "3 of 4 months"
+  example is illustrative.
 - **States:** first month (says what is missing, shows only real figures, no
   comparison or suggestion), no expenses, loading, failed read (never zero).
 

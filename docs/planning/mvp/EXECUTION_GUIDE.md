@@ -8,40 +8,33 @@ Do not execute all tickets at once or copy a proposed API blindly over completed
 ## Starting from a new checkout
 
 1. Run `pwd`, `git status --short`, `git log -1 --oneline`, and inspect applicable
-   `AGENTS.md`. Preserve existing work. The initial app is a generated greeting,
-   not the target architecture; see [baseline](BASELINE.md).
+   `AGENTS.md`. Preserve existing work.
 2. Read the ticket's dependencies and their Delivery evidence. Locate their
    **actual** produced contracts, tests and decision records. If a supposedly Done
    prerequisite is missing/broken, report the discrepancy; do not recreate a fake
    adapter just to unblock yourself. Ready work still requires its listed approvals.
 3. Make an acceptance-to-change/test checklist and identify owned files before
-   editing. For new modules/symbols, paths below are target locations, not claims
-   that the files already exist. Prefer established compatible names after bootstrap.
+   editing. Prefer the established names and packages below to new ones.
 4. For UI work, open [Sello v2](../../design/v2/README.md) and its
    [component catalog](../../design/v2/components.html). A ticket's v1.1 anchors apply
    only to screens v2 does not show (ADR 0013). Never infer money from mockup figures.
-5. Use SELLO-002's [setup](../../development/setup.md) and
-   [toolchain decision](../../decisions/0005-toolchain.md). The baseline commands
-   below use this host's inspected paths. Record unavailable devices/keys/
-   approvals as blockers where acceptance requires them; never waive the gate.
+5. Use the [setup](../../development/setup.md) and
+   [toolchain decision](../../decisions/0005-toolchain.md). Record unavailable
+   devices/keys/approvals as blockers where acceptance requires them; never waive
+   the gate.
 
 ## Module and file map
 
-The baseline has `app/src/main/java/com/software/sello/MainActivity.kt`,
-`app/src/main/java/com/software/sello/ui/theme/`, manifest/resources, sample tests,
-`settings.gradle.kts`, `gradle/libs.versions.toml` and wrapper configuration.
-SELLO-003 creates the rest; SELLO-001/002 records confirm identities/compatibility.
-
-| Target ownership | Proposed implementation/test locations |
+| Ownership | Where it lives |
 | --- | --- |
-| Pure financial types/policies/ports | `domain/src/main/kotlin/com/software/sello/domain/{model,policy,port,usecase}/`; tests in `domain/src/test/kotlin/` |
-| Room/transactions/codecs | `data/src/main/java/com/software/sello/data/{local,mapper,repository,backup,preferences}/`; host tests in `data/src/test/`, real Room in `data/src/androidTest/`; exported schemas in `data/schemas/` |
-| Reusable UI | `design-system/src/main/java/com/software/sello/designsystem/{theme,paper,money,input,category,navigation,chart,feedback}/`; previews and host/device tests alongside that module |
+| Pure financial types/policies/ports | `domain/src/main/kotlin/com/software/sello/domain/{model,policy,port}/`; tests in `domain/src/test/kotlin/` |
+| Room/transactions/codecs | `data/src/main/java/com/software/sello/data/{local,mapper,repository}/` and `data/src/main/kotlin/.../data/preferences/`; host tests in `data/src/test/`, real Room in `data/src/androidTest/`; exported schemas in `data/schemas/`. Backup codecs (`backup`) do not exist yet |
+| Reusable UI | `design-system/src/main/java/com/software/sello/designsystem/{component,icon,theme}/`; previews and host/device tests alongside that module |
 | App wiring/platform | `app/src/main/java/com/software/sello/{composition,navigation,platform,presentation}/`; composition is the only app package importing data implementations |
-| Feature UI | `app/src/main/java/com/software/sello/feature/{category,expense,receipt,income,recibo,resumen,settings,backup}/`; each owns State/Action/Event/ViewModel/ScreenRoot/Screen as needed |
+| Feature UI | `app/src/main/java/com/software/sello/feature/{category,expense,income,recibo,resumen,settings,startup}/`; each owns State/Action/Event/ViewModel/ScreenRoot/Screen as needed. A `backup` feature does not exist yet |
 | Sandbox | `app/src/debug/java/com/software/sello/devtools/`, `app/src/debug/res/` and debug-only bindings; release has no reverse dependency |
-| Catalog | `catalog/src/main/java/com/software/sello/catalog/{navigation,examples,fixtures}/`; synthetic render examples only, no domain/data/app dependency |
-| Decisions/runbooks | `docs/decisions/`, `docs/testing/`, `docs/release/`; these are created by their owning tickets, not pre-approved today |
+| Catalog | `catalog/src/main/java/com/software/sello/catalog/{components,foundations}/`; synthetic render examples only, no domain/data/app dependency |
+| Decisions/runbooks | `docs/decisions/`, `docs/testing/`; `docs/release/` is created by its owning ticket |
 
 Port/type names in tickets are contract suggestions. Agree signatures at the owning
 boundary, document them in its tests, and reuse them downstream. Do not create a
@@ -49,29 +42,14 @@ second “almost equivalent” repository or calculation because a name differs.
 
 ## Tools and host verification
 
-Required tools: Git, Gradle wrapper, agreed JDK, installed Android SDK/platform-tools,
-Python 3 (standard library only) for board tooling. Use `rg` for source searches.
-Android Studio is useful for previews/AVDs; it is not a substitute for command evidence.
+Tools and the environment are in [setup](../../development/setup.md). Run commands
+from the repository root. Use `rg` for source searches. Android Studio is useful for
+previews/AVDs; it is not a substitute for command evidence.
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
-./gradlew --version
-./gradlew projects
-python3 docs/planning/mvp/board.py --check
-```
-
-Run commands from the repository root. `JAVA_HOME` and daemon criteria can select
-different JDKs; inspect `gradle/gradle-daemon-jvm.properties` and `./gradlew --version`.
-The paths above are this machine's setup; another executor must configure its own
-SDK/JDK and untracked `local.properties`, not commit machine paths as build logic.
-
-Focused **host** examples after module creation:
+Focused **host** examples:
 
 ```bash
 ./gradlew :domain:test --tests '*MoneyPolicyTest'
-./gradlew :data:testDebugUnitTest --tests '*BackupValidatorTest'
 ./gradlew :app:testDebugUnitTest --tests '*ExpenseFormViewModelTest'
 ./gradlew :catalog:assembleDebug
 ```
@@ -85,11 +63,12 @@ assigned gate after focused tests, not only the example command shown in a ticke
 
 ## Device and process restoration
 
-Use an Android emulator/device matching SELLO-001/002's approved API matrix. If
+Use the API 30 emulator from [setup](../../development/setup.md#device-smoke) or an
+explicitly selected device. If
 T3 device tools are available, list/open a suitable device first; otherwise use
 Android Studio's AVD manager and `adb devices`. Set `ANDROID_SERIAL` when multiple
-devices exist. Never wipe or seed personal production data. Release QA uses an
-explicitly isolated synthetic test installation; sandbox scenarios use debug only.
+devices exist. Device permissions follow [AGENTS.md](../../../AGENTS.md#tests-and-verification).
+Release QA uses an isolated synthetic test installation; sandbox scenarios use debug only.
 
 ```bash
 adb devices
@@ -111,13 +90,30 @@ For an instrumented class selector use the actual configured test package:
 - **Eligible process death:** enter a draft, background via Home, kill the **debug**
   background process using `adb shell am kill com.software.sello.debug`, then return
   through Recents. Verify the process really died, task remained, and draft/operation
-  ID restores. Confirm the actual ID from SELLO-003 before using this example.
+  ID restores.
 - **Cold start/force-stop:** test persistence/recovery separately. Force-stop or
   clearing app data is not equivalent to saved-task process restoration.
 - **Room reopen:** close/reopen the real database in tests, preserving the file;
   in-memory fakes cannot prove durable receipts/migration/rollback.
 - **Visual evidence:** record build, API, window size, theme/font scale and scenario.
   A screenshot confirms the shown state, not all financial/device acceptance.
+
+### Device test notes
+
+- Wait for observable UI/data conditions with the existing `Waits.kt` helpers;
+  asynchronous updates need condition-based waits, not immediate reads or sleeps.
+- After typing, use the `press()` semantics helper and hide the keyboard during
+  cleanup so it cannot interfere with the next test.
+- Tests in one process share database and month state. Reset both using
+  `TestData.reset()` and `TestCommands.showCurrentMonth()` where applicable.
+  Seed histories through `TestCommands` so normal observers see the writes.
+- For a test window larger than the display, check node existence and bounds;
+  off-screen content need not satisfy a visibility assertion.
+- Device runs cover Android API availability that host-JDK tests cannot prove.
+  System dialogs can steal focus and Back presses; inspect focus before diagnosing
+  an app failure.
+- For saved-task restoration, return with the same launcher intent or through
+  Recents. A different launch can create a second task and test a different journey.
 
 ## Contract and failure checklist
 
@@ -139,16 +135,18 @@ write, close, canceled picker and preference-pending outcomes testable.
 
 ## Independent example corpus
 
-See [DECISION_INPUTS.md](DECISION_INPUTS.md) for policy approvals and exact baseline
-examples. Table values are independent assertions, not expected results generated
-by calling the production calculator. Mark proposal-only conventions unapproved
-until SELLO-001 is reviewed; never turn a pending example into hidden product policy.
+See [ADR 0001](../../decisions/0001-mvp-contract.md) for policy and the
+[example corpus](../../testing/mvp-financial-examples.md) for exact examples. Table
+values are independent assertions, not expected results generated by calling the
+production calculator. Never turn a pending example into hidden product policy.
+The rules approved in [ADR 0012](../../decisions/0012-budget-guidance-contract.md)
+need their own independent examples before the D03 ones they replace are retired.
 
 ## Delivery record
 
 Follow [QUALITY_FLOW.md](QUALITY_FLOW.md) and the [quality runner](#quality-runner)
 section below for the mandatory run, snapshot freshness, retention and completion
-validation. Do not start dependent work until SELLO-004's acceptance is Done.
+validation.
 
 Add `### Delivery evidence` to the canonical ticket after verification. Required fields:
 
@@ -157,15 +155,16 @@ Add `### Delivery evidence` to the canonical ticket after verification. Required
 - **Requirement mapping:** acceptance item → implementation and independent test
 - **Red / Green:** exact commands, behavioral failure, passing rerun; docs-only rationale if applicable
 - **Gate results:** actual assigned gate command, counts, reports, warnings/failures
-- **Quality run:** for SELLO-004 onward, run ID, ticket/profile, tested snapshot, outcome and retained artifact
+- **Quality run:** run ID, ticket/profile, tested snapshot, outcome and retained artifact
 - **Device / Artifact:** device/API/config/build and executed journey, or justified inapplicability
 - **Review:** self-review, and the pull request whose merge is the reviewer's approval
 ```
 
 This is a template, not completed evidence. Do not mark Done while device or signing
 acceptance remains missing. Approval is given by merging the ticket's pull request,
-which already proposes Done ([quality flow](QUALITY_FLOW.md#done-is-proposed-merging-approves)). Regenerate board/CSV after ticket/shared-workflow
-edits, then check the generated output and board unit tests. Do not commit/publish
+which already proposes Done
+([quality flow](QUALITY_FLOW.md#done-is-proposed-merging-approves)). Regenerate
+board/CSV after ticket/shared-workflow edits, then check the generated output and board unit tests. Do not commit/publish
 unless the current user request authorizes it.
 
 ## Quality runner
@@ -193,8 +192,10 @@ Flow for a ticket:
 2. When the work is final, run with `--retain`. It copies the passed report to
    `docs/planning/mvp/quality-reports/<ticket>.json` and prints a
    `- **Quality run:** ...` line. Paste that line into the ticket's Delivery evidence.
-3. Set the status to Review, regenerate the board, run `board.py --check`, commit
-   the retained report with the change and open the pull request.
+3. For the final PR, propose Done with complete evidence; partial PRs keep the
+   ticket In Progress and explain what remains. Regenerate the board, run
+   `board.py --check`, commit the retained report with the change and open the PR.
+   Review is for work waiting on something outside the merge.
 4. CI asks `verify-ticket --candidate-gate <base>` which gate the merge commit needs
    (G2, or G1 for a candidate that advances no ticket and changes only documents),
    runs `verify-ticket --merge-candidate <base> --gate <that>` on the merge commit
@@ -250,7 +251,6 @@ relevant guide against the selected versions; consult predecessor contracts firs
 - Koin constructors/graphs: https://insert-koin.io/docs/reference/koin-core/definitions/
 - Coroutine tests: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/
 - Serialization: https://kotlinlang.org/docs/serialization.html
-- Static/format tools: https://detekt.dev/docs/intro/
-  and https://pinterest.github.io/ktlint/latest/
+- Formatting: https://pinterest.github.io/ktlint/latest/
 - Shrinking/signing: https://developer.android.com/build/shrink-code
   and https://developer.android.com/studio/publish/app-signing

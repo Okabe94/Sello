@@ -2,13 +2,12 @@
 
 **Owner:** SELLO-012 · Rules: [architecture](../../ARCHITECTURE.md) §5.
 
-How a change to financial data is made so that its result is always knowable. The
-first command is creating an expense (`ExpenseCommands` in `:domain`,
-`RoomExpenseCommands` in `:data`), followed by
-[editing, deleting and undo](#editing-deleting-and-undo); [category and limit commands](categories-and-limits.md)
-follow the same steps. The shared steps are functions in
-`data/repository/CommandProtocol.kt`; each workflow keeps its own typed command,
-checks and outcome. There is deliberately no generic "repository" that does everything.
+How a change to financial data is made so that its result is always knowable.
+Expenses (`ExpenseCommands` in `:domain`, `RoomExpenseCommands` in `:data`), income
+and [categories and limits](categories-and-limits.md) all follow these steps.
+
+The shared steps are functions in `data/repository/CommandProtocol.kt`; each workflow
+keeps its own typed command, checks and outcome. There is no generic repository.
 
 ## What a caller does
 
@@ -19,7 +18,7 @@ checks and outcome. There is deliberately no generic "repository" that does ever
 
 | Outcome | Meaning | Next |
 | --- | --- | --- |
-| `Committed(expense, replayed)` | Saved. `replayed` is true when this operation had already committed and this call wrote nothing | Show the receipt. Celebrate only when `replayed` is false |
+| `Committed(expense, replayed)` | Saved. `replayed` is true when this operation had already committed and this call wrote nothing | Show the receipt. Confirm a new save only when `replayed` is false |
 | `Rejected(reason)` | Certainly not saved; the reason is typed | Show the reason; the draft is still valid to correct |
 | `OutcomeUnknown(operationId)` | The commit itself failed in a way that does not say whether it took effect | Call `find(operationId)` or submit the **same** command again. Never a new identifier |
 | a `CancellationException` | The caller was cancelled. It says nothing about the save | On return, `find(operationId)` |
@@ -52,7 +51,7 @@ fail as one.
 
 ## Editing, deleting and undo
 
-`EditExpense`, `DeleteExpense` and `RestoreExpense` (SELLO-019) follow the same steps
+`EditExpense`, `DeleteExpense` and `RestoreExpense` follow the same steps
 with their own kinds, `expense.edit`, `expense.delete` and `expense.restore`, and
 their own input identities. Edit and delete also carry the expense `version` the
 caller read. Step 3 for each:
@@ -105,7 +104,7 @@ seconds, after the deletion committed. At six seconds exactly it has ended.
 
 ## Income
 
-`IncomeCommands` and `RoomIncomeCommands` (SELLO-021) record, edit, delete and restore
+`IncomeCommands` and `RoomIncomeCommands` record, edit, delete and restore
 income by exactly the steps above, with their own kinds (`income.create`,
 `income.edit`, `income.delete`, `income.restore`), input identities and typed
 rejections. An income has an amount, a source, a date and an optional note; it has no
@@ -141,8 +140,8 @@ that cannot be read fails the month, it is never left out.
   caller is checked again afterwards. A caller cancelled meanwhile gets the
   cancellation while the receipt is already durable.
 - **Input identity.** `inputDigest` is a SHA-256 over the meaningful fields, each
-  written as byte length, colon, bytes: kind, format version, generation, category,
-  amount, currency, date, note-present flag, note. The operation identifier is not
+  written as byte length, colon, bytes. For an expense: kind, format version,
+  generation, category, amount, currency, date, note-present flag, note. The operation identifier is not
   part of it. A label, a formatted amount or an object's text form never is.
 - **Time.** Rows and receipts are stamped by `AuditClock`. `FinancialClock` is asked
   only which day it is, so simulated time can never appear in a timestamp.
@@ -155,6 +154,5 @@ that cannot be read fails the month, it is never left out.
 - No totals are checked when saving. With each record at most 999.999.999.999 COP, a
   month would need over nine million records to exceed what a total can hold, far
   beyond the 100.000-record backup bound. Totals are checked where they are
-  computed (SELLO-014).
+  computed.
 - `Committed` has no follow-up state because nothing follows a save yet.
-- No screen records or shows income yet; those arrive with the rest of SELLO-021.

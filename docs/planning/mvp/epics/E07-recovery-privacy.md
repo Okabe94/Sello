@@ -198,7 +198,7 @@ preferences, with partial settings progress visibly recoverable until complete.
 Restore spans two stores, so a boolean success/failure hides committed-data versus
 pending-settings state. Use validated import plans from SELLO-028, document picker
 from SELLO-029 and generation/receipt/prefs contracts. Read architecture §§5/7,
-approved D09 and [recovery cases](../DECISION_INPUTS.md#recovery-cases-to-turn-into-tests).
+approved D09 and [recovery cases](../../../testing/mvp-financial-examples.md#recovery-contracts-to-instantiate-in-downstream-tests--d07d09).
 
 ### Implementation plan
 1. Add choose/read/private-stage/validate flow; persist owned staging ID/format/counts/

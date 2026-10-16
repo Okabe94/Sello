@@ -1,12 +1,10 @@
 # Financial storage
 
-**Owner:** SELLO-011 · Rules: [architecture](../../ARCHITECTURE.md) §§4, 5, 7.
+Rules: [architecture](../../ARCHITECTURE.md) §§4, 5, 7.
 
 One Room database, `sello.db`, in the app's private storage, is the only place
 financial facts live. Its schema is version 3; every version is exported to
-`data/schemas/com.software.sello.data.local.SelloDatabase/`. Version 2 (SELLO-019)
-added `deleted_expense` and version 3 (SELLO-021) `deleted_income`; neither changed
-anything an earlier version held.
+`data/schemas/com.software.sello.data.local.SelloDatabase/`.
 
 ## What is stored
 
@@ -24,7 +22,9 @@ anything an earlier version held.
 
 There are no recurrence, goal, investment, widget or capture tables, and no
 preference such as theme or category order: those are not financial and stay out
-of Room.
+of Room, in the DataStore file `sello-preferences` (`DataStoreUserPreferences`). A
+preference that cannot be read falls back to the last good value or the default and
+never touches financial data.
 
 - **Generation** starts at 1 and advances only when the whole history is replaced
   (restore or reset). **Revision** starts at 0 and advances with every committed
@@ -36,10 +36,9 @@ of Room.
   record is gone from `expense` or `income`, so no read or total can count it; the
   row exists only so the deletion can be
   [undone](commands.md#editing-deleting-and-undo). Across both tables there is at
-  most one row. A later deletion of either kind replaces it and opening storage
-  removes it
-  (`FinancialStorage.discardUndoCopies`, called by `openStorage`), because the time
-  to undo is counted in the process that deleted. Like a receipt they have no foreign
+  most one row. A later deletion of either kind replaces it, and opening storage
+  removes it (`FinancialStorage.discardUndoCopies`, called by `openStorage`), because
+  the time to undo is counted in the process that deleted. Like a receipt they have no foreign
   key. They are not part of a portable backup (SELLO-028), and a reset must erase
   them with the rest (SELLO-031).
 - A month with neither a `month_limit` nor an applicable `default_limit` is
@@ -67,6 +66,8 @@ of Room.
   `StorageFailure.Integrity(table, row, column)`. Nothing is defaulted, trimmed,
   clamped or skipped, and one damaged row fails the whole read. The failure carries
   no stored value, so it is safe to log.
+- **Commands** are the only way to change anything: each writes the record, the
+  revision and the receipt in one transaction ([commands](commands.md)).
 - Room cannot declare `CHECK` constraints. Value ranges are therefore enforced by
   the typed domain values on the way in and the mappers on the way out, not by
   hand-written triggers that the exported schema would not describe.
@@ -84,8 +85,8 @@ of Room.
 At startup `openStorage` (app `composition`) establishes the profile before the
 graph is built: the first start of an installation stores the device zone, and every
 later start reads the stored zone and ignores the device's. It then discards what
-an earlier process kept to undo a deletion. If either fails the
-storage is closed and the failure returned; the app never continues on the device
+an earlier process kept to undo a deletion. If either fails the storage is closed
+and the failure returned; the app never continues on the device
 zone or an empty database, and shows the failed start instead
 ([time and composition](time-and-composition.md#when-the-data-cannot-be-opened)).
 
@@ -98,11 +99,9 @@ undone and reported ([ADR 0008](../decisions/0008-unreadable-storage-start-over.
 ## Backups by the system are off
 
 `allowBackup` is false and both rule files exclude every storage domain from cloud
-backup and device transfer, so the database never leaves the device through
-Android. The only backup is the file a person saves themselves (SELLO-028).
-
-Changes are made only through [commands](commands.md), which write the record, the
-revision and the receipt in one transaction.
+backup and device transfer, so the database and the preferences never leave the
+device through Android. The intended backup is a file the person saves themselves;
+it does not exist yet.
 
 ## Changing the schema
 
@@ -116,4 +115,4 @@ revision and the receipt in one transaction.
 
 ## Not here yet
 
-- Restore and reset: SELLO-030, SELLO-031.
+- Backup files, restore and reset: SELLO-028 to SELLO-031.

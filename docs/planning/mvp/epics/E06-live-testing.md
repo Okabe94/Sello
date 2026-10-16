@@ -112,7 +112,7 @@ update in actual Recibo/Resumen; ordinary manual workflows still work.
 ### Context and starting points
 A seeded graph is useful only when it exercises the same writes/calculations as
 manual use. Inputs are real expense/income/summary ports and the isolated session
-from SELLO-024. Read [G01](../DECISION_INPUTS.md#exact-baseline-examples), architecture
+from SELLO-024. Read [G01](../../../testing/mvp-financial-examples.md#history-income-and-graph-reconciliation--d04d06), architecture
 §9 and recovery-case checklist; no recurrence port exists in MVP.
 
 ### Implementation plan

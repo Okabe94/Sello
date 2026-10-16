@@ -1,119 +1,106 @@
 # App shell, month session and navigation
 
 **Owner:** SELLO-015 · Rules: [architecture](../../ARCHITECTURE.md) §§2, 6 ·
-Design: [Sello v2](../design/v2/README.md) shells and [components](../design/v2/components.html) (delivered from v1.1 [structure and global behaviour](../design/sello-spec.html)).
+Design: [Sello v2](../design/v2/README.md) shells and [components](../design/v2/components.html).
 
 The frame every screen sits in, and the state that belongs to the whole app instead
-of to one screen. All of it is in `:app`, package `navigation`.
+of to one screen. All of it is in `:app`, package `navigation`; every route is listed
+in the [navigation graph](navigation-graph.md).
 
 ## What is on screen today
 
-`SelloAppRoot` hosts Recibo, the [category editor](category-editor.md) and
-[Anotar](expense-entry.md). On Recibo the title is the selected month and opens the
-month picker, and the dock records an expense. There is no tab bar, because one tab
-is not a choice: a tab is added when its screen works, by adding it to `ShellTab`
-and its route to `Routes.kt` (SELLO-022 for Resumen).
+The tab bar switches between Recibo and Resumen (`ShellTab`). On both, the title is
+the selected month and opens the month picker, and the dock records an expense.
+Recibo's settings action opens Configuración. Recibo and category detail are
+described in [Recibo and category detail](recibo-and-detail.md); the forms in
+[Anotar](expense-entry.md) and the [category editor](category-editor.md).
 
-Recibo and the detail of one of its categories are described in
-[Recibo and category detail](recibo-and-detail.md). Which category is open is the
-frame's own saved state (`ShellState.detailCategoryId`), next to the month and the
-picker, so it survives rotation and the process being killed.
+Which category is open is the frame's own saved state (`ShellState.detailCategoryId`),
+next to the month and the picker, so it survives rotation and the process being killed.
 
 ## The selected month
 
-`MonthSession` holds the one month Recibo, Resumen and category detail all show.
+`MonthSession` holds the one month every screen shows. A screen's view model observes
+`selectedMonth` and never keeps its own.
 
 - It follows the current financial month, or stays on an earlier month the person
   picked. A later month can never be selected.
 - After **more than 30 minutes** in the background it returns to the current month.
-  Exactly 30 minutes keeps the selection. Nothing else is reset: drafts and a
-  pending entry request are untouched.
-- Two clocks with separate jobs: `FinancialClock` says which month is current;
-  `MonotonicClock` measures time in the background. Moving financial time, real or
-  simulated, is not time away.
-- "Background" is the activity being stopped, reported by the root, so a dialog or
-  the keyboard over the app does not count.
-
-A screen's view model takes `MonthSession` and observes `selectedMonth`. It does not
-keep its own month.
+  Exactly 30 minutes keeps the selection. Drafts and a pending entry request are
+  untouched.
+- `FinancialClock` says which month is current; `MonotonicClock` measures time away.
+  Moving financial time, real or simulated, is not time away.
+- "Background" is the activity being stopped, so a dialog or the keyboard over the app
+  does not count.
 
 ## What survives rotation and the process being killed
 
 `ShellViewModel` saves small values in its `SavedStateHandle`: the picked month, the
-moment the app left the foreground, whether the month picker is open and on which
-year, and a pending entry request as an identifier and a number. On a new process
-these are read back through the same validation as any outside input. The 30-minute
-rule is applied with the saved moment, so being killed in the background neither
-loses the selection nor extends it.
-
-Rules for every screen: save identifiers and small drafts, never records; rebuild
-anything large from storage; an operation identifier is saved before its command is sent.
+moment the app left the foreground, whether the picker is open and on which year, and
+a pending entry request as an identifier and a number. On a new process these pass
+the same validation as any outside input. The 30-minute rule uses the saved moment,
+so being killed in the background neither loses the selection nor extends it. Other
+screens follow architecture §6.
 
 ## Back
 
 `backTarget` is the single order: an open sheet or side panel closes first, then a
-detail screen, then any other tab returns to Recibo, and Back on Recibo leaves the app.
+detail screen, then Resumen returns to Recibo, and Back on Recibo leaves the app.
 
 ## Windows
 
-`ShellScreen` uses the design system's `SelloScaffold`. The month picker is a bottom
-sheet, opened whole and scrollable so a large font or a short window cannot cut
-months off; in a window wide enough for a side panel it is a panel beside the content.
-The scaffold keeps content clear of the system bars and hides the dock and tab bar
-while the system keyboard is open.
+`ShellScreen` uses the design system's `SelloScaffold`, which keeps content clear of
+the system bars and hides the dock and tab bar while the keyboard is open. The month
+picker is a bottom sheet, opened whole and scrollable so a large font or short window
+cannot cut months off; in a window wide enough it is a side panel.
 
-At the right of the picker's title, "Mes actual" goes to the month the financial day
-is in from whatever year is being browsed (SELLO-059). It is always there, sends the
-same `PickMonth` as that month's cell with the state's own current month, and so
-follows a month that turns while the picker is open. A screen reader is told the
-destination, "Ir al mes actual: Octubre 2026". With a large font it goes under the
-title instead of being cut.
+"Mes actual", at the right of the picker's title, sends the same `PickMonth` as the
+current month's cell from whatever year is shown, so it follows a month that turns
+while the picker is open. A screen reader hears the destination, "Ir al mes actual:
+Octubre 2026". With a large font it goes under the title instead of being cut.
 
 ## What is said about a correction
 
 `ExpenseCorrections` (`presentation/corrections`) is one object for the whole process.
-It deletes an expense, undoes that, and holds the one notice the frame shows over the
-bottom of the content, above the dock:
+It deletes and undoes expenses and income, and holds the one notice shown above the
+dock on Recibo, Resumen, category detail and income history. Forms do not show it;
+leaving the form does.
 
 | Notice | Shown | Action |
 | --- | --- | --- |
-| "Gasto borrado" | Until the time to undo is over | "Deshacer" |
+| "Gasto borrado", "Ingreso borrado" | Until the time to undo is over | "Deshacer" |
 | "No se pudo deshacer. Inténtalo de nuevo." | The same, after an undo that failed | "Deshacer", the same operation again |
-| "Gasto restaurado", "Gasto actualizado" | Four seconds | none |
+| "Gasto restaurado", "Gasto actualizado", "Ingreso restaurado", "Ingreso actualizado" | Four seconds | none |
 | "Categoría actualizada", "Límite de septiembre actualizado. Sus cifras ya lo usan.", "Categoría archivada", "Categoría desarchivada" | Four seconds | none |
-| "Ya no se puede deshacer…", "No se pudo deshacer porque tus datos cambiaron…" | Four seconds | none |
+| "Ya no se puede deshacer…", "No se pudo deshacer porque tus datos cambiaron…", for either kind | Four seconds | none |
 
-- **The six seconds are not the screen's.** They belong to the
-  [commands](commands.md#the-six-seconds). This object only stops showing the offer
-  when the same monotonic clock says the time is over, and checks again when the app
-  comes back into view, because waiting does not advance while a device sleeps.
+- **The time to undo belongs to the [commands](commands.md#the-six-seconds).** The
+  notice drops the offer when the same monotonic clock says it is over, and checks
+  again when the app returns to view.
 - **Drawing again changes nothing.** Rotation, a resize or another screen in between
   show the same notice with the same time left. A process that ends has no notice.
-- **A deletion runs to its end** even if the screen that asked for it is gone, and is
-  then on offer all the same.
-- **Read aloud** as "Gasto borrado. Puedes deshacerlo durante 6 segundos.", and
-  announced when it appears.
-- It is shown on Recibo and a category's detail. The entry form does not show it;
-  leaving the form does.
+- **A deletion runs to its end** even if the screen that asked for it is gone.
+- **Read aloud** as "Gasto borrado. Puedes deshacerlo durante 6 segundos." (or
+  "Ingreso borrado. …"), announced when it appears.
+
+The approved [v2 save feedback](../design/v2/README.md) will change ordinary-save
+notices; it is not implemented yet.
 
 ## Routes and links
 
-- Routes are `@Serializable` objects in `Routes.kt` and carry identifiers only. A
-  route never carries an amount, a record or a result.
+- Routes are `@Serializable` objects in `Routes.kt` and carry identifiers only, never
+  an amount, a record or a result.
 - `EntryLinks` understands `sello://anotar?categoria=<identifier>&monto=<amount>`.
   A link is outside input: anything not exactly that shape is ignored, and each value
   must pass the same rules as typed input or it is dropped, never repaired.
 - The dock and a link both become `ShellState.pendingEntry`, a request to open the
-  entry form. The shell cannot save anything: it has no access to a command. It
-  checks whether a category can take an expense and sets `entryReady` or
-  `entryNeedsCategory`; the root navigates and reports `EntryTaken`. The form checks
-  the prefilled category and amount itself.
-- The manifest declares the link for apps on the device. It is not `BROWSABLE`, so
-  a web page cannot open it.
+  entry form. The shell has no access to a command and cannot save anything. It sets
+  `entryReady` or `entryNeedsCategory`; the root navigates and reports `EntryTaken`.
+  The form checks the prefilled category and amount itself.
+- The manifest link is not `BROWSABLE`, so only apps on the device can open it.
 
 ## View models
 
-`composition/PresentationModule.kt` builds every view model in one factory. Screens
-ask for a view model by type through that factory and never touch the dependency
-graph; Koin stays in `composition`. A root composable (`…Root`) owns the view model
-and lifecycle effects; the screen composable below it takes state and callbacks only.
+Screens get view models through the one factory in `composition`, described in
+[time and composition](time-and-composition.md). A `…Root` composable owns the view
+model and lifecycle effects; the screen below it takes state and callbacks only.

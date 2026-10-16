@@ -42,8 +42,8 @@ builds/launches. Missing approvals keep this ticket out of Done.
 ### Context and starting points
 The design contains sample amounts and legacy migration hints, not approved new
 financial policies. Without this task, separate actors will choose different pace,
-budget history and reset semantics. Read [decision inputs](../DECISION_INPUTS.md),
-[baseline](../BASELINE.md), architecture §§1/4/7/9 and the
+budget history and reset semantics. Read [ADR 0001](../../../decisions/0001-mvp-contract.md),
+architecture §§1/4/7/9 and the
 [local design](../../../design/sello-spec.html#build). No predecessor implementation exists.
 
 ### Implementation plan
@@ -438,7 +438,7 @@ assembly separately and arrange smoke evidence before concluding launch acceptan
 
 ### Context and starting points
 The scaffold currently builds, but its mixed versions, JDK daemon criteria and SDK
-targets have not been declared supported. Read [baseline](../BASELINE.md),
+targets have not been declared supported. Read
 [tool commands](../EXECUTION_GUIDE.md#tools-and-host-verification), the catalog,
 wrapper, `gradle.properties`, daemon criteria and `app/build.gradle.kts`.
 

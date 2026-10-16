@@ -1,8 +1,12 @@
 # Screen frame, categories and charts
 
-Contracts of the `:design-system` structure components (SELLO-009). They hold no state
-and no financial rule; the application supplies selection, the month, formatted exact
-amounts and every word.
+Contracts of the `:design-system` structure components. They hold no state and no
+financial rule; the application supplies selection, the month, formatted exact amounts
+and every word.
+
+The approved [Sello v2](../design/v2/README.md) adds a Metas tab and moves Anotar to a
+dock above the tabs; its [components](../design/v2/components.html) mark what exists,
+what is extended and what is new. None of that is implemented yet.
 
 ## Frame and navigation
 
@@ -21,21 +25,18 @@ amounts and every word.
   already clear the system bars; apply them inside each pane's own scroll container.
 - Two panes appear only when the app passes `secondaryPane`. Each pane scrolls alone.
 - **A short window is two panes however narrow, and each screen decides whether that
-  suits it** (owner decision, SELLO-052, 2026-10-11). There is deliberately no shared
-  minimum width:
+  suits it.** There is no shared minimum width:
   - Recibo beside a category's detail is two columns of reading, so the app shows
     them side by side only from 600dp (`showsDetailBeside`).
   - The expense form's second pane is the keypad, which works at about 160dp. In a
-    393×400dp window, half a phone's screen, two panes keep the amount, the category,
-    the keys and the button on screen
+    393×400dp window two panes keep the amount, category, keys and button on screen
     ([capture](../testing/evidence/SELLO-052/01-two-columns-393x400.png)); one column
-    there leaves only the keypad in view, with the amount and category out of sight
-    and the button cut off
+    hides the amount and cuts off the button
     ([capture](../testing/evidence/SELLO-052/02-one-column-393x400-rejected.png)).
   Do not give the form Recibo's 600dp rule. If a window too narrow for 48dp keys
   (under about 350dp wide and under 480dp tall) ever matters, it needs its own design,
   not the one-column layout.
-- `SelloNavigation` takes any list of destinations (two in the MVP) and reports every
+- `SelloNavigation` takes any list of destinations (two today) and reports every
   selection, including the current tab again; the app owns back stacks and what a
   reselect does. `SelloDock` is the same action for the dock and for the rail's "+".
 - `MonthSwitcher` is a title that reports a tap. `MonthGrid` draws the cells it is

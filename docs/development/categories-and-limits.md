@@ -25,7 +25,8 @@ is `Limited(limit, explicit)`, `Paused` or `Unconfigured`; a limit is `Finite`
 
 Nothing is created per month. A month nobody opened answers from the same history
 whenever it is read, so the answer cannot depend on when the app was running. There
-is no carryover: each month starts from its own limit.
+is no carryover in MVP: each month starts from its own limit. The post-MVP direction
+is [ADR 0002](../decisions/0002-signed-carryover-direction.md).
 
 ## Commands
 
@@ -40,7 +41,7 @@ change raises it by one. An edit against an older version is `VersionConflict`.
 | `RenameCategory` | Only the shown name; identity, expenses and limits stay | The name is taken by another category |
 | `ChangeCategoryIcon` | Only the icon | |
 | `SetDefaultLimit` | The limit from the current month onwards; a second change in the same month replaces the first | The category is archived |
-| `SetMonthLimit` | The limit of exactly that month, current or past | The month has not started |
+| `SetMonthLimit` | The limit of exactly that month, current or past | The month has not started, or cannot be stored and read back |
 | `ArchiveCategory` | No new expenses; this month keeps its limit; paused from next month | Already archived |
 | `UnarchiveCategory` | Same month: the pause is removed and nothing else changes. Later: the last default applies again from this month; the paused months stay paused | Not archived |
 
@@ -61,7 +62,4 @@ read at, all in one transaction. A damaged row fails the whole read.
 
 ## Not here yet
 
-- Combining limits with spending, and observing changes, is the
-  [monthly snapshot](monthly-snapshot.md).
-- Removing a month's own limit to fall back to the default: no screen needs it yet.
-- Carryover of surplus or overspending: post-MVP (SELLO-E09).
+Removing a month's own limit to fall back to the default: no screen needs it yet.

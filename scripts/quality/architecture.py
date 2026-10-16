@@ -36,13 +36,15 @@ from pathlib import Path
 
 NAMESPACE = "com.software.sello"
 # Top-level package segment owned by each library module; everything else belongs to :app.
-OWNERS = {"domain": "domain", "data": "data", "designsystem": "design-system", "catalog": "catalog"}
+OWNERS = {"domain": "domain", "data": "data", "designsystem": "design-system", "catalog": "catalog", "prototype": "prototype"}
 ALLOWED_EDGES = {
     "domain": set(),
     "data": {"domain"},
     "design-system": set(),
     "app": {"domain", "design-system", "data"},
     "catalog": {"design-system"},
+    # Throwaway navigable husk of the design reference; never merged or shipped.
+    "prototype": {"design-system"},
 }
 FORBIDDEN_IN_DOMAIN = re.compile(
     r"(?<![\w.])(android|androidx|com\.google\.android|org\.koin|javax\.inject|dagger|io\.ktor|okhttp3|retrofit2)\."

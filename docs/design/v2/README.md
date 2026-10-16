@@ -328,6 +328,23 @@ form, and "Marcar como completada" (Lograda is the word Metas already uses). For
 celebrations: one ticket everywhere, a centred milestone slip, a printed final receipt, a
 round seal (it cannot hold long names or amounts) and automatic completion at 100 %.
 
+### Owner review notes — 2026-10-15
+
+All four notes are now applied in the mockups (2026-10-16).
+
+- **Faded milestone stamp accepted:** after a withdrawal, keeping the past stamp
+  grayed out is consistent with the owner's intent. The current percentage and bar
+  stay honest; the faded stamp acknowledges a historical achievement, and the
+  contribution history stays.
+- **Deliberate completion acknowledgment:** **Marcar como lograda** is an earned moment
+  the person takes themselves, replacing the earlier automatic-only completion. The
+  transition and celebration sequence are specified under Celebrations above.
+- **Completed goals are read-only:** no edit action and no contribution or withdrawal
+  controls; the goal, its history and the celebratory revisit stay accessible. Deleting
+  is the only action. No reopening or correction workflow.
+- **No-goals dock:** with no goals, the dock is **Crear una meta**, never an invitation to
+  contribute before a goal exists.
+
 ## Changes to record in the decision documents
 
 These Home choices replace working wording in

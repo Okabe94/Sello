@@ -11,11 +11,15 @@ const SCENES = {
   // A withdrawal of 400.000 on 20 Oct takes the goal from 57 % to 43 %, below the 50 % stamp.
   // Owner decision K: an earned stamp stays (faded) after a withdrawal.
   keep:     { saved: 1310000, pct: 43, reached: [25], kept: [50], withdrawal: true },
-  done:     { saved: 3000000, pct: 100, reached: [25, 50, 75, 100], done: true },
+  // Vacunas de Luna: target 400.000, four aportes of 100.000; marked lograda on mar 30 sep.
+  done:     { saved: 400000, target: 400000, pct: 100, reached: [25, 50, 75, 100], done: true,
+              months: [["Jul", 100000], ["Ago", 100000], ["Sep", 200000]], max: 240000,
+              movs: [["in", "Aporte", "mar 30 sep", 100000], ["in", "Aporte", "lun 15 sep", 100000, "75 %"], ["in", "Aporte", "vie 15 ago", 100000, "50 %"], ["in", "Aporte", "mar 15 jul", 100000, "25 %"]] },
 };
 const WITHDRAWAL = ["out", "Retiro", "lun 20 oct", -400000, null, "Arreglo del carro"];
 
 function hero(s, o = {}) {
+  const target = s.target ?? GOAL.target;
   const places = [25, 50, 75, 100].map(p => {
     const cls = s.reached.includes(p) ? "done" : (s.kept || []).includes(p) ? "kept" : "";
     return `<span class="v1-place ${cls}">${p === 100 ? "Meta" : `${p} %`}</span>`;
@@ -25,33 +29,32 @@ function hero(s, o = {}) {
   const next = [25, 50, 75, 100].find(p => !s.reached.includes(p) && !(s.kept || []).includes(p));
   const nextLine = s.done
     ? `<p class="gd-next">${icon("check")}<span>Meta lograda el <b>30 sep</b>. Lo que guardaste sigue aquí.</span></p>`
-    : `<p class="gd-next">${icon("flag")}<span>Próximo sello: <b>${next === 100 ? "la meta" : `${next} %`}</b>, faltan <b>${fmt(GOAL.target * next / 100 - s.saved)}</b></span></p>`;
+    : `<p class="gd-next">${icon("flag")}<span>Próximo sello: <b>${next === 100 ? "la meta" : `${next} %`}</b>, faltan <b>${fmt(target * next / 100 - s.saved)}</b></span></p>`;
   const keptNote = s.kept ? `<p class="gd-next">${icon("check")}<span>El sello del 50 % sigue siendo tuyo: lo lograste en octubre.</span></p>` : "";
-  return `<section class="slip pinked"><div class="gd-head"><span class="label">Ya guardaste</span><b>${s.pct} %</b></div><div class="gd-saved">${money(s.saved)}</div><div class="gd-sub"><span>de ${fmt(GOAL.target)}</span><span>${s.done ? "" : `faltan ${fmt(GOAL.target - s.saved)}`}</span></div><span class="v1-track" aria-hidden="true"><i style="width:${s.pct}%"></i></span><div class="tear" aria-hidden="true"></div><div class="gd-stamps-head"><b>Sellos</b><span class="caption">${stamps} de 4</span></div><span class="v1-places">${places}</span>${keptNote}${nextLine}</section>`;
+  return `<section class="slip pinked"><div class="gd-head"><span class="label">Ya guardaste</span><b>${s.pct} %</b></div><div class="gd-saved">${money(s.saved)}</div><div class="gd-sub"><span>de ${fmt(target)}</span><span>${s.done ? "" : `faltan ${fmt(target - s.saved)}`}</span></div><span class="v1-track" aria-hidden="true"><i style="width:${s.pct}%"></i></span><div class="tear" aria-hidden="true"></div><div class="gd-stamps-head"><b>Sellos</b><span class="caption">${stamps} de 4</span></div><span class="v1-places">${places}</span>${keptNote}${nextLine}</section>`;
 }
 
 // "Show on Recibo": a small star pill in the band, under the goal's name (owner pick Q3).
 const bandPill = on => `<div class="band-pin"><button class="pin-band ${on ? "on" : ""}" aria-pressed="${on}">${icon(on ? "star" : "star_outline")}${on ? "En tu Recibo" : "Mostrar en Recibo"}</button></div>`;
-const danger = `<section class="slip danger"><h2>Borrar esta meta</h2><p>Se borran la meta y sus <b>6 movimientos</b>. Esto no se puede deshacer.</p><button class="outline-btn loss wide">Borrar meta</button></section>`;
+const danger = n => `<section class="slip danger"><h2>Borrar esta meta</h2><p>Se borran la meta y sus <b>${n} movimientos</b>. Esto no se puede deshacer.</p><button class="outline-btn loss wide">Borrar meta</button></section>`;
 const facts = (s, o = {}) => `<section class="slip"><div class="leader"><span>Meta</span><i class="dots"></i><b>${money(GOAL.target)}</b></div><div class="leader"><span>Fecha objetivo</span><i class="dots"></i><b>${GOAL.date}</b></div><div class="leader"><span>Desde</span><i class="dots"></i><b>${GOAL.since}</b></div></section>`;
 
-function chart() {
-  const max = 420000;
-  const cols = MONTHS.map(([m, n], i) => `<button class="col ${i === MONTHS.length - 1 ? "now" : ""}" aria-label="${m}: ${fmt(n)} pesos">${i === MONTHS.length - 1 ? `<span class="v">${Math.round(n / 1000)} mil</span>` : ""}<span class="b" style="height:${100 * n / max}%"></span></button>`).join("");
-  return `<section class="slip"><h2 class="q">Aportes por mes</h2><div class="chart" style="height:120px">${cols}</div><div class="axis">${MONTHS.map(([m], i) => `<span class="${i === MONTHS.length - 1 ? "now" : ""}">${m}</span>`).join("")}</div></section>`;
+function chart(months = MONTHS, max = 420000) {
+  const cols = months.map(([m, n], i) => `<button class="col ${i === months.length - 1 ? "now" : ""}" aria-label="${m}: ${fmt(n)} pesos">${i === months.length - 1 ? `<span class="v">${Math.round(n / 1000)} mil</span>` : ""}<span class="b" style="height:${100 * n / max}%"></span></button>`).join("");
+  return `<section class="slip"><h2 class="q">Aportes por mes</h2><div class="chart" style="height:120px">${cols}</div><div class="axis">${months.map(([m], i) => `<span class="${i === months.length - 1 ? "now" : ""}">${m}</span>`).join("")}</div></section>`;
 }
 
 // Milestones in the movement list (owner pick MR2): the contribution that earned a stamp shows
 // the stamp in place of its + icon, with "Ganaste el sello del 50 %".
 function movements(s, o = {}) {
-  const list = s.withdrawal ? [WITHDRAWAL, ...SCENES.normal.movs.slice(0, 3)] : SCENES.normal.movs;
+  const list = s.withdrawal ? [WITHDRAWAL, ...SCENES.normal.movs.slice(0, 3)] : s.movs ?? SCENES.normal.movs;
   const rows = list.map(([dir, kind, date, n, stamp, note], i) => {
     const last = i === list.length - 1 ? "last" : "";
     const mark = stamp ? `<span class="mi mi-stamp">${stamp.replace(" ", "")}</span>` : `<span class="mi">${icon(dir === "out" ? "arrow_back" : "add")}</span>`;
     const sub = stamp ? `<small class="ms-line">Ganaste el sello del ${stamp}</small>` : "";
     return `<div class="mov-row ${dir === "out" ? "out" : ""} ${last}">${mark}<span><b>${kind}</b><small>${date}${note ? ` · ${note}` : ""}</small>${sub}</span><b>${dir === "out" ? "−" : "+"}${fmt(Math.abs(n))}</b></div>`;
   }).join("");
-  return `<section class="slip"><div class="mov-head"><h2 class="q" style="margin:0">Movimientos</h2>${s.done ? "" : `<button class="text-btn">Retirar dinero</button>`}</div>${rows}<button class="text-btn">Ver los ${s.withdrawal ? 7 : 6}${icon("chevron_right")}</button></section>`;
+  return `<section class="slip"><div class="mov-head"><h2 class="q" style="margin:0">Movimientos</h2>${s.done ? "" : `<button class="text-btn">Retirar dinero</button>`}</div>${rows}<button class="text-btn">Ver los ${s.withdrawal ? 7 : s.done ? s.movs.length : 6}${icon("chevron_right")}</button></section>`;
 }
 
 function body(scene, { state } = {}, o = {}) {
@@ -59,7 +62,7 @@ function body(scene, { state } = {}, o = {}) {
   if (state === "failed") return `<section class="slip empty">${icon("error")}<h2>No pudimos leer esta meta</h2><p>Tus registros siguen guardados. Vuelve a intentarlo.</p><button class="outline-btn">Reintentar</button></section>`;
   const s = SCENES[scene];
   // A completed goal is read-only: no edit, no Aportar or Retirar; deleting is its only action.
-  return hero(s, o) + (s.done ? "" : facts(s, o)) + chart() + movements(s, o) + (s.done ? danger : "");
+  return hero(s, o) + (s.done ? "" : facts(s, o)) + chart(s.months, s.max) + movements(s, o) + (s.done ? danger(s.movs.length) : "");
 }
 
 const frame = (o, html, { tall = false, done = false, title = GOAL.name, featured = true, pin = true } = {}) => `<div class="phone ${tall ? "tall" : ""}"><div class="app" data-ink="${o.ink}" data-theme="${o.theme}">${subShell({ title, body: html, active: 2, dock: done ? "" : "Aportar a esta meta", dockClass: "goal", action: done ? undefined : ["edit_note", "Editar meta"], band: done || !pin ? "" : bandPill(featured) })}</div></div>`;

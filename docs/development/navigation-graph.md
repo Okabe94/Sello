@@ -1,13 +1,14 @@
 # Current navigation graph
 
-**Snapshot:** 2026-10-14 · product tree `f25855f`, merged to `main` as
-`8ae3d17` by PR #46.
+**Describes the app at:** `8ae3d17`.
 
 This is a visual inventory of the navigation implemented by
 [`SelloAppRoot`](../../app/src/main/java/com/software/sello/navigation/SelloApp.kt)
 and [`Routes.kt`](../../app/src/main/java/com/software/sello/navigation/Routes.kt).
 It is a current-state reference for UI/UX work, not a proposed graph. Update this
 file when a destination, entry point, Back rule or screen-level composable changes.
+The approved [Sello v2](../design/v2/README.md) redesign will change this graph; it is
+not implemented yet.
 
 ## How to read the graph
 
@@ -74,9 +75,8 @@ mode. Switching mode only changes `rememberSaveable` state inside that host. It 
 not navigate to the other typed route. Expense and income edit routes bypass the
 switch and open their corresponding form directly.
 
-The month picker is another global state surface rather than a route. On every shell
-destination, `ShellState.monthPickerOpen` shows `MonthPicker` as a bottom sheet or a
-wide-window side panel. Back closes it before any detail or route is left.
+The month picker is shell state (`ShellState.monthPickerOpen`), not a route; its
+placement and Back order are in the [app shell](app-shell.md).
 
 ## Destination and composable map
 

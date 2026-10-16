@@ -655,3 +655,21 @@ svg.icon{width:1.72em;height:1.72em;fill:currentColor;flex:none;vertical-align:m
 .inv-ident .icon-choice[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .chips.one-row{grid-template-rows:auto}
 .text-btn.inline{min-height:32px;padding:0;font-size:1em}
+
+/* ---------- Review page: component catalog (not part of the app) ---------- */
+.cmp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.cmp{background:#fff;border:1px solid #dfe4f2;border-radius:14px;padding:14px;display:flex;flex-direction:column}
+.cmp-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cmp-head h3{margin:0;font-size:15px;font-weight:800}
+.cmp-status{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
+.cmp-status.exists{background:#dff3ea;color:#0a6b4a}.cmp-status.extend{background:#fff1d6;color:#8a5a00}.cmp-status.new{background:#dce2ff;color:#1f3be0}
+.cmp-code{margin:4px 0 0;font-size:12px;color:#566287}
+.cmp-note{margin:6px 0 0;font-size:12.5px;color:#434e72;line-height:1.45}
+.cmp-used{margin:4px 0 10px;font-size:12px;color:#566287}
+.app.cmp-stage{display:block;height:auto;padding:14px;border-radius:12px;margin-top:auto}
+.app.cmp-stage .slip:last-child{margin-bottom:0}
+.review>.section .cmp-stage .confirm h2{font-size:1.4em;margin:0 0 8px}
+.cmp-sws{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.cmp-sw{display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;font-size:.9em}
+.cmp-sw i{grid-row:span 2;width:28px;height:28px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.cmp-sw small{color:var(--soft);font-size:.8em}

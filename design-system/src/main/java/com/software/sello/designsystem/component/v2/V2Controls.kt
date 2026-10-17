@@ -56,6 +56,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
@@ -75,6 +76,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ButtonTone
 import com.software.sello.designsystem.component.IconChoice
+import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloNavigation
 import com.software.sello.designsystem.icon.SelloIcon
@@ -201,6 +203,86 @@ fun V2MonthBar(
         }
         Spacer(Modifier.weight(1f))
         CompositionLocalProvider(LocalContentColor provides colors.onBand) { actions() }
+    }
+}
+
+/**
+ * A tab's top bar on the band when it has a title instead of a month, as on Metas and
+ * Inversiones: the [title] as a heading, and [actions] (add, settings) as round 48dp
+ * icon buttons at the trailing edge.
+ */
+@Composable
+fun V2TitleBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    val colors = SelloTheme.colors
+    Row(
+        modifier.fillMaxWidth().background(colors.band).heightIn(min = 56.dp)
+            .padding(start = 16.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            title,
+            Modifier.weight(1f).semantics { heading() },
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontSize = if (LocalDensity.current.fontScale >= 1.3f) 19.sp else 24.sp,
+                fontWeight = FontWeight.W800,
+                letterSpacing = (-0.02).em
+            ),
+            color = colors.onBand
+        )
+        CompositionLocalProvider(LocalContentColor provides colors.onBand) { actions() }
+    }
+}
+
+/**
+ * The total that sits on the band under Metas' title: what is saved across active goals
+ * and, under it, what came in this month after a small gain plus. Display only; the
+ * caller formats [change] and supplies the exact [amount].
+ */
+@Composable
+fun GoalsBandTotal(
+    label: String,
+    amount: MoneyTextValue,
+    change: String,
+    modifier: Modifier = Modifier
+) {
+    val colors = SelloTheme.colors
+    Column(
+        modifier.fillMaxWidth().background(colors.band)
+            .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            label,
+            color = colors.onBand.copy(alpha = 0.85f),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        FittedMoneyText(amount, color = colors.onBand, startSize = 42)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Box(
+                Modifier.size(18.dp).background(colors.semantic.gain, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    SelloIcon.Add.painter(),
+                    null,
+                    Modifier.size(14.dp),
+                    tint = colors.semantic.onGain
+                )
+            }
+            Text(
+                change,
+                color = colors.onBand,
+                fontWeight = FontWeight.W700,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 

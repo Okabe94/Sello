@@ -41,6 +41,7 @@ import com.software.sello.catalog.foundations.MotionExample
 import com.software.sello.catalog.foundations.ShapeSpacingExample
 import com.software.sello.catalog.foundations.TypographyExample
 import com.software.sello.catalog.v2.v2CatalogExamples
+import com.software.sello.catalog.v2.v2ScreenExamples
 
 /** Component types, in the order the catalog home lists them. */
 enum class CatalogGroup(val id: String, @StringRes val title: Int) {
@@ -53,7 +54,8 @@ enum class CatalogGroup(val id: String, @StringRes val title: Int) {
     Navigation("navigation", R.string.catalog_group_navigation),
     Charts("charts", R.string.catalog_group_charts),
     Feedback("feedback", R.string.catalog_group_feedback),
-    V2("v2", R.string.catalog_group_v2)
+    V2("v2", R.string.catalog_group_v2),
+    V2Screens("v2-screens", R.string.catalog_group_v2_screens)
 }
 
 /**
@@ -261,4 +263,4 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Feedback,
         R.string.catalog_example_slip_skeleton
     ) { SlipSkeletonExample() }
-) + v2CatalogExamples
+) + v2CatalogExamples + v2ScreenExamples

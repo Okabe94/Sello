@@ -21,7 +21,18 @@ class V2CatalogContractTest {
 
     @Test
     fun existingExamplesRemainAvailableAlongsideV2() {
-        assertEquals(38, catalogExamples.count { it.group.id != "v2" })
+        assertEquals(38, catalogExamples.count { !it.group.id.startsWith("v2") })
         assertTrue(catalogExamples.any { it.id == "inputs.expense-entry" })
+    }
+
+    @Test
+    fun v2ScreensSectionMirrorsTheEvidenceScreensInFull() {
+        val screens = catalogExamples.filter { it.group.id == "v2-screens" }
+        assertEquals(
+            listOf("recibo", "metas", "inversiones", "celebration", "metas-undo")
+                .map { "v2-screens.$it" },
+            screens.map { it.id }
+        )
+        assertTrue(screens.all { it.fullBleed })
     }
 }

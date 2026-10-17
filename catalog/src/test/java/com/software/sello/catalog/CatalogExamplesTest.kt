@@ -49,7 +49,7 @@ class CatalogExamplesTest {
                 "feedback.notice",
                 "feedback.slip-skeleton"
             ),
-            catalogExamples.filter { it.group != CatalogGroup.V2 }.map { it.id }
+            catalogExamples.filter { !it.group.id.startsWith("v2") }.map { it.id }
         )
     }
 
@@ -67,7 +67,7 @@ class CatalogExamplesTest {
         assertEquals(
             listOf(
                 "foundations", "paper", "stamps", "money", "categories",
-                "inputs", "navigation", "charts", "feedback", "v2"
+                "inputs", "navigation", "charts", "feedback", "v2", "v2-screens"
             ),
             CatalogGroup.entries.map { it.id }
         )

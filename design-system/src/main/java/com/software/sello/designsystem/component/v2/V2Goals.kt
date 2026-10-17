@@ -33,16 +33,19 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -402,6 +405,10 @@ fun MovementRow(
     }
 }
 
+/**
+ * A signed return on one line: the arrow, the [percentage] large and the [amount] in
+ * words smaller, all in gain or loss ink. The amount wraps on its own at large text.
+ */
 @Composable
 fun PerformanceLine(
     percentage: String,
@@ -413,20 +420,49 @@ fun PerformanceLine(
     Row(
         modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(
             (if (loss) SelloIcon.TrendingDown else SelloIcon.TrendingUp).painter(),
             null,
+            Modifier.size(26.dp),
             tint = ink
         )
-        Column {
-            Text(percentage, fontWeight = FontWeight.W800, color = ink)
-            Text(amount, color = ink)
-        }
+        Text(
+            percentage,
+            color = ink,
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.W900
+            )
+        )
+        Text(
+            amount,
+            Modifier.weight(1f, fill = false),
+            color = ink,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.W800)
+        )
     }
 }
 
+private val ShadeMix = listOf(1f, 0.68f, 0.42f, 0.22f)
+
+/**
+ * The brand mixed into paper for the [rank]-th largest investment, from 0: the circle
+ * in its row and its share of the split bar use the same shade.
+ */
+@Composable
+fun investmentShade(rank: Int): Color {
+    val colors = SelloTheme.colors
+    return lerp(colors.paper, colors.brand, ShadeMix[rank.coerceIn(0, ShadeMix.lastIndex)])
+}
+
+/**
+ * One investment in the overview: a [shade] circle with its icon, the name over its
+ * kind and valuation date, and on the right the value over its signed change. Without a
+ * value the circle is dashed and [missingLabel] and [secondary] read plainly. [divider]
+ * rules it off from the next row.
+ */
 @Composable
 fun InvestmentRow(
     name: String,
@@ -437,38 +473,92 @@ fun InvestmentRow(
     missingLabel: String,
     secondary: String,
     onOpen: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loss: Boolean = false,
+    divider: Boolean = true
 ) {
+    val colors = SelloTheme.colors
     Row(
-        modifier.fillMaxWidth().heightIn(
-            min = 64.dp
-        ).clickable(role = Role.Button, onClick = onOpen).padding(vertical = 8.dp),
+        modifier
+            .fillMaxWidth()
+            .heightIn(min = 60.dp)
+            .drawBehind {
+                if (divider) {
+                    val line = 1.dp.toPx()
+                    drawLine(
+                        colors.rule,
+                        Offset(0f, size.height - line / 2),
+                        Offset(size.width, size.height - line / 2),
+                        line
+                    )
+                }
+            }
+            .clickable(role = Role.Button, onClick = onOpen)
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
-            Modifier.size(40.dp).background(shade, CircleShape),
+            Modifier.size(36.dp).then(
+                if (value == null) {
+                    Modifier.border(2.dp, colors.outline, CircleShape)
+                } else {
+                    Modifier.background(shade, CircleShape)
+                }
+            ),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon.painter(), null, tint = SelloTheme.colors.paper)
+            Icon(
+                icon.painter(),
+                null,
+                Modifier.size(20.dp),
+                tint = if (value == null) colors.inkSoft else colors.paper
+            )
         }
-        Column(Modifier.weight(1f)) {
-            Text(name, fontWeight = FontWeight.W800)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(name, fontWeight = FontWeight.W800, style = MaterialTheme.typography.bodyLarge)
             Text(
                 detail,
-                style = MaterialTheme.typography.labelSmall,
-                color = SelloTheme.colors.inkSoft
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.inkSoft,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
-            if (value ==
-                null
-            ) {
-                Text(missingLabel, fontWeight = FontWeight.W800)
-            } else {
-                MoneyText(value)
-            }
-            Text(secondary, style = MaterialTheme.typography.labelSmall)
         }
-        Icon(SelloIcon.ChevronRight.painter(), null, tint = SelloTheme.colors.outline)
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            if (value == null) {
+                Text(missingLabel, fontWeight = FontWeight.W800, color = colors.inkSoft)
+                Text(secondary, style = MaterialTheme.typography.bodySmall, color = colors.inkSoft)
+            } else {
+                MoneyText(
+                    value,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.W800
+                    )
+                )
+                val ink = if (loss) colors.semantic.loss else colors.semantic.gain
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Icon(
+                        (if (loss) SelloIcon.TrendingDown else SelloIcon.TrendingUp).painter(),
+                        null,
+                        Modifier.size(16.dp),
+                        tint = ink
+                    )
+                    Text(
+                        secondary,
+                        color = ink,
+                        fontWeight = FontWeight.W800,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -50,6 +50,7 @@ import com.software.sello.designsystem.component.v2.RecordedMark
 import com.software.sello.designsystem.component.v2.RecordedValuesChart
 import com.software.sello.designsystem.component.v2.SplitBar
 import com.software.sello.designsystem.component.v2.SplitSegment
+import com.software.sello.designsystem.component.v2.investmentShade
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
 
@@ -295,12 +296,12 @@ fun V2InvestmentsExample() {
                     SplitSegment(
                         0.7f,
                         strings.getString(R.string.v2_demo_parqueadero_19_000_000_pesos),
-                        colors.brand
+                        investmentShade(0)
                     ),
                     SplitSegment(
                         0.3f,
                         strings.getString(R.string.v2_demo_fondo_8_000_000_pesos),
-                        colors.brand.copy(alpha = 0.6f)
+                        investmentShade(1)
                     )
                 )
             )
@@ -308,7 +309,7 @@ fun V2InvestmentsExample() {
                 "Parqueadero",
                 strings.getString(R.string.v2_demo_finca_raiz_valor_del_12_jun),
                 SelloIcon.Home,
-                colors.brand,
+                investmentShade(0),
                 copFixture(
                     19_000_000
                 ),
@@ -334,7 +335,8 @@ fun V2InvestmentsExample() {
                 {
                     result =
                         "Cripto"
-                }
+                },
+                divider = false
             )
         }
         Caption(strings.getString(R.string.v2_demo_sin_valor_se_omite_de_la_barra))

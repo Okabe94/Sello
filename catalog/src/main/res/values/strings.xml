@@ -73,6 +73,12 @@
     <string name="catalog_motion_full">Full</string>
     <string name="catalog_motion_reduced">Reduced</string>
     <string name="catalog_group_v2">V2</string>
+    <string name="catalog_group_v2_screens">V2 screens</string>
+    <string name="v2_screen_recibo">Recibo · Default, a payment is reserved</string>
+    <string name="v2_screen_metas">Metas · Goal list</string>
+    <string name="v2_screen_inversiones">Inversiones · Overview</string>
+    <string name="v2_screen_celebration">Celebration · Lograda (live)</string>
+    <string name="v2_screen_metas_undo">Metas · After Listo, Deshacer</string>
     <string name="catalog_window_narrow">Narrow 320</string>
     <string name="v2_entry">Inputs · Expense and income entry</string>
     <string name="v2_amount">Inputs · Amount sizing and limits</string>

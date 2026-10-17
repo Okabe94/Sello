@@ -49,6 +49,19 @@ The new Material Symbols Rounded vectors come from the official Google Fonts
 `fonts.gstatic.com` endpoints recorded in each drawable. The existing Apache 2.0
 Material Symbols license covers them; no dependency/toolchain update is needed.
 
+## V2 screens
+
+The **V2 screens** group shows whole screens from
+[the evidence](../design/v2/evidence) for comparison: Recibo (a payment reserved), Metas,
+Inversiones, the Lograda celebration and Metas after Listo with Deshacer. They are put
+together only from existing components with synthetic data. The two pieces the
+evidence needed that had no composable, `V2TitleBar` (a tab title with actions on the
+band) and `GoalsBandTotal` (Guardado en metas), now exist in `:design-system`.
+`PerformanceLine` keeps the arrow, percentage and amount on one line, and
+`InvestmentRow` follows the reference: a brand-into-paper `investmentShade` circle, the
+value over its signed change on the right, and rules between rows. `components.jpg` is
+the component reference itself, so it has no screen here.
+
 ## Verification
 
 The registry contract first failed because the V2 section was absent. A device test

@@ -41,3 +41,15 @@ val v2CatalogExamples = listOf(
     example("states", R.string.v2_states) { V2StatesExample() },
     example("foundations", R.string.v2_foundations) { V2FoundationsExample() }
 )
+
+private fun screen(id: String, title: Int, content: @Composable () -> Unit) =
+    CatalogExample("v2-screens.$id", CatalogGroup.V2Screens, title, fullBleed = true, content)
+
+/** The evidence screens in full, built from existing components for comparison. */
+val v2ScreenExamples = listOf(
+    screen("recibo", R.string.v2_screen_recibo) { V2ReciboScreen() },
+    screen("metas", R.string.v2_screen_metas) { V2MetasScreen() },
+    screen("inversiones", R.string.v2_screen_inversiones) { V2InversionesScreen() },
+    screen("celebration", R.string.v2_screen_celebration) { V2CelebrationScreen() },
+    screen("metas-undo", R.string.v2_screen_metas_undo) { V2MetasUndoScreen() }
+)

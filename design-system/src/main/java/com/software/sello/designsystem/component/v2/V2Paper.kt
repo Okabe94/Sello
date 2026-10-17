@@ -228,6 +228,7 @@ fun EntryAmountSlip(
 
 /**
  * Keeps the amount, action and pad stable; choices scroll independently in either layout.
+ * A portrait window too short for that scrolls the amount with the choices instead.
  *
  * The entry's only text input is the docked [NoteComposer], whose keyboard covers this
  * screen. A host that pads for that keyboard would otherwise squeeze the entry or flip it
@@ -306,7 +307,7 @@ private fun EntryPanes(
                 }
             }
         }
-    } else {
+    } else if (availableHeight >= PinnedAmountMinHeight) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             header()
             amount()
@@ -319,8 +320,29 @@ private fun EntryPanes(
             action()
             keypad()
         }
+    } else {
+        // Too short to pin the amount and still leave two rows of choices: the header,
+        // amount and choices scroll together; the action and pad stay put.
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                header()
+                amount()
+                choices()
+            }
+            action()
+            keypad()
+        }
     }
 }
+
+/**
+ * The shortest portrait window that pins the switch, amount, action and pad (about
+ * 490dp) and still leaves two rows of chips (about 110dp) visible between them.
+ */
+private val PinnedAmountMinHeight = 600.dp
 
 @Composable
 fun AnswerSlip(

@@ -21,6 +21,13 @@ class V2CatalogInteractionTest {
     @get:Rule
     val rule = createAndroidComposeRule<CatalogActivity>()
 
+    // A chip sits in its strip's sideways scroll inside the entry's vertical one, and
+    // performScrollTo moves only the closest: bring the strip into view, then the chip.
+    private fun tapChip(strip: String, chip: String) {
+        rule.onNodeWithTag(strip).performScrollTo()
+        rule.onNodeWithTag(chip).performScrollTo().performClick()
+    }
+
     @Test
     fun v2EntryOpensFromItsOwnSection() {
         rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
@@ -42,7 +49,7 @@ class V2CatalogInteractionTest {
     @Test
     fun expenseNoteSheetNamesItsEntryAndMarksTheNoteOptional() {
         rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        rule.onNodeWithTag("v2:entry:choice:1").performScrollTo().performClick()
+        tapChip("v2:entry:choices", "v2:entry:choice:1")
         rule.onNodeWithTag("v2:entry:note").performScrollTo().performClick()
         rule.onNodeWithText("Gasto en Comida", substring = true).assertExists()
         rule.onNodeWithText("Opcional").assertExists()
@@ -53,7 +60,7 @@ class V2CatalogInteractionTest {
     fun otherSourceIsAFullWidthLineWithAChangeAction() {
         rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
         rule.onNodeWithText("Ingreso").performClick()
-        rule.onNodeWithTag("v2:entry:choice:4").performScrollTo().performClick()
+        tapChip("v2:entry:choices", "v2:entry:choice:4")
         rule.onNodeWithTag("v2:entry:source").performScrollTo().performClick()
         rule.onNode(hasSetTextAction()).performTextInput("Venta de la bicicleta")
         rule.onNodeWithContentDescription("Listo").performClick()
@@ -67,7 +74,7 @@ class V2CatalogInteractionTest {
     @Test
     fun unknownOutcomeOffersCheckingAndLocksTheKeypad() {
         rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        rule.onNodeWithTag("v2:entry:state:3").performScrollTo().performClick()
+        tapChip("v2:entry:states", "v2:entry:state:3")
         rule.onNodeWithTag(
             "v2:entry:submit"
         ).assertTextContains("Comprobar si se guardó").assertIsEnabled()
@@ -77,7 +84,7 @@ class V2CatalogInteractionTest {
     @Test
     fun restoredDraftSurvivesRecreationWithoutSubmitting() {
         rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        rule.onNodeWithTag("v2:entry:state:4").performScrollTo().performClick()
+        tapChip("v2:entry:states", "v2:entry:state:4")
         rule.activityRule.scenario.recreate()
         rule.onNodeWithText("Almuerzo").assertExists()
         rule.onNodeWithTag("v2:entry:submit").assertIsEnabled()

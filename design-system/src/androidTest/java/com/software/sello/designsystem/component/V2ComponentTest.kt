@@ -143,7 +143,8 @@ class V2ComponentTest {
             val button = rule.onNodeWithContentDescription(
                 "Octubre 2026"
             ).getUnclippedBoundsInRoot()
-            assertTrue(button.right - button.left < (bar.right - bar.left) / 2)
+            // Two 48dp actions still fit beside the month button on the narrowest bar.
+            assertTrue(button.right - button.left <= (bar.right - bar.left) - 96.dp)
         }
     }
 

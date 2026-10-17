@@ -167,7 +167,7 @@ fun V2EntryExample() {
             )
         },
         choices = {
-            V2ChipRows(names.size) { index ->
+            V2ChipRows(names.size, Modifier.testTag("v2:entry:choices")) { index ->
                 SelloChip(
                     names[index],
                     choice == index,

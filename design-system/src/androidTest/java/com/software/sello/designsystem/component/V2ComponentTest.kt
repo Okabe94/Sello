@@ -28,7 +28,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
+import com.software.sello.designsystem.component.v2.CompletedGoalRow
 import com.software.sello.designsystem.component.v2.FittedMoneyText
+import com.software.sello.designsystem.component.v2.GoalCard
 import com.software.sello.designsystem.component.v2.MilestonePlace
 import com.software.sello.designsystem.component.v2.MilestoneSpec
 import com.software.sello.designsystem.component.v2.MilestoneState
@@ -36,6 +38,7 @@ import com.software.sello.designsystem.component.v2.NoteComposer
 import com.software.sello.designsystem.component.v2.PastMonthRibbon
 import com.software.sello.designsystem.component.v2.V2ChipRows
 import com.software.sello.designsystem.component.v2.V2EntryLayout
+import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.component.v2.V2NavigationBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
@@ -100,9 +103,40 @@ class V2ComponentTest {
         }) {
             val button = rule.onNodeWithText("Volver a noviembre")
             button.assertIsDisplayed().performClick()
-            assertTrue(button.getUnclippedBoundsInRoot().height >= 48.dp)
+            val node = button.fetchSemanticsNode()
+            assertTrue(
+                with(node.layoutInfo.density) {
+                    node.touchBoundsInRoot.height.toDp()
+                } >= 47.9.dp
+            )
         }
         assertEquals(4, returns)
+    }
+
+    @Test
+    fun ribbonKeepsItsReturnButtonOnTheMessagesLine() {
+        rule.inEveryScheme(content = {
+            PastMonthRibbon(AnnotatedString("Estás viendo septiembre"), "Volver a octubre", {})
+        }) {
+            val message = rule.onNodeWithText("Estás viendo septiembre").getUnclippedBoundsInRoot()
+            val button = rule.onNodeWithText("Volver a octubre").getUnclippedBoundsInRoot()
+            val middle = (button.top + button.bottom) / 2
+            assertTrue(middle > message.top && middle < message.bottom)
+            assertTrue(button.left > message.right)
+        }
+    }
+
+    @Test
+    fun monthBarButtonHugsTheMonthAndLeavesRoomForActions() {
+        rule.inEveryScheme(content = {
+            V2MonthBar("Octubre", "2026", {}, Modifier.testTag("bar"))
+        }) {
+            val bar = rule.onNodeWithTag("bar").getUnclippedBoundsInRoot()
+            val button = rule.onNodeWithContentDescription(
+                "Octubre 2026"
+            ).getUnclippedBoundsInRoot()
+            assertTrue(button.right - button.left < (bar.right - bar.left) / 2)
+        }
     }
 
     @Test
@@ -239,6 +273,57 @@ class V2ComponentTest {
             assertEquals(before, amount.getUnclippedBoundsInRoot().top)
             assertEquals(padBefore, rule.onNodeWithTag("pad").getUnclippedBoundsInRoot().top)
             rule.onNodeWithTag("action").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun completedGoalRowCarriesItsStampOnTheRight() {
+        rule.inEveryScheme(content = {
+            CompletedGoalRow("Vacunas de Luna", "400.000, 30 sep", SelloIcon.Pets, "Lograda", {})
+        }) {
+            val name = rule.onNodeWithText(
+                "Vacunas de Luna",
+                useUnmergedTree = true
+            ).getUnclippedBoundsInRoot()
+            val stamp = rule.onNodeWithContentDescription(
+                "Lograda",
+                useUnmergedTree = true
+            ).getUnclippedBoundsInRoot()
+            assertTrue(stamp.left > name.right)
+            assertTrue(stamp.top < name.bottom)
+        }
+    }
+
+    @Test
+    fun activeGoalCardPutsTheDateBesideTheTargetAndSpreadsItsPlaces() {
+        val places = listOf("25 %", "50 %", "75 %", "Meta").map {
+            MilestoneSpec(it, "$it, por alcanzar", MilestoneState.Empty)
+        }
+        rule.inEveryScheme(content = {
+            GoalCard(
+                "Curso de inglés", SelloIcon.School, "15 %",
+                MoneyTextValue(MoneySign.None, "", "300.000", "300.000 pesos"),
+                "de 2.000.000", "jun 2027", 0.15f, places, {}, Modifier.testTag("card")
+            )
+        }) {
+            val target = rule.onNodeWithText(
+                "de 2.000.000",
+                useUnmergedTree = true
+            ).getUnclippedBoundsInRoot()
+            val date = rule.onNodeWithText(
+                "jun 2027",
+                useUnmergedTree = true
+            ).getUnclippedBoundsInRoot()
+            val middle = (date.top + date.bottom) / 2
+            assertTrue(middle > target.top && middle < target.bottom)
+            val card = rule.onNodeWithTag("card").getUnclippedBoundsInRoot()
+            val meta = rule.onNodeWithText(
+                "Meta",
+                useUnmergedTree = true
+            ).getUnclippedBoundsInRoot()
+            // The last place reaches the card's trailing padding, and the teeth follow closely.
+            assertTrue(card.right - meta.right < 40.dp)
+            assertTrue(card.bottom - meta.bottom < 44.dp)
         }
     }
 

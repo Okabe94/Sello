@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -24,10 +27,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +68,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -137,47 +144,71 @@ fun V2NavigationBar(navigation: SelloNavigation, modifier: Modifier = Modifier) 
     }
 }
 
+/**
+ * The tab's top bar on the band: the month, its year and a chevron form one button that
+ * opens the month picker; [actions] (settings, add) sit at the trailing edge as round
+ * 48dp icon buttons. From font scale 1.3 the year is left out so the month keeps its room.
+ */
 @Composable
-fun V2MonthBar(month: String, year: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun V2MonthBar(
+    month: String,
+    year: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    description: String = "$month $year",
+    actions: @Composable RowScope.() -> Unit = {}
+) {
     val colors = SelloTheme.colors
+    val large = LocalDensity.current.fontScale >= 1.3f
     Row(
-        modifier.background(colors.band).clickable(role = Role.Button, onClick = onClick)
-            .clearAndSetSemantics {
-                contentDescription = "$month $year"
-                role = Role.Button
-                onClick {
-                    onClick()
-                    true
-                }
-            }
-            .heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier.fillMaxWidth().background(colors.band).heightIn(min = 56.dp)
+            .padding(start = 16.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            month,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = if (LocalDensity.current.fontScale >=
-                    1.3f
-                ) {
-                    21.sp
-                } else {
-                    28.sp
-                }
-            ),
-            color = colors.onBand
-        )
-        if (LocalDensity.current.fontScale <
-            1.3f
+        Row(
+            Modifier
+                .heightIn(min = 48.dp)
+                .clickable(role = Role.Button, onClick = onClick)
+                .clearAndSetSemantics {
+                    contentDescription = description
+                    role = Role.Button
+                    onClick {
+                        onClick()
+                        true
+                    }
+                },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Text(year, style = MaterialTheme.typography.labelSmall, color = colors.onBand)
+            Text(
+                month,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontSize = if (large) 19.sp else 24.sp,
+                    fontWeight = FontWeight.W800,
+                    letterSpacing = (-0.02).em
+                ),
+                color = colors.onBand
+            )
+            if (!large) {
+                Text(
+                    year,
+                    Modifier.padding(start = 6.dp),
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.W600),
+                    color = colors.onBand.copy(alpha = 0.8f)
+                )
+            }
+            Icon(SelloIcon.KeyboardArrowDown.painter(), null, tint = colors.onBand)
         }
-        Icon(SelloIcon.KeyboardArrowDown.painter(), null, tint = colors.onBand)
+        Spacer(Modifier.weight(1f))
+        CompositionLocalProvider(LocalContentColor provides colors.onBand) { actions() }
     }
 }
 
-/** Plain presentation data only; no selected-month or clock logic. */
+/**
+ * Says which past month is shown and goes back in one tap. A translucent pill meant to
+ * sit on the band, under the [V2MonthBar]. Bold spans in [message] name the month. Plain
+ * presentation data only; no selected-month or clock logic.
+ */
 @Composable
 fun PastMonthRibbon(
     message: AnnotatedString,
@@ -186,38 +217,38 @@ fun PastMonthRibbon(
     modifier: Modifier = Modifier
 ) {
     val colors = SelloTheme.colors
-    Column(
-        modifier.fillMaxWidth().background(colors.band, SelloTheme.shapes.control).padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+    Row(
+        modifier.fillMaxWidth()
+            .background(colors.onBand.copy(alpha = 0.16f), CircleShape)
+            .padding(start = 12.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(SelloIcon.Event.painter(), null, tint = colors.onBand)
-            Text(
-                message,
-                color = colors.onBand,
-                modifier = Modifier.weight(1f).semantics {
-                    liveRegion =
-                        LiveRegionMode.Polite
-                }
-            )
-        }
-        Surface(
-            color = colors.onBand.copy(alpha = 0.16f),
-            contentColor = colors.onBand,
-            shape = CircleShape
-        ) {
-            Text(
-                returnLabel,
-                modifier = Modifier.clickable(
-                    role = Role.Button,
-                    onClick = onReturn
-                ).heightIn(min = 48.dp).padding(12.dp),
-                fontWeight = FontWeight.W800
-            )
-        }
+        Icon(SelloIcon.Event.painter(), null, Modifier.size(20.dp), tint = colors.onBand)
+        Text(
+            message,
+            color = colors.onBand,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f).semantics {
+                liveRegion =
+                    LiveRegionMode.Polite
+            }
+        )
+        Text(
+            returnLabel,
+            modifier = Modifier
+                .minimumInteractiveComponentSize()
+                .heightIn(min = 40.dp)
+                .clip(CircleShape)
+                .background(if (colors.isDark) colors.paper else Color.White)
+                .clickable(role = Role.Button, onClick = onReturn)
+                .padding(horizontal = 14.dp)
+                .wrapContentHeight(Alignment.CenterVertically),
+            color = if (colors.isDark) colors.ink else colors.band,
+            fontWeight = FontWeight.W800,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1
+        )
     }
 }
 

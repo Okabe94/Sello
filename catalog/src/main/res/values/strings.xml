@@ -137,9 +137,9 @@
     <string name="v2_demo_anotar_movimiento" formatted="false">Anotar movimiento</string>
     <string name="v2_demo_crear_una_meta" formatted="false">Crear una meta</string>
     <string name="v2_demo_riel_existente_para_ventanas_amplias_la_integracion" formatted="false">Riel existente para ventanas amplias; la integración de pantallas sigue en sus tickets.</string>
-    <string name="v2_demo_estas_viendo_septiembre" formatted="false">Estás viendo septiembre</string>
-    <string name="v2_demo_volver_a_noviembre" formatted="false">Volver a noviembre</string>
-    <string name="v2_demo_noviembre_mes_actual" formatted="false">Noviembre · mes actual</string>
+    <string name="v2_demo_volver_a_octubre" formatted="false">Volver a octubre</string>
+    <string name="v2_demo_octubre_mes_actual" formatted="false">Octubre · mes actual</string>
+    <string name="v2_demo_metas_suma_crear_meta" formatted="false">Metas suma Crear meta antes de Configuración.</string>
     <string name="v2_demo_ver_septiembre" formatted="false">Ver septiembre</string>
     <string name="v2_demo_repetir_aterrizaje" formatted="false">Repetir aterrizaje</string>
     <string name="v2_demo_al_dia" formatted="false">Al día</string>
@@ -206,14 +206,10 @@
     <string name="v2_demo_marcar_como_lograda" formatted="false">Marcar como lograda</string>
     <string name="v2_demo_completar_meta" formatted="false">Completar meta</string>
     <string name="v2_demo_de_3_000_000" formatted="false">de 3.000.000</string>
-    <string name="v2_demo_fecha_objetivo_dic_2026" formatted="false">Fecha objetivo · dic 2026</string>
     <string name="v2_demo_abrir_viaje_a_la_costa" formatted="false">Abrir Viaje a la costa</string>
     <string name="v2_demo_sin_fecha" formatted="false">Sin fecha</string>
-    <string name="v2_demo_0" formatted="false">0 %</string>
-    <string name="v2_demo_de_20_000_000" formatted="false">de 20.000.000</string>
-    <string name="v2_demo_abrir_sin_fecha" formatted="false">Abrir Sin fecha</string>
     <string name="v2_demo_vacunas_de_luna" formatted="false">Vacunas de Luna</string>
-    <string name="v2_demo_400_000_30_sep" formatted="false">400.000 · 30 sep</string>
+    <string name="v2_demo_400_000_30_sep" formatted="false">400.000, 30 sep</string>
     <string name="v2_demo_abrir_meta_lograda_solo_lectura" formatted="false">Abrir meta lograda, solo lectura</string>
     <string name="v2_demo_vie_2_oct" formatted="false">vie 2 oct</string>
     <string name="v2_demo_ganaste_el_sello_del_50" formatted="false">Ganaste el sello del 50 %</string>

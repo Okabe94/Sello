@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,6 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.software.sello.catalog.R
 import com.software.sello.catalog.components.copFixture
@@ -56,6 +62,7 @@ import com.software.sello.designsystem.component.v2.V2Dock
 import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.component.v2.V2NavigationBar
 import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 
 @Composable
@@ -127,12 +134,24 @@ fun V2NavigationExample() {
 
 @Composable
 fun V2MonthExample() {
+    val strings = LocalResources.current
     var taps by rememberSaveable { mutableIntStateOf(0) }
     V2Stack {
-        V2MonthBar("Octubre", "2026", { taps++ })
-        V2MonthBar("Septiembre", "2026", { taps++ })
+        V2MonthBar("Octubre", "2026", { taps++ }, description = "Cambiar mes, octubre 2026") {
+            SettingsAction()
+        }
+        Caption(strings.getString(R.string.v2_demo_metas_suma_crear_meta))
+        V2MonthBar("Octubre", "2026", { taps++ }, description = "Cambiar mes, octubre 2026") {
+            IconButton({}) { Icon(SelloIcon.Add.painter(), "Crear meta") }
+            SettingsAction()
+        }
         Caption("Abrir selector: $taps")
     }
+}
+
+@Composable
+private fun SettingsAction() {
+    IconButton({}) { Icon(SelloIcon.Settings.painter(), "Configuración") }
 }
 
 @Composable
@@ -140,21 +159,27 @@ fun V2RibbonExample() {
     val strings = LocalResources.current
     var past by rememberSaveable { mutableStateOf(true) }
     V2Stack {
-        if (past) {
-            PastMonthRibbon(
-                AnnotatedString(
-                    strings.getString(R.string.v2_demo_estas_viendo_septiembre)
-                ),
-                strings.getString(R.string.v2_demo_volver_a_noviembre),
-                {
-                    past =
-                        false
-                },
-                Modifier.testTag("v2:ribbon")
-            )
-        } else {
-            Caption(strings.getString(R.string.v2_demo_noviembre_mes_actual))
+        // The ribbon lives on the band under the month bar, as on Recibo and Resumen.
+        Column(Modifier.background(SelloTheme.colors.band).padding(bottom = 10.dp)) {
+            V2MonthBar(
+                if (past) "Septiembre" else "Octubre",
+                "2026",
+                {},
+                description = "Cambiar mes"
+            ) { SettingsAction() }
+            if (past) {
+                PastMonthRibbon(
+                    buildAnnotatedString {
+                        append("Estás viendo ")
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("septiembre") }
+                    },
+                    strings.getString(R.string.v2_demo_volver_a_octubre),
+                    { past = false },
+                    Modifier.padding(horizontal = 12.dp).testTag("v2:ribbon")
+                )
+            }
         }
+        if (!past) Caption(strings.getString(R.string.v2_demo_octubre_mes_actual))
         SelloButton(strings.getString(R.string.v2_demo_ver_septiembre), {
             past = true
         }, kind = ButtonKind.Outlined)

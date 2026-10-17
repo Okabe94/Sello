@@ -169,59 +169,59 @@ fun V2GoalPillExample() {
 fun V2GoalCardsExample() {
     val strings = LocalResources.current
     var result by rememberSaveable { mutableStateOf("") }
+    // The reference's goals, highest completion first.
     V2Stack {
         GoalCard(
-            strings.getString(
-                R.string.v2_demo_viaje_a_la_costa
-            ),
-            SelloIcon.Flight, strings.getString(R.string.v2_demo_57),
-            copFixture(
-                1_710_000
-            ),
-            strings.getString(
-                R.string.v2_demo_de_3_000_000
-            ),
-            strings.getString(R.string.v2_demo_fecha_objetivo_dic_2026), 0.57f, GoalPlaces, {
-                result =
-                    strings.getString(R.string.v2_demo_abrir_viaje_a_la_costa)
-            }
+            strings.getString(R.string.v2_demo_viaje_a_la_costa),
+            SelloIcon.Flight,
+            strings.getString(R.string.v2_demo_57),
+            copFixture(1_710_000),
+            strings.getString(R.string.v2_demo_de_3_000_000),
+            "dic 2026",
+            0.57f,
+            GoalPlaces,
+            { result = strings.getString(R.string.v2_demo_abrir_viaje_a_la_costa) }
         )
         GoalCard(
-            strings.getString(
-                R.string.v2_demo_sin_fecha
-            ),
-            SelloIcon.Home,
-            strings.getString(
-                R.string.v2_demo_0
-            ),
-            copFixture(
-                0
-            ),
-            strings.getString(
-                R.string.v2_demo_de_20_000_000
-            ),
-            strings.getString(R.string.v2_demo_sin_fecha), 0f,
-            GoalPlaces.map {
-                it.copy(state = MilestoneState.Empty, description = "${it.label}, por alcanzar")
-            },
-            {
-                result =
-                    strings.getString(R.string.v2_demo_abrir_sin_fecha)
-            }
+            "Celular nuevo",
+            SelloIcon.PhoneIphone,
+            "37 %",
+            copFixture(450_000),
+            "de 1.200.000",
+            strings.getString(R.string.v2_demo_sin_fecha),
+            0.37f,
+            placesUpTo(1),
+            { result = "Abrir Celular nuevo" },
+            flagged = false
+        )
+        GoalCard(
+            "Curso de inglés",
+            SelloIcon.School,
+            "15 %",
+            copFixture(300_000),
+            "de 2.000.000",
+            "jun 2027",
+            0.15f,
+            placesUpTo(0),
+            { result = "Abrir Curso de inglés" }
         )
         CompletedGoalRow(
-            strings.getString(
-                R.string.v2_demo_vacunas_de_luna
-            ),
+            strings.getString(R.string.v2_demo_vacunas_de_luna),
             strings.getString(R.string.v2_demo_400_000_30_sep),
             SelloIcon.Pets,
             "Lograda",
-            {
-                result =
-                    strings.getString(R.string.v2_demo_abrir_meta_lograda_solo_lectura)
-            }
+            { result = strings.getString(R.string.v2_demo_abrir_meta_lograda_solo_lectura) }
         )
         Caption(result)
+    }
+}
+
+/** The four places with the first [earned] marked as reached. */
+private fun placesUpTo(earned: Int) = GoalPlaces.mapIndexed { index, place ->
+    if (index < earned) {
+        place.copy(state = MilestoneState.Earned, description = "${place.label}, logrado")
+    } else {
+        place.copy(state = MilestoneState.Empty, description = "${place.label}, por alcanzar")
     }
 }
 

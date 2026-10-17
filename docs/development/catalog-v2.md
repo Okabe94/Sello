@@ -68,7 +68,11 @@ into two columns. The entry now keeps its keyboard-free height while a keyboard 
 matched the reference: chips in a column share the widest chip's width and start at the
 leading edge; the note and an income source's name are full-width `EntryLine`s with
 Editar/Cambiar; and `NoteComposer` states what the note belongs to, then shows a filled
-box, a round check button and an Opcional hint.
+box, a round check button and an Opcional hint. `V2MonthBar` is now a month, year and chevron
+button with trailing icon actions, and `PastMonthRibbon` a translucent pill on the band
+with its white return button on the same line. `GoalCard` puts the target and its flagged date
+on one line and spreads 60dp places across the card; reached places are a double ring.
+`CompletedGoalRow` has an ink icon, a regular detail line and the stamp on the right.
 
 Run focused suites before the unticketed integrated gate:
 

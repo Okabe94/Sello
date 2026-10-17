@@ -65,13 +65,17 @@ import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloMotion
 import com.software.sello.designsystem.theme.SelloTheme
 
-/** Display-only fitting. Exact grouped digits and their spoken equivalent come from the caller. */
+/**
+ * Display-only fitting. Exact grouped digits and their spoken equivalent come from the
+ * caller. [startSize] in sp overrides the largest size tried, as on a goal card.
+ */
 @Composable
 fun FittedMoneyText(
     value: MoneyTextValue,
     modifier: Modifier = Modifier,
     color: Color = SelloTheme.colors.ink,
     entry: Boolean = false,
+    startSize: Int? = null,
     onTextLayout: (androidx.compose.ui.text.TextLayoutResult) -> Unit = {}
 ) {
     val measurer = rememberTextMeasurer()
@@ -79,6 +83,7 @@ fun FittedMoneyText(
         val narrow = maxWidth < 300.dp
         val digits = value.digits.count { it.isDigit() }
         val initial = when {
+            startSize != null -> startSize
             !entry -> 60
             digits <= 6 -> 45
             digits <= 9 -> if (narrow) 31 else 35

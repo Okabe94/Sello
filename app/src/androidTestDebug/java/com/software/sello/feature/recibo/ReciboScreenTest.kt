@@ -4,11 +4,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -22,6 +25,7 @@ import com.software.sello.designsystem.component.MoneySign
 import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.designsystem.theme.SelloTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -155,8 +159,12 @@ class ReciboScreenTest {
     fun theFirstRunOffersToCreateCategoriesAndNothingThatDoesNotExistYet() {
         show(ReciboState.FirstRun)
 
-        rule.onNodeWithText("Tu recibo está en blanco").assertIsDisplayed()
-        rule.onNodeWithText("Crear categorías").performClick()
+        rule.onNodeWithText("Dale forma a tu mes").assertIsDisplayed()
+        rule.onNodeWithText(
+            "Crea una categoría para lo que importa: la casa, la comida, el ocio o tu ahorro."
+        ).assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_FAILED_TAG).assertDoesNotExist()
+        rule.onNodeWithText("Crear categoría").performClick()
 
         assertEquals(listOf<ReciboAction>(ReciboAction.CreateCategory), actions)
         // No backup or entry action before those exist.
@@ -227,6 +235,31 @@ class ReciboScreenTest {
     }
 
     @Test
+    fun theCategoriesCardHeaderCarriesTheOnlyAddButton() {
+        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+
+        val add = rule.onNodeWithContentDescription("Agregar categoría")
+        val heading = rule.onNodeWithText("Tus categorías").getUnclippedBoundsInRoot()
+        val firstCell = rule.onNodeWithTag(reciboCategoryTag("a")).getUnclippedBoundsInRoot()
+        val button = add.getUnclippedBoundsInRoot()
+        // On the heading's line, above the grid.
+        assertTrue(button.bottom <= firstCell.top)
+        assertTrue(button.top < heading.bottom && button.bottom > heading.top)
+        val node = add.fetchSemanticsNode()
+        assertTrue(
+            with(node.layoutInfo.density) {
+                node.touchBoundsInRoot.height.toDp()
+            } >= 47.9.dp
+        )
+        // No caption and no second add action under the grid.
+        rule.onNodeWithText("queda en cada una").assertDoesNotExist()
+        rule.onAllNodesWithText("Agregar categoría").assertCountEquals(0)
+        add.performClick()
+
+        assertEquals(listOf<ReciboAction>(ReciboAction.CreateCategory), actions)
+    }
+
+    @Test
     fun olderFiguresCarryANoticeAndAWayToReadAgain() {
         show(
             month(
@@ -289,7 +322,11 @@ class ReciboScreenTest {
         show(ReciboState.Failed)
 
         rule.onNodeWithTag(RECIBO_FAILED_TAG).assertIsDisplayed()
-        rule.onNodeWithText("No pudimos leer tus datos de este mes.").assertIsDisplayed()
+        rule.onNodeWithText("No pudimos leer tu mes").assertIsDisplayed()
+        rule.onNodeWithText("Tus registros siguen guardados. Vuelve a intentarlo.")
+            .assertIsDisplayed()
+        // A failed read is never shown as first use.
+        rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertDoesNotExist()
         rule.onNodeWithText("Reintentar").performClick()
 
         assertEquals(listOf<ReciboAction>(ReciboAction.Retry), actions)

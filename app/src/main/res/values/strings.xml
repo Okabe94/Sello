@@ -43,9 +43,10 @@
     <string name="month_picker_title">Elige un mes</string>
     <string name="month_picker_current">Mes actual</string>
     <string name="month_picker_current_description">Ir al mes actual: %1$s</string>
-    <string name="recibo_first_run_title">Tu recibo está en blanco</string>
-    <string name="recibo_first_run_body">Tres pasos y queda listo: crea tus categorías, ponle un límite a cada una y anota tu primer gasto.</string>
+    <string name="recibo_first_run_title">Dale forma a tu mes</string>
+    <string name="recibo_first_run_body">Crea una categoría para lo que importa: la casa, la comida, el ocio o tu ahorro.</string>
     <string name="recibo_create_categories">Crear categorías</string>
+    <string name="recibo_create_category">Crear categoría</string>
     <string name="recibo_add_category">Agregar categoría</string>
     <string name="recibo_category_archived">Archivada</string>
     <string name="category_editor_title">Nueva categoría</string>
@@ -108,7 +109,6 @@
     </plurals>
     <string name="recibo_per_day">Puedes gastar al día</string>
     <string name="recibo_categories_title">Tus categorías</string>
-    <string name="recibo_categories_caption">queda en cada una</string>
     <string name="recibo_cell_limited">%1$s. %2$s %3$s de %4$s. %5$s.</string>
     <string name="recibo_cell_open">%1$s. %2$s %3$s. %4$s.</string>
     <string name="recibo_cell_archived">%1$s Archivada.</string>
@@ -200,7 +200,8 @@
     <string name="category_saved_month">Límite de %1$s actualizado. Sus cifras ya lo usan.</string>
     <string name="category_archived_notice">Categoría archivada</string>
     <string name="category_unarchived_notice">Categoría desarchivada</string>
-    <string name="recibo_failed">No pudimos leer tus datos de este mes.</string>
+    <string name="recibo_failed_title">No pudimos leer tu mes</string>
+    <string name="recibo_failed">Tus registros siguen guardados. Vuelve a intentarlo.</string>
     <string-array name="weekday_names_short">
         <item>lun</item>
         <item>mar</item>

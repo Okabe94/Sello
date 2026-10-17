@@ -7,9 +7,10 @@ and the [app shell](app-shell.md).
 
 ## What a person sees
 
-- A new installation opens on an empty Recibo with one action, "Crear categorías".
-  There is no backup action until restore exists (SELLO-030).
-- Once a category exists, Recibo offers "Agregar categoría".
+- A new installation opens on an empty Recibo, "Dale forma a tu mes", with one
+  action, "Crear categoría". There is no backup action until restore exists (SELLO-030).
+- Once a category exists, the **+** in the "Tus categorías" header ("Agregar
+  categoría") creates another.
 - The form (`feature/category`) asks for a name, an icon and a monthly limit.
 
 ## The form's rules

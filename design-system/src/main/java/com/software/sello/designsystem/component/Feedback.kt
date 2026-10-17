@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
@@ -33,11 +36,14 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogWindowProvider
 import com.software.sello.designsystem.R
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 
 /**
@@ -103,29 +109,43 @@ fun EmptySlip(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null
+) = EmptySlipContent(title, body, modifier, actionLabel, onAction, icon = null)
+
+/** The v2 look of [EmptySlip]: the same content centred under a large decorative [icon]. */
+@Composable
+fun EmptySlip(
+    title: String,
+    body: String,
+    icon: SelloIcon,
+    modifier: Modifier = Modifier,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) = EmptySlipContent(title, body, modifier, actionLabel, onAction, icon)
+
+@Composable
+private fun EmptySlipContent(
+    title: String,
+    body: String,
+    modifier: Modifier,
+    actionLabel: String?,
+    onAction: (() -> Unit)?,
+    icon: SelloIcon?
 ) {
     Slip(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.semantics { heading() }
-        )
-        Spacer(Modifier.height(SelloTheme.spacing.xs))
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyLarge,
-            color = SelloTheme.colors.inkSoft
-        )
-        if (actionLabel != null && onAction != null) {
-            Spacer(Modifier.height(SelloTheme.spacing.lg))
-            SelloButton(text = actionLabel, onClick = onAction, kind = ButtonKind.Outlined)
+        StateLayout(icon) {
+            StateText(title, body, icon != null)
+            if (actionLabel != null && onAction != null) {
+                Spacer(Modifier.height(SelloTheme.spacing.lg))
+                SelloButton(text = actionLabel, onClick = onAction, kind = ButtonKind.Outlined)
+            }
         }
     }
 }
 
 /**
  * A slip whose content could not be read. [message] says what failed in plain words.
- * It never shows a figure: a failed read has no amount, not a zero.
+ * It never shows a figure: a failed read has no amount, not a zero. With an [icon] it
+ * takes the v2 look: centred under a large decorative icon.
  */
 @Composable
 fun ErrorSlip(
@@ -133,25 +153,65 @@ fun ErrorSlip(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     title: String = stringResource(R.string.sello_error_title),
-    retryLabel: String = stringResource(R.string.sello_retry)
+    retryLabel: String = stringResource(R.string.sello_retry),
+    icon: SelloIcon? = null
 ) {
     Slip(modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.semantics { heading() }
-            )
-            Spacer(Modifier.height(SelloTheme.spacing.xs))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = SelloTheme.colors.inkSoft
-            )
+        StateLayout(icon) {
+            Column(
+                horizontalAlignment = if (icon !=
+                    null
+                ) {
+                    Alignment.CenterHorizontally
+                } else {
+                    Alignment.Start
+                },
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+            ) { StateText(title, message, icon != null) }
+            Spacer(Modifier.height(SelloTheme.spacing.lg))
+            SelloButton(text = retryLabel, onClick = onRetry, kind = ButtonKind.Outlined)
         }
-        Spacer(Modifier.height(SelloTheme.spacing.lg))
-        SelloButton(text = retryLabel, onClick = onRetry, kind = ButtonKind.Outlined)
     }
+}
+
+/** Left-aligned as in v1.1, or centred under a decorative [icon] as in v2. */
+@Composable
+private fun StateLayout(icon: SelloIcon?, content: @Composable () -> Unit) {
+    if (icon == null) {
+        Column { content() }
+    } else {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth().padding(vertical = SelloTheme.spacing.md)
+        ) {
+            Icon(
+                painter = icon.painter(),
+                contentDescription = null,
+                tint = SelloTheme.colors.brand,
+                modifier = Modifier.size(44.dp)
+            )
+            Spacer(Modifier.height(SelloTheme.spacing.sm))
+            content()
+        }
+    }
+}
+
+@Composable
+private fun StateText(title: String, body: String, centred: Boolean) {
+    val align = if (centred) TextAlign.Center else TextAlign.Start
+    Text(
+        text = title,
+        style = MaterialTheme.typography.headlineSmall,
+        textAlign = align,
+        modifier = Modifier.semantics { heading() }
+    )
+    Spacer(Modifier.height(SelloTheme.spacing.xs))
+    Text(
+        text = body,
+        style = MaterialTheme.typography.bodyLarge,
+        color = SelloTheme.colors.inkSoft,
+        textAlign = align
+    )
 }
 
 /**

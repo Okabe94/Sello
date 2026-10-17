@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +46,7 @@ import com.software.sello.designsystem.component.SlipSkeleton
 import com.software.sello.designsystem.component.Stamp
 import com.software.sello.designsystem.component.StampInk
 import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.category.CategoryIcons
 
@@ -79,8 +82,9 @@ fun ReciboScreen(
                 title = stringResource(R.string.recibo_first_run_title),
                 body = stringResource(R.string.recibo_first_run_body),
                 modifier = Modifier.testTag(RECIBO_FIRST_RUN_TAG),
-                actionLabel = stringResource(R.string.recibo_create_categories),
-                onAction = { onAction(ReciboAction.CreateCategory) }
+                actionLabel = stringResource(R.string.recibo_create_category),
+                onAction = { onAction(ReciboAction.CreateCategory) },
+                icon = SelloIcon.ReceiptLong
             )
 
             is ReciboState.Month -> {
@@ -94,7 +98,9 @@ fun ReciboScreen(
             ReciboState.Failed -> ErrorSlip(
                 message = stringResource(R.string.recibo_failed),
                 onRetry = { onAction(ReciboAction.Retry) },
-                modifier = Modifier.testTag(RECIBO_FAILED_TAG)
+                modifier = Modifier.testTag(RECIBO_FAILED_TAG),
+                title = stringResource(R.string.recibo_failed_title),
+                icon = SelloIcon.Error
             )
         }
     }
@@ -200,18 +206,25 @@ private fun CategoriesSlip(
     selectedCategoryId: String?,
     onAction: (ReciboAction) -> Unit
 ) {
+    // Only the answer slip above keeps the pinked edge; this card is plain paper.
     Slip(Modifier.testTag(RECIBO_CATEGORIES_TAG), pinked = false) {
-        Text(
-            text = stringResource(R.string.recibo_categories_title),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.semantics { heading() }
-        )
-        Text(
-            text = stringResource(R.string.recibo_categories_caption),
-            style = MaterialTheme.typography.bodyMedium,
-            color = SelloTheme.colors.inkSoft
-        )
-        Spacer(Modifier.height(SelloTheme.spacing.sm))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.recibo_categories_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f).semantics { heading() }
+            )
+            IconButton(
+                onClick = { onAction(ReciboAction.CreateCategory) },
+                modifier = Modifier.testTag(RECIBO_ADD_CATEGORY_TAG)
+            ) {
+                Icon(
+                    painter = SelloIcon.Add.painter(),
+                    contentDescription = stringResource(R.string.recibo_add_category),
+                    tint = SelloTheme.colors.ink
+                )
+            }
+        }
         val editLabel = stringResource(R.string.recibo_category_edit)
         CategoryGrid(categories) { index, category ->
             val isSelected = category.id == selectedCategoryId
@@ -242,14 +255,6 @@ private fun CategoriesSlip(
                 staggerIndex = index
             )
         }
-        Spacer(Modifier.height(SelloTheme.spacing.sm))
-        SelloButton(
-            text = stringResource(R.string.recibo_add_category),
-            onClick = { onAction(ReciboAction.CreateCategory) },
-            modifier = Modifier.testTag(RECIBO_ADD_CATEGORY_TAG),
-            kind = ButtonKind.Text,
-            icon = SelloIcon.Add
-        )
     }
 }
 

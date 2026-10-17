@@ -66,7 +66,9 @@ the component reference itself, so it has no screen here.
 0.65, 1.0 and 1.4 s on the desk, gain floods out of the Meta stamp at 1.75 s, the stamps
 rise and turn white at 2.05 s, the title rises at 2.4 s, the outlined plate is stamped at
 2.75 s, 64 seeded paper chads fall from 2.0 s and the actions fade in at 3.1 s. Reduced
-motion opens on the final screen without chads.
+motion opens on the final screen without chads. The system bars keep dark ink on the pale desk
+and turn white once the green floods in. The expense categories end with `AddChip`
+(Nueva): a dashed brand chip that is a button, not one of the choices.
 
 ## Verification
 

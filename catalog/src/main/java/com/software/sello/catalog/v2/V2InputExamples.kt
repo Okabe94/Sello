@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.software.sello.catalog.R
 import com.software.sello.catalog.components.DraftFixture
 import com.software.sello.catalog.components.copFixture
+import com.software.sello.designsystem.component.AddChip
 import com.software.sello.designsystem.component.AmountKeypad
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ButtonTone
@@ -167,16 +168,22 @@ fun V2EntryExample() {
             )
         },
         choices = {
-            V2ChipRows(names.size, Modifier.testTag("v2:entry:choices")) { index ->
-                SelloChip(
-                    names[index],
-                    choice == index,
-                    { choice = index },
-                    enabled = !locked,
-                    modifier = Modifier.testTag("v2:entry:choice:$index"),
-                    // Income sources are words only; expense categories carry their icon.
-                    icon = if (income) null else Categories[index].second
-                )
+            // Expense categories end with Nueva, which would open the category editor.
+            val count = if (income) names.size else names.size + 1
+            V2ChipRows(count, Modifier.testTag("v2:entry:choices")) { index ->
+                if (index == names.size) {
+                    AddChip("Nueva", {}, enabled = !locked)
+                } else {
+                    SelloChip(
+                        names[index],
+                        choice == index,
+                        { choice = index },
+                        enabled = !locked,
+                        modifier = Modifier.testTag("v2:entry:choice:$index"),
+                        // Income sources are words only; expense categories carry their icon.
+                        icon = if (income) null else Categories[index].second
+                    )
+                }
             }
             if (income && choice == 4) {
                 EntryLine(
@@ -433,11 +440,15 @@ fun V2ChipsExample() {
     var choice by rememberSaveable { mutableIntStateOf(-1) }
     V2Stack {
         Caption(strings.getString(R.string.v2_demo_maximo_dos_filas_desplaza_para_ver_mas))
-        V2ChipRows(Categories.size) { index ->
-            SelloChip(Categories[index].first, choice == index, {
-                choice =
-                    index
-            }, icon = Categories[index].second)
+        V2ChipRows(Categories.size + 1) { index ->
+            if (index == Categories.size) {
+                AddChip("Nueva", {})
+            } else {
+                SelloChip(Categories[index].first, choice == index, {
+                    choice =
+                        index
+                }, icon = Categories[index].second)
+            }
         }
         Caption(strings.getString(R.string.v2_demo_dos_grupos_comparten_el_espacio_una_fila))
         V2ChipRows(4, rows = 1) { index ->

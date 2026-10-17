@@ -1,18 +1,25 @@
 package com.software.sello.designsystem.component
 
+import android.os.Build
+import android.view.View
+import android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.height
+import androidx.compose.ui.window.DialogWindowProvider
 import com.software.sello.designsystem.component.v2.CelebrationOverlay
 import com.software.sello.designsystem.component.v2.MilestoneSpec
 import com.software.sello.designsystem.component.v2.MilestoneState
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -26,9 +33,9 @@ class V2CelebrationTest {
         MilestoneSpec(it, "$it, logrado", MilestoneState.Earned)
     }
 
-    private fun show(reduced: Boolean) {
+    private fun show(reduced: Boolean, dark: Boolean = false) {
         rule.setContent {
-            SelloTheme(reducedMotion = reduced) {
+            SelloTheme(darkTheme = dark, reducedMotion = reduced) {
                 CelebrationOverlay(
                     "¡Lo lograste!", "Meta lograda", "Vacunas de Luna", SelloIcon.Pets,
                     MoneyTextValue(MoneySign.None, "", "400.000", "400.000 pesos"),
@@ -69,5 +76,40 @@ class V2CelebrationTest {
         // Listo and Ver mi meta are pinned to the bottom of the screen, below the plate.
         assertTrue(view.top > done.bottom)
         assertTrue(screen.bottom - view.bottom < screen.height / 8)
+    }
+
+    /** Whether the celebration's window asks for dark status-bar icons (for a light bar). */
+    private fun darkStatusIcons(): Boolean {
+        val root = rule.onNode(
+            isRoot() and hasAnyDescendant(hasContentDescription("25 %, logrado"))
+        )
+            .fetchSemanticsNode().root as ViewRootForTest
+        val window = (root.view.parent as DialogWindowProvider).window
+        // Android 11 applies the older light-bar flag; its appearance getter stays 0.
+        @Suppress("DEPRECATION")
+        return if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR != 0
+        } else {
+            window.insetsController!!.systemBarsAppearance and APPEARANCE_LIGHT_STATUS_BARS != 0
+        }
+    }
+
+    @Test
+    fun statusBarIconsTurnWhiteAsTheGreenFloodsIn() {
+        rule.mainClock.autoAdvance = false
+        show(reduced = false)
+        // On the pale desk the status bar keeps dark icons; the ink turns white from 1.9 s.
+        rule.mainClock.advanceTimeBy(1_000)
+        assertTrue(darkStatusIcons())
+        rule.mainClock.advanceTimeBy(1_600)
+        assertFalse(darkStatusIcons())
+    }
+
+    @Test
+    fun aDarkDeskKeepsWhiteStatusIconsThroughout() {
+        rule.mainClock.autoAdvance = false
+        show(reduced = false, dark = true)
+        rule.mainClock.advanceTimeBy(1_000)
+        assertFalse(darkStatusIcons())
     }
 }

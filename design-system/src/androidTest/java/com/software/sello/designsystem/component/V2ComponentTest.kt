@@ -416,6 +416,24 @@ class V2ComponentTest {
     }
 
     @Test
+    fun addChipIsAReachableButtonAtDoubleFont() {
+        var added = 0
+        rule.inEveryScheme(fontScale = 2f, width = 320.dp, content = {
+            AddChip("Nueva", { added++ })
+        }) {
+            val chip = rule.onNodeWithText("Nueva")
+            chip.assertIsDisplayed().performClick()
+            val node = chip.fetchSemanticsNode()
+            assertTrue(
+                with(node.layoutInfo.density) {
+                    node.touchBoundsInRoot.height.toDp()
+                } >= 47.9.dp
+            )
+        }
+        assertEquals(4, added)
+    }
+
+    @Test
     fun reducedMotionRetainsTheEarnedMilestoneMeaningAfterWithdrawal() {
         rule.inEveryScheme(reducedMotion = true, content = {
             MilestonePlace(

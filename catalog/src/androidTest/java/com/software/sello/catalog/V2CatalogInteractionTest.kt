@@ -1,5 +1,9 @@
 package com.software.sello.catalog
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -69,6 +73,17 @@ class V2CatalogInteractionTest {
         assertEquals(amount.left, line.left)
         assertEquals(amount.right, line.right)
         rule.onNodeWithText("Cambiar").assertExists()
+    }
+
+    @Test
+    fun expenseCategoriesEndWithANuevaButtonThatIsNotAChoice() {
+        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
+        rule.onNodeWithTag("v2:entry:choices").performScrollTo()
+        rule.onNodeWithText("Nueva").performScrollTo()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
+        rule.onNodeWithText("Ingreso").performScrollTo().performClick()
+        rule.onNodeWithText("Nueva").assertDoesNotExist()
     }
 
     @Test

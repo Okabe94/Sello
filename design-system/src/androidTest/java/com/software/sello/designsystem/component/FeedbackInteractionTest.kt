@@ -17,6 +17,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.software.sello.designsystem.icon.SelloIcon
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -77,6 +79,53 @@ class FeedbackInteractionTest {
             assertEquals(it, 1, actions)
             assertTouchTarget("Anotar", it)
             assertEquals(it, 1, rule.onAllNodes(isButton).fetchSemanticsNodes().size)
+        }
+    }
+
+    @Test
+    fun withAnIconTheStateSlipsCentreTheirTextAndKeepTheIconSilent() {
+        var retries = 0
+        rule.inEveryScheme(
+            reset = { retries = 0 },
+            content = {
+                Column {
+                    EmptySlip(
+                        "Dale forma a tu mes",
+                        "Crea una categoría.",
+                        SelloIcon.ReceiptLong,
+                        Modifier.testTag("empty")
+                    )
+                    ErrorSlip(
+                        "Tus registros siguen guardados.",
+                        { retries++ },
+                        Modifier.testTag("error"),
+                        title = "No pudimos leer tu mes",
+                        icon = SelloIcon.Error
+                    )
+                }
+            }
+        ) {
+            listOf(
+                "empty" to "Dale forma a tu mes",
+                "error" to "No pudimos leer tu mes"
+            ).forEach { (tag, title) ->
+                val slip = rule.onNodeWithTag(tag).getUnclippedBoundsInRoot()
+                val heading = rule.onNodeWithText(title).getUnclippedBoundsInRoot()
+                val slipMiddle = (slip.left + slip.right) / 2
+                val headingMiddle = (heading.left + heading.right) / 2
+                assertTrue(it, (slipMiddle - headingMiddle).value in -1f..1f)
+            }
+            // The icons are decorative: the only described nodes are none.
+            assertEquals(
+                it,
+                0,
+                rule.onAllNodes(
+                    hasContentDescription("", substring = true)
+                ).fetchSemanticsNodes().size
+            )
+            rule.onNodeWithText("Reintentar").assert(isButton).performClick()
+            assertEquals(it, 1, retries)
+            assertTouchTarget("Reintentar", it)
         }
     }
 

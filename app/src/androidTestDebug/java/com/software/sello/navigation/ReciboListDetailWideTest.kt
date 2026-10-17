@@ -11,6 +11,8 @@ import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -89,6 +91,12 @@ class ReciboListDetailWideTest {
         assertTrue("recibo $recibo, detail $detail", recibo.right <= detail.left)
         // Beside Recibo there is nothing to go back from.
         rule.onNodeWithTag(DETAIL_BACK_TAG).assertDoesNotExist()
+        // The categories card keeps its add action in the header beside the detail.
+        rule.onNode(
+            hasContentDescription("Agregar categoría") and
+                hasAnyAncestor(hasTestTag(SCAFFOLD_PRIMARY_TAG)) and
+                hasClickAction()
+        ).assertExists()
 
         rule.onNodeWithTag(market).performSemanticsAction(SemanticsActions.OnClick)
 

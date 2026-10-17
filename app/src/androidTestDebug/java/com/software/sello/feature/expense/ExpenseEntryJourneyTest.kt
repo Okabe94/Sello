@@ -88,7 +88,7 @@ class ExpenseEntryJourneyTest {
     private fun startWithCategory(name: String = "Mercado"): ActivityScenario<MainActivity> {
         val app = launch()
         rule.awaitTag(RECIBO_FIRST_RUN_TAG)
-        rule.onNodeWithText("Crear categorías").performClick()
+        rule.onNodeWithText("Crear categoría").performClick()
         createCategory(name)
         rule.awaitTag(RECIBO_CATEGORIES_TAG)
         return app

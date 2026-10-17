@@ -5,7 +5,7 @@
 > subject to the user's current instructions.
 
 **Snapshot:** 2026-10-17 · **Product baseline:** `df0aefa`.
-SELLO-001–023 and epics E01–E05 are recorded Done in the canonical tickets.
+SELLO-001–023, SELLO-063 and epics E01–E05 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -53,6 +53,7 @@ those definitions and open inputs.
 | [SELLO-021](../planning/mvp/epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Added income entry/history, editing/deletion and shared guarded undo, with a Room migration. |
 | [SELLO-022](../planning/mvp/epics/E05-mvp-workflows.md#sello-022--deliver-basic-resumen-with-exact-actuals-and-history-charts) | Added Resumen income/spending, net flow, allocation and exact history charts. |
 | [SELLO-023](../planning/mvp/epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings) | Added persisted appearance, category ordering/direction and working settings. |
+| [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
 
 ## Remaining work
 

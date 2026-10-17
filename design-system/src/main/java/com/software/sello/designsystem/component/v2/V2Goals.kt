@@ -46,6 +46,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -73,8 +74,18 @@ data class MilestoneSpec(
     val caption: String? = null
 )
 
+/**
+ * One stamp place. [diameter] is 60dp on cards and 66dp in the celebration; [ink] replaces the
+ * state's colour where the place sits on green.
+ */
 @Composable
-fun MilestonePlace(spec: MilestoneSpec, modifier: Modifier = Modifier, land: Boolean = false) {
+fun MilestonePlace(
+    spec: MilestoneSpec,
+    modifier: Modifier = Modifier,
+    land: Boolean = false,
+    diameter: Dp = 60.dp,
+    ink: Color? = null
+) {
     val colors = SelloTheme.colors
     val reduced = SelloTheme.reducedMotion
     val progress = remember { Animatable(if (land && !reduced) 0f else 1f) }
@@ -98,7 +109,7 @@ fun MilestonePlace(spec: MilestoneSpec, modifier: Modifier = Modifier, land: Boo
         }
     }
     val earned = spec.state == MilestoneState.Earned || spec.state == MilestoneState.Kept
-    val color = when (spec.state) {
+    val color = ink ?: when (spec.state) {
         MilestoneState.Empty -> colors.outline
         MilestoneState.Kept -> colors.semantic.gain.copy(alpha = 0.42f)
         else -> colors.semantic.gain
@@ -112,7 +123,7 @@ fun MilestonePlace(spec: MilestoneSpec, modifier: Modifier = Modifier, land: Boo
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(60.dp).graphicsLayer {
+            modifier = Modifier.size(diameter).graphicsLayer {
                 scaleX =
                     SelloMotion.STAMP_V2_INITIAL_SCALE +
                     (1f - SelloMotion.STAMP_V2_INITIAL_SCALE) * progress.value
@@ -165,7 +176,13 @@ fun MilestonePlace(spec: MilestoneSpec, modifier: Modifier = Modifier, land: Boo
             Text(
                 spec.label,
                 style = SelloTheme.type.stampSmall.copy(fontSize = 14.sp),
-                color = if (spec.state == MilestoneState.Empty) colors.inkSoft else color
+                color = if (spec.state == MilestoneState.Empty &&
+                    ink == null
+                ) {
+                    colors.inkSoft
+                } else {
+                    color
+                }
             )
         }
         spec.caption?.let {

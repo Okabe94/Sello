@@ -62,6 +62,12 @@ band) and `GoalsBandTotal` (Guardado en metas), now exist in `:design-system`.
 value over its signed change on the right, and rules between rows. `components.jpg` is
 the component reference itself, so it has no screen here.
 
+`CelebrationOverlay` runs the reference's timeline from one clock: stamps land at 0.3,
+0.65, 1.0 and 1.4 s on the desk, gain floods out of the Meta stamp at 1.75 s, the stamps
+rise and turn white at 2.05 s, the title rises at 2.4 s, the outlined plate is stamped at
+2.75 s, 64 seeded paper chads fall from 2.0 s and the actions fade in at 3.1 s. Reduced
+motion opens on the final screen without chads.
+
 ## Verification
 
 The registry contract first failed because the V2 section was absent. A device test

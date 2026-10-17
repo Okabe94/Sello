@@ -71,6 +71,18 @@ class CatalogShellTest {
     }
 
     @Test
+    fun backReturnsToTheSameSpotInTheList() {
+        val link = rule.onNodeWithTag(exampleLinkTag("v2.entry")).performScrollTo()
+        val before = link.getUnclippedBoundsInRoot().top
+        link.performClick()
+        rule.onNodeWithTag(BACK_TAG).performClick()
+        assertEquals(
+            before,
+            rule.onNodeWithTag(exampleLinkTag("v2.entry")).getUnclippedBoundsInRoot().top
+        )
+    }
+
+    @Test
     fun switchingInkChangesBrandButNotGainOrLoss() {
         rule.onNodeWithTag(CONTROLS_TOGGLE_TAG).performClick()
         choose("mode", "Light")

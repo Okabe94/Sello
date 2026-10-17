@@ -72,4 +72,233 @@
     <string name="catalog_control_motion">Motion</string>
     <string name="catalog_motion_full">Full</string>
     <string name="catalog_motion_reduced">Reduced</string>
+    <string name="catalog_group_v2">V2</string>
+    <string name="catalog_group_v2_screens">V2 screens</string>
+    <string name="v2_screen_recibo">Recibo · Default, a payment is reserved</string>
+    <string name="v2_screen_metas">Metas · Goal list</string>
+    <string name="v2_screen_inversiones">Inversiones · Overview</string>
+    <string name="v2_screen_celebration">Celebration · Lograda (live)</string>
+    <string name="v2_screen_metas_undo">Metas · After Listo, Deshacer</string>
+    <string name="catalog_window_narrow">Narrow 320</string>
+    <string name="v2_entry">Inputs · Expense and income entry</string>
+    <string name="v2_amount">Inputs · Amount sizing and limits</string>
+    <string name="v2_keypad">Inputs · Compact Sello pad</string>
+    <string name="v2_chips">Inputs · Two-row choices</string>
+    <string name="v2_note_composer">Inputs · Keyboard note composer</string>
+    <string name="v2_buttons">Controls · Action tones and states</string>
+    <string name="v2_dock">Shell · Full-width docks</string>
+    <string name="v2_navigation">Shell · Two, three and four tabs</string>
+    <string name="v2_month_bar">Shell · Month and year</string>
+    <string name="v2_past_month_ribbon">Shell · Past-month ribbon</string>
+    <string name="v2_stamps">Paper · V2 status and result stamps</string>
+    <string name="v2_footnotes">Paper · Footnotes, facts and review invitation</string>
+    <string name="v2_summary">Paper · Recibo answer states</string>
+    <string name="v2_comparison">Summary · Same-days comparison</string>
+    <string name="v2_ranking">Summary · Category spending ranking</string>
+    <string name="v2_suggestion">Summary · Dismissible suggestion</string>
+    <string name="v2_charts">Charts · Split, partial-month and recorded values</string>
+    <string name="v2_milestones">Goals · Milestone states and projections</string>
+    <string name="v2_goal_pill">Goals · Recibo goal and reached row</string>
+    <string name="v2_goal_cards">Goals · Active and completed cards</string>
+    <string name="v2_movements">Goals · Contributions and withdrawals</string>
+    <string name="v2_investments">Investments · Return and valuation states</string>
+    <string name="v2_icon_choice">Controls · Icon strip and Recibo pin</string>
+    <string name="v2_feedback">Feedback · Confirmation, undo, ticket and danger</string>
+    <string name="v2_celebration">Feedback · Goal completion celebration</string>
+    <string name="v2_states">Feedback · Empty, loading and failed reads</string>
+    <string name="v2_foundations">Foundations · Tokens, icons and motion</string>
+    <string name="v2_demo_ingreso_en_pesos" formatted="false">Ingreso en pesos</string>
+    <string name="v2_demo_gasto_en_pesos" formatted="false">Gasto en pesos</string>
+    <string name="v2_demo_maximo_12_digitos" formatted="false">Máximo 12 dígitos</string>
+    <string name="v2_demo_hoy_vie_16" formatted="false">Hoy, vie 16</string>
+    <string name="v2_demo_agregar_nota" formatted="false">Agregar nota</string>
+    <string name="v2_demo_opcional" formatted="false">Opcional</string>
+    <string name="v2_demo_editar" formatted="false">Editar</string>
+    <string name="v2_demo_cambiar" formatted="false">Cambiar</string>
+    <string name="v2_demo_nombre_de_la_fuente" formatted="false">Nombre de la fuente</string>
+    <string name="v2_demo_no_guardado" formatted="false">No guardado</string>
+    <string name="v2_demo_por_comprobar" formatted="false">Por comprobar</string>
+    <string name="v2_demo_no_se_guardo_tu_borrador_sigue_aqui" formatted="false">No se guardó. Tu borrador sigue aquí.</string>
+    <string name="v2_demo_aun_no_sabemos_si_se_guardo_compruebalo" formatted="false">Aún no sabemos si se guardó. Compruébalo antes de volver a anotar.</string>
+    <string name="v2_demo_borrador_sintetico_restaurado_no_se_envia_al" formatted="false">Borrador sintético restaurado; no se envía al abrirlo.</string>
+    <string name="v2_demo_catalogo_datos_sinteticos_sin_almacenamiento_financiero" formatted="false">Catálogo: datos sintéticos, sin almacenamiento financiero.</string>
+    <string name="v2_demo_guardando" formatted="false">Guardando…</string>
+    <string name="v2_demo_comprobar_si_se_guardo" formatted="false">Comprobar si se guardó</string>
+    <string name="v2_demo_anotar_ingreso" formatted="false">Anotar ingreso</string>
+    <string name="v2_demo_anotar_gasto" formatted="false">Anotar gasto</string>
+    <string name="v2_demo_gasto_anotado_48_700_en_comida" formatted="false">Gasto anotado: 48.700 en Comida</string>
+    <string name="v2_demo_escribe_el_nombre_de_la_fuente" formatted="false">Escribe el nombre de la fuente</string>
+    <string name="v2_demo_manten_borrar_para_vaciar_el_monto_una" formatted="false">Mantén Borrar para vaciar el monto. Una tecla válida retira el error del límite.</string>
+    <string name="v2_demo_maximo_dos_filas_desplaza_para_ver_mas" formatted="false">Máximo dos filas; desplaza para ver más categorías.</string>
+    <string name="v2_demo_dos_grupos_comparten_el_espacio_una_fila" formatted="false">Dos grupos comparten el espacio: una fila cada uno.</string>
+    <string name="v2_demo_valor_de_hoy" formatted="false">Valor de hoy</string>
+    <string name="v2_demo_dividendo_o_renta" formatted="false">Dividendo o renta</string>
+    <string name="v2_demo_llevas_1_710_000_guardados_en_esta" formatted="false">Llevas 1.710.000 guardados en esta meta.</string>
+    <string name="v2_demo_probar_nota_larga" formatted="false">Probar nota larga</string>
+    <string name="v2_demo_una_nota_sintetica_que_supera_el_limite" formatted="false">Una nota sintética que supera el límite sin perder ninguna de las palabras escritas.</string>
+    <string name="v2_demo_nota_comida" formatted="false">Nota · Comida</string>
+    <string name="v2_demo_maximo_60_caracteres_tu_texto_sigue_aqui" formatted="false">Máximo 60 caracteres. Tu texto sigue aquí.</string>
+    <string name="v2_demo_elige_una_meta" formatted="false">Elige una meta</string>
+    <string name="v2_demo_aportar_a_una_meta" formatted="false">Aportar a una meta</string>
+    <string name="v2_demo_anotar_movimiento" formatted="false">Anotar movimiento</string>
+    <string name="v2_demo_crear_una_meta" formatted="false">Crear una meta</string>
+    <string name="v2_demo_riel_existente_para_ventanas_amplias_la_integracion" formatted="false">Riel existente para ventanas amplias; la integración de pantallas sigue en sus tickets.</string>
+    <string name="v2_demo_volver_a_octubre" formatted="false">Volver a octubre</string>
+    <string name="v2_demo_octubre_mes_actual" formatted="false">Octubre · mes actual</string>
+    <string name="v2_demo_metas_suma_crear_meta" formatted="false">Metas suma Crear meta antes de Configuración.</string>
+    <string name="v2_demo_ver_septiembre" formatted="false">Ver septiembre</string>
+    <string name="v2_demo_repetir_aterrizaje" formatted="false">Repetir aterrizaje</string>
+    <string name="v2_demo_al_dia" formatted="false">Al día</string>
+    <string name="v2_demo_al_limite" formatted="false">Al límite</string>
+    <string name="v2_demo_sin_margen" formatted="false">Sin margen</string>
+    <string name="v2_demo_sin_limite" formatted="false">Sin límite</string>
+    <string name="v2_demo_incluye_200_000_separado_para_1_pago" formatted="false">Incluye 200.000 separado para 1 pago previsto</string>
+    <string name="v2_demo_pagos_previstos" formatted="false">Pagos previstos</string>
+    <string name="v2_demo_valores_anotados_entre_el_12_jun_y" formatted="false">Valores anotados entre el 12 jun y el 14 oct</string>
+    <string name="v2_demo_fechas_de_valoracion" formatted="false">Fechas de valoración</string>
+    <string name="v2_demo_ver_como_cerraste_octubre" formatted="false">Ver cómo cerraste octubre</string>
+    <string name="v2_demo_resumen_de_octubre" formatted="false">Resumen de octubre</string>
+    <string name="v2_demo_has_gastado_este_mes" formatted="false">Has gastado este mes</string>
+    <string name="v2_demo_falta_para_tus_pagos" formatted="false">Falta para tus pagos</string>
+    <string name="v2_demo_restante_del_presupuesto" formatted="false">Restante del presupuesto</string>
+    <string name="v2_demo_mes_cerrado_gastaste_920_000_de_1" formatted="false">Mes cerrado · gastaste 920.000 de 1.000.000.</string>
+    <string name="v2_demo_quedan_100_000_y_tus_pagos_previstos" formatted="false">Quedan 100.000 y tus pagos previstos suman 150.000.</string>
+    <string name="v2_demo_por_dia" formatted="false">por día</string>
+    <string name="v2_demo_10_dias_incluido_hoy" formatted="false">10 días, incluido hoy</string>
+    <string name="v2_demo_ajustar_presupuesto" formatted="false">Ajustar presupuesto</string>
+    <string name="v2_demo_tus_categorias" formatted="false">Tus categorías</string>
+    <string name="v2_demo_cafe" formatted="false">Café</string>
+    <string name="v2_demo_mas" formatted="false">Más</string>
+    <string name="v2_demo_mes_cerrado" formatted="false">Mes cerrado</string>
+    <string name="v2_demo_como_cerro_septiembre" formatted="false">¿Cómo cerró septiembre?</string>
+    <string name="v2_demo_como_va_este_mes" formatted="false">¿Cómo va este mes?</string>
+    <string name="v2_demo_menos_que_en_septiembre" formatted="false">menos que en septiembre</string>
+    <string name="v2_demo_mas_que_en_agosto" formatted="false">más que en agosto</string>
+    <string name="v2_demo_11_1_al_mismo_dia_del_mes" formatted="false">↓ 11,1 % al mismo día del mes</string>
+    <string name="v2_demo_21_1_respecto_al_mes_anterior" formatted="false">↑ 21,1 % respecto al mes anterior</string>
+    <string name="v2_demo_meses_completos" formatted="false">Meses completos</string>
+    <string name="v2_demo_del_1_al_22_de_cada_mes" formatted="false">Del 1 al 22 de cada mes</string>
+    <string name="v2_demo_ingresos_de_octubre" formatted="false">Ingresos de octubre</string>
+    <string name="v2_demo_ingresos_anotados" formatted="false">Ingresos anotados</string>
+    <string name="v2_demo_ingresos_menos_gastos" formatted="false">Ingresos menos gastos</string>
+    <string name="v2_demo_sin_asignar_a_categorias" formatted="false">Sin asignar a categorías</string>
+    <string name="v2_demo_ver_ingresos_y_su_destino" formatted="false">Ver ingresos y su destino</string>
+    <string name="v2_demo_donde_se_va" formatted="false">¿Dónde se va?</string>
+    <string name="v2_demo_una_sugerencia" formatted="false">Una sugerencia</string>
+    <string name="v2_demo_cafe_supero_su_limite_dos_meses_seguidos" formatted="false">Café superó su límite dos meses seguidos.</string>
+    <string name="v2_demo_podrias_ajustar_su_limite_para_que_refleje" formatted="false">Podrías ajustar su límite para que refleje lo que de verdad gastas.</string>
+    <string name="v2_demo_ajustar_el_presupuesto_de_cafe" formatted="false">Ajustar el presupuesto de Café</string>
+    <string name="v2_demo_descartar_sugerencia" formatted="false">Descartar sugerencia</string>
+    <string name="v2_demo_accion_sintetica_ajustar_cafe" formatted="false">Acción sintética: ajustar Café</string>
+    <string name="v2_demo_mostrar_sugerencia" formatted="false">Mostrar sugerencia</string>
+    <string name="v2_demo_la_elegibilidad_y_el_descarte_mensual_pertenecen" formatted="false">La elegibilidad y el descarte mensual pertenecen al producto; aquí solo se muestra el componente.</string>
+    <string name="v2_demo_vacio_logrado_conservado_100_pendiente_de_marcar" formatted="false">Vacío · logrado · conservado · 100 % pendiente de marcar</string>
+    <string name="v2_demo_50_por_ciento_sello_conservado_tras_un" formatted="false">50 por ciento, sello conservado tras un retiro</string>
+    <string name="v2_demo_100_por_ciento_pendiente_de_marcar_como" formatted="false">100 por ciento, pendiente de marcar como lograda</string>
+    <string name="v2_demo_el_sello_del_50_sigue_siendo_tuyo" formatted="false">El sello del 50 % sigue siendo tuyo: lo lograste en octubre.</string>
+    <string name="v2_demo_proyecciones_solo_al_crear_o_editar_con" formatted="false">Proyecciones solo al crear o editar, con su supuesto explícito</string>
+    <string name="v2_demo_si_aportas_769_231_cada_mes" formatted="false">Si aportas 769.231 cada mes</string>
+    <string name="v2_demo_jun_28" formatted="false">jun 28</string>
+    <string name="v2_demo_dic_28" formatted="false">dic 28</string>
+    <string name="v2_demo_con_movimiento_reducido_se_muestra_el_mismo" formatted="false">Con movimiento reducido se muestra el mismo sello en su posición final.</string>
+    <string name="v2_demo_viaje_a_la_costa" formatted="false">Viaje a la costa</string>
+    <string name="v2_demo_57" formatted="false">57 %</string>
+    <string name="v2_demo_aportar_a_viaje_a_la_costa" formatted="false">Aportar a Viaje a la costa</string>
+    <string name="v2_demo_abrir_meta" formatted="false">Abrir meta</string>
+    <string name="v2_demo_una_meta_de_nombre_largo_para_probar" formatted="false">Una meta de nombre largo para probar texto grande</string>
+    <string name="v2_demo_100" formatted="false">100 %</string>
+    <string name="v2_demo_celular_nuevo" formatted="false">Celular nuevo</string>
+    <string name="v2_demo_llego_al_100" formatted="false">Llegó al 100 %</string>
+    <string name="v2_demo_marcar_como_lograda" formatted="false">Marcar como lograda</string>
+    <string name="v2_demo_completar_meta" formatted="false">Completar meta</string>
+    <string name="v2_demo_de_3_000_000" formatted="false">de 3.000.000</string>
+    <string name="v2_demo_abrir_viaje_a_la_costa" formatted="false">Abrir Viaje a la costa</string>
+    <string name="v2_demo_sin_fecha" formatted="false">Sin fecha</string>
+    <string name="v2_demo_vacunas_de_luna" formatted="false">Vacunas de Luna</string>
+    <string name="v2_demo_400_000_30_sep" formatted="false">400.000, 30 sep</string>
+    <string name="v2_demo_abrir_meta_lograda_solo_lectura" formatted="false">Abrir meta lograda, solo lectura</string>
+    <string name="v2_demo_vie_2_oct" formatted="false">vie 2 oct</string>
+    <string name="v2_demo_ganaste_el_sello_del_50" formatted="false">Ganaste el sello del 50 %</string>
+    <string name="v2_demo_lun_20_oct_arreglo_del_carro" formatted="false">lun 20 oct · Arreglo del carro</string>
+    <string name="v2_demo_retiro_en_pesos" formatted="false">Retiro en pesos</string>
+    <string name="v2_demo_aporte_en_pesos" formatted="false">Aporte en pesos</string>
+    <string name="v2_demo_mas_de_lo_guardado_1_710_000" formatted="false">Más de lo guardado (1.710.000)</string>
+    <string name="v2_demo_registrar_retiro" formatted="false">Registrar retiro</string>
+    <string name="v2_demo_5_6" formatted="false">+5,6 %</string>
+    <string name="v2_demo_2_066_000_de_ganancia" formatted="false">+2.066.000 de ganancia</string>
+    <string name="v2_demo_4_3" formatted="false">−4,3 %</string>
+    <string name="v2_demo_258_000_de_perdida" formatted="false">−258.000 de pérdida</string>
+    <string name="v2_demo_parqueadero_19_000_000_pesos" formatted="false">Parqueadero: 19.000.000 pesos</string>
+    <string name="v2_demo_fondo_8_000_000_pesos" formatted="false">Fondo: 8.000.000 pesos</string>
+    <string name="v2_demo_finca_raiz_valor_del_12_jun" formatted="false">Finca raíz · valor del 12 jun</string>
+    <string name="v2_demo_sin_valor" formatted="false">Sin valor</string>
+    <string name="v2_demo_7_5" formatted="false">+7,5 %</string>
+    <string name="v2_demo_criptomoneda_sin_valor_anotado" formatted="false">Criptomoneda · sin valor anotado</string>
+    <string name="v2_demo_aportaste_2_000_000" formatted="false">aportaste 2.000.000</string>
+    <string name="v2_demo_sin_valor_se_omite_de_la_barra" formatted="false">Sin valor se omite de la barra; no se representa como cero.</string>
+    <string name="v2_demo_educacion" formatted="false">Educación</string>
+    <string name="v2_demo_inversion" formatted="false">Inversión</string>
+    <string name="v2_demo_en_tu_recibo" formatted="false">En tu Recibo</string>
+    <string name="v2_demo_mostrar_en_recibo" formatted="false">Mostrar en Recibo</string>
+    <string name="v2_demo_agosto_750_000_pesos" formatted="false">Agosto, 750.000 pesos</string>
+    <string name="v2_demo_septiembre_920_000_pesos" formatted="false">Septiembre, 920.000 pesos</string>
+    <string name="v2_demo_920_mil" formatted="false">920 mil</string>
+    <string name="v2_demo_octubre_400_000_pesos_mes_en_curso" formatted="false">Octubre, 400.000 pesos, mes en curso</string>
+    <string name="v2_demo_400_mil" formatted="false">400 mil</string>
+    <string name="v2_demo_entro_en_octubre" formatted="false">Entró en octubre</string>
+    <string name="v2_demo_en_presupuestos_1_500_000_pesos" formatted="false">En presupuestos: 1.500.000 pesos</string>
+    <string name="v2_demo_sin_asignar_500_000_pesos" formatted="false">Sin asignar: 500.000 pesos</string>
+    <string name="v2_demo_en_presupuestos_de_categorias" formatted="false">En presupuestos de categorías</string>
+    <string name="v2_demo_sin_asignar" formatted="false">Sin asignar</string>
+    <string name="v2_demo_mes_a_mes_un_mes_normal_835" formatted="false">Mes a mes · Un mes normal: 835.000</string>
+    <string name="v2_demo_gastos_mensuales_octubre_esta_en_curso" formatted="false">Gastos mensuales; octubre está en curso</string>
+    <string name="v2_demo_limite_1_m" formatted="false">Límite 1 M</string>
+    <string name="v2_demo_octubre_va_hasta_el_22_no_se" formatted="false">* Octubre va hasta el 22; no se proyecta.</string>
+    <string name="v2_demo_que_dias_gastas_mas_los_sabados" formatted="false">¿Qué días gastas más? · Los sábados</string>
+    <string name="v2_demo_42_700_en_promedio_ultimos_4_meses" formatted="false">42.700 en promedio · últimos 4 meses completos</string>
+    <string name="v2_demo_viernes_20_000_pesos_en_promedio" formatted="false">Viernes, 20.000 pesos en promedio</string>
+    <string name="v2_demo_sab" formatted="false">sáb</string>
+    <string name="v2_demo_sabado_42_700_pesos_en_promedio" formatted="false">Sábado, 42.700 pesos en promedio</string>
+    <string name="v2_demo_42_7_mil" formatted="false">42,7 mil</string>
+    <string name="v2_demo_gasto_medio_por_dia_de_la_semana" formatted="false">Gasto medio por día de la semana</string>
+    <string name="v2_demo_valores_anotados" formatted="false">Valores anotados</string>
+    <string name="v2_demo_12_jun_4_000_000_pesos" formatted="false">12 jun: 4.000.000 pesos</string>
+    <string name="v2_demo_9_sep_5_242_000_pesos" formatted="false">9 sep: 5.242.000 pesos</string>
+    <string name="v2_demo_14_oct_5_000_000_pesos" formatted="false">14 oct: 5.000.000 pesos</string>
+    <string name="v2_demo_valores_registrados_y_aportes_menos_retiros_en" formatted="false">Valores registrados y aportes menos retiros, en línea escalonada</string>
+    <string name="v2_demo_celular_nuevo_meta_lograda" formatted="false">Celular nuevo, meta lograda.</string>
+    <string name="v2_demo_100_pendiente_de_marcar" formatted="false">100 % pendiente de marcar</string>
+    <string name="v2_demo_gasto_borrado" formatted="false">Gasto borrado</string>
+    <string name="v2_demo_ganaste_los_sellos_del_25_y_del" formatted="false">Ganaste los sellos del 25 % y del 50 %</string>
+    <string name="v2_demo_viaje_a_la_costa_faltan_1_290" formatted="false">Viaje a la costa · faltan 1.290.000 para la meta</string>
+    <string name="v2_demo_borrar_esta_meta" formatted="false">Borrar esta meta</string>
+    <string name="v2_demo_se_borran_la_meta_y_sus_6" formatted="false">Se borran la meta y sus 6 movimientos. Esto no se puede deshacer.</string>
+    <string name="v2_demo_borrar_meta" formatted="false">Borrar meta</string>
+    <string name="v2_demo_borrar_viaje_a_la_costa" formatted="false">¿Borrar Viaje a la costa?</string>
+    <string name="v2_demo_confirmacion_sintetica_el_catalogo_no_borra_registros" formatted="false">Confirmación sintética; el catálogo no borra registros.</string>
+    <string name="v2_demo_celebracion_sintetica_de_una_finalizacion_confirmada_sin" formatted="false">Celebración sintética de una finalización confirmada; sin cambios financieros.</string>
+    <string name="v2_demo_probar_nombre_y_monto_largos" formatted="false">Probar nombre y monto largos</string>
+    <string name="v2_demo_lo_lograste" formatted="false">¡Lo lograste!</string>
+    <string name="v2_demo_meta_lograda" formatted="false">META LOGRADA</string>
+    <string name="v2_demo_un_viaje_con_toda_la_familia_para" formatted="false">Un viaje con toda la familia para conocer la costa colombiana</string>
+    <string name="v2_demo_16_oct_2026_6_aportes" formatted="false">16 oct 2026 · 6 aportes</string>
+    <string name="v2_demo_ver_mi_meta" formatted="false">Ver mi meta</string>
+    <string name="v2_demo_meta_lograda_historial_de_solo_lectura" formatted="false">Meta lograda · historial de solo lectura</string>
+    <string name="v2_demo_dale_forma_a_tu_mes" formatted="false">Dale forma a tu mes</string>
+    <string name="v2_demo_crea_una_categoria_para_lo_que_importa" formatted="false">Crea una categoría para lo que importa: la casa, la comida, el ocio o tu ahorro.</string>
+    <string name="v2_demo_crear_categoria" formatted="false">Crear categoría</string>
+    <string name="v2_demo_ponle_nombre_a_algo_que_quieras" formatted="false">Ponle nombre a algo que quieras</string>
+    <string name="v2_demo_tus_metas_apareceran_aqui" formatted="false">Tus metas aparecerán aquí.</string>
+    <string name="v2_demo_sin_metas_la_accion_crear_una_meta" formatted="false">Sin metas, la acción Crear una meta vive en el dock.</string>
+    <string name="v2_demo_tus_registros_siguen_guardados_vuelve_a_intentarlo" formatted="false">Tus registros siguen guardados. Vuelve a intentarlo.</string>
+    <string name="v2_demo_no_pudimos_leer_tu_mes" formatted="false">No pudimos leer tu mes</string>
+    <string name="v2_demo_primer_mes_aun_no_hay_un_mes" formatted="false">Primer mes: aún no hay un mes anterior para comparar.</string>
+    <string name="v2_demo_sello_funciona_sin_ingresos" formatted="false">Sello funciona sin ingresos</string>
+    <string name="v2_demo_puedes_empezar_con_tus_categorias_y_gastos" formatted="false">Puedes empezar con tus categorías y gastos.</string>
+    <string name="v2_demo_tokens_existentes_nuevos_simbolos_y_movimiento_reducido" formatted="false">Tokens existentes, nuevos símbolos y movimiento reducido en el mismo catálogo.</string>
+    <string name="v2_demo_more_than_september">más que en septiembre</string>
+    <string name="v2_caller_preview">Vista del llamador · confirmación sintética sobre el dock</string>
+    <string name="v2_expense_confirmation">Gasto anotado: %1$s en %2$s</string>
+    <string name="v2_income_confirmation">Ingreso anotado: %1$s de %2$s</string>
+    <string name="v2_september_income">Ingresos de septiembre</string>
 </resources>

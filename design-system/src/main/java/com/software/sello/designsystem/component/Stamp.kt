@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -21,8 +23,8 @@ import com.software.sello.designsystem.theme.SelloMotion
 import com.software.sello.designsystem.theme.SelloTheme
 import java.util.Locale
 
-/** Good is gain, Done is brand, Over is loss, Neutral is soft ink. There is no amber stamp. */
-enum class StampInk { Good, Done, Over, Neutral }
+/** Semantic inks; Warn is reserved for a review status, never ordinary overspending. */
+enum class StampInk { Good, Done, Over, Neutral, Warn }
 
 /** 15sp, 34sp and 52sp. */
 enum class StampSize { Small, Large, Hero }
@@ -46,7 +48,8 @@ fun Stamp(
     modifier: Modifier = Modifier,
     size: StampSize = StampSize.Small,
     angle: Float = StampDefaults.angle(size),
-    land: Boolean = false
+    land: Boolean = false,
+    v2Motion: Boolean = false
 ) {
     val colors = SelloTheme.colors
     val color = when (ink) {
@@ -54,6 +57,7 @@ fun Stamp(
         StampInk.Done -> colors.brand
         StampInk.Over -> colors.semantic.loss
         StampInk.Neutral -> colors.inkSoft
+        StampInk.Warn -> colors.semantic.warn
     }
     val spec = when (size) {
         StampSize.Small -> StampSpec(
@@ -79,10 +83,14 @@ fun Stamp(
     }
     val animate = land && !SelloTheme.reducedMotion
     val progress = remember { Animatable(if (animate) 0f else 1f) }
+    val ring = remember { Animatable(0f) }
     val haptics = LocalHapticFeedback.current
     LaunchedEffect(Unit) {
         if (land) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-        if (animate) progress.animateTo(1f, SelloMotion.stamp())
+        if (animate) {
+            progress.animateTo(1f, SelloMotion.stamp())
+            if (v2Motion) ring.animateTo(1f, SelloMotion.emphasized())
+        }
     }
     Text(
         text = text.uppercase(Locale.ROOT),
@@ -92,12 +100,26 @@ fun Stamp(
         modifier = modifier
             .graphicsLayer {
                 val p = progress.value
-                val scale =
-                    SelloMotion.STAMP_INITIAL_SCALE + (1f - SelloMotion.STAMP_INITIAL_SCALE) * p
+                val initialScale = if (v2Motion) {
+                    SelloMotion.STAMP_V2_INITIAL_SCALE
+                } else {
+                    SelloMotion.STAMP_INITIAL_SCALE
+                }
+                val scale = initialScale + (1f - initialScale) * p
                 scaleX = scale
                 scaleY = scale
                 alpha = p.coerceIn(0f, 1f)
                 rotationZ = angle + SelloMotion.STAMP_SETTLE_DEGREES * (1f - p)
+            }
+            .drawBehind {
+                if (v2Motion && ring.value > 0f && ring.value < 1f) {
+                    drawCircle(
+                        color.copy(alpha = 1f - ring.value),
+                        radius =
+                            this@drawBehind.size.maxDimension / 2 + ring.value * 8.dp.toPx(),
+                        style = Stroke(2.dp.toPx())
+                    )
+                }
             }
             .border(spec.outline, color, spec.shape)
             .padding(spec.padding)

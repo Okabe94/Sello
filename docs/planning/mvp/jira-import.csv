@@ -6543,8 +6543,7 @@ Evidence from 2026-10-16: with 393.700 spent of 750.000 on day 16, the forecast
 200.000 of 400.000 shows ""Justo"". ADR 0012 BG1 and D03 ""Approved design"" define the
 replacement; D03 ""Current calculation"" says the forecast stays until this ticket.
 
-**Before Ready:** the owner reviews BG-E01 and BG-E04, which ADR 0012 still marks as
-""not separately reviewed"", and the reviewed values are recorded there.
+The owner confirmed BG-E01 and BG-E04 on 2026-10-17; ADR 0012 records the values.
 
 Start at `domain/.../model/MonthlySnapshot.kt` (`Verdict`, `PastVerdict`,
 `BudgetStanding`), `domain/.../policy/MonthlyBudgetPolicy.kt` (`verdict`),
@@ -6905,9 +6904,9 @@ The month bar reads **Octubre** with a smaller **2026**, and any past month is
 clearly signalled with a one-tap way back.
 
 ### Deliverables
-Month button styling in `MonthSwitcher` with its catalog example updated, and the
-`PastMonthRibbon` from SELLO-068 placed under the month bar on every screen that
-uses the shared month.
+The selected-month behaviour behind the SELLO-068 frame: the ribbon shown under the
+month bar on every screen that uses the shared month while a past month is selected,
+and **Volver a** selecting the current month.
 
 ### Acceptance criteria
 - The month button shows the month name large and the year small; at large font the
@@ -6930,12 +6929,12 @@ Choosing September in the month picker shows the ribbon on Recibo; tapping
 Shared month: `navigation/MonthSession.kt`, `ShellViewModel.kt`; frame:
 `SelloScaffold.kt`, `MonthSwitcher` in `designsystem/component/Navigation.kt`;
 [app shell guide](../../../development/app-shell.md). The ribbon component itself is
-SELLO-068; this ticket owns its placement and behaviour.
+SELLO-068; this ticket owns when it shows and what it does.
 
 ### Implementation plan
 1. Show the SELLO-068 ribbon from the shell when the selected month differs from
    the current one, wired to the existing select-current-month action.
-2. Restyle the month button; keep its spoken label.
+2. Check the SELLO-068 month bar keeps the spoken label and opens the same picker.
 
 ### Concrete cases and pitfalls
 - The current month comes from the financial clock; a month change at midnight
@@ -7027,8 +7026,9 @@ The dock is one full-width **+ Anotar** button and the selected tab is marked by
 pill behind its icon.
 
 ### Deliverables
-`EntryDock` and `SelloNavigationBar` changes in `:design-system`, catalog examples,
-and the shell updated on every tab.
+The shell using `V2Dock` and `V2NavigationBar` (built in pull request #54) on every
+tab, with the rail keeping its Anotar action. `EntryDock` and `SelloNavigationBar`
+are retired in SELLO-073.
 
 ### Acceptance criteria
 - The dock is a single brand button with a + icon and **Anotar**; it opens expense
@@ -7052,9 +7052,9 @@ and the selected tab has a line above it. Code: `EntryDock`, `SelloNavigationBar
 `ShellScreenLayoutTest`, `KeyboardInsetsTest`, `AdaptiveScaffoldTest`.
 
 ### Implementation plan
-1. Change `EntryDock` to a full-width `SelloButton` and update its catalog example.
-2. Add the pill indicator to the navigation bar.
-3. Check the rail and every shell route.
+1. Replace `EntryDock` with `V2Dock` and `SelloNavigationBar` with `V2NavigationBar`
+   in `SelloScaffold`.
+2. Check the rail and every shell route.
 
 ### Concrete cases and pitfalls
 - The dock is reused on Configuración, Ingresos and category detail; check each.
@@ -7265,41 +7265,48 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Gate:** G2
 
 ### Outcome
-An Excedido month offers **Ajustar presupuesto ›** under the big number, leading to
-where the limits can be changed.
+An Excedido month offers **Ajustar presupuesto ›** under the big number, which brings
+Recibo's categories card into view, where each category opens its detail and limit
+editor.
 
 ### Deliverables
-The link in the answer slip for an overspent current month and its navigation.
+The link in the answer slip for an overspent current month, scrolling Recibo to its
+categories card and moving accessibility focus to the card's heading.
 
 ### Acceptance criteria
 - The link appears only with Excedido in the current month, never for a past month.
-- It opens the owner-approved destination; existing limit edits keep their
-  current/past-month rules.
-- It has a 48dp target and a clear spoken label.
+- Tapping it scrolls Recibo so the **Tus categorías** heading is at the top of the
+  list and gives it accessibility focus; nothing navigates away.
+- In a two-column layout where the card is already visible, it still moves focus to
+  the heading.
+- It has a 48dp target and a clear spoken label, such as ""Ajustar presupuesto, ir a
+  tus categorías"".
+- Existing limit edits keep their current/past-month rules.
 
 ### Tests
-Screen test for visibility; navigation test for the destination and Back; G2.
+Screen test for visibility; scroll-position and focus test; two-column test; G2.
 
 ### Working checkpoint
-From an Excedido Recibo the link reaches the approved limit-editing destination.
+From an Excedido Recibo the link brings the categories card into view, and a
+category opens its limit editor as today.
 
 ### Context and starting points
-**Decision input before Ready:** where the link goes. Options: the category editor
-for the most overspent category, a list of categories with their limits, or category
-detail. The owner chooses; the executor does not guess. ADR 0012 names the link;
-the category editor is described in
-[category-editor.md](../../../development/category-editor.md).
+**Decision (owner, 2026-10-17): option D**, Recibo's own categories card. It needs no
+new screen and works when no single category is over its limit. A dedicated list of
+limits was considered and left for later. ADR 0012 names the link; the category
+editor is described in [category-editor.md](../../../development/category-editor.md).
 
 ### Implementation plan
-1. Record the decision in this ticket.
-2. Add the link and its route; reuse existing editors.
+1. Add the link to the SELLO-062 answer slip for Excedido in the current month.
+2. Scroll Recibo's list to the categories card and request focus on its heading.
 
 ### Concrete cases and pitfalls
 - Overspending with no single overspent category is possible (unlimited categories
-  count toward the total); the destination must handle it.
+  count toward the total); the card shows every category, so the link still helps.
+- A failed or loading categories card must still be reachable without a crash.
 
 ### Verification recipe
-Focused screen and navigation tests, then `./scripts/verify-ticket SELLO-067 --retain`.
+Focused screen tests, then `./scripts/verify-ticket SELLO-067 --retain`.
 
 Shared definition of done and gates:
 
@@ -7363,7 +7370,7 @@ Focused tests run first; the gate is the final integrated checkpoint. Documentat
 names expected new test behavior, not pretend pre-existing test classes.
 
 ",1012,Medium,Backlog,sello-067
-68,Task,SELLO-068 — Add the PastMonthRibbon design-system component,"Local ID: SELLO-068
+68,Task,SELLO-068 — Wire the v2 month bar and past-month ribbon into the app frame,"Local ID: SELLO-068
 Epic: SELLO-E12
 Increment: MVP
 Repository source: docs/planning/mvp/epics/E12-v2-recibo.md
@@ -7377,50 +7384,46 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Gate:** G2
 
 ### Outcome
-`:design-system` has the v2 past-month ribbon, shown in the catalog, ready for the
-shell to place under the month bar.
+The app frame draws its month title with the `V2MonthBar` and has a place for the
+`PastMonthRibbon` under it, both built in pull request #54.
 
 ### Deliverables
-`PastMonthRibbon` in `designsystem/component`, a `:catalog` example with light/dark,
-both inks, font scales 1.0/1.3/2.0 and the compact window, and a component test.
+`SelloScaffold` using `V2MonthBar` (month, small year, chevron, settings action) in
+place of `MonthSwitcher`'s title, an optional ribbon slot that shows
+`PastMonthRibbon` on the band, the catalog scaffold example updated and frame tests.
 
 ### Acceptance criteria
-- It shows a calendar icon, **Estás viendo** with the month name in bold, and a
-  **Volver a {month}** button; the app supplies both month names and the action.
-- It sits on the band colour with paper text, matches the v2 catalog entry, and
-  reflows to two lines at large text without clipping the button.
-- The button has a 48dp target; the message is announced politely as status and the
-  button has a clear spoken label.
-- The component holds no month logic, clock or navigation; it takes plain strings
-  and a callback.
+- Every tab with the shared month shows the v2 month bar; tapping it opens the same
+  month picker, and its spoken label still names the month and year.
+- When the caller passes a ribbon, it sits on the band under the month bar; without
+  one, nothing changes.
+- Large text and narrow windows keep the month button and actions reachable.
+- `PastMonthRibbon` and `V2MonthBar` hold no month logic or clock; SELLO-064 decides
+  when the ribbon shows.
 
 ### Tests
-Catalog example test, semantics and target-size test, large-font layout test; G2.
+Scaffold layout and semantics tests; catalog example test; G2.
 
 ### Working checkpoint
-The catalog app shows the ribbon in all four theme combinations and at font scale
-2.0, and its button reports a tap.
+Recibo and Resumen show the v2 month bar on a phone; the catalog scaffold shows the
+ribbon slot filled.
 
 ### Context and starting points
-v2 component catalog: ""Past-month ribbon · New · PastMonthRibbon (proposal) ·
-Recibo, Resumen, income while a past month is selected"". Styling: `.past-ribbon`
-in `docs/design/v2/sello.css`; markup: `pastRibbon` in `docs/design/v2/kit.js`.
-Reuse `SelloTheme` tokens, `SelloIcon` (the `event` icon) and `SelloButton` styles;
-follow existing examples in `catalog/.../StructureExamples.kt`. Placement and
-behaviour are SELLO-064.
+The components and their tests exist in `designsystem/component/v2/V2Controls.kt`
+(`V2MonthBar`, `PastMonthRibbon`) and `V2ComponentTest`. The frame is
+`SelloScaffold.kt`; `MonthSwitcher` is in `designsystem/component/Navigation.kt`.
 
 ### Implementation plan
-1. Add the composable with a minimal API (`message month`, `return label`,
-   `onReturn`, `modifier`).
-2. Add the catalog example beside `MonthSwitcherExample`.
-3. Add semantics, target-size and large-font tests.
+1. Draw the title with `V2MonthBar` in `SelloScaffold`, keeping the picker action.
+2. Add the ribbon slot and its catalog example.
 
 ### Concrete cases and pitfalls
-- Long month names (""septiembre"") plus ""Volver a noviembre"" must fit at 320dp.
-- Do not add a `YearMonth` or clock dependency to `:design-system`.
+- Pushed screens with a title (Configuración, income history) keep their title bar;
+  `V2TitleBar` exists for tab titles.
+- `MonthSwitcher` itself is retired in SELLO-073 once nothing uses it.
 
 ### Verification recipe
-`:design-system` and `:catalog` device tests, then
+`:design-system`, `:catalog` and shell device tests, then
 `./scripts/verify-ticket SELLO-068 --retain`.
 
 Shared definition of done and gates:
@@ -7485,7 +7488,7 @@ Focused tests run first; the gate is the final integrated checkpoint. Documentat
 names expected new test behavior, not pretend pre-existing test classes.
 
 ",1012,Highest,Backlog,sello-068
-69,Task,SELLO-069 — Add a confirmation variant to SelloNotice,"Local ID: SELLO-069
+69,Task,SELLO-069 — Wire the confirmation notice into the shell,"Local ID: SELLO-069
 Epic: SELLO-E12
 Increment: MVP
 Repository source: docs/planning/mvp/epics/E12-v2-recibo.md
@@ -7499,46 +7502,41 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 - **Gate:** G2
 
 ### Outcome
-`SelloNotice` can show the v2 save confirmation: ink background, paper text and a
-leading check icon in the gain colour, with no action.
+The shell can show `SelloNotice`'s confirmation look (built in pull request #54)
+above the dock, ready for SELLO-066 to use after a save.
 
 ### Deliverables
-An optional leading check (or a confirmation kind) on `SelloNotice`, its catalog
-example in `NoticeExample`, and component tests; existing notice uses unchanged.
+The shell's notice slot accepting a confirmation notice, placed above the dock on
+every tab and beside the rail in wide layouts, with a shell test.
 
 ### Acceptance criteria
-- The confirmation shows a gain-coloured check icon before the message, e.g.
-  ""Gasto anotado: 48.700 en Comida""; the icon is decorative and not spoken.
+- A confirmation shows the gain check before the message, e.g. ""Gasto anotado:
+  48.700 en Comida""; the check is decorative and not spoken.
 - The message is announced politely; spoken text can carry the full amount.
 - Existing undo and plain notices look and behave as before.
-- Correct in light and dark themes and at font scale 2.0.
+- Correct in light and dark themes, at font scale 2.0 and with the keyboard closed.
 
 ### Tests
-Catalog notice example test covering the new variant; semantics test; screenshot or
-layout check in dark theme; G2.
+Shell notice placement and semantics tests in both themes; G2.
 
 ### Working checkpoint
-The catalog notice example shows the confirmation alongside the existing undo and
-plain notices.
+A test host shows a confirmation above the dock on Recibo and Resumen.
 
 ### Context and starting points
-v2 component catalog: ""Toast · Extend · SelloNotice · After a save"". Styling:
-`.toast` in `docs/design/v2/sello.css` (ink background, paper text, check icon in
-gain, darker green in dark theme). Current `SelloNotice` is in
-`designsystem/component/Corrections.kt`; its example is `NoticeExample` in
-`catalog/.../FeedbackExamples.kt`. Timing and placement belong to SELLO-066.
+`SelloNotice(confirmation = true)` is in `designsystem/component/Corrections.kt` with
+its catalog example in the V2 feedback examples. The shell's notice slot is the
+`notice` parameter of `SelloScaffold`. Timing and text belong to SELLO-066.
 
 ### Implementation plan
-1. Add the optional leading icon to `SelloNotice` without changing its defaults.
-2. Extend `NoticeExample` with the confirmation.
-3. Add semantics and theme tests.
+1. Pass confirmation notices through the shell's notice slot.
+2. Add placement and semantics tests.
 
 ### Concrete cases and pitfalls
-- The check must keep enough contrast on ink in dark theme (v2 uses a darker green).
 - Do not add timing or auto-dismiss to the component; the shell owns it.
+- The notice must not cover the dock or the tab bar.
 
 ### Verification recipe
-`:design-system` and `:catalog` device tests, then
+`:design-system` and shell device tests, then
 `./scripts/verify-ticket SELLO-069 --retain`.
 
 Shared definition of done and gates:
@@ -7603,3 +7601,612 @@ Focused tests run first; the gate is the final integrated checkpoint. Documentat
 names expected new test behavior, not pretend pre-existing test classes.
 
 ",1012,Highest,Backlog,sello-069
+1013,Epic,SELLO-E13 — Bring the rest of today's app to Sello v2,"Local ID: SELLO-E13
+Increment: MVP
+Goal: Every screen the app already has looks and behaves as approved in Sello v2, using one set of components, before new features are added.
+Exit: Expense and income entry, income history and Resumen match their v2 designs for today's scope; superseded v1 components are gone from the app and catalog; a manual screen-reader and switch-access pass is recorded.",,Highest,Backlog,sello-e13
+70,Story,SELLO-070 — Bring expense entry and edit to v2,"Local ID: SELLO-070
+Epic: SELLO-E13
+Increment: MVP
+Repository source: docs/planning/mvp/epics/E13-v2-current-app.md
+Resource links resolve relative to that repository file.
+Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
+
+- **Type:** Story
+- **Priority:** P0
+- **Status:** Backlog
+- **Depends on:** SELLO-066, SELLO-004
+- **Gate:** G2
+
+### Outcome
+Anotar opens the v2 form: amount slip, two rows of category chips ending in
+**Nueva**, a note row with its docked composer, a fixed **Anotar gasto** button and
+the compact Sello pad.
+
+### Deliverables
+The expense form rebuilt on `V2EntryLayout`, `EntryAmountSlip`, `V2ChipRows`,
+`SelloChip` with category icons, `AddChip`, `EntryLine`, `NoteComposer`, the compact
+`AmountKeypad` and `V2Dock`-style action, for both new entries and edits, with its
+screen tests updated.
+
+### Acceptance criteria
+- Order and behaviour follow the v2 README ""Expense and income entry"": no category
+  preselected (except from ""Anotar aquí""), at most two chip rows scrolling sideways,
+  the amount, action and pad never moving.
+- **Nueva** opens the category editor and returns with the new category selected, as
+  today's entry prerequisite does.
+- The note row opens the composer docked to the keyboard; over 60 characters the
+  text is kept, the counter turns red and ✓ is disabled; editing starts with the
+  cursor at the end.
+- Amount sizes step down as digits are added; a 13th digit shows **Máximo 12 dígitos**
+  in place of the label without moving anything.
+- Saving, unknown-outcome recovery (""Comprobar si se guardó""), drafts restored after
+  process death, past-month edits and the edit-only delete keep today's rules.
+- Short windows scroll the amount with the choices; two-column windows keep today's
+  split; large text and 320dp windows keep every control reachable.
+
+### Tests
+Updated expense entry screen and journey tests (new entry, edit, unknown outcome,
+restoration), the keyboard-inset test and G2.
+
+### Working checkpoint
+On a phone, an expense can be entered, edited and recovered after process death in
+the v2 form, and the saved confirmation from SELLO-066 appears.
+
+### Context and starting points
+Today: `app/.../feature/expense/ExpenseEntryScreen.kt` and its root, render model and
+tests; see ""6. Expense entry and edit"" in the current app inventory. Reference:
+`docs/design/v2/entry.html` and the catalog example `v2.entry` in
+`catalog/.../v2/V2InputExamples.kt`, which already shows every state with synthetic
+data.
+
+### Implementation plan
+1. Rebuild the form's layout on `V2EntryLayout` with the v2 pieces.
+2. Wire **Nueva** to the existing category-creation route.
+3. Move the note to `EntryLine` and `NoteComposer`.
+4. Update screen and journey tests; check 320dp, font 2.0 and two columns.
+
+### Concrete cases and pitfalls
+- The composer's keyboard must not resize or flip the form behind it.
+- Edits have no Gasto/Ingreso switch, as today.
+- The note limit counts characters as people see them (code points), not UTF-16 units.
+
+### Verification recipe
+`:app` focused screen and journey tests, then `./scripts/verify-ticket SELLO-070 --retain`.
+
+Shared definition of done and gates:
+
+1. Deliverables are checked in and satisfy every acceptance criterion. Changes
+   respect architecture/source-set boundaries and do not activate deferred features.
+2. Behavior changes have a meaningful failing test followed by passing evidence;
+   pure build/docs tasks instead show negative/configuration/link checks as applicable.
+3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
+   command/environment, revision, result counts, report paths, and device/API where
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
+4. Existing completed journeys still work. No successful stubs, inaccessible
+   placeholders, destructive migrations, compile failures, or failed read → zero.
+5. Applicable catalog examples and sandbox scenarios grow with the change.
+   Accessibility, process restoration, financial bounds and error handling are
+   checked where the ticket touches them; the final epic does not postpone quality.
+6. Reviewer checks code, financial/recovery semantics, release isolation and
+   evidence. Update the canonical ticket status/evidence, then regenerate the board.
+
+Add a `### Delivery evidence` section to completed tickets with requirement mapping,
+red/green commands, integration/device results, review and unresolved issues.
+Do not rewrite acceptance after execution just to make a ticket pass.
+
+Use these required evidence fields (no placeholder values): `Revision`,
+`Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
+`Review`, each written as `- **Field:** evidence`. State why a red test/device gate
+is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
+
+## Gate profiles
+
+Use the environment from [setup](../../development/setup.md).
+
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
+- **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
+  structure check, board and quality-tool tests, the architecture rules
+  (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
+  writes a report. `scripts/quality/gates.py` owns the task list; a test keeps this
+  block identical to it. Run the Gradle command directly only for quick feedback.
+
+```bash
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+```
+
+- **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
+  emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
+  `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
+  and `:catalog:connectedDebugAndroidTest`, and refuses to start without a connected
+  device. Assembling test APKs is not device acceptance.
+- **G3 — release:** G2 across agreed API/window/font configurations, optimized
+  production composition/artifact inspection, performance evidence, and signed
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
+
+Focused tests run first; the gate is the final integrated checkpoint. Documentation
+names expected new test behavior, not pretend pre-existing test classes.
+
+",1013,Highest,Backlog,sello-070
+71,Story,"SELLO-071 — Bring income entry, edit and history to v2","Local ID: SELLO-071
+Epic: SELLO-E13
+Increment: MVP
+Repository source: docs/planning/mvp/epics/E13-v2-current-app.md
+Resource links resolve relative to that repository file.
+Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
+
+- **Type:** Story
+- **Priority:** P1
+- **Status:** Backlog
+- **Depends on:** SELLO-070, SELLO-064, SELLO-004
+- **Gate:** G2
+
+### Outcome
+Income entry matches the v2 form in green, and income history becomes the v2
+**Ingresos de octubre** screen: what came in, where it went, and each income.
+
+### Deliverables
+Income entry and edit on the SELLO-070 form (source chips without icons, **Otro**
+with a full-width source-name row using the same composer, the amount in gain with
+`+`, **Anotar ingreso**); income history rebuilt with `V2TitleBar`, an `AnswerSlip`
+hero (""Entró en octubre""), a `SplitBar` with **En presupuestos de categorías** and
+**Sin asignar** lines, and the income list with a total line.
+
+### Acceptance criteria
+- Income entry keeps today's sources, optional name, date, note, saving and
+  recovery rules; the source name is required only for Otro and is never lost when
+  the composer closes.
+- The history hero shows the recorded total; a negative unassigned amount is signed
+  and red, followed by the two facts behind it, with no suggestion.
+- No expected income, plan box or suggestion appears: recurrence does not exist.
+- Rows keep paging, editing and failed-page retry; loading and failed reads never
+  show zero.
+- A past month shows the shared ribbon.
+
+### Tests
+Income entry, history and journey tests updated; split-bar semantics; G2.
+
+### Working checkpoint
+From Resumen, income history shows the v2 hero and list for the selected month, and
+a new income saved there appears in it.
+
+### Context and starting points
+Today: ""5. Income history"" and ""7. Income entry and edit"" in the current app
+inventory; the allocated and unallocated figures already exist for Resumen. Reference:
+`docs/design/v2/income.html`, ""Income"" in the v2 README and the catalog examples.
+
+### Implementation plan
+1. Move income entry onto the SELLO-070 form with the green tone.
+2. Rebuild income history's top with the hero and split bar from existing figures.
+3. Restyle the list; update tests.
+
+### Concrete cases and pitfalls
+- Unassigned income can be negative; the bar must not draw a negative segment.
+- ""Sello funciona sin ingresos"" stays the empty state.
+
+### Verification recipe
+`:app` focused tests, then `./scripts/verify-ticket SELLO-071 --retain`.
+
+Shared definition of done and gates:
+
+1. Deliverables are checked in and satisfy every acceptance criterion. Changes
+   respect architecture/source-set boundaries and do not activate deferred features.
+2. Behavior changes have a meaningful failing test followed by passing evidence;
+   pure build/docs tasks instead show negative/configuration/link checks as applicable.
+3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
+   command/environment, revision, result counts, report paths, and device/API where
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
+4. Existing completed journeys still work. No successful stubs, inaccessible
+   placeholders, destructive migrations, compile failures, or failed read → zero.
+5. Applicable catalog examples and sandbox scenarios grow with the change.
+   Accessibility, process restoration, financial bounds and error handling are
+   checked where the ticket touches them; the final epic does not postpone quality.
+6. Reviewer checks code, financial/recovery semantics, release isolation and
+   evidence. Update the canonical ticket status/evidence, then regenerate the board.
+
+Add a `### Delivery evidence` section to completed tickets with requirement mapping,
+red/green commands, integration/device results, review and unresolved issues.
+Do not rewrite acceptance after execution just to make a ticket pass.
+
+Use these required evidence fields (no placeholder values): `Revision`,
+`Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
+`Review`, each written as `- **Field:** evidence`. State why a red test/device gate
+is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
+
+## Gate profiles
+
+Use the environment from [setup](../../development/setup.md).
+
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
+- **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
+  structure check, board and quality-tool tests, the architecture rules
+  (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
+  writes a report. `scripts/quality/gates.py` owns the task list; a test keeps this
+  block identical to it. Run the Gradle command directly only for quick feedback.
+
+```bash
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+```
+
+- **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
+  emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
+  `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
+  and `:catalog:connectedDebugAndroidTest`, and refuses to start without a connected
+  device. Assembling test APKs is not device acceptance.
+- **G3 — release:** G2 across agreed API/window/font configurations, optimized
+  production composition/artifact inspection, performance evidence, and signed
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
+
+Focused tests run first; the gate is the final integrated checkpoint. Documentation
+names expected new test behavior, not pretend pre-existing test classes.
+
+",1013,High,Backlog,sello-071
+72,Story,SELLO-072 — Bring Resumen to v2 for today's figures,"Local ID: SELLO-072
+Epic: SELLO-E13
+Increment: MVP
+Repository source: docs/planning/mvp/epics/E13-v2-current-app.md
+Resource links resolve relative to that repository file.
+Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
+
+- **Type:** Story
+- **Priority:** P1
+- **Status:** Backlog
+- **Depends on:** SELLO-064, SELLO-065, SELLO-004
+- **Gate:** G2
+
+### Outcome
+Resumen shows today's figures in the v2 order and components: income lines first,
+then month by month, then where the money goes.
+
+### Deliverables
+Resumen rebuilt with v2 components for the figures it already computes: the income
+slip as receipt lines with **Ver ingresos y su destino ›**, the monthly columns with
+the month in progress striped, and categories ranked by spending with
+`SpendingRankRow`, plus updated screen tests.
+
+### Acceptance criteria
+- Only figures the app already computes appear; nothing is projected for the month
+  in progress.
+- Columns give exact values on selection, as today; the striped current month is
+  explained to screen readers.
+- Each ranked category opens its detail; the total line matches the sum.
+- Loading, failed (never zero), empty and stale states keep today's behaviour.
+- Large text, 320dp and two-column layouts work.
+
+### Tests
+Resumen screen and journey tests updated; chart exact-selection tests; G2.
+
+### Working checkpoint
+On a phone, Resumen shows the v2 income lines, columns and ranking for the selected
+month, and each opens what it opens today.
+
+### Context and starting points
+Today: ""4. Resumen"" in the current app inventory and `app/.../feature/resumen`.
+Reference: `docs/design/v2/resumen.html` and ""Resumen"" in the v2 README. The v2
+hero (""¿Cómo va este mes?"" against the same days of last month), ""¿Qué días gastas
+más?"" and the suggestion need new calculations and are not part of this ticket; the
+owner can ticket them separately.
+
+### Implementation plan
+1. Reorder Resumen's slips to the v2 order.
+2. Replace the income and allocation slips with receipt lines.
+3. Replace category columns with ranked rows.
+4. Update tests.
+
+### Concrete cases and pitfalls
+- Removing the cumulative daily line chart changes what Resumen shows; keep it until
+  the owner confirms it goes, and record the decision here.
+- The month in progress must never be drawn as a full month.
+
+### Verification recipe
+`:app` focused tests, then `./scripts/verify-ticket SELLO-072 --retain`.
+
+Shared definition of done and gates:
+
+1. Deliverables are checked in and satisfy every acceptance criterion. Changes
+   respect architecture/source-set boundaries and do not activate deferred features.
+2. Behavior changes have a meaningful failing test followed by passing evidence;
+   pure build/docs tasks instead show negative/configuration/link checks as applicable.
+3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
+   command/environment, revision, result counts, report paths, and device/API where
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
+4. Existing completed journeys still work. No successful stubs, inaccessible
+   placeholders, destructive migrations, compile failures, or failed read → zero.
+5. Applicable catalog examples and sandbox scenarios grow with the change.
+   Accessibility, process restoration, financial bounds and error handling are
+   checked where the ticket touches them; the final epic does not postpone quality.
+6. Reviewer checks code, financial/recovery semantics, release isolation and
+   evidence. Update the canonical ticket status/evidence, then regenerate the board.
+
+Add a `### Delivery evidence` section to completed tickets with requirement mapping,
+red/green commands, integration/device results, review and unresolved issues.
+Do not rewrite acceptance after execution just to make a ticket pass.
+
+Use these required evidence fields (no placeholder values): `Revision`,
+`Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
+`Review`, each written as `- **Field:** evidence`. State why a red test/device gate
+is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
+
+## Gate profiles
+
+Use the environment from [setup](../../development/setup.md).
+
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
+- **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
+  structure check, board and quality-tool tests, the architecture rules
+  (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
+  writes a report. `scripts/quality/gates.py` owns the task list; a test keeps this
+  block identical to it. Run the Gradle command directly only for quick feedback.
+
+```bash
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+```
+
+- **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
+  emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
+  `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
+  and `:catalog:connectedDebugAndroidTest`, and refuses to start without a connected
+  device. Assembling test APKs is not device acceptance.
+- **G3 — release:** G2 across agreed API/window/font configurations, optimized
+  production composition/artifact inspection, performance evidence, and signed
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
+
+Focused tests run first; the gate is the final integrated checkpoint. Documentation
+names expected new test behavior, not pretend pre-existing test classes.
+
+",1013,High,Backlog,sello-072
+73,Task,SELLO-073 — Retire the v1 components v2 replaced,"Local ID: SELLO-073
+Epic: SELLO-E13
+Increment: MVP
+Repository source: docs/planning/mvp/epics/E13-v2-current-app.md
+Resource links resolve relative to that repository file.
+Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
+
+- **Type:** Task
+- **Priority:** P1
+- **Status:** Backlog
+- **Depends on:** SELLO-065, SELLO-068, SELLO-070, SELLO-071, SELLO-072, SELLO-004
+- **Gate:** G2
+
+### Outcome
+The app and catalog use one set of components: each v1 component that a v2 one
+replaced is deleted, and the remaining v2 components lose their `V2` prefix.
+
+### Deliverables
+Removal of superseded v1 components and their catalog examples and tests (for
+example `EntryDock`, `SelloNavigationBar`, `MonthSwitcher`'s title, `FieldPill` where
+`EntryLine` replaced it, `ChipFlow` where `V2ChipRows` replaced it), the `V2` names
+renamed to their final names, the catalog's V2 section folded into its component
+groups, and the remaining screens (category detail, the category editor,
+Configuración) moved onto the shared components where an equivalent exists.
+
+### Acceptance criteria
+- No production screen imports a deleted component; the architecture check passes.
+- Each deletion is backed by a search showing no remaining use.
+- Category detail, the editor and Configuración look as before (ADR 0013 v1.1) apart
+  from shared pieces now drawn by the v2 component.
+- The catalog lists each component once.
+
+### Tests
+Full `:design-system`, `:catalog` and `:app` suites; G2.
+
+### Working checkpoint
+The catalog lists each component once, and the app runs every journey with no v1
+duplicate left.
+
+### Context and starting points
+List v1 components with `grep` over `designsystem/component` and compare against
+`designsystem/component/v2`. The catalog's `v2-screens` section is review material;
+keep or remove it with the owner.
+
+### Implementation plan
+1. List each v1/v2 pair and its remaining uses.
+2. Move remaining uses, delete the v1 component and its example and tests.
+3. Rename v2 components and fold catalog sections.
+
+### Concrete cases and pitfalls
+- Some v1 components have no v2 replacement (for example `CategoryCell`); keep them.
+- Renames touch many files; do them in one focused commit without behaviour changes.
+
+### Verification recipe
+Full suites, then `./scripts/verify-ticket SELLO-073 --retain`.
+
+Shared definition of done and gates:
+
+1. Deliverables are checked in and satisfy every acceptance criterion. Changes
+   respect architecture/source-set boundaries and do not activate deferred features.
+2. Behavior changes have a meaningful failing test followed by passing evidence;
+   pure build/docs tasks instead show negative/configuration/link checks as applicable.
+3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
+   command/environment, revision, result counts, report paths, and device/API where
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
+4. Existing completed journeys still work. No successful stubs, inaccessible
+   placeholders, destructive migrations, compile failures, or failed read → zero.
+5. Applicable catalog examples and sandbox scenarios grow with the change.
+   Accessibility, process restoration, financial bounds and error handling are
+   checked where the ticket touches them; the final epic does not postpone quality.
+6. Reviewer checks code, financial/recovery semantics, release isolation and
+   evidence. Update the canonical ticket status/evidence, then regenerate the board.
+
+Add a `### Delivery evidence` section to completed tickets with requirement mapping,
+red/green commands, integration/device results, review and unresolved issues.
+Do not rewrite acceptance after execution just to make a ticket pass.
+
+Use these required evidence fields (no placeholder values): `Revision`,
+`Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
+`Review`, each written as `- **Field:** evidence`. State why a red test/device gate
+is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
+
+## Gate profiles
+
+Use the environment from [setup](../../development/setup.md).
+
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
+- **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
+  structure check, board and quality-tool tests, the architecture rules
+  (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
+  writes a report. `scripts/quality/gates.py` owns the task list; a test keeps this
+  block identical to it. Run the Gradle command directly only for quick feedback.
+
+```bash
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+```
+
+- **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
+  emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
+  `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
+  and `:catalog:connectedDebugAndroidTest`, and refuses to start without a connected
+  device. Assembling test APKs is not device acceptance.
+- **G3 — release:** G2 across agreed API/window/font configurations, optimized
+  production composition/artifact inspection, performance evidence, and signed
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
+
+Focused tests run first; the gate is the final integrated checkpoint. Documentation
+names expected new test behavior, not pretend pre-existing test classes.
+
+",1013,High,Backlog,sello-073
+74,Task,SELLO-074 — Review the v2 screens with TalkBack and Switch Access,"Local ID: SELLO-074
+Epic: SELLO-E13
+Increment: MVP
+Repository source: docs/planning/mvp/epics/E13-v2-current-app.md
+Resource links resolve relative to that repository file.
+Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
+
+- **Type:** Task
+- **Priority:** P1
+- **Status:** Backlog
+- **Depends on:** SELLO-073, SELLO-004
+- **Gate:** G2
+
+### Outcome
+A person has used every v2 screen with TalkBack and with Switch Access on a device,
+and what they found is fixed or ticketed.
+
+### Deliverables
+A recorded manual pass (device, Android version, settings, screens and findings) in
+`docs/testing/`, with fixes for small issues and tickets for larger ones.
+
+### Acceptance criteria
+- Every v2 screen and state in today's scope is covered: Recibo, entry (expense and
+  income, including the composer and unknown outcome), income history, Resumen and
+  the frame.
+- Amounts are spoken exactly; status changes are announced once; focus order follows
+  the visual order; every action is reachable by switch.
+- Findings are fixed with a test or ticketed; none are left unrecorded.
+
+### Tests
+The manual pass itself; regression tests for each fix; G2.
+
+### Working checkpoint
+The recorded pass lists no open, unrecorded finding.
+
+### Context and starting points
+Accessibility baseline: ""Adaptive and accessibility baseline"" in the current app
+inventory and ARCHITECTURE.md. Automated tests already cover semantics and target
+sizes; this ticket is the human check they cannot replace.
+
+### Implementation plan
+1. Run the pass with TalkBack, then with Switch Access, on a physical device.
+2. Record findings; fix small ones with tests; ticket the rest.
+
+### Concrete cases and pitfalls
+- The celebration and ribbons use live regions; check they are not announced twice.
+- Use synthetic data only; no personal records on the review device.
+
+### Verification recipe
+The recorded pass, focused tests for fixes, then `./scripts/verify-ticket SELLO-074 --retain`.
+
+Shared definition of done and gates:
+
+1. Deliverables are checked in and satisfy every acceptance criterion. Changes
+   respect architecture/source-set boundaries and do not activate deferred features.
+2. Behavior changes have a meaningful failing test followed by passing evidence;
+   pure build/docs tasks instead show negative/configuration/link checks as applicable.
+3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
+   command/environment, revision, result counts, report paths, and device/API where
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
+4. Existing completed journeys still work. No successful stubs, inaccessible
+   placeholders, destructive migrations, compile failures, or failed read → zero.
+5. Applicable catalog examples and sandbox scenarios grow with the change.
+   Accessibility, process restoration, financial bounds and error handling are
+   checked where the ticket touches them; the final epic does not postpone quality.
+6. Reviewer checks code, financial/recovery semantics, release isolation and
+   evidence. Update the canonical ticket status/evidence, then regenerate the board.
+
+Add a `### Delivery evidence` section to completed tickets with requirement mapping,
+red/green commands, integration/device results, review and unresolved issues.
+Do not rewrite acceptance after execution just to make a ticket pass.
+
+Use these required evidence fields (no placeholder values): `Revision`,
+`Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
+`Review`, each written as `- **Field:** evidence`. State why a red test/device gate
+is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
+
+## Gate profiles
+
+Use the environment from [setup](../../development/setup.md).
+
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
+- **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
+  structure check, board and quality-tool tests, the architecture rules
+  (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
+  writes a report. `scripts/quality/gates.py` owns the task list; a test keeps this
+  block identical to it. Run the Gradle command directly only for quick feedback.
+
+```bash
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+```
+
+- **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
+  emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
+  `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
+  and `:catalog:connectedDebugAndroidTest`, and refuses to start without a connected
+  device. Assembling test APKs is not device acceptance.
+- **G3 — release:** G2 across agreed API/window/font configurations, optimized
+  production composition/artifact inspection, performance evidence, and signed
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
+
+Focused tests run first; the gate is the final integrated checkpoint. Documentation
+names expected new test behavior, not pretend pre-existing test classes.
+
+",1013,High,Backlog,sello-074

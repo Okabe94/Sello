@@ -1,6 +1,6 @@
 # 0012 — Budget guidance and income planning definitions
 
-**Owner:** project owner (user) · **Updated:** 2026-10-16
+**Owner:** project owner (user) · **Updated:** 2026-10-17
 **Status:** approved definitions and examples as labeled below; replacement
 calculations and screens are not yet implemented. Recurrence is outside MVP.
 
@@ -113,10 +113,10 @@ Rows explicitly marked otherwise retain their separate review requirement.
 
 | ID | Inputs | Result and review status |
 | --- | --- | --- |
-| BG-E01 | L 1.000.000; E 400.000; Q 0; D 10 | R/M 600.000; daily 60.000; Al día. Tone confirmed; numeric case not separately reviewed. |
+| BG-E01 | L 1.000.000; E 400.000; Q 0; D 10 | Confirmed (2026-10-17): R/M 600.000; daily 60.000; Al día. |
 | BG-E02 | E01 plus reserved rent 200.000 | Confirmed: headline M 400.000; secondary Q 200.000; R 600.000; daily 40.000. |
 | BG-E03 | E02 rent recorded for 200.000 on the same day; no other changes | Confirmed: E 600.000; Q 0; headline 400.000; daily 40.000. Reservation context disappears. |
-| BG-E04 | L 300.000; E 110.000 in a category limited to 100.000; Q 0; D 10 | Category overrun 10.000; overall R 190.000; daily 19.000; Al día. B08 baseline amounts approved; revised-label case not separately reviewed. |
+| BG-E04 | L 300.000; E 110.000 in a category limited to 100.000; Q 0; D 10 | Confirmed (2026-10-17): category overrun 10.000 shown on that category only; overall R 190.000; daily 19.000; Al día. |
 | BG-E05 | L 1.000.000; E 1.000.000, then 1.000.001; Q 0 | Confirmed: Al límite/daily 0, then Excedido/overrun 1/daily 0. |
 | BG-E06 | L 1.000.000; E 900.000; Q 150.000; D 10 | Confirmed: R 100.000; M −50.000; daily 0; Revisar and exact shortfall 50.000, naming upcoming payments. No income input. |
 | BG-E07 | M 849, then 850; D 17 | Confirmed: daily 0, then 50. The first margin remains positive; rounding does not mean overspending. |

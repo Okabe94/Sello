@@ -16,8 +16,16 @@ and **Revisar** are out of this epic and must not appear as placeholders.
 
 **Current focus (owner decision, 2026-10-16):** bring Recibo to a working v2 state
 before new features and before MVP release work; SELLO-033 therefore depends on this
-epic. Read dependency links for order: SELLO-068 and SELLO-069 build the missing
-components, SELLO-061 must precede SELLO-062 and SELLO-067.
+epic. Read dependency links for order: SELLO-068 and SELLO-069 wire the built
+components into the app, SELLO-061 must precede SELLO-062 and SELLO-067.
+
+**Components already built (owner decision, 2026-10-17):** the v2 components were
+built and reviewed in the catalog first (pull request #54, `catalog-v2-components`):
+`AnswerSlip`, `V2MonthBar`, `PastMonthRibbon`, `V2Dock`, `V2NavigationBar`, the
+confirmation `SelloNotice`, `V2ChipRows`, `AddChip` and the rest of
+`designsystem/component/v2`. Tickets here reuse them instead of building their own,
+and SELLO-068 and SELLO-069 are reduced to wiring them into the app. Retiring the v1
+components they replace is SELLO-073.
 
 These tickets come from a 2026-10-16 comparison of the running app (`98df571`,
 debug build on an API 33 emulator, synthetic data) with v2. The early-month review
@@ -71,8 +79,7 @@ Evidence from 2026-10-16: with 393.700 spent of 750.000 on day 16, the forecast
 200.000 of 400.000 shows "Justo". ADR 0012 BG1 and D03 "Approved design" define the
 replacement; D03 "Current calculation" says the forecast stays until this ticket.
 
-**Before Ready:** the owner reviews BG-E01 and BG-E04, which ADR 0012 still marks as
-"not separately reviewed", and the reviewed values are recorded there.
+The owner confirmed BG-E01 and BG-E04 on 2026-10-17; ADR 0012 records the values.
 
 Start at `domain/.../model/MonthlySnapshot.kt` (`Verdict`, `PastVerdict`,
 `BudgetStanding`), `domain/.../policy/MonthlyBudgetPolicy.kt` (`verdict`),
@@ -232,9 +239,9 @@ The month bar reads **Octubre** with a smaller **2026**, and any past month is
 clearly signalled with a one-tap way back.
 
 ### Deliverables
-Month button styling in `MonthSwitcher` with its catalog example updated, and the
-`PastMonthRibbon` from SELLO-068 placed under the month bar on every screen that
-uses the shared month.
+The selected-month behaviour behind the SELLO-068 frame: the ribbon shown under the
+month bar on every screen that uses the shared month while a past month is selected,
+and **Volver a** selecting the current month.
 
 ### Acceptance criteria
 - The month button shows the month name large and the year small; at large font the
@@ -257,12 +264,12 @@ Choosing September in the month picker shows the ribbon on Recibo; tapping
 Shared month: `navigation/MonthSession.kt`, `ShellViewModel.kt`; frame:
 `SelloScaffold.kt`, `MonthSwitcher` in `designsystem/component/Navigation.kt`;
 [app shell guide](../../../development/app-shell.md). The ribbon component itself is
-SELLO-068; this ticket owns its placement and behaviour.
+SELLO-068; this ticket owns when it shows and what it does.
 
 ### Implementation plan
 1. Show the SELLO-068 ribbon from the shell when the selected month differs from
    the current one, wired to the existing select-current-month action.
-2. Restyle the month button; keep its spoken label.
+2. Check the SELLO-068 month bar keeps the spoken label and opens the same picker.
 
 ### Concrete cases and pitfalls
 - The current month comes from the financial clock; a month change at midnight
@@ -287,8 +294,9 @@ The dock is one full-width **+ Anotar** button and the selected tab is marked by
 pill behind its icon.
 
 ### Deliverables
-`EntryDock` and `SelloNavigationBar` changes in `:design-system`, catalog examples,
-and the shell updated on every tab.
+The shell using `V2Dock` and `V2NavigationBar` (built in pull request #54) on every
+tab, with the rail keeping its Anotar action. `EntryDock` and `SelloNavigationBar`
+are retired in SELLO-073.
 
 ### Acceptance criteria
 - The dock is a single brand button with a + icon and **Anotar**; it opens expense
@@ -312,9 +320,9 @@ and the selected tab has a line above it. Code: `EntryDock`, `SelloNavigationBar
 `ShellScreenLayoutTest`, `KeyboardInsetsTest`, `AdaptiveScaffoldTest`.
 
 ### Implementation plan
-1. Change `EntryDock` to a full-width `SelloButton` and update its catalog example.
-2. Add the pill indicator to the navigation bar.
-3. Check the rail and every shell route.
+1. Replace `EntryDock` with `V2Dock` and `SelloNavigationBar` with `V2NavigationBar`
+   in `SelloScaffold`.
+2. Check the rail and every shell route.
 
 ### Concrete cases and pitfalls
 - The dock is reused on Configuración, Ingresos and category detail; check each.
@@ -391,43 +399,50 @@ Focused ViewModel tests, then the entry and income journeys on a device, then
 - **Gate:** G2
 
 ### Outcome
-An Excedido month offers **Ajustar presupuesto ›** under the big number, leading to
-where the limits can be changed.
+An Excedido month offers **Ajustar presupuesto ›** under the big number, which brings
+Recibo's categories card into view, where each category opens its detail and limit
+editor.
 
 ### Deliverables
-The link in the answer slip for an overspent current month and its navigation.
+The link in the answer slip for an overspent current month, scrolling Recibo to its
+categories card and moving accessibility focus to the card's heading.
 
 ### Acceptance criteria
 - The link appears only with Excedido in the current month, never for a past month.
-- It opens the owner-approved destination; existing limit edits keep their
-  current/past-month rules.
-- It has a 48dp target and a clear spoken label.
+- Tapping it scrolls Recibo so the **Tus categorías** heading is at the top of the
+  list and gives it accessibility focus; nothing navigates away.
+- In a two-column layout where the card is already visible, it still moves focus to
+  the heading.
+- It has a 48dp target and a clear spoken label, such as "Ajustar presupuesto, ir a
+  tus categorías".
+- Existing limit edits keep their current/past-month rules.
 
 ### Tests
-Screen test for visibility; navigation test for the destination and Back; G2.
+Screen test for visibility; scroll-position and focus test; two-column test; G2.
 
 ### Working checkpoint
-From an Excedido Recibo the link reaches the approved limit-editing destination.
+From an Excedido Recibo the link brings the categories card into view, and a
+category opens its limit editor as today.
 
 ### Context and starting points
-**Decision input before Ready:** where the link goes. Options: the category editor
-for the most overspent category, a list of categories with their limits, or category
-detail. The owner chooses; the executor does not guess. ADR 0012 names the link;
-the category editor is described in
-[category-editor.md](../../../development/category-editor.md).
+**Decision (owner, 2026-10-17): option D**, Recibo's own categories card. It needs no
+new screen and works when no single category is over its limit. A dedicated list of
+limits was considered and left for later. ADR 0012 names the link; the category
+editor is described in [category-editor.md](../../../development/category-editor.md).
 
 ### Implementation plan
-1. Record the decision in this ticket.
-2. Add the link and its route; reuse existing editors.
+1. Add the link to the SELLO-062 answer slip for Excedido in the current month.
+2. Scroll Recibo's list to the categories card and request focus on its heading.
 
 ### Concrete cases and pitfalls
 - Overspending with no single overspent category is possible (unlimited categories
-  count toward the total); the destination must handle it.
+  count toward the total); the card shows every category, so the link still helps.
+- A failed or loading categories card must still be reachable without a crash.
 
 ### Verification recipe
-Focused screen and navigation tests, then `./scripts/verify-ticket SELLO-067 --retain`.
+Focused screen tests, then `./scripts/verify-ticket SELLO-067 --retain`.
 
-## SELLO-068 — Add the PastMonthRibbon design-system component
+## SELLO-068 — Wire the v2 month bar and past-month ribbon into the app frame
 
 - **Type:** Task
 - **Priority:** P0
@@ -436,53 +451,49 @@ Focused screen and navigation tests, then `./scripts/verify-ticket SELLO-067 --r
 - **Gate:** G2
 
 ### Outcome
-`:design-system` has the v2 past-month ribbon, shown in the catalog, ready for the
-shell to place under the month bar.
+The app frame draws its month title with the `V2MonthBar` and has a place for the
+`PastMonthRibbon` under it, both built in pull request #54.
 
 ### Deliverables
-`PastMonthRibbon` in `designsystem/component`, a `:catalog` example with light/dark,
-both inks, font scales 1.0/1.3/2.0 and the compact window, and a component test.
+`SelloScaffold` using `V2MonthBar` (month, small year, chevron, settings action) in
+place of `MonthSwitcher`'s title, an optional ribbon slot that shows
+`PastMonthRibbon` on the band, the catalog scaffold example updated and frame tests.
 
 ### Acceptance criteria
-- It shows a calendar icon, **Estás viendo** with the month name in bold, and a
-  **Volver a {month}** button; the app supplies both month names and the action.
-- It sits on the band colour with paper text, matches the v2 catalog entry, and
-  reflows to two lines at large text without clipping the button.
-- The button has a 48dp target; the message is announced politely as status and the
-  button has a clear spoken label.
-- The component holds no month logic, clock or navigation; it takes plain strings
-  and a callback.
+- Every tab with the shared month shows the v2 month bar; tapping it opens the same
+  month picker, and its spoken label still names the month and year.
+- When the caller passes a ribbon, it sits on the band under the month bar; without
+  one, nothing changes.
+- Large text and narrow windows keep the month button and actions reachable.
+- `PastMonthRibbon` and `V2MonthBar` hold no month logic or clock; SELLO-064 decides
+  when the ribbon shows.
 
 ### Tests
-Catalog example test, semantics and target-size test, large-font layout test; G2.
+Scaffold layout and semantics tests; catalog example test; G2.
 
 ### Working checkpoint
-The catalog app shows the ribbon in all four theme combinations and at font scale
-2.0, and its button reports a tap.
+Recibo and Resumen show the v2 month bar on a phone; the catalog scaffold shows the
+ribbon slot filled.
 
 ### Context and starting points
-v2 component catalog: "Past-month ribbon · New · PastMonthRibbon (proposal) ·
-Recibo, Resumen, income while a past month is selected". Styling: `.past-ribbon`
-in `docs/design/v2/sello.css`; markup: `pastRibbon` in `docs/design/v2/kit.js`.
-Reuse `SelloTheme` tokens, `SelloIcon` (the `event` icon) and `SelloButton` styles;
-follow existing examples in `catalog/.../StructureExamples.kt`. Placement and
-behaviour are SELLO-064.
+The components and their tests exist in `designsystem/component/v2/V2Controls.kt`
+(`V2MonthBar`, `PastMonthRibbon`) and `V2ComponentTest`. The frame is
+`SelloScaffold.kt`; `MonthSwitcher` is in `designsystem/component/Navigation.kt`.
 
 ### Implementation plan
-1. Add the composable with a minimal API (`message month`, `return label`,
-   `onReturn`, `modifier`).
-2. Add the catalog example beside `MonthSwitcherExample`.
-3. Add semantics, target-size and large-font tests.
+1. Draw the title with `V2MonthBar` in `SelloScaffold`, keeping the picker action.
+2. Add the ribbon slot and its catalog example.
 
 ### Concrete cases and pitfalls
-- Long month names ("septiembre") plus "Volver a noviembre" must fit at 320dp.
-- Do not add a `YearMonth` or clock dependency to `:design-system`.
+- Pushed screens with a title (Configuración, income history) keep their title bar;
+  `V2TitleBar` exists for tab titles.
+- `MonthSwitcher` itself is retired in SELLO-073 once nothing uses it.
 
 ### Verification recipe
-`:design-system` and `:catalog` device tests, then
+`:design-system`, `:catalog` and shell device tests, then
 `./scripts/verify-ticket SELLO-068 --retain`.
 
-## SELLO-069 — Add a confirmation variant to SelloNotice
+## SELLO-069 — Wire the confirmation notice into the shell
 
 - **Type:** Task
 - **Priority:** P0
@@ -491,44 +502,39 @@ behaviour are SELLO-064.
 - **Gate:** G2
 
 ### Outcome
-`SelloNotice` can show the v2 save confirmation: ink background, paper text and a
-leading check icon in the gain colour, with no action.
+The shell can show `SelloNotice`'s confirmation look (built in pull request #54)
+above the dock, ready for SELLO-066 to use after a save.
 
 ### Deliverables
-An optional leading check (or a confirmation kind) on `SelloNotice`, its catalog
-example in `NoticeExample`, and component tests; existing notice uses unchanged.
+The shell's notice slot accepting a confirmation notice, placed above the dock on
+every tab and beside the rail in wide layouts, with a shell test.
 
 ### Acceptance criteria
-- The confirmation shows a gain-coloured check icon before the message, e.g.
-  "Gasto anotado: 48.700 en Comida"; the icon is decorative and not spoken.
+- A confirmation shows the gain check before the message, e.g. "Gasto anotado:
+  48.700 en Comida"; the check is decorative and not spoken.
 - The message is announced politely; spoken text can carry the full amount.
 - Existing undo and plain notices look and behave as before.
-- Correct in light and dark themes and at font scale 2.0.
+- Correct in light and dark themes, at font scale 2.0 and with the keyboard closed.
 
 ### Tests
-Catalog notice example test covering the new variant; semantics test; screenshot or
-layout check in dark theme; G2.
+Shell notice placement and semantics tests in both themes; G2.
 
 ### Working checkpoint
-The catalog notice example shows the confirmation alongside the existing undo and
-plain notices.
+A test host shows a confirmation above the dock on Recibo and Resumen.
 
 ### Context and starting points
-v2 component catalog: "Toast · Extend · SelloNotice · After a save". Styling:
-`.toast` in `docs/design/v2/sello.css` (ink background, paper text, check icon in
-gain, darker green in dark theme). Current `SelloNotice` is in
-`designsystem/component/Corrections.kt`; its example is `NoticeExample` in
-`catalog/.../FeedbackExamples.kt`. Timing and placement belong to SELLO-066.
+`SelloNotice(confirmation = true)` is in `designsystem/component/Corrections.kt` with
+its catalog example in the V2 feedback examples. The shell's notice slot is the
+`notice` parameter of `SelloScaffold`. Timing and text belong to SELLO-066.
 
 ### Implementation plan
-1. Add the optional leading icon to `SelloNotice` without changing its defaults.
-2. Extend `NoticeExample` with the confirmation.
-3. Add semantics and theme tests.
+1. Pass confirmation notices through the shell's notice slot.
+2. Add placement and semantics tests.
 
 ### Concrete cases and pitfalls
-- The check must keep enough contrast on ink in dark theme (v2 uses a darker green).
 - Do not add timing or auto-dismiss to the component; the shell owns it.
+- The notice must not cover the dock or the tab bar.
 
 ### Verification recipe
-`:design-system` and `:catalog` device tests, then
+`:design-system` and shell device tests, then
 `./scripts/verify-ticket SELLO-069 --retain`.

@@ -4,7 +4,7 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-16 · **Product baseline:** `df0aefa`.
+**Snapshot:** 2026-10-17 · **Product baseline:** `df0aefa`.
 SELLO-001–023 and epics E01–E05 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
@@ -59,6 +59,10 @@ those definitions and open inputs.
 - SELLO-061–069 ([E12](../planning/mvp/epics/E12-v2-recibo.md)): the current focus.
   Brings Recibo to the v2 design: factual status, answer slip, categories card,
   month ribbon, dock and tabs, and brief save feedback.
+- SELLO-070–074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): after E12, brings
+  expense and income entry, income history and Resumen to v2, retires the v1
+  components v2 replaced and records a manual TalkBack and Switch Access pass. The v2
+  components themselves are in pull request #54.
 - SELLO-024–027: sandbox sessions, seeded scenarios and recovery diagnostics.
   A controlled debug financial clock exists; the full sandbox tools do not.
 - SELLO-028–032: backup, restore, reset and their privacy verification. Restore

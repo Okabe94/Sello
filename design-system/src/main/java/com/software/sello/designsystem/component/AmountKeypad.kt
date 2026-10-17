@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +53,8 @@ fun AmountKeypad(
     onClearAll: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    onSubmit: (() -> Unit)? = null
+    onSubmit: (() -> Unit)? = null,
+    compact: Boolean = false
 ) {
     val hardware = Modifier.onPreviewKeyEvent { event ->
         if (!enabled || event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -70,21 +72,25 @@ fun AmountKeypad(
         true
     }
     Column(
-        verticalArrangement = Arrangement.spacedBy(KeyGap),
+        verticalArrangement = Arrangement.spacedBy(if (compact) 0.dp else KeyGap),
         modifier = modifier.then(hardware)
     ) {
         for (row in listOf(1..3, 4..6, 7..9)) {
-            KeyRow {
+            KeyRow(compact) {
                 for (digit in row) {
-                    Key(enabled, onClick = { onDigit(digit) }) { KeyLabel(digit.toString()) }
+                    Key(enabled, compact = compact, onClick = {
+                        onDigit(digit)
+                    }) { KeyLabel(digit.toString()) }
                 }
             }
         }
-        KeyRow {
-            Key(enabled, onClick = onTripleZero) { KeyLabel("000") }
-            Key(enabled, onClick = { onDigit(0) }) { KeyLabel("0") }
+        KeyRow(compact) {
+            Key(enabled, compact = compact, onClick = onTripleZero) { KeyLabel("000") }
+            Key(enabled, compact = compact, onClick = { onDigit(0) }) { KeyLabel("0") }
             Key(
                 enabled = enabled,
+                compact = compact,
+                delete = compact,
                 onClick = onBackspace,
                 onLongClick = onClearAll,
                 longClickLabel = stringResource(R.string.sello_clear_all),
@@ -93,7 +99,7 @@ fun AmountKeypad(
                 Icon(
                     painter = SelloIcon.Backspace.painter(),
                     contentDescription = null,
-                    tint = SelloTheme.colors.ink,
+                    tint = if (compact) SelloTheme.colors.onBrandSoft else SelloTheme.colors.ink,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -102,8 +108,11 @@ fun AmountKeypad(
 }
 
 @Composable
-private fun KeyRow(content: @Composable RowScope.() -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(KeyGap), content = content)
+private fun KeyRow(compact: Boolean, content: @Composable RowScope.() -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 0.dp else KeyGap),
+        content = content
+    )
 }
 
 @Composable
@@ -119,6 +128,8 @@ private fun KeyLabel(text: String) {
 @Composable
 private fun RowScope.Key(
     enabled: Boolean,
+    compact: Boolean = false,
+    delete: Boolean = false,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
     longClickLabel: String? = null,
@@ -131,9 +142,6 @@ private fun RowScope.Key(
         modifier = Modifier
             .weight(1f)
             .heightIn(min = SelloTheme.spacing.minTouchTarget)
-            .alpha(if (enabled) 1f else DISABLED_KEY_ALPHA)
-            .clip(SelloTheme.shapes.control)
-            .background(SelloTheme.colors.paper)
             .combinedClickable(
                 enabled = enabled,
                 role = Role.Button,
@@ -145,6 +153,10 @@ private fun RowScope.Key(
                 }
             )
             .semantics { if (description != null) contentDescription = description }
+            .then(if (compact) Modifier.padding(2.dp) else Modifier)
+            .alpha(if (enabled) 1f else DISABLED_KEY_ALPHA)
+            .clip(SelloTheme.shapes.control)
+            .background(if (delete) SelloTheme.colors.brandSoft else SelloTheme.colors.paper)
     ) { content() }
 }
 

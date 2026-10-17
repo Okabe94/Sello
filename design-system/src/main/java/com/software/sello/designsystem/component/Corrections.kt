@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -65,7 +69,8 @@ fun SelloNotice(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
     busy: Boolean = false,
-    spoken: String = message
+    spoken: String = message,
+    confirmation: Boolean = false
 ) {
     val colors = SelloTheme.colors
     Row(
@@ -79,6 +84,14 @@ fun SelloNotice(
             .padding(start = SelloTheme.spacing.lg, end = SelloTheme.spacing.xs)
             .heightIn(min = SelloTheme.spacing.minTouchTarget)
     ) {
+        if (confirmation) {
+            Icon(
+                SelloIcon.Check.painter(),
+                null,
+                Modifier.size(22.dp),
+                colors.semantic.onGain.takeIf { colors.isDark } ?: colors.semantic.gain
+            )
+        }
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,

@@ -1,0 +1,519 @@
+package com.software.sello.catalog.v2
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
+import com.software.sello.catalog.R
+import com.software.sello.catalog.components.copFixture
+import com.software.sello.designsystem.component.ButtonKind
+import com.software.sello.designsystem.component.ButtonTone
+import com.software.sello.designsystem.component.ChartPeriod
+import com.software.sello.designsystem.component.ChartPoint
+import com.software.sello.designsystem.component.ChartReference
+import com.software.sello.designsystem.component.ColumnsChart
+import com.software.sello.designsystem.component.IconChoice
+import com.software.sello.designsystem.component.LeaderLine
+import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.SelloButton
+import com.software.sello.designsystem.component.SelloChip
+import com.software.sello.designsystem.component.Slip
+import com.software.sello.designsystem.component.TearLine
+import com.software.sello.designsystem.component.v2.CompletedGoalRow
+import com.software.sello.designsystem.component.v2.EntryAmountSlip
+import com.software.sello.designsystem.component.v2.FactLine
+import com.software.sello.designsystem.component.v2.GoalCard
+import com.software.sello.designsystem.component.v2.GoalPill
+import com.software.sello.designsystem.component.v2.GoalPinPill
+import com.software.sello.designsystem.component.v2.IconChoiceStrip
+import com.software.sello.designsystem.component.v2.InvestmentRow
+import com.software.sello.designsystem.component.v2.MilestoneRow
+import com.software.sello.designsystem.component.v2.MilestoneSpec
+import com.software.sello.designsystem.component.v2.MilestoneState
+import com.software.sello.designsystem.component.v2.MovementRow
+import com.software.sello.designsystem.component.v2.PerformanceLine
+import com.software.sello.designsystem.component.v2.ReachedRow
+import com.software.sello.designsystem.component.v2.RecordedMark
+import com.software.sello.designsystem.component.v2.RecordedValuesChart
+import com.software.sello.designsystem.component.v2.SplitBar
+import com.software.sello.designsystem.component.v2.SplitSegment
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.theme.SelloTheme
+
+internal val GoalPlaces = listOf(
+    MilestoneSpec("25 %", "25 por ciento, logrado", MilestoneState.Earned),
+    MilestoneSpec("50 %", "50 por ciento, logrado", MilestoneState.Earned),
+    MilestoneSpec("75 %", "75 por ciento, por alcanzar", MilestoneState.Empty),
+    MilestoneSpec("Meta", "Meta, por alcanzar", MilestoneState.Empty)
+)
+
+@Composable
+fun V2MilestonesExample() {
+    val strings = LocalResources.current
+    var replay by rememberSaveable { mutableIntStateOf(0) }
+    V2Stack {
+        Caption(
+            strings.getString(R.string.v2_demo_vacio_logrado_conservado_100_pendiente_de_marcar)
+        )
+        MilestoneRow(
+            listOf(
+                GoalPlaces[0],
+                GoalPlaces[1].copy(
+                    state = MilestoneState.Kept,
+                    description = strings.getString(
+                        R.string.v2_demo_50_por_ciento_sello_conservado_tras_un
+                    )
+                ),
+                GoalPlaces[2],
+                GoalPlaces[3].copy(
+                    state = MilestoneState.Ready,
+                    description = strings.getString(
+                        R.string.v2_demo_100_por_ciento_pendiente_de_marcar_como
+                    )
+                )
+            )
+        )
+        FactLine(
+            AnnotatedString(strings.getString(R.string.v2_demo_el_sello_del_50_sigue_siendo_tuyo))
+        )
+        Caption(strings.getString(R.string.v2_demo_proyecciones_solo_al_crear_o_editar_con))
+        Text(strings.getString(R.string.v2_demo_si_aportas_769_231_cada_mes))
+        MilestoneRow(
+            GoalPlaces.mapIndexed { index, place ->
+                place.copy(
+                    caption = listOf(
+                        "logrado",
+                        "logrado",
+                        strings.getString(R.string.v2_demo_jun_28),
+                        strings.getString(R.string.v2_demo_dic_28)
+                    )[index]
+                )
+            }
+        )
+        key(replay) { MilestoneRow(GoalPlaces, landingIndex = if (replay > 0) 1 else null) }
+        SelloButton(strings.getString(R.string.v2_demo_repetir_aterrizaje), {
+            replay++
+        }, kind = ButtonKind.Outlined)
+        Caption(strings.getString(R.string.v2_demo_con_movimiento_reducido_se_muestra_el_mismo))
+    }
+}
+
+@Composable
+fun V2GoalPillExample() {
+    val strings = LocalResources.current
+    var result by rememberSaveable { mutableStateOf("") }
+    V2Stack {
+        GoalPill(
+            strings.getString(
+                R.string.v2_demo_viaje_a_la_costa
+            ),
+            strings.getString(
+                R.string.v2_demo_57
+            ),
+            0.57f,
+            SelloIcon.Flight,
+            strings.getString(
+                R.string.v2_demo_aportar_a_viaje_a_la_costa
+            ),
+            {
+                result =
+                    strings.getString(R.string.v2_demo_abrir_meta)
+            },
+            { result = "Aportar" }
+        )
+        GoalPill(
+            strings.getString(
+                R.string.v2_demo_una_meta_de_nombre_largo_para_probar
+            ),
+            strings.getString(R.string.v2_demo_100),
+            1f,
+            SelloIcon.Home,
+            "Aportar",
+            {
+                result =
+                    strings.getString(R.string.v2_demo_abrir_meta)
+            },
+            { result = "Aportar" }
+        )
+        ReachedRow(
+            strings.getString(
+                R.string.v2_demo_celular_nuevo
+            ),
+            strings.getString(
+                R.string.v2_demo_llego_al_100
+            ),
+            strings.getString(R.string.v2_demo_marcar_como_lograda),
+            {
+                result =
+                    strings.getString(R.string.v2_demo_completar_meta)
+            }
+        )
+        Caption(result)
+    }
+}
+
+@Composable
+fun V2GoalCardsExample() {
+    val strings = LocalResources.current
+    var result by rememberSaveable { mutableStateOf("") }
+    V2Stack {
+        GoalCard(
+            strings.getString(
+                R.string.v2_demo_viaje_a_la_costa
+            ),
+            SelloIcon.Flight, strings.getString(R.string.v2_demo_57),
+            copFixture(
+                1_710_000
+            ),
+            strings.getString(
+                R.string.v2_demo_de_3_000_000
+            ),
+            strings.getString(R.string.v2_demo_fecha_objetivo_dic_2026), 0.57f, GoalPlaces, {
+                result =
+                    strings.getString(R.string.v2_demo_abrir_viaje_a_la_costa)
+            }
+        )
+        GoalCard(
+            strings.getString(
+                R.string.v2_demo_sin_fecha
+            ),
+            SelloIcon.Home,
+            strings.getString(
+                R.string.v2_demo_0
+            ),
+            copFixture(
+                0
+            ),
+            strings.getString(
+                R.string.v2_demo_de_20_000_000
+            ),
+            strings.getString(R.string.v2_demo_sin_fecha), 0f,
+            GoalPlaces.map {
+                it.copy(state = MilestoneState.Empty, description = "${it.label}, por alcanzar")
+            },
+            {
+                result =
+                    strings.getString(R.string.v2_demo_abrir_sin_fecha)
+            }
+        )
+        CompletedGoalRow(
+            strings.getString(
+                R.string.v2_demo_vacunas_de_luna
+            ),
+            strings.getString(R.string.v2_demo_400_000_30_sep),
+            SelloIcon.Pets,
+            "Lograda",
+            {
+                result =
+                    strings.getString(R.string.v2_demo_abrir_meta_lograda_solo_lectura)
+            }
+        )
+        Caption(result)
+    }
+}
+
+@Composable
+fun V2MovementsExample() {
+    val strings = LocalResources.current
+    var withdrawal by rememberSaveable { mutableStateOf(false) }
+    V2Stack {
+        Slip(Modifier.fillMaxWidth(), pinked = false) {
+            MovementRow(
+                "Aporte",
+                strings.getString(R.string.v2_demo_vie_2_oct),
+                copFixture(350_000, signed = true),
+                milestone = GoalPlaces[1],
+                annotation = strings.getString(R.string.v2_demo_ganaste_el_sello_del_50)
+            )
+            MovementRow(
+                "Retiro",
+                strings.getString(R.string.v2_demo_lun_20_oct_arreglo_del_carro),
+                copFixture(-400_000),
+                icon = SelloIcon.ArrowBack
+            )
+        }
+        SelloChip("Retirar", withdrawal, { withdrawal = !withdrawal })
+        EntryAmountSlip(
+            if (withdrawal) {
+                strings.getString(
+                    R.string.v2_demo_retiro_en_pesos
+                )
+            } else {
+                strings.getString(R.string.v2_demo_aporte_en_pesos)
+            },
+            copFixture(if (withdrawal) -500_000 else 500_000, signed = true),
+            icon = SelloIcon.Flight,
+            tone = if (withdrawal) ButtonTone.Ink else ButtonTone.Gain
+        )
+        FactLine(
+            AnnotatedString(strings.getString(R.string.v2_demo_llevas_1_710_000_guardados_en_esta))
+        )
+        EntryAmountSlip(
+            strings.getString(R.string.v2_demo_retiro_en_pesos),
+            copFixture(-2_000_000),
+            error = strings.getString(R.string.v2_demo_mas_de_lo_guardado_1_710_000)
+        )
+        SelloButton(strings.getString(R.string.v2_demo_registrar_retiro), {
+        }, enabled = false, tone = ButtonTone.Ink)
+    }
+}
+
+@Composable
+fun V2InvestmentsExample() {
+    val strings = LocalResources.current
+    var result by rememberSaveable { mutableStateOf("") }
+    val colors = SelloTheme.colors
+    V2Stack {
+        Slip(Modifier.fillMaxWidth()) {
+            PerformanceLine(
+                strings.getString(R.string.v2_demo_5_6),
+                strings.getString(R.string.v2_demo_2_066_000_de_ganancia),
+                false
+            )
+            PerformanceLine(
+                strings.getString(R.string.v2_demo_4_3),
+                strings.getString(R.string.v2_demo_258_000_de_perdida),
+                true
+            )
+        }
+        Slip(Modifier.fillMaxWidth(), pinked = false) {
+            SplitBar(
+                listOf(
+                    SplitSegment(
+                        0.7f,
+                        strings.getString(R.string.v2_demo_parqueadero_19_000_000_pesos),
+                        colors.brand
+                    ),
+                    SplitSegment(
+                        0.3f,
+                        strings.getString(R.string.v2_demo_fondo_8_000_000_pesos),
+                        colors.brand.copy(alpha = 0.6f)
+                    )
+                )
+            )
+            InvestmentRow(
+                "Parqueadero",
+                strings.getString(R.string.v2_demo_finca_raiz_valor_del_12_jun),
+                SelloIcon.Home,
+                colors.brand,
+                copFixture(
+                    19_000_000
+                ),
+                strings.getString(R.string.v2_demo_sin_valor),
+                strings.getString(R.string.v2_demo_7_5),
+                {
+                    result =
+                        "Parqueadero"
+                }
+            )
+            InvestmentRow(
+                "Cripto",
+                strings.getString(
+                    R.string.v2_demo_criptomoneda_sin_valor_anotado
+                ),
+                SelloIcon.Insights,
+                colors.inkSoft,
+                null,
+                strings.getString(
+                    R.string.v2_demo_sin_valor
+                ),
+                strings.getString(R.string.v2_demo_aportaste_2_000_000),
+                {
+                    result =
+                        "Cripto"
+                }
+            )
+        }
+        Caption(strings.getString(R.string.v2_demo_sin_valor_se_omite_de_la_barra))
+        Caption(result)
+    }
+}
+
+@Composable
+fun V2IconChoiceExample() {
+    val strings = LocalResources.current
+    var picked by rememberSaveable { mutableStateOf("flight") }
+    var pinned by rememberSaveable { mutableStateOf(false) }
+    val choices =
+        listOf(
+            IconChoice("flight", SelloIcon.Flight, "Viaje"),
+            IconChoice("home", SelloIcon.Home, "Casa"),
+            IconChoice("school", SelloIcon.School, strings.getString(R.string.v2_demo_educacion)),
+            IconChoice("pets", SelloIcon.Pets, "Mascotas"),
+            IconChoice("phone", SelloIcon.PhoneIphone, "Celular"),
+            IconChoice(
+                "bank",
+                SelloIcon.AccountBalance,
+                strings.getString(R.string.v2_demo_inversion)
+            )
+        )
+    V2Stack {
+        IconChoiceStrip(choices, picked, { picked = it })
+        IconChoiceStrip(choices, picked, { picked = it }, tone = ButtonTone.Ink)
+        Column(Modifier.fillMaxWidth().background(SelloTheme.colors.band).padding(12.dp)) {
+            GoalPinPill(
+                if (pinned) {
+                    strings.getString(
+                        R.string.v2_demo_en_tu_recibo
+                    )
+                } else {
+                    strings.getString(R.string.v2_demo_mostrar_en_recibo)
+                },
+                pinned,
+                {
+                    pinned =
+                        !pinned
+                }
+            )
+        }
+        Caption("Elegido: $picked")
+    }
+}
+
+@Composable
+fun V2ChartsExample() {
+    val strings = LocalResources.current
+    var picked by rememberSaveable { mutableStateOf<String?>(null) }
+    var recorded by rememberSaveable { mutableStateOf<String?>(null) }
+    val colors = SelloTheme.colors
+    val months = listOf(
+        ChartPoint("ago", "ago", 750_000, strings.getString(R.string.v2_demo_agosto_750_000_pesos)),
+        ChartPoint(
+            "sep",
+            "sep",
+            920_000,
+            strings.getString(R.string.v2_demo_septiembre_920_000_pesos),
+            valueLabel = strings.getString(R.string.v2_demo_920_mil)
+        ),
+        ChartPoint(
+            "oct",
+            "oct*",
+            400_000,
+            strings.getString(R.string.v2_demo_octubre_400_000_pesos_mes_en_curso),
+            ChartPeriod.Current,
+            strings.getString(R.string.v2_demo_400_mil)
+        )
+    )
+    V2Stack {
+        Slip(Modifier.fillMaxWidth(), pinked = false) {
+            Text(strings.getString(R.string.v2_demo_entro_en_octubre))
+            SplitBar(
+                listOf(
+                    SplitSegment(
+                        0.75f,
+                        strings.getString(R.string.v2_demo_en_presupuestos_1_500_000_pesos),
+                        colors.brand
+                    ),
+                    SplitSegment(
+                        0.25f,
+                        strings.getString(R.string.v2_demo_sin_asignar_500_000_pesos),
+                        colors.brand,
+                        striped = true
+                    )
+                )
+            )
+            LeaderLine(strings.getString(R.string.v2_demo_en_presupuestos_de_categorias)) {
+                MoneyText(copFixture(1_500_000))
+            }
+            LeaderLine(strings.getString(R.string.v2_demo_sin_asignar)) {
+                MoneyText(copFixture(500_000))
+            }
+        }
+        Slip(Modifier.fillMaxWidth(), pinked = false) {
+            Text(strings.getString(R.string.v2_demo_mes_a_mes_un_mes_normal_835))
+            ColumnsChart(
+                months,
+                strings.getString(
+                    R.string.v2_demo_gastos_mensuales_octubre_esta_en_curso
+                ),
+                selectedId = picked,
+                onSelect = {
+                    picked =
+                        it
+                },
+                reference = ChartReference(
+                    1_000_000,
+                    strings.getString(R.string.v2_demo_limite_1_m)
+                ),
+                stripedCurrent = true
+            )
+            picked?.let { id ->
+                Text(months.first { it.id == id }.spoken, Modifier.testTag("v2:chart:selected"))
+            }
+            Caption(strings.getString(R.string.v2_demo_octubre_va_hasta_el_22_no_se))
+        }
+        Slip(Modifier.fillMaxWidth(), pinked = false) {
+            Text(strings.getString(R.string.v2_demo_que_dias_gastas_mas_los_sabados))
+            Caption(strings.getString(R.string.v2_demo_42_700_en_promedio_ultimos_4_meses))
+            ColumnsChart(
+                listOf(
+                    ChartPoint(
+                        "vie",
+                        "vie",
+                        20_000,
+                        strings.getString(R.string.v2_demo_viernes_20_000_pesos_en_promedio)
+                    ),
+                    ChartPoint(
+                        "sab",
+                        strings.getString(R.string.v2_demo_sab),
+                        42_700,
+                        strings.getString(R.string.v2_demo_sabado_42_700_pesos_en_promedio),
+                        ChartPeriod.Current,
+                        strings.getString(R.string.v2_demo_42_7_mil)
+                    )
+                ),
+                strings.getString(R.string.v2_demo_gasto_medio_por_dia_de_la_semana)
+            )
+        }
+        Slip(Modifier.fillMaxWidth(), pinked = false) {
+            Text(strings.getString(R.string.v2_demo_valores_anotados))
+            RecordedValuesChart(
+                listOf(
+                    RecordedMark(
+                        "jun",
+                        0f,
+                        0.45f,
+                        strings.getString(R.string.v2_demo_12_jun_4_000_000_pesos)
+                    ),
+                    RecordedMark(
+                        "sep",
+                        0.65f,
+                        0.72f,
+                        strings.getString(R.string.v2_demo_9_sep_5_242_000_pesos)
+                    ),
+                    RecordedMark(
+                        "oct",
+                        1f,
+                        0.68f,
+                        strings.getString(R.string.v2_demo_14_oct_5_000_000_pesos)
+                    )
+                ),
+                listOf(
+                    RecordedMark("a", 0f, 0.4f, ""),
+                    RecordedMark("b", 0.4f, 0.6f, ""),
+                    RecordedMark("c", 1f, 0.6f, "")
+                ),
+                strings.getString(R.string.v2_demo_valores_registrados_y_aportes_menos_retiros_en),
+                recorded,
+                {
+                    recorded =
+                        it
+                }
+            )
+            recorded?.let { Text("Valor seleccionado: $it") }
+        }
+    }
+}

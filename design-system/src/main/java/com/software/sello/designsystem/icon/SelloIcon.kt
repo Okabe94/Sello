@@ -15,6 +15,11 @@ enum class SelloIcon(@DrawableRes val filled: Int, @DrawableRes val outlined: In
         R.drawable.ic_sello_account_balance,
         R.drawable.ic_sello_account_balance_outlined
     ),
+    Flag(R.drawable.ic_sello_flag),
+    Close(R.drawable.ic_sello_close),
+    TrendingUp(R.drawable.ic_sello_trending_up),
+    TrendingDown(R.drawable.ic_sello_trending_down),
+    Star(R.drawable.ic_sello_star, R.drawable.ic_sello_star_outline),
     Add(R.drawable.ic_sello_add),
     ArrowBack(R.drawable.ic_sello_arrow_back),
     Backspace(R.drawable.ic_sello_backspace),

@@ -1,0 +1,459 @@
+package com.software.sello.designsystem.component.v2
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.software.sello.designsystem.component.ButtonKind
+import com.software.sello.designsystem.component.ButtonTone
+import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.MoneyTextValue
+import com.software.sello.designsystem.component.SelloButton
+import com.software.sello.designsystem.component.Slip
+import com.software.sello.designsystem.component.Stamp
+import com.software.sello.designsystem.component.StampInk
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
+import com.software.sello.designsystem.theme.SelloMotion
+import com.software.sello.designsystem.theme.SelloTheme
+
+/** Kept acknowledges an historical crossing; Ready is not a completed goal. */
+enum class MilestoneState { Empty, Earned, Kept, Ready }
+
+@Immutable
+data class MilestoneSpec(
+    val label: String,
+    val description: String,
+    val state: MilestoneState,
+    val caption: String? = null
+)
+
+@Composable
+fun MilestonePlace(spec: MilestoneSpec, modifier: Modifier = Modifier, land: Boolean = false) {
+    val colors = SelloTheme.colors
+    val reduced = SelloTheme.reducedMotion
+    val progress = remember { Animatable(if (land && !reduced) 0f else 1f) }
+    val ring = remember { Animatable(0f) }
+    val haptics = LocalHapticFeedback.current
+    LaunchedEffect(land) {
+        if (land) {
+            if (!reduced) {
+                progress.animateTo(1f, SelloMotion.stamp())
+                ring.animateTo(1f, SelloMotion.emphasized())
+            } else {
+                progress.snapTo(1f)
+            }
+            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+        }
+    }
+    LaunchedEffect(reduced) {
+        if (reduced) {
+            progress.snapTo(1f)
+            ring.snapTo(1f)
+        }
+    }
+    val earned = spec.state == MilestoneState.Earned || spec.state == MilestoneState.Kept
+    val color = when (spec.state) {
+        MilestoneState.Empty -> colors.outline
+        MilestoneState.Kept -> colors.semantic.gain.copy(alpha = 0.42f)
+        else -> colors.semantic.gain
+    }
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.semantics(mergeDescendants = true) {
+            contentDescription =
+                spec.description
+        }
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(64.dp).graphicsLayer {
+                scaleX =
+                    SelloMotion.STAMP_V2_INITIAL_SCALE +
+                    (1f - SelloMotion.STAMP_V2_INITIAL_SCALE) * progress.value
+                scaleY = scaleX
+                alpha = progress.value.coerceIn(0f, 1f)
+                rotationZ = if (earned) -8f else 0f
+            }.drawBehind {
+                val inset = 3.dp.toPx()
+                drawCircle(
+                    color,
+                    radius = size.minDimension / 2 - inset,
+                    style = Stroke(
+                        if (earned) 2.5.dp.toPx() else 1.5.dp.toPx(),
+                        pathEffect = if (earned) {
+                            null
+                        } else {
+                            PathEffect.dashPathEffect(
+                                floatArrayOf(4.dp.toPx(), 3.dp.toPx())
+                            )
+                        }
+                    )
+                )
+                if (ring.value > 0f &&
+                    ring.value < 1f
+                ) {
+                    drawCircle(
+                        color.copy(alpha = 1f - ring.value),
+                        radius =
+                            size.minDimension / 2 + ring.value * 8.dp.toPx(),
+                        style = Stroke(2.dp.toPx())
+                    )
+                }
+            }
+        ) { Text(spec.label, style = SelloTheme.type.stampSmall, color = color) }
+        spec.caption?.let {
+            Text(it, style = MaterialTheme.typography.labelSmall, color = colors.inkSoft)
+        }
+    }
+}
+
+@Composable
+fun MilestoneRow(
+    places: List<MilestoneSpec>,
+    modifier: Modifier = Modifier,
+    landingIndex: Int? = null
+) {
+    Row(
+        modifier.horizontalScroll(rememberScrollState()).padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        places.forEachIndexed { index, spec -> MilestonePlace(spec, land = index == landingIndex) }
+    }
+}
+
+@Composable
+fun GoalPill(
+    name: String,
+    percentage: String,
+    progress: Float,
+    icon: SelloIcon,
+    contributeLabel: String,
+    onOpen: () -> Unit,
+    onContribute: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = SelloTheme.colors
+    Row(
+        modifier.fillMaxWidth().clip(CircleShape).background(colors.paper).drawBehind {
+            drawRect(
+                colors.brandSoft,
+                size = androidx.compose.ui.geometry.Size(
+                    size.width * progress.coerceIn(0f, 1f),
+                    size.height
+                )
+            )
+        }.heightIn(min = 56.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            Modifier.weight(
+                1f
+            ).heightIn(min = 56.dp).clickable(role = Role.Button, onClick = onOpen).padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(icon.painter(), null, tint = colors.brand)
+            Text(name, Modifier.weight(1f), fontWeight = FontWeight.W800, color = colors.ink)
+            Text(percentage, color = colors.ink)
+        }
+        IconButton(
+            onClick = onContribute,
+            modifier = Modifier.padding(4.dp).background(colors.paper, CircleShape)
+        ) {
+            Icon(SelloIcon.Add.painter(), contributeLabel, tint = colors.brand)
+        }
+    }
+}
+
+@Composable
+fun ReachedRow(
+    name: String,
+    message: String,
+    actionLabel: String,
+    onComplete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier.fillMaxWidth().background(
+            SelloTheme.colors.semantic.gainSoft,
+            SelloTheme.shapes.control
+        ).padding(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(SelloIcon.Check.painter(), null, tint = SelloTheme.colors.semantic.onGainSoft)
+            Column(Modifier.padding(start = 8.dp)) {
+                Text(name, fontWeight = FontWeight.W800)
+                Text(message)
+            }
+        }
+        SelloButton(actionLabel, onComplete, kind = ButtonKind.Text, tone = ButtonTone.Gain)
+    }
+}
+
+@Composable
+fun GoalCard(
+    name: String,
+    icon: SelloIcon,
+    percentage: String,
+    saved: MoneyTextValue,
+    target: String,
+    date: String,
+    progress: Float,
+    places: List<MilestoneSpec>,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Slip(modifier.fillMaxWidth(), onClick = onOpen) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(icon.painter(), null, tint = SelloTheme.colors.semantic.gain)
+            Text(name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+            Text(percentage, color = SelloTheme.colors.semantic.gain, fontWeight = FontWeight.W800)
+        }
+        FittedMoneyText(saved)
+        Text(target, color = SelloTheme.colors.inkSoft)
+        Text(date, color = SelloTheme.colors.inkSoft)
+        SplitBar(
+            listOf(
+                SplitSegment(
+                    progress.coerceIn(0f, 1f),
+                    percentage,
+                    SelloTheme.colors.semantic.gain
+                ),
+                SplitSegment(
+                    (
+                        1f -
+                            progress
+                        ).coerceIn(0f, 1f),
+                    "",
+                    SelloTheme.colors.paperDim
+                )
+            ),
+            Modifier.padding(top = 8.dp)
+        )
+        MilestoneRow(places)
+    }
+}
+
+@Composable
+fun CompletedGoalRow(
+    name: String,
+    detail: String,
+    icon: SelloIcon,
+    stamp: String,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Slip(modifier.fillMaxWidth(), onClick = onOpen) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(icon.painter(), null, tint = SelloTheme.colors.semantic.gain)
+            Column(Modifier.weight(1f)) {
+                Text(name, fontWeight = FontWeight.W800)
+                Text(detail, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+        Stamp(stamp, StampInk.Good, Modifier.padding(top = 8.dp))
+    }
+}
+
+@Composable
+fun MovementRow(
+    kind: String,
+    detail: String,
+    amount: MoneyTextValue,
+    modifier: Modifier = Modifier,
+    milestone: MilestoneSpec? = null,
+    icon: SelloIcon = SelloIcon.Add,
+    annotation: String? = null
+) {
+    Row(
+        modifier.fillMaxWidth().padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (milestone !=
+            null
+        ) {
+            MilestonePlace(milestone)
+        } else {
+            Icon(icon.painter(), null, tint = SelloTheme.colors.inkSoft)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(kind, fontWeight = FontWeight.W800)
+            Text(
+                detail,
+                style = MaterialTheme.typography.labelSmall,
+                color = SelloTheme.colors.inkSoft
+            )
+            annotation?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = SelloTheme.colors.semantic.gain
+                )
+            }
+            MoneyText(amount)
+        }
+    }
+}
+
+@Composable
+fun PerformanceLine(
+    percentage: String,
+    amount: String,
+    loss: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val ink = if (loss) SelloTheme.colors.semantic.loss else SelloTheme.colors.semantic.gain
+    Row(
+        modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Icon(
+            (if (loss) SelloIcon.TrendingDown else SelloIcon.TrendingUp).painter(),
+            null,
+            tint = ink
+        )
+        Column {
+            Text(percentage, fontWeight = FontWeight.W800, color = ink)
+            Text(amount, color = ink)
+        }
+    }
+}
+
+@Composable
+fun InvestmentRow(
+    name: String,
+    detail: String,
+    icon: SelloIcon,
+    shade: Color,
+    value: MoneyTextValue?,
+    missingLabel: String,
+    secondary: String,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier.fillMaxWidth().heightIn(
+            min = 64.dp
+        ).clickable(role = Role.Button, onClick = onOpen).padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            Modifier.size(40.dp).background(shade, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon.painter(), null, tint = SelloTheme.colors.paper)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(name, fontWeight = FontWeight.W800)
+            Text(
+                detail,
+                style = MaterialTheme.typography.labelSmall,
+                color = SelloTheme.colors.inkSoft
+            )
+            if (value ==
+                null
+            ) {
+                Text(missingLabel, fontWeight = FontWeight.W800)
+            } else {
+                MoneyText(value)
+            }
+            Text(secondary, style = MaterialTheme.typography.labelSmall)
+        }
+        Icon(SelloIcon.ChevronRight.painter(), null, tint = SelloTheme.colors.outline)
+    }
+}
+
+private val TicketShape = GenericShape { size, _ ->
+    val notch = minOf(size.width / 20f, size.height / 6f)
+    moveTo(0f, 0f)
+    lineTo(size.width, 0f)
+    lineTo(size.width, size.height / 2 - notch)
+    cubicTo(
+        size.width - 2 * notch,
+        size.height / 2 - notch,
+        size.width - 2 * notch,
+        size.height / 2 + notch,
+        size.width,
+        size.height / 2 + notch
+    )
+    lineTo(size.width, size.height)
+    lineTo(0f, size.height)
+    lineTo(0f, size.height / 2 + notch)
+    cubicTo(
+        2 * notch,
+        size.height / 2 + notch,
+        2 * notch,
+        size.height / 2 - notch,
+        0f,
+        size.height / 2 - notch
+    )
+    close()
+}
+
+@Composable
+fun StampTicket(
+    places: List<MilestoneSpec>,
+    title: String,
+    detail: String,
+    modifier: Modifier = Modifier,
+    land: Boolean = false
+) {
+    Column(
+        modifier.fillMaxWidth().clip(
+            TicketShape
+        ).background(SelloTheme.colors.paper).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        MilestoneRow(places, landingIndex = if (land) places.lastIndex else null)
+        Text(title, fontWeight = FontWeight.W800)
+        Text(detail, color = SelloTheme.colors.inkSoft)
+    }
+}

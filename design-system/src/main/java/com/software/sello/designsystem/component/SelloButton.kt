@@ -25,6 +25,9 @@ import com.software.sello.designsystem.theme.SelloTheme
 /** One filled button per screen; Destructive only inside a confirmation. */
 enum class ButtonKind { Filled, Outlined, Text, Destructive }
 
+/** Optional v2 action ink; the default preserves existing consumers. */
+enum class ButtonTone { Brand, Gain, Ink, Loss }
+
 /**
  * Sello's button. While [loading] it keeps its label and colours, shows a spinner in
  * place of the icon and ignores presses, so a save cannot be submitted twice.
@@ -37,13 +40,20 @@ fun SelloButton(
     kind: ButtonKind = ButtonKind.Filled,
     icon: SelloIcon? = null,
     enabled: Boolean = true,
-    loading: Boolean = false
+    loading: Boolean = false,
+    tone: ButtonTone = ButtonTone.Brand
 ) {
     val colors = SelloTheme.colors
+    val (toneInk, onTone) = when (tone) {
+        ButtonTone.Brand -> colors.brand to colors.onBrand
+        ButtonTone.Gain -> colors.semantic.gain to colors.semantic.onGain
+        ButtonTone.Ink -> colors.ink to colors.paper
+        ButtonTone.Loss -> colors.semantic.loss to colors.semantic.onLoss
+    }
     val (container, content) = when (kind) {
-        ButtonKind.Filled -> colors.brand to colors.onBrand
+        ButtonKind.Filled -> toneInk to onTone
         ButtonKind.Destructive -> colors.semantic.loss to colors.semantic.onLoss
-        ButtonKind.Outlined, ButtonKind.Text -> Color.Transparent to colors.brand
+        ButtonKind.Outlined, ButtonKind.Text -> Color.Transparent to toneInk
     }
     // A loading button stays at full strength; a disabled one fades to 38 %.
     val fade = if (loading) 1f else DISABLED_ALPHA
@@ -59,7 +69,7 @@ fun SelloButton(
             disabledContentColor = content.copy(alpha = fade)
         ),
         border = if (kind == ButtonKind.Outlined) {
-            BorderStroke(1.5.dp, colors.brand.copy(alpha = if (enabled || loading) 1f else fade))
+            BorderStroke(1.5.dp, toneInk.copy(alpha = if (enabled || loading) 1f else fade))
         } else {
             null
         },

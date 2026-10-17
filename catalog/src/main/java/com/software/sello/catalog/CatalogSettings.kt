@@ -27,6 +27,7 @@ enum class CatalogMotion(@StringRes val label: Int) {
 /** Widths at the reference's breakpoints; [Device] uses whatever the screen offers. */
 enum class CatalogWindow(@StringRes val label: Int, val width: Dp?, val height: Dp? = null) {
     Device(R.string.catalog_window_device, null),
+    Narrow(R.string.catalog_window_narrow, 320.dp),
     Compact(R.string.catalog_window_compact, 360.dp),
     Landscape(R.string.catalog_window_landscape, 760.dp, 400.dp),
     Medium(R.string.catalog_window_medium, 600.dp),

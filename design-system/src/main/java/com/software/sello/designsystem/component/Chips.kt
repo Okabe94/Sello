@@ -139,7 +139,8 @@ fun FieldPill(
     icon: SelloIcon,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: Boolean = false
+    placeholder: Boolean = false,
+    enabled: Boolean = true
 ) {
     val colors = SelloTheme.colors
     Row(
@@ -151,7 +152,7 @@ fun FieldPill(
             .clip(SelloTheme.shapes.control)
             .background(colors.paper)
             .border(1.5.dp, colors.rule, SelloTheme.shapes.control)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 12.dp)
     ) {
         Icon(

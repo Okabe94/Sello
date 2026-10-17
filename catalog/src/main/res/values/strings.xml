@@ -106,6 +106,9 @@
     <string name="v2_demo_maximo_12_digitos" formatted="false">Máximo 12 dígitos</string>
     <string name="v2_demo_hoy_vie_16" formatted="false">Hoy, vie 16</string>
     <string name="v2_demo_agregar_nota" formatted="false">Agregar nota</string>
+    <string name="v2_demo_opcional" formatted="false">Opcional</string>
+    <string name="v2_demo_editar" formatted="false">Editar</string>
+    <string name="v2_demo_cambiar" formatted="false">Cambiar</string>
     <string name="v2_demo_nombre_de_la_fuente" formatted="false">Nombre de la fuente</string>
     <string name="v2_demo_no_guardado" formatted="false">No guardado</string>
     <string name="v2_demo_por_comprobar" formatted="false">Por comprobar</string>

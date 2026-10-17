@@ -23,6 +23,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
@@ -33,6 +34,7 @@ import com.software.sello.designsystem.component.v2.MilestoneSpec
 import com.software.sello.designsystem.component.v2.MilestoneState
 import com.software.sello.designsystem.component.v2.NoteComposer
 import com.software.sello.designsystem.component.v2.PastMonthRibbon
+import com.software.sello.designsystem.component.v2.V2ChipRows
 import com.software.sello.designsystem.component.v2.V2EntryLayout
 import com.software.sello.designsystem.component.v2.V2NavigationBar
 import com.software.sello.designsystem.icon.SelloIcon
@@ -133,15 +135,30 @@ class V2ComponentTest {
         val note = "Una nota de prueba que supera el límite y conserva todas las palabras escritas."
         rule.setContent {
             SelloTheme {
-                NoteComposer("Nota de Comida", note, {
-                }, "${note.length}/60", "Máximo 60 caracteres", "Listo", "Cancelar", {
-                    submitted++
-                }, {})
+                NoteComposer(
+                    AnnotatedString("Gasto en Comida"), note, {}, "${note.length}/60",
+                    "Opcional", "Máximo 60 caracteres", "Listo", "Cancelar", { submitted++ }, {}
+                )
             }
         }
         rule.onNode(hasSetTextAction()).assertTextContains(note)
-        rule.onNodeWithText("Listo").assertIsNotEnabled().performClick()
+        rule.onNodeWithContentDescription("Listo").assertIsNotEnabled().performClick()
         assertEquals(0, submitted)
+    }
+
+    @Test
+    fun editingAnExistingNoteStartsWithTheCursorAtTheEnd() {
+        var note by mutableStateOf("Almuerzo")
+        rule.setContent {
+            SelloTheme {
+                NoteComposer(
+                    AnnotatedString("Gasto en Comida"), note, { note = it }, "${note.length}/60",
+                    "Opcional", null, "Listo", "Cancelar", {}, {}
+                )
+            }
+        }
+        rule.onNode(hasSetTextAction()).performTextInput(" del equipo")
+        assertEquals("Almuerzo del equipo", note)
     }
 
     @Test
@@ -149,13 +166,53 @@ class V2ComponentTest {
         val note = "Nota sintética que conserva todas sus palabras. ".repeat(8)
         rule.inEveryScheme(fontScale = 2f, width = 320.dp, content = {
             NoteComposer(
-                "Nota de Comida", note, {}, "${note.length}/60", "Máximo 60 caracteres",
-                "Listo", "Cancelar", {}, {}
+                AnnotatedString("Gasto en Comida"), note, {}, "${note.length}/60",
+                "Opcional", "Máximo 60 caracteres", "Listo", "Cancelar", {}, {}
             )
         }) {
             rule.onNode(hasSetTextAction()).assertTextContains(note)
             rule.onNodeWithText("Cancelar").assertIsDisplayed()
-            rule.onNodeWithText("Listo").assertIsDisplayed().assertIsNotEnabled()
+            rule.onNodeWithContentDescription("Listo").assertIsDisplayed().assertIsNotEnabled()
+        }
+    }
+
+    @Test
+    fun twoChipRowsAreVisiblyApartAndKeep48dpTargets() {
+        rule.inEveryScheme(content = {
+            V2ChipRows(4) { SelloChip("Categoría $it", false, {}) }
+        }) {
+            // A horizontal grid fills down first: 0 and 1 share the first column.
+            val upper = rule.onNodeWithText("Categoría 0").getUnclippedBoundsInRoot()
+            val lower = rule.onNodeWithText("Categoría 1").getUnclippedBoundsInRoot()
+            assertTrue(lower.top - upper.bottom >= 6.dp)
+            val chip = rule.onNodeWithText("Categoría 0").fetchSemanticsNode()
+            val target = with(chip.layoutInfo.density) { chip.touchBoundsInRoot.height.toDp() }
+            assertTrue(target >= 47.9.dp)
+        }
+    }
+
+    @Test
+    fun chipsInAColumnTakeTheWidestChipsWidth() {
+        val names = listOf("Ocio", "Una categoría larga", "Café", "Ropa")
+        rule.inEveryScheme(content = {
+            V2ChipRows(names.size) { SelloChip(names[it], false, {}) }
+        }) {
+            val short = rule.onNodeWithText("Ocio").getUnclippedBoundsInRoot()
+            val long = rule.onNodeWithText("Una categoría larga").getUnclippedBoundsInRoot()
+            assertEquals(long.left, short.left)
+            assertEquals(long.right, short.right)
+        }
+    }
+
+    @Test
+    fun aFewChipsStartAtTheLeadingEdge() {
+        rule.inEveryScheme(content = {
+            V2ChipRows(2, Modifier.testTag("rows")) {
+                SelloChip(listOf("Salario", "Otro")[it], false, {})
+            }
+        }) {
+            val rows = rule.onNodeWithTag("rows").getUnclippedBoundsInRoot()
+            assertEquals(rows.left, rule.onNodeWithText("Salario").getUnclippedBoundsInRoot().left)
         }
     }
 

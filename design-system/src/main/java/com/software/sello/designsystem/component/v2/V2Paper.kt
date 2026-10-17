@@ -10,12 +10,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +44,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.software.sello.designsystem.R
@@ -215,7 +221,14 @@ fun EntryAmountSlip(
     }
 }
 
-/** Keeps the amount, action and pad stable; choices scroll independently in either layout. */
+/**
+ * Keeps the amount, action and pad stable; choices scroll independently in either layout.
+ *
+ * The entry's only text input is the docked [NoteComposer], whose keyboard covers this
+ * screen. A host that pads for that keyboard would otherwise squeeze the entry or flip it
+ * into two columns behind the sheet, so while the keyboard is open the entry keeps the
+ * height it had without it.
+ */
 @Composable
 fun V2EntryLayout(
     modifier: Modifier = Modifier,
@@ -226,47 +239,80 @@ fun V2EntryLayout(
     keypad: @Composable () -> Unit
 ) {
     BoxWithConstraints(modifier.fillMaxSize()) {
-        if (maxWidth >= 600.dp || maxHeight < 480.dp) {
-            val availableHeight = maxHeight
-            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(
-                    Modifier.weight(1f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    header()
-                    amount()
-                    Column(
-                        Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) { choices() }
-                }
-                Column(
-                    Modifier.weight(1f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.Bottom
-                ) {
-                    Column(
-                        Modifier.heightIn(max = availableHeight)
-                            .verticalScroll(rememberScrollState(), reverseScrolling = true),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        action()
-                        keypad()
-                    }
-                }
-            }
-        } else {
-            Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        val settled = remember(maxWidth) { SettledHeight(maxHeight) }
+        SideEffect { if (!keyboardOpen) settled.height = maxHeight }
+        val height = if (keyboardOpen) maxOf(settled.height, maxHeight) else maxHeight
+        val twoPane = maxWidth >= 600.dp || height < 480.dp
+        Box(
+            Modifier.fillMaxWidth()
+                .wrapContentHeight(Alignment.Top, unbounded = true)
+                .height(height)
+        ) {
+            EntryPanes(
+                twoPane,
+                height,
+                header,
+                amount,
+                choices,
+                action,
+                keypad
+            )
+        }
+    }
+}
+
+private class SettledHeight(var height: Dp)
+
+@Composable
+private fun EntryPanes(
+    twoPane: Boolean,
+    availableHeight: Dp,
+    header: @Composable () -> Unit,
+    amount: @Composable () -> Unit,
+    choices: @Composable () -> Unit,
+    action: @Composable () -> Unit,
+    keypad: @Composable () -> Unit
+) {
+    if (twoPane) {
+        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                Modifier.weight(1f).fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 header()
                 amount()
                 Column(
                     Modifier.weight(1f).verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    choices()
-                }
-                action()
-                keypad()
+                ) { choices() }
             }
+            Column(
+                Modifier.weight(1f).fillMaxHeight(),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Column(
+                    Modifier.heightIn(max = availableHeight)
+                        .verticalScroll(rememberScrollState(), reverseScrolling = true),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    action()
+                    keypad()
+                }
+            }
+        }
+    } else {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            header()
+            amount()
+            Column(
+                Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                choices()
+            }
+            action()
+            keypad()
         }
     }
 }

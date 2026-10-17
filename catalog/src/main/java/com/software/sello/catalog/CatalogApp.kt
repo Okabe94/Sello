@@ -1,6 +1,7 @@
 package com.software.sello.catalog
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -49,6 +50,8 @@ fun CatalogApp() {
         mutableStateOf(CatalogSettings())
     }
     var openId by rememberSaveable { mutableStateOf<String?>(null) }
+    // Held here, not in the list, so opening an example and coming back keeps the spot.
+    val homeScroll = rememberScrollState()
     val open = catalogExamples.firstOrNull { it.id == openId }
     val dark = when (settings.mode) {
         CatalogMode.System -> isSystemInDarkTheme()
@@ -72,7 +75,7 @@ fun CatalogApp() {
                 CatalogControls(settings = settings, onChange = { settings = it })
                 CatalogStage(settings = settings) {
                     if (open == null) {
-                        CatalogHome(onOpen = { openId = it.id })
+                        CatalogHome(scroll = homeScroll, onOpen = { openId = it.id })
                     } else {
                         CatalogExampleScreen(example = open, onBack = { openId = null })
                     }
@@ -107,12 +110,12 @@ private fun CatalogStage(settings: CatalogSettings, content: @Composable () -> U
 }
 
 @Composable
-private fun CatalogHome(onOpen: (CatalogExample) -> Unit) {
+private fun CatalogHome(scroll: ScrollState, onOpen: (CatalogExample) -> Unit) {
     val spacing = SelloTheme.spacing
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scroll)
             .padding(spacing.deskMargin),
         verticalArrangement = Arrangement.spacedBy(spacing.slipGap)
     ) {

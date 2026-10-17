@@ -61,6 +61,14 @@ amount scrolling away with the choices; only the choices now scroll in the left 
 Catalog interaction tests cover unknown outcomes, activity recreation without
 auto-submission, and a note counter that first counted emoji as two characters; it
 now counts code points like the entry example.
+Device testing found three visual faults, each now covered by a test that failed first:
+the two chip rows had no gap, because the grid stretched each chip to its 48dp row;
+expense chips had no icons; and the note keyboard flipped the entry behind the sheet
+into two columns. The entry now keeps its keyboard-free height while a keyboard is open. A second round
+matched the reference: chips in a column share the widest chip's width and start at the
+leading edge; the note and an income source's name are full-width `EntryLine`s with
+Editar/Cambiar; and `NoteComposer` states what the note belongs to, then shows a filled
+box, a round check button and an Opcional hint.
 
 Run focused suites before the unticketed integrated gate:
 

@@ -19,6 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.software.sello.catalog.R
 import com.software.sello.catalog.components.DraftFixture
@@ -33,6 +37,7 @@ import com.software.sello.designsystem.component.SelloChip
 import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.v2.EntryAmountSlip
+import com.software.sello.designsystem.component.v2.EntryLine
 import com.software.sello.designsystem.component.v2.FactLine
 import com.software.sello.designsystem.component.v2.NoteComposer
 import com.software.sello.designsystem.component.v2.V2ChipRows
@@ -51,11 +56,22 @@ internal fun Caption(text: String) {
     Text(text, color = SelloTheme.colors.inkSoft, style = MaterialTheme.typography.bodySmall)
 }
 
-internal val CategoryNames =
+/** The reference's expense categories, each known by its icon and name. */
+internal val Categories =
     listOf(
-        "Comida", "Transporte", "Café", "Casa", "Salud", "Ocio", "Ahorro", "Educación",
-        "Mascotas", "Una categoría con nombre largo"
+        "Hogar" to SelloIcon.Home,
+        "Comida" to SelloIcon.Restaurant,
+        "Transporte" to SelloIcon.DirectionsBus,
+        "Café" to SelloIcon.LocalCafe,
+        "Salud" to SelloIcon.MedicalServices,
+        "Ocio" to SelloIcon.Theaters,
+        "Ropa" to SelloIcon.Checkroom,
+        "Mascotas" to SelloIcon.Pets,
+        "Educación" to SelloIcon.School,
+        "Gimnasio" to SelloIcon.FitnessCenter,
+        "Una categoría con nombre largo" to SelloIcon.ReceiptLong
     )
+private val CategoryNames = Categories.map { it.first }
 private val Sources = listOf("Salario", "Freelance", "Ingresos pasivos", "Transferencia", "Otro")
 
 @Composable
@@ -142,7 +158,7 @@ fun V2EntryExample() {
                 } else if (choice >=
                     0
                 ) {
-                    SelloIcon.Restaurant
+                    Categories[choice].second
                 } else {
                     null
                 },
@@ -152,44 +168,50 @@ fun V2EntryExample() {
         },
         choices = {
             V2ChipRows(names.size) { index ->
-                SelloChip(names[index], choice == index, {
-                    choice = index
-                }, enabled = !locked, modifier = Modifier.testTag("v2:entry:choice:$index"))
+                SelloChip(
+                    names[index],
+                    choice == index,
+                    { choice = index },
+                    enabled = !locked,
+                    modifier = Modifier.testTag("v2:entry:choice:$index"),
+                    // Income sources are words only; expense categories carry their icon.
+                    icon = if (income) null else Categories[index].second
+                )
             }
-            FieldPill(
-                note.ifEmpty {
-                    strings.getString(R.string.v2_demo_agregar_nota)
-                },
+            if (income && choice == 4) {
+                EntryLine(
+                    sourceName.ifEmpty {
+                        strings.getString(R.string.v2_demo_nombre_de_la_fuente)
+                    },
+                    SelloIcon.AccountBalance,
+                    {
+                        if (!locked) {
+                            noteDraft = sourceName
+                            editingSource = true
+                            editingNote = true
+                        }
+                    },
+                    Modifier.testTag("v2:entry:source"),
+                    action = strings.getString(R.string.v2_demo_cambiar),
+                    placeholder = sourceName.isEmpty(),
+                    enabled = !locked
+                )
+            }
+            EntryLine(
+                note.ifEmpty { strings.getString(R.string.v2_demo_agregar_nota) },
                 SelloIcon.EditNote,
                 {
                     if (!locked) {
-                        noteDraft =
-                            note
+                        noteDraft = note
                         editingSource = false
                         editingNote = true
                     }
                 },
                 Modifier.testTag("v2:entry:note"),
+                action = strings.getString(R.string.v2_demo_editar),
                 placeholder = note.isEmpty(),
                 enabled = !locked
             )
-            if (income && choice == 4) {
-                FieldPill(
-                    sourceName.ifEmpty {
-                        strings.getString(R.string.v2_demo_nombre_de_la_fuente)
-                    },
-                    SelloIcon.EditNote,
-                    {
-                        if (!locked) {
-                            noteDraft =
-                                sourceName
-                            editingSource = true
-                            editingNote = true
-                        }
-                    },
-                    enabled = !locked
-                )
-            }
             V2ChipRows(5, modifier = Modifier.testTag("v2:entry:states"), rows = 1) { index ->
                 SelloChip(
                     listOf(
@@ -294,35 +316,58 @@ fun V2EntryExample() {
     if (editingNote) {
         val length = noteDraft.codePointCount(0, noteDraft.length)
         val maximum = if (editingSource) 24 else 60
-        NoteComposer(
+        val kind = if (income) "Ingreso" else "Gasto"
+        val category = names.getOrNull(choice)
+        val facts = SpanStyle(color = SelloTheme.colors.ink, fontWeight = FontWeight.Bold)
+        val context = buildAnnotatedString {
             if (editingSource) {
-                strings.getString(R.string.v2_demo_nombre_de_la_fuente)
+                append(strings.getString(R.string.v2_demo_nombre_de_la_fuente))
             } else {
-                "Nota · ${names.getOrNull(
-                    choice
-                ) ?: "Gasto"}"
-            },
-            noteDraft, {
-                noteDraft =
-                    it
-            },
+                append(kind)
+                category?.let {
+                    append(" en ")
+                    withStyle(facts) { append(it) }
+                }
+                amount?.let {
+                    append(" · ")
+                    withStyle(facts) { append(if (income) "+${it.digits}" else it.digits) }
+                }
+            }
+        }
+        val spoken = if (editingSource) {
+            context.text
+        } else {
+            listOfNotNull(
+                kind + (category?.let { " en $it" } ?: ""),
+                amount?.spoken
+            ).joinToString(", ")
+        }
+        val over = length > maximum
+        NoteComposer(
+            context,
+            noteDraft,
+            { noteDraft = it },
             "$length/$maximum",
-            if (length >
-                maximum
-            ) {
-                "Máximo $maximum caracteres. Tu texto sigue aquí."
-            } else if (editingSource &&
-                noteDraft.isBlank()
-            ) {
+            hint = if (editingSource) {
                 strings.getString(R.string.v2_demo_escribe_el_nombre_de_la_fuente)
             } else {
-                null
+                strings.getString(R.string.v2_demo_opcional)
             },
-            "Listo", "Cancelar", {
+            error = if (over) "Máximo $maximum caracteres. Tu texto sigue aquí." else null,
+            doneLabel = "Listo",
+            cancelLabel = "Cancelar",
+            onDone = {
                 if (editingSource) sourceName = noteDraft else note = noteDraft
-                editingNote =
-                    false
-            }, { editingNote = false }
+                editingNote = false
+            },
+            onCancel = { editingNote = false },
+            contextIcon = when {
+                editingSource || income -> SelloIcon.AccountBalance
+                choice >= 0 -> Categories[choice].second
+                else -> SelloIcon.ReceiptLong
+            },
+            contextDescription = spoken,
+            doneEnabled = !over && !(editingSource && noteDraft.isBlank())
         )
     }
 }
@@ -388,11 +433,11 @@ fun V2ChipsExample() {
     var choice by rememberSaveable { mutableIntStateOf(-1) }
     V2Stack {
         Caption(strings.getString(R.string.v2_demo_maximo_dos_filas_desplaza_para_ver_mas))
-        V2ChipRows(CategoryNames.size) { index ->
-            SelloChip(CategoryNames[index], choice == index, {
+        V2ChipRows(Categories.size) { index ->
+            SelloChip(Categories[index].first, choice == index, {
                 choice =
                     index
-            })
+            }, icon = Categories[index].second)
         }
         Caption(strings.getString(R.string.v2_demo_dos_grupos_comparten_el_espacio_una_fila))
         V2ChipRows(4, rows = 1) { index ->
@@ -408,10 +453,10 @@ fun V2ChipsExample() {
             )
         }
         V2ChipRows(4, rows = 1) { index ->
-            SelloChip(CategoryNames[index], choice == index, {
+            SelloChip(Categories[index].first, choice == index, {
                 choice =
                     index
-            })
+            }, icon = Categories[index].second)
         }
         SelloChip("Deshabilitado", false, {}, enabled = false)
         FactLine(
@@ -427,16 +472,16 @@ fun V2ComposerExample() {
     var value by rememberSaveable { mutableStateOf("") }
     var draft by rememberSaveable { mutableStateOf("") }
     V2Stack {
-        FieldPill(
-            value.ifEmpty {
-                strings.getString(R.string.v2_demo_agregar_nota)
-            },
+        EntryLine(
+            value.ifEmpty { strings.getString(R.string.v2_demo_agregar_nota) },
             SelloIcon.EditNote,
             {
                 draft = value
                 open = true
             },
-            Modifier.testTag("v2:composer:open")
+            Modifier.testTag("v2:composer:open"),
+            action = strings.getString(R.string.v2_demo_editar),
+            placeholder = value.isEmpty()
         )
         SelloButton(strings.getString(R.string.v2_demo_probar_nota_larga), {
             draft =
@@ -449,21 +494,24 @@ fun V2ComposerExample() {
     if (open) {
         val length = draft.codePointCount(0, draft.length)
         NoteComposer(
-            strings.getString(R.string.v2_demo_nota_comida), draft, {
-                draft = it
-            }, "$length/60",
-            if (length >
-                60
-            ) {
+            AnnotatedString(strings.getString(R.string.v2_demo_nota_comida)),
+            draft,
+            { draft = it },
+            "$length/60",
+            hint = strings.getString(R.string.v2_demo_opcional),
+            error = if (length > 60) {
                 strings.getString(R.string.v2_demo_maximo_60_caracteres_tu_texto_sigue_aqui)
             } else {
                 null
             },
-            "Listo", "Cancelar", {
-                value =
-                    draft
+            doneLabel = "Listo",
+            cancelLabel = "Cancelar",
+            onDone = {
+                value = draft
                 open = false
-            }, { open = false }
+            },
+            onCancel = { open = false },
+            contextIcon = SelloIcon.Restaurant
         )
     }
 }

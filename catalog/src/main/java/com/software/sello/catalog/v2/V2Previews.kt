@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -197,7 +198,19 @@ private fun V2FoundationsExamplePreview(
 private fun NoteComposerOpenPreview(
     @PreviewParameter(V2PreviewThemes::class) theme: V2PreviewTheme
 ) = Frame(theme) {
-    NoteComposer("Nota · Comida", "Almuerzo", {}, "8/60", null, "Listo", "Cancelar", {}, {})
+    NoteComposer(
+        AnnotatedString("Gasto en Comida · 48.700"),
+        "Almuerzo",
+        {},
+        "8/60",
+        "Opcional",
+        null,
+        "Listo",
+        "Cancelar",
+        {},
+        {},
+        contextIcon = SelloIcon.Restaurant
+    )
 }
 
 @V2Previews

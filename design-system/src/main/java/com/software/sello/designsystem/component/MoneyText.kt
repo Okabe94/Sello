@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -66,12 +67,27 @@ fun MoneyText(
     modifier: Modifier = Modifier,
     style: MoneyStyle = MoneyStyle.Line,
     color: Color = Color.Unspecified,
-    fontWeight: FontWeight? = null
+    fontWeight: FontWeight? = null,
+    textStyle: TextStyle? = null,
+    singleLine: Boolean = false,
+    onTextLayout: (TextLayoutResult) -> Unit = {}
 ) {
     val ink = color.takeOrElse { LocalContentColor.current }
     val semantics = modifier.clearAndSetSemantics {
         contentDescription = value.spoken
         text = AnnotatedString(moneyPlainText(value, style))
+    }
+    if (textStyle != null) {
+        Text(
+            moneyAnnotatedString(value, style, textStyle, ink),
+            semantics,
+            ink,
+            style = textStyle,
+            softWrap = !singleLine,
+            maxLines = if (singleLine) 1 else Int.MAX_VALUE,
+            onTextLayout = onTextLayout
+        )
+        return
     }
     if (style != MoneyStyle.Hero) {
         val textStyle = style.textStyle(fontWeight)

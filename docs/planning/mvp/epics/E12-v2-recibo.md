@@ -726,7 +726,8 @@ Focused screen tests, then `./scripts/verify-ticket SELLO-067 --retain`.
 ### Delivery evidence
 
 - **Revision:** tested snapshot is the `sello-067-adjust-budget-link` working tree on
-  `main` at `9ece94c`, with only the ticket and epic status uncommitted; it is
+  its merge of `main` at `4c12c86` (bringing in `61b7792`, CI system-image caching,
+  with no overlap), with only the ticket and epic status uncommitted; it is
   identified exactly by the retained input fingerprint below. The commit and pull
   request follow this evidence; no claim is made that the gate tested a clean commit.
 - **Requirement mapping:** `ReciboSummary.adjustable` is true only when the overall
@@ -750,8 +751,9 @@ Focused screen tests, then `./scripts/verify-ticket SELLO-067 --retain`.
   window with the detail beside the list, focus moving with the detail kept.
 - **Gate results:** `./scripts/verify-ticket SELLO-067 --retain` passed all six checks.
   Host: 529 tests; device: 570 tests; zero failures, errors or skips. Lint had zero
-  errors and 32 existing warnings.
-- **Quality run:** run 20261020T204727Z-a9f2697d; SELLO-067 G2 passed; HEAD 9ece94c, inputs sha256 143abe8cef71; report docs/planning/mvp/quality-reports/SELLO-067.json sha256 5e0a8251b4cc2830008a7758849758701d2d0f72be054e04bec49f9e9a93733a
+  errors and 32 existing warnings. After merging `main` the gate was run again and
+  passed with the same counts.
+- **Quality run:** run 20261020T212841Z-1910a6d1; SELLO-067 G2 passed; HEAD 4c12c86, inputs sha256 d6c528ac6200; report docs/planning/mvp/quality-reports/SELLO-067.json sha256 67c698c458a3a2b0b8899e73b477f7d6b6d6355d9497d68dbeda51213753eb60
 - **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
   (320 × 640dp, animations off), serial `emulator-5582`. On the same AVD a debug build
   with one synthetic category (limit 100.000) and an expense of 143.700 showed

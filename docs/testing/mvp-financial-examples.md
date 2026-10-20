@@ -53,8 +53,8 @@ expectations, not evidence that the scaffold implements validation.
 | ID | Inputs | Expected outcome |
 | --- | --- | --- |
 | B01 | finite limit 100,000/spend 30,000; unlimited spend 20,000 | Total spent 50,000; remaining 50,000 |
-| B02 | all limits absent; spent 50,000 | Has gastado / Sin límite; no invented capacity/allowance/verdict |
-| B03 | 2026-10-31; limit 100,000; spent 90,000 | Remaining 10,000; 1 available day; allowance 10,000; Para hoy |
+| B02 | all limits absent; spent 50,000 | Has gastado este mes / Sin límite; no invented capacity/allowance/verdict |
+| B03 | 2026-10-31; limit 100,000; spent 90,000 | Remaining 10,000; 1 available day; allowance 10,000; 1 día, incluido hoy |
 | B04 | overall finite limits total 100,000; overall spent 110,000 | Overall remaining −10,000; overall allowance 0 in loss ink; Excedido; this is not a single-category overspend with other finite capacity remaining |
 | B05 | explicit limit 0; spent 0, then spent 1 | Al día then Excedido; no percentage division by zero |
 | B06 | configured limit 100,000; successfully loaded empty expense list | Actual 0; forecast 0; Al día; zero is not unavailable data |

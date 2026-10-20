@@ -15,27 +15,32 @@ anything itself.
 `ReciboRenderModel` turns a `SnapshotState` into what both screens draw. It picks the
 sentence, formats the amounts the snapshot already holds and names the verdict:
 
+Recibo's answer slip (the v2 `AnswerSlip`):
+
 | Month | With limits | Without any limit |
 | --- | --- | --- |
-| In progress | "Te quedan" what remains, or "Te pasaste por" how far over; the status Al día, Al límite or Excedido; "Para N días" ("Para hoy" on the last day) and what can be spent a day | "Has gastado" the total, "Sin límite", nothing per day |
-| Finished | "Te sobraron" or "Te pasaste por"; Cumplido or Excedido; nothing per day | the same as above |
+| In progress | "Restante del presupuesto" and the status Al día, Al límite or Excedido; the remainder, signed when over (−43.700); a tear line, then what can be spent a day ("25.350 por día", 0 when nothing is left) and "16 días, incluido hoy" ("1 día" on the last day) | "Has gastado este mes" the total, "Sin límite", nothing per day |
+| Finished | "Restante del presupuesto", Cumplido or Excedido, the signed remainder and "Mes cerrado · gastaste 920.000 de 1.000.000."; nothing per day | the same as above |
+
+The categories and their detail keep sentences that say which way the amount goes
+("Te quedan", "Te pasaste por", "Te sobraron"), so their amount carries no sign; a
+category's cell keeps the minus.
 
 A finished month uses the limits that applied in that month, because the snapshot
-does. The amount in a sentence never carries a sign: the words say which way it
-goes. A category's cell keeps the minus.
+does; its closing line takes the spent amount and the limit from the same budget as
+the remainder.
 
 The verdict is always a word, on screen and in what a screen reader says, never a
-colour alone. Each block is read as one sentence with its exact amounts: "Te quedan
-937.200 pesos. Al día.", "Alimentación. Te quedan 287.600 pesos de 900.000 pesos.
-Al día."
+colour alone, and a minus is read as "menos". Each block is read as one sentence with
+its exact amounts: "Restante del presupuesto: menos 43.700 pesos. Excedido.", "0 pesos
+por día. 1 día, incluido hoy.", "Alimentación. Te quedan 287.600 pesos de 900.000
+pesos. Al día."
 
 How full a category's circle is drawn is the only number that is not exact. It is
 geometry: it is never shown as a figure, compared or turned back into money.
 
-The approved [v2 Recibo](../design/v2/home.html) changes the stamps
-([ADR 0012](../decisions/0012-budget-guidance-contract.md)), always shows the per-day
-line in the current month, closes a past month with one line and adds a review
-invitation; none of it is implemented yet.
+The approved [v2 Recibo](../design/v2/home.html) also adds a review invitation early
+in the month; it is not implemented yet.
 
 ## Order of the categories
 

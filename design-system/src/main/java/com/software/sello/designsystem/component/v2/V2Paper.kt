@@ -39,6 +39,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -344,6 +346,11 @@ private fun EntryPanes(
  */
 private val PinnedAmountMinHeight = 600.dp
 
+/**
+ * A screen's answer: a label with its stamp, then one large amount, in loss ink when
+ * [ink] is [StampInk.Over]. With [description], the label, stamp and amount are read
+ * as that one sentence; [detail] is read on its own.
+ */
 @Composable
 fun AnswerSlip(
     label: String,
@@ -351,29 +358,35 @@ fun AnswerSlip(
     stamp: String,
     ink: StampInk,
     modifier: Modifier = Modifier,
+    description: String? = null,
     detail: @Composable () -> Unit = {}
 ) {
     Slip(modifier.fillMaxWidth()) {
-        // Stacked at large text so the rotated stamp never steals the label's width.
-        if (LocalDensity.current.fontScale >= 1.3f) {
-            Text(label, color = SelloTheme.colors.inkSoft)
-            Stamp(stamp, ink, Modifier.padding(vertical = 8.dp), angle = -5f)
+        val answer = if (description == null) {
+            Modifier
         } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(label, modifier = Modifier.weight(1f), color = SelloTheme.colors.inkSoft)
-                Stamp(stamp, ink, Modifier.padding(vertical = 8.dp), angle = -5f)
-            }
+            Modifier.clearAndSetSemantics { contentDescription = description }
         }
-        FittedMoneyText(
-            amount,
-            color = if (ink ==
-                StampInk.Over
-            ) {
-                SelloTheme.colors.semantic.loss
+        Column(answer.fillMaxWidth()) {
+            // Stacked at large text so the rotated stamp never steals the label's width.
+            if (LocalDensity.current.fontScale >= 1.3f) {
+                Text(label, color = SelloTheme.colors.inkSoft)
+                Stamp(stamp, ink, Modifier.padding(vertical = 8.dp), angle = -5f)
             } else {
-                SelloTheme.colors.ink
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(label, modifier = Modifier.weight(1f), color = SelloTheme.colors.inkSoft)
+                    Stamp(stamp, ink, Modifier.padding(vertical = 8.dp), angle = -5f)
+                }
             }
-        )
+            FittedMoneyText(
+                amount,
+                color = if (ink == StampInk.Over) {
+                    SelloTheme.colors.semantic.loss
+                } else {
+                    SelloTheme.colors.ink
+                }
+            )
+        }
         detail()
     }
 }

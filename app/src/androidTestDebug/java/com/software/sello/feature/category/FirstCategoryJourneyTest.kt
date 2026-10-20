@@ -126,7 +126,9 @@ class FirstCategoryJourneyTest {
         rule.onNodeWithContentDescription(
             "Mercado de plaza. Te quedan 300.000 pesos de 300.000 pesos. Al día."
         ).performScrollTo().assertIsDisplayed()
-        rule.onNodeWithContentDescription("Te quedan 300.000 pesos. Al día.").assertExists()
+        rule.onNodeWithContentDescription(
+            "Restante del presupuesto: 300.000 pesos. Al día."
+        ).assertExists()
         assertEquals(
             listOf("Mercado de plaza|mercado de plaza|shopping_cart|0|1"),
             TestData.rows("SELECT name, name_key, icon, archived, version FROM category")
@@ -151,7 +153,9 @@ class FirstCategoryJourneyTest {
         rule.awaitDescription(
             "Mercado de plaza. Te quedan 300.000 pesos de 300.000 pesos. Al día."
         )
-        rule.onNodeWithContentDescription("Te quedan 300.000 pesos. Al día.").assertExists()
+        rule.onNodeWithContentDescription(
+            "Restante del presupuesto: 300.000 pesos. Al día."
+        ).assertExists()
     }
 
     @Test

@@ -155,7 +155,7 @@ class ReciboViewModelTest {
         assertEquals(ReciboRenderModel(MoneyFormatter(labels)).recibo(read), state)
         assertEquals(
             MoneyTextValue(MoneySign.None, "", "3.000.001.199.997", "3.000.001.199.997 pesos"),
-            state.summary.figure.amount
+            state.summary.amount
         )
         assertEquals(
             listOf("00000000-0000-4000-8000-000000000000", "00000000-0000-4000-8000-000000000001"),
@@ -213,7 +213,7 @@ class ReciboViewModelTest {
         assertEquals(listOf(october, november), snapshots.observed)
         assertEquals(
             MoneyTextValue(MoneySign.None, "", "1", "1 pesos"),
-            (viewModel.state.value as ReciboState.Month).summary.figure.amount
+            (viewModel.state.value as ReciboState.Month).summary.amount
         )
     }
 

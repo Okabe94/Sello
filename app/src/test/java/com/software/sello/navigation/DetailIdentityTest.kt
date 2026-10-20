@@ -5,6 +5,7 @@ import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.feature.recibo.BudgetFigure
 import com.software.sello.feature.recibo.CategoryDetailState
 import com.software.sello.feature.recibo.ExpenseListState
+import com.software.sello.feature.recibo.ReciboAnswerLabel
 import com.software.sello.feature.recibo.ReciboCategory
 import com.software.sello.feature.recibo.ReciboHeadline
 import com.software.sello.feature.recibo.ReciboStamp
@@ -49,7 +50,7 @@ class DetailIdentityTest {
     )
 
     private val recibo = ReciboState.Month(
-        summary = ReciboSummary(figure, days = null, perDay = null, perDayExhausted = false),
+        summary = ReciboSummary(ReciboAnswerLabel.Remaining, figure.amount, figure.stamp),
         categories = listOf(category("a", "Alimentación"), category("b", "Café")),
         stale = false
     )

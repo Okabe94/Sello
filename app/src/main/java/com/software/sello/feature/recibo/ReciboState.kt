@@ -70,16 +70,33 @@ data class BudgetFigure(
     val stamp: ReciboStamp
 )
 
+/** The label above the month's big number. */
+enum class ReciboAnswerLabel {
+    /** "Restante del presupuesto": the limit less what was spent, in any month. */
+    Remaining,
+
+    /** "Has gastado este mes": there is no finite limit to compare with. */
+    Spent
+}
+
 /**
- * The month as a whole. [days] and [perDay] exist only in the month in progress with a
- * limit; [perDayExhausted] says the limit is already passed, so nothing is left per day.
+ * The month as a whole, as the answer slip shows it. [amount] carries its sign: a
+ * month over its limit shows a minus. [perDay] exists only in the month in progress
+ * with a limit; [closed] only in a finished month with one.
  */
 data class ReciboSummary(
-    val figure: BudgetFigure,
-    val days: Int?,
-    val perDay: MoneyTextValue?,
-    val perDayExhausted: Boolean
+    val label: ReciboAnswerLabel,
+    val amount: MoneyTextValue,
+    val stamp: ReciboStamp,
+    val perDay: ReciboPerDay? = null,
+    val closed: ReciboClosedMonth? = null
 )
+
+/** What can be spent each day from today to the end of the month, today included. */
+data class ReciboPerDay(val amount: MoneyTextValue, val days: Int)
+
+/** What a finished month spent against its limit, both from the same snapshot. */
+data class ReciboClosedMonth(val spent: MoneyTextValue, val limit: MoneyTextValue)
 
 /**
  * One category in the month. [cellAmount] is what its cell shows: what is left, with a

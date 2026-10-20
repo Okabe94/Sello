@@ -30,7 +30,9 @@ class HostedWorkflowTests(unittest.TestCase):
 
     def test_the_one_job_is_the_required_check(self):
         self.assertEqual(1, len(re.findall(r"(?m)^  \w[\w-]*:\n    name: ", self.code.split("jobs:\n", 1)[1])))
-        self.assertIn("    name: quality\n", self.code)
+        # GitHub appends matrix values to a literal job name. Referencing the
+        # matrix explicitly prevents that suffix and preserves the required check.
+        self.assertIn("    name: ${{ matrix.cache-profile && 'quality' }}\n", self.code)
 
     def test_a_pull_request_asks_the_runner_which_gate_it_needs(self):
         plan = self.steps["Decide what this run verifies"]
@@ -81,6 +83,21 @@ class HostedWorkflowTests(unittest.TestCase):
         self.assertIn("build-scan-publish: false", cache)
         self.assertIn("dependency-graph: disabled", cache)
         self.assertIn("add-job-summary-as-pr-comment: never", cache)
+
+    def test_host_pushes_and_full_runs_have_separate_singleton_cache_profiles(self):
+        # Matrix context is part of setup-gradle's immutable key. A host push
+        # must not occupy the key used to publish the nightly device build.
+        profile = re.search(r"(?m)^        cache-profile:\n((?:          .+\n)+)", self.code)
+        self.assertIsNotNone(profile, "Host and device runs still share one immutable cache key")
+        self.assertEqual(
+            ["- ${{ github.event_name == 'push' && 'host' || 'device' }}"],
+            [line.strip() for line in profile.group(1).splitlines()],
+        )
+        strategy = self.code.split("    strategy:\n", 1)[1].split("    env:\n", 1)[0]
+        self.assertEqual("      matrix:\n        cache-profile:\n" + profile.group(1), strategy)
+        cache = self.steps["Set up Gradle caching"]
+        self.assertNotIn("workflow-job-context:", cache)  # Let the action read the real matrix.
+        self.assertNotIn("gradle-home-cache-strict-match:", cache)  # Retain cross-profile fallback.
 
     def test_gradle_task_cache_is_enabled_alongside_configuration_cache(self):
         properties = GRADLE_PROPERTIES.read_text(encoding="utf-8")

@@ -152,6 +152,22 @@ and Gradle's local task-output cache. Only trusted jobs on `main` save entries;
 pull requests and other refs use them read-only. Keep `actions/setup-java` free
 of a second Gradle cache configuration so the two actions cannot compete.
 
+The job has one `cache-profile` matrix entry per run: `host` for pushes to `main`,
+`device` for PRs, nightly and manual runs. This is a cache preference; the runner
+still decides the actual G1/G2 gate, including G1 for document-only PRs. The fixed
+job name explicitly references matrix context and resolves to `quality`, so GitHub
+does not append a profile suffix; the matrix does not add a second runner.
+`setup-gradle` includes matrix context in its immutable cache key, so a host push
+cannot occupy the key needed to save a later nightly device build at the same SHA.
+Normal cross-profile restore fallback remains enabled for cold profiles and the
+transition from the earlier unprofiled cache.
+
+PRs prefer the latest device-profile cache on `main`. That entry may be older than
+the latest host-profile cache; Gradle still validates task inputs and rebuilds
+affected outputs. Once a profile has saved a key for a SHA, another run of the
+same profile/SHA cannot update it. Separating profiles fixes the host/device
+collision; it does not make GitHub's cache entries mutable.
+
 `org.gradle.caching=true` enables task-output reuse locally and in CI. Gradle
 still selects the full gate task graph and checks each cacheable task's inputs.
 Data unit tests also track the complete schema directory and Kotlin storage sources

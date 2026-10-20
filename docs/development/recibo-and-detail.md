@@ -17,8 +17,8 @@ sentence, formats the amounts the snapshot already holds and names the verdict:
 
 | Month | With limits | Without any limit |
 | --- | --- | --- |
-| In progress | "Te quedan" what remains, or "Te pasaste por" how far over; the verdict Al día, Justo or Pasado; "Para N días" ("Para hoy" on the last day) and what can be spent a day | "Has gastado" the total, "Sin límite", nothing per day |
-| Finished | "Te sobraron" or "Te pasaste por"; Bajo el límite or Sobre el límite; nothing per day | the same as above |
+| In progress | "Te quedan" what remains, or "Te pasaste por" how far over; the status Al día, Al límite or Excedido; "Para N días" ("Para hoy" on the last day) and what can be spent a day | "Has gastado" the total, "Sin límite", nothing per day |
+| Finished | "Te sobraron" or "Te pasaste por"; Cumplido or Excedido; nothing per day | the same as above |
 
 A finished month uses the limits that applied in that month, because the snapshot
 does. The amount in a sentence never carries a sign: the words say which way it

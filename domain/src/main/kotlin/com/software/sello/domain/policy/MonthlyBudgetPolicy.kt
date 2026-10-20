@@ -29,15 +29,14 @@ data class CategoryInMonth(val category: Category, val state: MonthBudgetState)
  * later alerts take them from the snapshot and never recompute them.
  *
  * With `S` spent, `L` the sum of finite limits, `d` today's day of the month and `N`
- * the month's length: the forecast is `S × N / d`, today counting towards the pace
- * but not towards the days still to come; the days available are `N − d + 1`, today
+ * the month's length: the verdict compares `S` with `L` (ADR 0012 BG1); the forecast
+ * `S × N / d` is only an estimate for Resumen, today counting towards the pace but
+ * not towards the days still to come; the days available are `N − d + 1`, today
  * included. All arithmetic is exact: no floating point, and comparisons are made on
  * whole numbers before anything is rounded for display.
  */
 object MonthlyBudgetPolicy {
     private val FIFTY = BigInteger.valueOf(50)
-    private val HUNDRED = BigInteger.valueOf(100)
-    private val NINETY_FIVE = BigInteger.valueOf(95)
 
     // Not BigInteger.TWO: that constant does not exist on Android 11.
     private val TWO = BigInteger.valueOf(2)
@@ -61,18 +60,14 @@ object MonthlyBudgetPolicy {
     }
 
     /**
-     * Over if what was actually spent, or the exact forecast, is above the limit. On
-     * track if the forecast is at most 95% of the limit. Tight in between. A zero
-     * limit needs no division: nothing spent is on track, anything spent is over.
+     * What was actually spent against the limit, whatever the pace. Exactly a positive
+     * limit is at the limit; a zero limit with nothing spent is on track, so that an
+     * untouched zero budget does not read as used up.
      */
-    fun verdict(limit: Money, spent: Money, forecast: Forecast): Verdict {
-        val scaledLimit = limit.minorUnits.toBigInteger() * forecast.denominator.toBigInteger()
-        return when {
-            spent.minorUnits > limit.minorUnits -> Verdict.Over
-            forecast.numerator > scaledLimit -> Verdict.Over
-            forecast.numerator * HUNDRED <= scaledLimit * NINETY_FIVE -> Verdict.OnTrack
-            else -> Verdict.Tight
-        }
+    fun verdict(limit: Money, spent: Money): Verdict = when {
+        spent.minorUnits > limit.minorUnits -> Verdict.Over
+        spent.minorUnits == limit.minorUnits && limit.minorUnits > 0 -> Verdict.AtLimit
+        else -> Verdict.OnTrack
     }
 
     fun pastVerdict(limit: Money, spent: Money): PastVerdict =
@@ -205,8 +200,7 @@ object MonthlyBudgetPolicy {
             is Outcome.Failure -> estimate
 
             is Outcome.Success -> {
-                val standing =
-                    BudgetStanding.Current(estimate.value, verdict(limit, spent, estimate.value))
+                val standing = BudgetStanding.Current(estimate.value, verdict(limit, spent))
                 Outcome.Success(LimitedBudget(limit, spent, remaining, standing))
             }
         }

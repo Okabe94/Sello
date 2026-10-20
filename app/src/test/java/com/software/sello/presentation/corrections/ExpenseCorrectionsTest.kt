@@ -353,6 +353,53 @@ class ExpenseCorrectionsTest {
         assertNull(notice)
     }
 
+    private val saved = CorrectionNotice.Confirmed(
+        "Gasto anotado: 48.700 en Comida",
+        "Gasto anotado: 48.700 pesos en Comida"
+    )
+
+    @Test
+    fun aConfirmedSaveIsSaidForFourSecondsAndCanBeDismissed() = test {
+        corrections.confirmed(saved)
+        val said = notice
+        advanceTimeBy(3_999)
+        runCurrent()
+        val stillSaid = notice
+        advanceTimeBy(1)
+        runCurrent()
+        val gone = notice
+        corrections.confirmed(saved)
+        corrections.dismiss()
+
+        assertEquals(listOf(saved, saved, null), listOf(said, stillSaid, gone))
+        assertNull(notice)
+    }
+
+    @Test
+    fun aConfirmedSaveTakesThePlaceOfAnOfferToUndoAndLeavesNothingToUndo() = test {
+        // Newest wins, as for every statement: the offer goes, its deletion stands.
+        delete()
+        corrections.confirmed(saved)
+        corrections.undo()
+        runCurrent()
+
+        assertEquals(saved, notice)
+        assertEquals(emptyList<Any>(), commands.restored)
+    }
+
+    @Test
+    fun aLaterNoticeTakesThePlaceOfAConfirmedSave() = test {
+        corrections.confirmed(saved)
+        val first = notice
+        advanceTimeBy(1_000)
+        corrections.updated()
+        advanceTimeBy(3_500)
+        runCurrent()
+
+        assertEquals(saved, first)
+        assertEquals(CorrectionNotice.Updated, notice)
+    }
+
     // --- Income: the same offer, the income's own commands and words ---
 
     private suspend fun deleteIncome(

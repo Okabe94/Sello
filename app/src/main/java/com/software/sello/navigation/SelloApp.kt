@@ -620,7 +620,7 @@ const val SETTINGS_ACTION_TAG = "navigation:settings"
  * has something to press; everything else is a statement that goes away by itself.
  */
 @Composable
-private fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
+internal fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
     val tagged = Modifier.testTag(CORRECTION_NOTICE_TAG)
     when (notice) {
         is CorrectionNotice.Deleted -> SelloNotice(
@@ -701,6 +701,13 @@ private fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
 
         CorrectionNotice.IncomeUpdated ->
             SelloNotice(stringResource(R.string.income_updated), tagged)
+
+        is CorrectionNotice.Confirmed -> SelloNotice(
+            message = notice.message,
+            modifier = tagged,
+            spoken = notice.spoken,
+            confirmation = true
+        )
     }
 }
 

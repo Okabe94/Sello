@@ -24,17 +24,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -46,6 +49,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +70,7 @@ import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloMotion
 import com.software.sello.designsystem.theme.SelloTheme
+import kotlinx.coroutines.launch
 
 /**
  * Display-only fitting. Exact grouped digits and their spoken equivalent come from the
@@ -125,6 +130,12 @@ fun FittedMoneyText(
     }
 }
 
+/**
+ * The amount being entered: [label] (or [error] in its place, so nothing moves), the
+ * [date] pill, an [icon] circle and the fitted amount. Text pasted that cannot be an
+ * amount is shown as it was in [rejectedText]; with [onPaste] a paste button hands the
+ * clipboard text to the caller untouched.
+ */
 @Composable
 fun EntryAmountSlip(
     label: String,
@@ -134,7 +145,10 @@ fun EntryAmountSlip(
     date: @Composable () -> Unit = {},
     icon: SelloIcon? = null,
     tone: ButtonTone = ButtonTone.Brand,
-    limitPulse: Int = 0
+    limitPulse: Int = 0,
+    rejectedText: String? = null,
+    onPaste: ((String) -> Unit)? = null,
+    pasteLabel: String = stringResource(R.string.sello_paste)
 ) {
     val reduced = SelloTheme.reducedMotion
     val shake = remember { Animatable(0f) }
@@ -203,27 +217,45 @@ fun EntryAmountSlip(
                     )
                 }
             }
-            FittedMoneyText(
-                amount
-                    ?: MoneyTextValue(
-                        MoneySign.None,
-                        "",
-                        "0",
-                        stringResource(R.string.sello_amount_empty)
-                    ),
-                Modifier.weight(1f).graphicsLayer {
-                    translationX =
-                        shake.value * 4.dp.toPx()
-                },
-                if (amount ==
-                    null
-                ) {
-                    colors.outline
-                } else {
-                    ink
-                },
-                entry = true
-            )
+            val moved = Modifier.weight(1f).graphicsLayer {
+                translationX = shake.value * 4.dp.toPx()
+            }
+            if (rejectedText != null) {
+                Text(
+                    rejectedText,
+                    moved,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = colors.semantic.loss,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            } else {
+                FittedMoneyText(
+                    amount
+                        ?: MoneyTextValue(
+                            MoneySign.None,
+                            "",
+                            "0",
+                            stringResource(R.string.sello_amount_empty)
+                        ),
+                    moved,
+                    if (amount == null) colors.outline else ink,
+                    entry = true
+                )
+            }
+            if (onPaste != null) {
+                val clipboard = LocalClipboard.current
+                val scope = rememberCoroutineScope()
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            val clip = clipboard.getClipEntry()?.clipData
+                            val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text
+                            if (text != null) onPaste(text.toString())
+                        }
+                    }
+                ) { Icon(SelloIcon.ContentPaste.painter(), pasteLabel, tint = colors.brand) }
+            }
         }
     }
 }

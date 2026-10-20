@@ -102,7 +102,7 @@ class ExpenseCorrectionJourneyTest {
 
     private fun key(label: String) =
         rule.onNode(hasText(label) and hasAnyAncestor(hasTestTag(ENTRY_KEYPAD_TAG)))
-            .performScrollTo().performClick()
+            .performClick()
 
     private fun deleteFromMenu(row: String) {
         rule.onNodeWithTag(row).performScrollTo().performTouchInput { longClick() }
@@ -123,7 +123,7 @@ class ExpenseCorrectionJourneyTest {
         repeat(5) {
             rule.onNode(
                 hasContentDescription("Borrar") and hasAnyAncestor(hasTestTag(ENTRY_KEYPAD_TAG))
-            ).performScrollTo().performClick()
+            ).performClick()
         }
         listOf("1", "2", "000").forEach(::key)
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()

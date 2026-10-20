@@ -120,6 +120,9 @@ class ExpenseFormViewModelTest {
 
     private fun ExpenseEntryViewModel.submit() = onAction(ExpenseEntryAction.Submit)
 
+    /** No category is chosen for the person; these tests choose Alimentación themselves. */
+    private fun ExpenseEntryViewModel.chosen() = also { it.pick(1) }
+
     private val ExpenseEntryViewModel.now get() = state.value
 
     // --- Opening ---
@@ -161,15 +164,32 @@ class ExpenseFormViewModelTest {
     // --- Which category starts selected ---
 
     @Test
-    fun theOnlyCategoryIsChosenAndWithSeveralNoneIsUntilOneWasUsed() {
+    fun noCategoryIsChosenWhenTheFormOpensEvenWithOnlyOneOrOneUsedBefore() {
         val single = ready(food)
-        val several = ready(food, coffee)
         reads.lastUsed = categoryId(2)
         val withHistory = ready(food, coffee)
 
-        assertEquals(uuid(1), single.now.categoryId)
-        assertNull(several.now.categoryId)
-        assertEquals(uuid(2), withHistory.now.categoryId)
+        assertNull(single.now.categoryId)
+        assertNull(withHistory.now.categoryId)
+        assertEquals(Missing.Category, single.also { it.type("5000") }.now.missing)
+        assertFalse(single.now.canSubmit)
+    }
+
+    @Test
+    fun aCategoryCreatedFromNuevaIsChosenWhenTheEditorReturns() {
+        val saved = SavedStateHandle()
+        snapshots.ready(monthOf("2026-10-22", listOf(food)))
+        val form = form(saved)
+        form.type("5000")
+
+        // The editor saved Café and handed back its identifier before the month had it.
+        form.onAction(ExpenseEntryAction.CategoryCreated(uuid(2)))
+        val beforeTheMonthHasIt = form.now.categoryId
+        snapshots.ready(monthOf("2026-10-22", listOf(food, coffee)))
+
+        assertNull(beforeTheMonthHasIt)
+        assertEquals(uuid(2), form.now.categoryId)
+        assertEquals(shown("5.000"), form.now.amount)
     }
 
     @Test
@@ -187,13 +207,6 @@ class ExpenseFormViewModelTest {
         assertNull(asking(uuid(5)))
         assertNull(asking(uuid(77)))
         assertNull(asking("' OR 1=1 --"))
-    }
-
-    @Test
-    fun aLastUsedCategoryThatWasArchivedIsNotChosen() {
-        reads.lastUsed = categoryId(5)
-
-        assertNull(ready(food, coffee, archived).now.categoryId)
     }
 
     @Test
@@ -240,9 +253,25 @@ class ExpenseFormViewModelTest {
         form.onAction(ExpenseEntryAction.TripleZero)
 
         assertEquals(shown("999.999.999.999"), full.amount)
-        assertEquals(0, full.limitPulse)
+        assertEquals(0 to false, full.limitPulse to full.atLimit)
         assertEquals(shown("999.999.999.999"), form.now.amount)
-        assertEquals(2, form.now.limitPulse)
+        assertEquals(2 to true, form.now.limitPulse to form.now.atLimit)
+    }
+
+    @Test
+    fun maximoDoceDigitosStaysUntilTheNextKeyThatChangesTheAmount() {
+        val form = ready()
+        form.type("999999999999")
+        form.type("9")
+        val refused = form.now.atLimit
+        form.onAction(ExpenseEntryAction.Backspace)
+        val afterBackspace = form.now.atLimit
+        form.type("9")
+        form.type("9")
+        form.onAction(ExpenseEntryAction.ClearAmount)
+
+        assertEquals(true to false, refused to afterBackspace)
+        assertFalse(form.now.atLimit)
     }
 
     @Test
@@ -305,97 +334,70 @@ class ExpenseFormViewModelTest {
         assertNull(form.now.categoryId)
     }
 
-    // --- The preview ---
+    // --- The note, written in its composer ---
 
     @Test
-    fun thePreviewShowsWhatWouldBeLeftInTheMonthAndInTheCategory() {
-        // Limits 900.000 and 650.000, spent 612.400 and 400: 937.200 left in the month
-        // and 287.600 in Alimentación, as on the reference's screen.
-        snapshots.ready(
-            monthOf("2026-10-22", listOf(food, bills), listOf(spending[0], spending[3]))
-        )
-        val form = form()
-        form.type("48700")
-        val monthOnly = form.now.preview
-        form.pick(1)
-
-        assertEquals(
-            EntryPreview(PreviewLine(PreviewLine.Kind.Remaining, shown("888.500")), null),
-            monthOnly
-        )
-        assertEquals(
-            EntryPreview(
-                PreviewLine(PreviewLine.Kind.Remaining, shown("888.500")),
-                PreviewLine(PreviewLine.Kind.Remaining, shown("238.900"))
-            ),
-            form.now.preview
-        )
-    }
-
-    @Test
-    fun goingOverALimitIsShownAsHowFarOverAndNothingBlocksSaving() {
-        snapshots.ready(monthOf("2026-10-22", listOf(food, coffee), spending.take(2)))
-        val form = form()
-        form.pick(2)
-
-        // Café has 8.800 left; 21.100 is 12.300 over.
-        form.type("21100")
-
-        assertEquals(
-            PreviewLine(PreviewLine.Kind.Over, shown("12.300")),
-            form.now.preview?.category
-        )
-        assertTrue(form.now.canSubmit)
-    }
-
-    @Test
-    fun aCategoryWithoutALimitPreviewsWhatWouldHaveBeenSpent() {
-        snapshots.ready(monthOf("2026-10-22", listOf(food, transport), spending.take(3).drop(2)))
-        val form = form()
-        form.pick(3)
-
-        form.type("14000")
-
-        assertEquals(
-            PreviewLine(PreviewLine.Kind.Spent, shown("100.000")),
-            form.now.preview?.category
-        )
-    }
-
-    @Test
-    fun thereIsNoPreviewWithoutAValidAmount() {
+    fun theNoteOpensOnWhatWasWrittenAndOnlyAValidOneIsKept() {
         val form = ready(food)
+        form.onAction(ExpenseEntryAction.OpenNote)
+        val opened = form.now
+        form.onAction(ExpenseEntryAction.NoteDraftChanged("Pan"))
+        form.onAction(ExpenseEntryAction.NoteDone)
+        val kept = form.now
+        form.onAction(ExpenseEntryAction.OpenNote)
+        form.onAction(ExpenseEntryAction.NoteDraftChanged("Pan y café"))
+        form.onAction(ExpenseEntryAction.NoteCancelled)
 
-        form.onAction(ExpenseEntryAction.Paste("1e3"))
-
-        assertNull(form.now.preview)
+        assertEquals("", opened.noteDraft)
+        assertEquals("Pan" to null, kept.note to kept.noteDraft)
+        assertEquals("Pan" to null, form.now.note to form.now.noteDraft)
     }
 
     @Test
-    fun aDateInAnotherMonthPreviewsThatMonth() {
-        val september = YearMonth.of(2026, 9)
-        snapshots.ready(monthOf("2026-10-22", listOf(food)))
-        snapshots.ready(
-            monthOf(
-                "2026-10-22",
-                listOf(categoryIn(1, "Alimentación", 500_000)),
-                listOf(storedExpense(100, 1, "2026-09-10", 100_000)),
-                month = september
-            )
-        )
-        val form = form()
-        form.type("50000")
+    fun overSixtyCharactersAsPeopleCountThemTheTextIsKeptAndCannotBeFinished() {
+        val form = ready(food)
+        form.onAction(ExpenseEntryAction.OpenNote)
+        // Sixty faces are sixty characters, though each is two UTF-16 units.
+        form.onAction(ExpenseEntryAction.NoteDraftChanged("\uD83D\uDE00".repeat(60)))
+        val sixty = form.now
+        form.onAction(ExpenseEntryAction.NoteDraftChanged("\uD83D\uDE00".repeat(61)))
+        form.onAction(ExpenseEntryAction.NoteDone)
 
-        form.onAction(ExpenseEntryAction.DatePicked(LocalDate.of(2026, 9, 30)))
-
-        assertEquals(listOf(october, september), snapshots.observed)
+        assertEquals(60 to null, sixty.noteDraftLength to sixty.noteDraftProblem)
         assertEquals(
-            PreviewLine(PreviewLine.Kind.Remaining, shown("350.000")),
-            form.now.preview?.month
+            61 to NoteProblem.TooLong,
+            form.now.noteDraftLength to form.now.noteDraftProblem
         )
+        // Still open, the long text still there, the note itself untouched.
+        assertEquals("\uD83D\uDE00".repeat(61), form.now.noteDraft)
+        assertEquals("", form.now.note)
     }
 
-    // --- The date ---
+    @Test
+    fun anOpenComposerAndItsTextComeBackAfterTheProcessIsKilled() {
+        val saved = SavedStateHandle()
+        val first = ready(food, saved = saved)
+        first.onAction(ExpenseEntryAction.OpenNote)
+        first.onAction(ExpenseEntryAction.NoteDraftChanged("Almuer"))
+
+        val restored = form(saved.afterProcessDeath()).now
+
+        assertEquals("Almuer", restored.noteDraft)
+        assertEquals("", restored.note)
+    }
+
+    @Test
+    fun whileSavingTheNoteCannotBeOpened() {
+        commands.hold = CompletableDeferred()
+        val form = ready(food)
+        form.type("5000")
+        form.pick(1)
+        form.submit()
+
+        form.onAction(ExpenseEntryAction.OpenNote)
+
+        assertNull(form.now.noteDraft)
+    }
 
     @Test
     fun aDayAfterTodayCannotBeChosenAndAnEarlierOneCan() {
@@ -451,7 +453,7 @@ class ExpenseFormViewModelTest {
 
     @Test
     fun anEmptyNoteIsNoNote() {
-        val form = ready(food)
+        val form = ready(food).chosen()
         form.type("5000")
         form.onAction(ExpenseEntryAction.NoteChanged("   "))
 
@@ -465,7 +467,7 @@ class ExpenseFormViewModelTest {
         commands.hold = CompletableDeferred()
         // Storage is the authority: what it returns is shown, whatever the draft said.
         reads.stored[expenseId(900)] = storedExpense(900, 1, "2026-10-21", 10_000, "Pan")
-        val form = ready(food)
+        val form = ready(food).chosen()
         form.type("10000")
 
         form.submit()
@@ -507,7 +509,7 @@ class ExpenseFormViewModelTest {
     @Test
     fun aSavedExpenseThatCannotBeReadBackIsStillSaidToBeSavedAndNotSentAgain() {
         reads.failure = StorageFailure.Unavailable("SQLiteException")
-        val form = ready(food)
+        val form = ready(food).chosen()
         form.type("10000")
 
         form.submit()
@@ -556,7 +558,7 @@ class ExpenseFormViewModelTest {
 
         for ((reason, error) in cases) {
             commands.answer = { ExpenseCommandOutcome.Rejected(reason) }
-            val form = ready(food)
+            val form = ready(food).chosen()
             form.type("10000")
             form.onAction(ExpenseEntryAction.NoteChanged("Pan"))
 
@@ -573,7 +575,7 @@ class ExpenseFormViewModelTest {
     @Test
     fun afterTheDataWasReplacedTheNextAttemptUsesTheNewGeneration() {
         commands.answer = { ExpenseCommandOutcome.Rejected(ExpenseRejection.StaleGeneration(2)) }
-        val form = ready(food)
+        val form = ready(food).chosen()
         form.type("10000")
         form.submit()
 
@@ -591,7 +593,7 @@ class ExpenseFormViewModelTest {
     fun anUnknownOutcomeIsSettledByAskingAboutTheSameOperationNeverBySendingAgain() {
         commands.answer = { ExpenseCommandOutcome.OutcomeUnknown(it.operationId) }
         commands.found = { Outcome.Success(commands.committed(it)) }
-        val form = ready(food)
+        val form = ready(food).chosen()
         form.type("10000")
 
         form.submit()
@@ -604,7 +606,7 @@ class ExpenseFormViewModelTest {
     @Test
     fun anUnknownOutcomeThatWasNotSavedReturnsToTheDraftWithNothingRecorded() {
         commands.answer = { ExpenseCommandOutcome.OutcomeUnknown(it.operationId) }
-        val form = ready(food)
+        val form = ready(food).chosen()
         form.type("10000")
 
         form.submit()
@@ -621,7 +623,7 @@ class ExpenseFormViewModelTest {
     fun whileTheOutcomeCannotBeReadTheDraftIsLockedAndRetryOnlyAsksAgain() {
         commands.answer = { ExpenseCommandOutcome.OutcomeUnknown(it.operationId) }
         commands.found = { Outcome.Failure(StorageFailure.Unavailable("SQLiteException")) }
-        val form = ready(food)
+        val form = ready(food).chosen()
         form.type("10000")
 
         form.submit()
@@ -707,7 +709,7 @@ class ExpenseFormViewModelTest {
         commands.hold = CompletableDeferred()
         reads.stored[expenseId(900)] = storedExpense(900, 1, "2026-10-22", 10_000)
         val saved = SavedStateHandle()
-        val first = ready(food, saved = saved)
+        val first = ready(food, saved = saved).chosen()
         first.type("10000")
         first.submit()
         // The process dies here: the command left, its answer never arrived.
@@ -726,7 +728,7 @@ class ExpenseFormViewModelTest {
     fun anInterruptedSaveThatNeverCommittedLeavesTheDraftAndTheNextTryIsANewOperation() {
         commands.hold = CompletableDeferred()
         val saved = SavedStateHandle()
-        val first = ready(food, saved = saved)
+        val first = ready(food, saved = saved).chosen()
         first.type("10000")
         first.submit()
         val afterDeath = saved.afterProcessDeath()
@@ -746,7 +748,7 @@ class ExpenseFormViewModelTest {
     fun aSaveConfirmedJustBeforeTheProcessDiedIsSaidAfterTheRestartWithoutSendingAgain() {
         reads.stored[expenseId(900)] = storedExpense(900, 1, "2026-10-22", 10_000)
         val saved = SavedStateHandle()
-        val first = ready(food, saved = saved)
+        val first = ready(food, saved = saved).chosen()
         first.type("10000")
         first.submit()
         val readsBefore = reads.reads
@@ -771,7 +773,7 @@ class ExpenseFormViewModelTest {
         untouched.pick(1)
         untouched.onAction(ExpenseEntryAction.Back)
 
-        val typed = ready(food)
+        val typed = ready(food).chosen()
         typed.type("5")
         typed.onAction(ExpenseEntryAction.Back)
         val asked = typed.now
@@ -780,7 +782,7 @@ class ExpenseFormViewModelTest {
         typed.onAction(ExpenseEntryAction.Back)
         typed.onAction(ExpenseEntryAction.DiscardConfirmed)
 
-        val saved = ready(food)
+        val saved = ready(food).chosen()
         saved.type("10000")
         saved.submit()
         val closedBySaving = saved.now.closed

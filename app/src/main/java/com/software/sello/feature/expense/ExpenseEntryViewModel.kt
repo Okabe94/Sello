@@ -14,8 +14,6 @@ import com.software.sello.domain.model.TransactionAmountError
 import com.software.sello.domain.policy.AmountDraft
 import com.software.sello.domain.policy.AmountDraftError
 import com.software.sello.domain.policy.EffectiveDates
-import com.software.sello.domain.policy.ExpensePreviewPolicy
-import com.software.sello.domain.policy.PreviewFigure
 import com.software.sello.domain.port.CreateExpense
 import com.software.sello.domain.port.EditExpense
 import com.software.sello.domain.port.ExpenseCommandOutcome
@@ -83,6 +81,7 @@ class ExpenseEntryViewModel(
     /** Everything that is not the draft itself. */
     private data class Progress(
         val limitPulse: Int = 0,
+        val atLimit: Boolean = false,
         val datePickerOpen: Boolean = false,
         val noteProblem: NoteProblem? = null,
         val busy: Boolean = false,
@@ -134,13 +133,28 @@ class ExpenseEntryViewModel(
             .flatMapLatest(snapshots::observe)
             .stateIn(viewModelScope, SharingStarted.Eagerly, SnapshotState.Loading)
 
+    /** The note being written in its composer; kept in [saved] so a restart reopens it. */
+    private val noteDraft: StateFlow<String?> = saved.getStateFlow(KEY_NOTE_DRAFT, null)
+
     val state: StateFlow<ExpenseEntryState> =
-        combine(draft, progress, month, clock.today) { draft, progress, month, today ->
-            render(draft, progress, month, today.date)
+        combine(draft, progress, month, clock.today, noteDraft) {
+                draft,
+                progress,
+                month,
+                today,
+                note
+            ->
+            render(draft, progress, month, today.date, note)
         }.stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
-            render(draft.value, progress.value, month.value, clock.today.value.date)
+            render(
+                draft.value,
+                progress.value,
+                month.value,
+                clock.today.value.date,
+                noteDraft.value
+            )
         )
 
     init {
@@ -243,13 +257,9 @@ class ExpenseEntryViewModel(
         saved[KEY_CATEGORY_DEFAULTED] = true
         if (draft.value.categoryId != null) return
         val ids = eligible(snapshot).map { it.id.value }
-        val asked = saved.get<String>(KEY_PREFILL_CATEGORY)
-        val lastUsed = (reads.lastUsedCategory() as? Outcome.Success)?.value?.value
-        val choice = when {
-            asked != null -> asked.takeIf { it in ids }
-            lastUsed in ids -> lastUsed
-            else -> ids.singleOrNull()
-        }
+        // Only a caller's request is chosen ("Anotar aquí", a link); otherwise none is,
+        // so Anotar waits until the person picks one.
+        val choice = saved.get<String>(KEY_PREFILL_CATEGORY)?.takeIf { it in ids }
         if (choice != null && draft.value.categoryId == null) setCategory(choice)
     }
 
@@ -278,15 +288,19 @@ class ExpenseEntryViewModel(
 
             ExpenseEntryAction.TripleZero -> if (now.editable) key(draft.value.amount.tripleZero())
 
-            ExpenseEntryAction.Backspace ->
-                if (now.editable) setAmount(draft.value.amount.backspace())
+            ExpenseEntryAction.Backspace -> if (now.editable) {
+                setAmount(draft.value.amount.backspace())
+                progress.update { it.copy(atLimit = false) }
+            }
 
-            ExpenseEntryAction.ClearAmount -> if (now.editable) setAmount(AmountDraft.Empty)
+            ExpenseEntryAction.ClearAmount -> if (now.editable) {
+                setAmount(AmountDraft.Empty)
+                progress.update { it.copy(atLimit = false) }
+            }
 
             is ExpenseEntryAction.Paste -> if (now.editable) {
-                setAmount(
-                    AmountDraft.paste(action.text)
-                )
+                setAmount(AmountDraft.paste(action.text))
+                progress.update { it.copy(atLimit = false) }
             }
 
             is ExpenseEntryAction.CategoryPicked ->
@@ -314,6 +328,38 @@ class ExpenseEntryViewModel(
             is ExpenseEntryAction.NoteChanged -> if (now.editable) {
                 saved[KEY_NOTE] = action.text
                 draft.update { it.copy(note = action.text) }
+            }
+
+            ExpenseEntryAction.OpenNote -> if (now.editable) {
+                saved[KEY_NOTE_DRAFT] =
+                    draft.value.note
+            }
+
+            is ExpenseEntryAction.NoteDraftChanged ->
+                if (saved.get<String>(KEY_NOTE_DRAFT) != null) saved[KEY_NOTE_DRAFT] = action.text
+
+            // Over the limit nothing is taken: the composer stays open with the text in it.
+            ExpenseEntryAction.NoteDone -> {
+                val written = saved.get<String>(KEY_NOTE_DRAFT)
+                if (written != null && now.editable && Note.of(written) is Outcome.Success) {
+                    saved[KEY_NOTE] = written
+                    draft.update { it.copy(note = written) }
+                    saved[KEY_NOTE_DRAFT] = null
+                }
+            }
+
+            ExpenseEntryAction.NoteCancelled -> saved[KEY_NOTE_DRAFT] = null
+
+            // Created from Nueva: chosen once the month can offer it, unless the form has
+            // moved on to saving meanwhile.
+            is ExpenseEntryAction.CategoryCreated -> if (!editing) {
+                viewModelScope.launch {
+                    month.first { read ->
+                        read is SnapshotState.Ready &&
+                            eligible(read.snapshot).any { it.id.value == action.id }
+                    }
+                    if (state.value.editable) setCategory(action.id)
+                }
             }
 
             ExpenseEntryAction.Submit -> if (now.canSubmit && now.editable) submit()
@@ -347,7 +393,13 @@ class ExpenseEntryViewModel(
 
     private fun key(change: AmountDraft.Change) {
         setAmount(change.draft)
-        if (change.limitReached) progress.update { it.copy(limitPulse = it.limitPulse + 1) }
+        progress.update {
+            if (change.limitReached) {
+                it.copy(limitPulse = it.limitPulse + 1, atLimit = true)
+            } else {
+                it.copy(atLimit = false)
+            }
+        }
     }
 
     /** Whether leaving would lose something: anything typed, or any change to a recorded expense. */
@@ -537,30 +589,17 @@ class ExpenseEntryViewModel(
         draft: Draft,
         progress: Progress,
         month: SnapshotState,
-        today: LocalDate
+        today: LocalDate,
+        writing: String?
     ): ExpenseEntryState {
         val snapshot = (month as? SnapshotState.Ready)?.snapshot
         val original = progress.original
         val categories = snapshot?.let { eligible(it, original?.categoryId) }.orEmpty()
             .map { EntryCategory(it.id.value, it.name.value, it.icon.value) }
         val amount = (draft.amount.toTransactionAmount() as? Outcome.Success)?.value
-        val noteProblem = when (val note = Note.of(draft.note)) {
-            is Outcome.Success -> null
-
-            is Outcome.Failure -> when (note.error) {
-                is TextError.TooLong -> NoteProblem.TooLong
-                else -> NoteProblem.NotAllowed
-            }
-        }
+        val noteProblem = problem(draft.note)
+        val noteDraft = writing?.takeIf { progress.recorded == null }
         val chosen = draft.categoryId?.takeIf { id -> categories.any { it.id == id } }
-        // The preview adds the draft to the month. A recorded expense is already in it,
-        // so for a correction that sum would count it twice: none is shown.
-        val preview = if (snapshot != null && amount != null && !editing) {
-            val category = (chosen?.let(CategoryId::of) as? Outcome.Success)?.value
-            (ExpensePreviewPolicy.preview(snapshot, amount, category) as? Outcome.Success)?.value
-        } else {
-            null
-        }
         val waitingForOriginal = editing && original == null && progress.error == null
         val currentMonth = YearMonth.from(today)
         return ExpenseEntryState(
@@ -572,6 +611,7 @@ class ExpenseEntryViewModel(
             amountText = (draft.amount as? AmountDraft.Rejected)?.original,
             amountProblem = (draft.amount as? AmountDraft.Rejected)?.let { problem(it.error) },
             limitPulse = progress.limitPulse,
+            atLimit = progress.atLimit,
             categories = categories,
             categoryId = chosen,
             date = draft.date,
@@ -579,7 +619,9 @@ class ExpenseEntryViewModel(
             datePickerOpen = progress.datePickerOpen,
             note = draft.note,
             noteProblem = noteProblem,
-            preview = preview?.let { EntryPreview(line(it.month), it.category?.let(::line)) },
+            noteDraft = noteDraft,
+            noteDraftProblem = noteDraft?.let(::problem),
+            noteDraftLength = noteDraft?.trim()?.let { it.codePointCount(0, it.length) } ?: 0,
             missing = when {
                 amount == null -> Missing.Amount
                 chosen == null -> Missing.Category
@@ -600,6 +642,15 @@ class ExpenseEntryViewModel(
         )
     }
 
+    private fun problem(note: String): NoteProblem? = when (val checked = Note.of(note)) {
+        is Outcome.Success -> null
+
+        is Outcome.Failure -> when (checked.error) {
+            is TextError.TooLong -> NoteProblem.TooLong
+            else -> NoteProblem.NotAllowed
+        }
+    }
+
     private fun problem(error: AmountDraftError) = when (error) {
         is AmountDraftError.Range -> when (error.error) {
             TransactionAmountError.NotPositive -> AmountProblem.Zero
@@ -608,15 +659,6 @@ class ExpenseEntryViewModel(
         }
 
         else -> AmountProblem.NotAnAmount
-    }
-
-    private fun line(figure: PreviewFigure) = when (figure) {
-        is PreviewFigure.Spent -> PreviewLine(PreviewLine.Kind.Spent, money.format(figure.total))
-
-        is PreviewFigure.Over -> PreviewLine(PreviewLine.Kind.Over, money.format(figure.by))
-
-        is PreviewFigure.Remaining ->
-            PreviewLine(PreviewLine.Kind.Remaining, money.format(figure.amount))
     }
 
     companion object {
@@ -632,6 +674,7 @@ class ExpenseEntryViewModel(
         private const val KEY_CATEGORY_DEFAULTED = "expense.categoryDefaulted"
         private const val KEY_DATE = "expense.date"
         private const val KEY_NOTE = "expense.note"
+        private const val KEY_NOTE_DRAFT = "expense.note.draft"
         private const val KEY_OPERATION = "expense.operation"
         private const val KEY_SAVED_EXPENSE = "expense.saved"
         private const val KEY_ORIGINAL_VERSION = "expense.original.version"

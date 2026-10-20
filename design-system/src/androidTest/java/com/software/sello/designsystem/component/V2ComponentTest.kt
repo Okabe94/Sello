@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.software.sello.designsystem.component.v2.AnswerSlip
 import com.software.sello.designsystem.component.v2.CompletedGoalRow
+import com.software.sello.designsystem.component.v2.EntryAmountSlip
 import com.software.sello.designsystem.component.v2.FittedMoneyText
 import com.software.sello.designsystem.component.v2.GoalCard
 import com.software.sello.designsystem.component.v2.GoalsBandTotal
@@ -122,6 +123,33 @@ class V2ComponentTest {
             rule.onNodeWithText("Excedido").assertDoesNotExist()
             rule.onNodeWithTag("detail").assertTextContains("detalle")
         }
+    }
+
+    @Test
+    fun anEntryAmountSlipShowsRefusedPastedTextAsItWasAndOffersPasteOnlyWhenAsked() {
+        var paste by mutableStateOf(true)
+        rule.inEveryScheme(content = {
+            EntryAmountSlip(
+                "Gasto en pesos",
+                amount = null,
+                error = "Eso no es un monto.",
+                rejectedText = "1e3",
+                onPaste = if (paste) {
+                    {}
+                } else {
+                    null
+                }
+            )
+        }) {
+            rule.onNodeWithText("1e3").assertIsDisplayed()
+            rule.onNodeWithText("Eso no es un monto.").assertIsDisplayed()
+            rule.onNodeWithText("Gasto en pesos").assertDoesNotExist()
+            rule.onNodeWithContentDescription("Pegar").assertIsDisplayed()
+        }
+        paste = false
+        rule.waitForIdle()
+
+        rule.onNodeWithContentDescription("Pegar").assertDoesNotExist()
     }
 
     @Test

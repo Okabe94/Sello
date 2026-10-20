@@ -19,6 +19,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -79,6 +81,7 @@ import com.software.sello.presentation.corrections.CorrectionsViewModel
 import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.month.MonthNames
 import com.software.sello.presentation.month.monthNames
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * The root of the app's interface: it owns navigation and the frame's lifecycle
@@ -241,10 +244,11 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 )
             }
         }
-        composable<IncomeEntryRoute> {
+        composable<IncomeEntryRoute> { entry ->
             EntryDestination(
                 viewModels,
                 startsWithIncome = true,
+                result = entry.savedStateHandle,
                 onCreateCategory = { navigation.navigate(CategoryEditorRoute()) },
                 announcements = announcementState,
                 onDismissPastExpense = if (announcementState.failure == null) {
@@ -287,10 +291,11 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 if (onEdit == true) navigation.popBackStack()
             }
         }
-        composable<ExpenseEntryRoute> {
+        composable<ExpenseEntryRoute> { entry ->
             EntryDestination(
                 viewModels,
                 startsWithIncome = false,
+                result = entry.savedStateHandle,
                 onCreateCategory = { navigation.navigate(CategoryEditorRoute()) },
                 announcements = announcementState,
                 onDismissPastExpense = if (announcementState.failure == null) {
@@ -655,9 +660,16 @@ private fun EntryDestination(
     announcements: CorrectionAnnouncementState,
     onDismissPastExpense: () -> Unit,
     announcementFailed: Boolean,
+    result: SavedStateHandle? = null,
     onClosed: () -> Unit
 ) {
     var income by rememberSaveable { mutableStateOf(startsWithIncome) }
+    // What the category editor, opened from Nueva, left for this entry.
+    val created by (
+        result?.getStateFlow<String?>(CREATED_CATEGORY_RESULT, null) ?: remember {
+            MutableStateFlow<String?>(null)
+        }
+        ).collectAsStateWithLifecycle()
     if (income) {
         IncomeFormRoot(viewModels, onClosed, onExpense = { income = false })
     } else {
@@ -668,6 +680,8 @@ private fun EntryDestination(
             announcements = announcements,
             onDismissPastExpense = onDismissPastExpense,
             announcementFailed = announcementFailed,
+            createdCategoryId = created,
+            onCreatedCategoryTaken = { result?.set(CREATED_CATEGORY_RESULT, null) },
             onClosed = onClosed
         )
     }

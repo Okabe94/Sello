@@ -158,21 +158,22 @@ class ExpenseEntryGeometryTest {
     }
 
     @Test
-    fun theButtonIsSixteenDpBelowTheKeypadInEveryLayout() {
+    fun theButtonIsEightDpAboveTheKeypadInEveryLayout() {
         show(phone)
         state = one
         rule.waitForIdle()
 
-        assertEquals(16f, bounds(ENTRY_SUBMIT_TAG).top - bounds(ENTRY_KEYPAD_TAG).bottom, 0.5f)
+        // v2: the action sits on the pad, not under it.
+        assertEquals(8f, bounds(ENTRY_KEYPAD_TAG).top - bounds(ENTRY_SUBMIT_TAG).bottom, 0.5f)
     }
 
     @Test
-    fun sidewaysTheButtonIsSixteenDpBelowTheKeypadToo() {
+    fun sidewaysTheButtonIsEightDpAboveTheKeypadToo() {
         show(sideways)
         state = one
         rule.waitForIdle()
 
-        assertEquals(16f, bounds(ENTRY_SUBMIT_TAG).top - bounds(ENTRY_KEYPAD_TAG).bottom, 0.5f)
+        assertEquals(8f, bounds(ENTRY_KEYPAD_TAG).top - bounds(ENTRY_SUBMIT_TAG).bottom, 0.5f)
     }
 
     @Test
@@ -182,13 +183,13 @@ class ExpenseEntryGeometryTest {
         rule.waitForIdle()
         val keypad = bounds(ENTRY_KEYPAD_TAG)
 
-        // Every key, and the lowest row of pixels the keypad owns, nearest the button.
+        // Every key, and the top row of pixels the keypad owns, nearest the button.
         for (label in listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "000", "0")) {
             val place = key(label).center
             rule.onRoot().performTouchInput { click(place) }
         }
         for (x in listOf(keypad.left + 1, keypad.center.x, keypad.right - 1)) {
-            rule.onRoot().performTouchInput { click(Offset(x, keypad.bottom - 1)) }
+            rule.onRoot().performTouchInput { click(Offset(x, keypad.top + 1)) }
         }
 
         assertTrue("$actions", actions.isNotEmpty())
@@ -214,7 +215,7 @@ class ExpenseEntryGeometryTest {
         // All three inside the window's height, the button whole.
         assertTrue("$amount", amount.top >= 0f && amount.bottom <= 400f)
         assertTrue("$button", button.top >= 0f && button.bottom <= 400f)
-        assertTrue("$keypad", keypad.bottom <= button.top)
+        assertTrue("$button above $keypad", button.bottom <= keypad.top)
         // Each key is at least the smallest size a finger can be asked to hit.
         val five = rule.onNodeWithText("5").fetchSemanticsNode().touchBoundsInRoot
         assertTrue("$five", five.width >= 48f && five.height >= 48f)

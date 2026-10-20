@@ -132,7 +132,6 @@ class ExpenseEditViewModelTest {
         assertEquals(Missing.Changes, form.now.missing)
         assertFalse(form.now.canSubmit)
         assertTrue(form.now.canDelete)
-        assertNull(form.now.preview)
         assertEquals(emptyList<YearMonth>(), form.now.pastMonths)
         assertEquals(emptyList<Any>(), commands.edited + commands.created)
     }

@@ -5,11 +5,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -19,6 +22,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.designsystem.component.MoneySign
@@ -27,6 +31,7 @@ import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.date.dateLabels
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -54,12 +59,9 @@ class ExpenseEntryScreenTest {
     private val complete = empty.copy(
         amount = shown("48.700"),
         categoryId = "a",
-        missing = null,
-        preview = EntryPreview(
-            PreviewLine(PreviewLine.Kind.Remaining, shown("888.500")),
-            PreviewLine(PreviewLine.Kind.Over, shown("12.300"))
-        )
+        missing = null
     )
+    private var created = 0
 
     private fun show(
         state: ExpenseEntryState,
@@ -74,6 +76,7 @@ class ExpenseEntryScreenTest {
                         state = state,
                         dates = dateLabels(),
                         onAction = { actions += it },
+                        onCreateCategory = { created++ },
                         showPastExpenseAnnouncement = showPastExpenseAnnouncement,
                         dismissPastExpenseAnnouncement = { pastExpenseAnnouncementDismissed++ }
                     )
@@ -89,25 +92,29 @@ class ExpenseEntryScreenTest {
     fun anEmptyFormSaysTheAmountIsMissingOnTheSlipOnlyAndCannotBeSubmitted() {
         show(empty)
 
-        rule.onNodeWithText("Hoy, vie 9 oct, renglón nuevo").assertIsDisplayed()
-        rule.onNodeWithText("Elige una categoría").assertIsDisplayed()
+        rule.onNodeWithText("Gasto en pesos").assertIsDisplayed()
+        rule.onNodeWithText("Hoy, vie 9 oct").assertIsDisplayed()
+        // Nothing is chosen for the person.
+        rule.onNode(hasText("Alimentación") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))
+            .assertIsNotSelected()
         // The slip already says there is no amount; no second line repeats it by the keypad.
         rule.onNodeWithContentDescription("Sin monto").assertIsDisplayed()
         rule.onNodeWithText("Escribe un monto.").assertDoesNotExist()
         rule.onNodeWithTag(ENTRY_MISSING_TAG).assertDoesNotExist()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
-        rule.onNodeWithTag(ENTRY_PREVIEW_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsNotEnabled()
+        // As in v2, nothing previews the month before saving.
+        rule.onNodeWithText("Vista previa, si lo anotas").assertDoesNotExist()
     }
 
     @Test
     fun everyControlReportsWhatWasDone() {
         show(complete)
 
-        key("7").performScrollTo().performClick()
-        key("000").performScrollTo().performClick()
+        key("7").performClick()
+        key("000").performClick()
         rule.onNodeWithText("Café").performScrollTo().performClick()
         rule.onNodeWithTag(ENTRY_DATE_TAG).performScrollTo().performClick()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().performClick()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performClick()
         rule.onNodeWithContentDescription("Cerrar").performClick()
 
         assertEquals(
@@ -133,19 +140,84 @@ class ExpenseEntryScreenTest {
         rule.onNode(hasText("Café") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))
             .assertIsNotSelected()
         rule.onNodeWithContentDescription("Anotar gasto de 48.700 pesos en Alimentación")
-            .performScrollTo().assertIsEnabled()
+            .assertIsDisplayed().assertIsEnabled()
         rule.onNodeWithContentDescription("Fecha: Hoy, vie 9 oct").assertExists()
     }
 
     @Test
-    fun thePreviewIsLabelledAsOneAndSaysHowFarOverACategoryWouldGo() {
+    fun nuevaEndsTheChipsAndOpensTheCategoryEditor() {
         show(complete)
 
-        rule.onNodeWithText("Vista previa, si lo anotas").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("Te quedarán").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithContentDescription("888.500 pesos").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("En Alimentación te pasas por").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithContentDescription("12.300 pesos").performScrollTo().assertIsDisplayed()
+        val chips = rule.onNodeWithTag(ENTRY_CATEGORIES_TAG).getUnclippedBoundsInRoot()
+        val nueva = rule.onNodeWithTag(ENTRY_NEW_CATEGORY_TAG).performScrollTo()
+            .assertHasClickAction()
+        val shown = nueva.getUnclippedBoundsInRoot()
+        assertTrue("$shown in $chips", shown.top >= chips.top && shown.bottom <= chips.bottom)
+        nueva.performClick()
+
+        assertEquals(1, created)
+        assertEquals(emptyList<ExpenseEntryAction>(), actions)
+    }
+
+    @Test
+    fun theNoteRowOpensTheComposerAndTheComposerReportsWhatIsWritten() {
+        show(complete.copy(note = "Pan"))
+
+        rule.onNodeWithTag(ENTRY_NOTE_TAG).performScrollTo().assertTextContains("Pan")
+            .assertTextContains("Editar").performClick()
+
+        assertEquals(listOf<ExpenseEntryAction>(ExpenseEntryAction.OpenNote), actions)
+    }
+
+    @Test
+    fun anOpenComposerSaysWhatTheNoteBelongsToAndReportsItsButtons() {
+        show(complete.copy(note = "Pan", noteDraft = "Pan", noteDraftLength = 3))
+
+        rule.onNodeWithText("3/60").assertIsDisplayed()
+        rule.onNodeWithText("Opcional").assertIsDisplayed()
+        rule.onNodeWithContentDescription(
+            "Nota del gasto en Alimentación, 48.700 pesos"
+        ).assertExists()
+            .performTextInput("y")
+        rule.onNodeWithContentDescription("Listo").performClick()
+        rule.onNodeWithText("Cancelar").performClick()
+
+        assertEquals(
+            listOf(
+                ExpenseEntryAction.NoteDraftChanged("Pany"),
+                ExpenseEntryAction.NoteDone,
+                ExpenseEntryAction.NoteCancelled
+            ),
+            actions
+        )
+    }
+
+    @Test
+    fun overSixtyCharactersTheComposerKeepsTheTextSaysSoAndCannotBeFinished() {
+        val long = "a".repeat(61)
+        show(
+            complete.copy(
+                noteDraft = long,
+                noteDraftLength = 61,
+                noteDraftProblem = NoteProblem.TooLong
+            )
+        )
+
+        rule.onNodeWithText(long).assertIsDisplayed()
+        rule.onNodeWithText("61/60").assertIsDisplayed()
+        rule.onNodeWithText("Máximo 60 caracteres. Tu texto sigue aquí.").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Listo").assertIsNotEnabled().performClick()
+
+        assertEquals(emptyList<ExpenseEntryAction>(), actions)
+    }
+
+    @Test
+    fun aThirteenthDigitSaysMaximoDoceDigitosInPlaceOfTheLabel() {
+        show(complete.copy(amount = shown("999.999.999.999"), atLimit = true, limitPulse = 1))
+
+        rule.onNodeWithText("Máximo 12 dígitos").assertIsDisplayed()
+        rule.onNodeWithText("Gasto en pesos").assertDoesNotExist()
+        rule.onNodeWithContentDescription("999.999.999.999 pesos").assertIsDisplayed()
     }
 
     @Test
@@ -162,9 +234,9 @@ class ExpenseEntryScreenTest {
     fun whileSavingNothingCanBePressed() {
         show(complete.copy(busy = true))
 
-        key("7").performScrollTo().performClick()
+        key("7").performClick()
         rule.onNodeWithText("Café").performScrollTo().assertIsNotEnabled()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().performClick()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performClick()
 
         assertEquals(emptyList<ExpenseEntryAction>(), actions)
     }
@@ -179,10 +251,10 @@ class ExpenseEntryScreenTest {
             )
         )
 
-        // Said above the keys and outside anything that scrolls: it cannot be out of sight.
+        // Said above the button, with the pad, outside anything that scrolls.
         rule.onNodeWithText("Esa categoría ya no acepta gastos. Elige otra; no se anotó nada.")
             .assertIsDisplayed()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsNotEnabled()
     }
 
     @Test
@@ -199,7 +271,7 @@ class ExpenseEntryScreenTest {
         show(complete.copy(error = EntryError.Unknown))
 
         rule.onNodeWithText("Anotar gasto").assertDoesNotExist()
-        rule.onNodeWithText("Comprobar si se guardó").performScrollTo().performClick()
+        rule.onNodeWithText("Comprobar si se guardó").assertIsDisplayed().performClick()
 
         assertEquals(listOf<ExpenseEntryAction>(ExpenseEntryAction.Retry), actions)
     }
@@ -212,7 +284,7 @@ class ExpenseEntryScreenTest {
         rule.onNodeWithText("Gasto anotado").assertDoesNotExist()
         rule.onNodeWithText("Recibido", ignoreCase = true).assertDoesNotExist()
         rule.onNodeWithText("Listo").assertDoesNotExist()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsNotEnabled()
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performClick()
 
         assertEquals(emptyList<ExpenseEntryAction>(), actions)
@@ -250,8 +322,8 @@ class ExpenseEntryScreenTest {
         rule.onNodeWithContentDescription("48.700 pesos").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("Café").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag(ENTRY_DATE_TAG).performScrollTo().assertIsDisplayed()
-        key("000").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsDisplayed().assertIsEnabled()
+        key("000").assertIsDisplayed()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsDisplayed().assertIsEnabled()
     }
 
     // --- Correcting a recorded expense ---
@@ -259,7 +331,6 @@ class ExpenseEntryScreenTest {
     /** A recorded expense of Monday 5 October, opened and not changed yet. */
     private val correcting get() = complete.copy(
         editing = true,
-        preview = null,
         date = LocalDate.of(2026, 10, 5),
         missing = Missing.Changes
     )
@@ -269,14 +340,16 @@ class ExpenseEntryScreenTest {
         show(correcting)
 
         rule.onNodeWithText("Editar gasto").assertIsDisplayed()
-        rule.onNodeWithText("lun 5 oct, renglón anotado").assertIsDisplayed()
-        rule.onNodeWithText("Guardar cambios").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("lun 5 oct").assertIsDisplayed()
+        // A correction keeps its kind and category: no switch and no Nueva.
+        rule.onNodeWithTag("entry.kind").assertDoesNotExist()
+        rule.onNodeWithTag(ENTRY_NEW_CATEGORY_TAG).assertDoesNotExist()
+        rule.onNodeWithText("Guardar cambios").assertIsDisplayed()
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsNotEnabled()
         rule.onNodeWithTag(ENTRY_MISSING_TAG).assertIsDisplayed()
         rule.onNodeWithText("Aún no cambiaste nada.").assertExists()
         rule.onNodeWithText("Anotar gasto").assertDoesNotExist()
         rule.onNodeWithText("Anotar").assertDoesNotExist()
-        rule.onNodeWithTag(ENTRY_PREVIEW_TAG).assertDoesNotExist()
         rule.onNodeWithTag(ENTRY_PAST_MONTHS_TAG).assertDoesNotExist()
     }
 
@@ -284,7 +357,7 @@ class ExpenseEntryScreenTest {
     fun onceSomethingChangedTheButtonSaysWhatWillBeSavedAndReportsIt() {
         show(correcting.copy(missing = null))
 
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsEnabled()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsEnabled()
             .assert(
                 SemanticsMatcher.expectValue(
                     SemanticsProperties.ContentDescription,
@@ -360,9 +433,9 @@ class ExpenseEntryScreenTest {
         rule.onNodeWithText(
             "Este gasto cambió mientras lo corregías. No se guardó nada; sal y vuelve a abrirlo."
         ).assertIsDisplayed()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsNotEnabled()
         rule.onNodeWithTag(ENTRY_DELETE_TAG).assertIsNotEnabled()
-        key("7").performScrollTo().assertIsNotEnabled()
+        key("7").assertIsNotEnabled()
     }
 
     @Test

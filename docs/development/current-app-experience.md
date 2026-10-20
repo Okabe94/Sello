@@ -185,10 +185,13 @@ total, rows, pagination busy state and page-error retry.
 **Entry:** the dock or rail `+`, "Anotar aquí", Resumen's empty action, the device
 link, or an expense row for edit.
 
-**Behavior:** amount, category, date and note are a restorable draft. A new entry has
-an expense/income switch. Amount input is integer COP up to 12 digits on the Sello
-keypad; future dates are unavailable. A preview below a tear line says what the month
-and category would look like, without saving. Saving is single-operation and
+**Behavior:** the v2 form (SELLO-070): amount slip with a date pill, category chips in
+at most two rows ending with **Nueva**, a note row that opens a composer docked to the
+keyboard, **Anotar gasto** fixed above the compact Sello pad. Amount, category, date
+and note are a restorable draft. A new entry has an expense/income switch; no category
+is chosen at opening unless the caller asked for one. Amount input is integer COP up
+to 12 digits ("Máximo 12 dígitos" past that); future dates are unavailable. There is no
+live preview. Saving is single-operation and
 receipt-backed; an unknown outcome changes the action to "Comprobar si se guardó".
 A confirmed save closes the form; the screen it was opened from shows "Gasto anotado:
 48.700 en Comida" (or "Ingreso anotado: …") above the dock, worded from the record

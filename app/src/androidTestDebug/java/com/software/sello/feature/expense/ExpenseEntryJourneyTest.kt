@@ -6,8 +6,10 @@ import android.net.Uri
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -95,23 +97,38 @@ class ExpenseEntryJourneyTest {
         return app
     }
 
-    private fun openAnotar() {
+    /** Opens Anotar from the dock; nothing is chosen for the person, so [category] is picked. */
+    private fun openAnotar(category: String = "Mercado") {
         // The dock is not drawn while the system keyboard is up, and the keyboard used
         // to type the category's name may still be closing when Recibo comes back.
         rule.awaitDescription("Anotar un gasto")
         rule.onNodeWithContentDescription("Anotar un gasto").performClick()
         rule.awaitTag(ENTRY_KEYPAD_TAG)
+        val chip = rule.onNode(
+            hasText(category) and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG))
+        )
+        chip.assertIsNotSelected()
+        chip.performClick()
+        chip.assertIsSelected()
+    }
+
+    /** Writes [text] in the note's composer and finishes it. */
+    private fun writeNote(text: String) {
+        rule.onNodeWithTag(ENTRY_NOTE_TAG).performScrollTo().performClick()
+        rule.onNode(hasSetTextAction()).performTextInput(text)
+        rule.onNodeWithContentDescription("Listo").performClick()
+        rule.onNode(hasSetTextAction()).assertDoesNotExist()
     }
 
     private fun press(vararg keys: String) = keys.forEach { key ->
         rule.onNode(hasText(key) and hasAnyAncestor(hasTestTag(ENTRY_KEYPAD_TAG)))
-            .performScrollTo().performClick()
+            .performClick()
     }
 
     /** The amount on the slip; the preview lines below it may show the same figure. */
     private fun amountShows(spoken: String) = rule.onAllNodesWithContentDescription(
         spoken
-    ).onFirst().performScrollTo().assertIsDisplayed()
+    ).onFirst().assertIsDisplayed()
 
     /** A confirmed save closes the form; Recibo shows it and says what was saved. */
     private fun savedAndBackOnRecibo(said: String) {
@@ -131,11 +148,10 @@ class ExpenseEntryJourneyTest {
         startWithCategory()
         openAnotar()
         // Nothing can be recorded without an amount.
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertIsNotEnabled()
 
         press("1", "0", "000")
-        rule.onNodeWithContentDescription("Nota (opcional)").performScrollTo()
-            .performTextInput("Pan")
+        writeNote("Pan")
         rule.onNodeWithContentDescription("Anotar gasto de 10.000 pesos en Mercado").press()
 
         // No receipt and no Listo: straight back, with the stored figures already on Recibo.
@@ -163,7 +179,7 @@ class ExpenseEntryJourneyTest {
         press("5", "000")
 
         // Two presses with nothing in between, faster than a finger could manage.
-        val save = rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().fetchSemanticsNode()
+        val save = rule.onNodeWithTag(ENTRY_SUBMIT_TAG).fetchSemanticsNode()
         rule.runOnUiThread { repeat(2) { save.config[SemanticsActions.OnClick].action!!.invoke() } }
 
         savedAndBackOnRecibo("Gasto anotado: 5.000 en Mercado")
@@ -227,6 +243,26 @@ class ExpenseEntryJourneyTest {
             .assertIsSelected()
         assertEquals(emptyList<String>(), expenses())
 
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
+        savedAndBackOnRecibo("Gasto anotado: 48.700 en Café")
+
+        assertEquals(listOf("48700|COP|Café|$today|null|1|1"), expenses())
+    }
+
+    @Test
+    fun nuevaCreatesACategoryAndComesBackWithItChosenAndTheDraftKept() {
+        startWithCategory()
+        openAnotar()
+        press("4", "8", "7", "0", "0")
+
+        rule.onNodeWithTag(ENTRY_NEW_CATEGORY_TAG).performScrollTo().performClick()
+        createCategory("Café")
+
+        rule.awaitTag(ENTRY_KEYPAD_TAG)
+        rule.onNode(hasText("Café") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))
+            .assertIsSelected()
+        amountShows("48.700 pesos")
+        assertEquals(emptyList<String>(), expenses())
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
         savedAndBackOnRecibo("Gasto anotado: 48.700 en Café")
 

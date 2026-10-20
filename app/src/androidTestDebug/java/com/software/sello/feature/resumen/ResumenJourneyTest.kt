@@ -24,6 +24,7 @@ import com.software.sello.awaitDescription
 import com.software.sello.awaitTag
 import com.software.sello.awaitText
 import com.software.sello.feature.category.EDITOR_SUBMIT_TAG
+import com.software.sello.feature.expense.ENTRY_CATEGORIES_TAG
 import com.software.sello.feature.expense.ENTRY_KEYPAD_TAG
 import com.software.sello.feature.expense.ENTRY_SUBMIT_TAG
 import com.software.sello.hideKeyboard
@@ -65,9 +66,11 @@ class ResumenJourneyTest {
         rule.awaitText("Resumen")
         rule.onNodeWithContentDescription("Anotar un gasto").performClick()
         rule.awaitTag(ENTRY_KEYPAD_TAG)
+        rule.onNode(hasText("Comida") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))
+            .performClick()
         listOf("3", "0", "000").forEach { key ->
             rule.onNode(hasText(key) and hasAnyAncestor(hasTestTag(ENTRY_KEYPAD_TAG)))
-                .performScrollTo().performClick()
+                .performClick()
         }
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
         rule.awaitText("Gasto anotado: 30.000 en Comida")

@@ -675,6 +675,14 @@ private fun EntryDestination(
 
 const val SETTINGS_ACTION_TAG = "navigation:settings"
 
+/** "Gasto anotado: 48.700 en Comida", with as much as could be read back. */
+@Composable
+private fun expenseRecorded(figure: String?, category: String?): String = when {
+    figure == null -> stringResource(R.string.notice_expense_recorded_plain)
+    category == null -> stringResource(R.string.notice_expense_recorded_amount, figure)
+    else -> stringResource(R.string.notice_expense_recorded, figure, category)
+}
+
 /**
  * What is said about the last correction. Only a deletion that can still be undone
  * has something to press; everything else is a statement that goes away by itself.
@@ -768,6 +776,31 @@ internal fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
             spoken = notice.spoken,
             confirmation = true
         )
+
+        is CorrectionNotice.ExpenseRecorded -> {
+            val category = notice.categoryName?.takeIf { it.isNotBlank() }
+            // On screen the figure as it is written; read aloud with its currency.
+            SelloNotice(
+                message = expenseRecorded(notice.amount?.digits, category),
+                modifier = tagged,
+                spoken = expenseRecorded(notice.amount?.spoken, category),
+                confirmation = true
+            )
+        }
+
+        is CorrectionNotice.IncomeRecorded -> {
+            val amount = notice.amount
+            SelloNotice(
+                message = amount?.let {
+                    stringResource(R.string.notice_income_recorded, it.digits)
+                } ?: stringResource(R.string.notice_income_recorded_plain),
+                modifier = tagged,
+                spoken = amount?.let {
+                    stringResource(R.string.notice_income_recorded, it.spoken)
+                } ?: stringResource(R.string.notice_income_recorded_plain),
+                confirmation = true
+            )
+        }
     }
 }
 

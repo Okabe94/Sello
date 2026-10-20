@@ -24,9 +24,7 @@ import com.software.sello.awaitDescription
 import com.software.sello.awaitTag
 import com.software.sello.awaitText
 import com.software.sello.feature.category.EDITOR_SUBMIT_TAG
-import com.software.sello.feature.expense.ENTRY_DONE_TAG
 import com.software.sello.feature.expense.ENTRY_KEYPAD_TAG
-import com.software.sello.feature.expense.ENTRY_RECEIPT_TAG
 import com.software.sello.feature.expense.ENTRY_SUBMIT_TAG
 import com.software.sello.hideKeyboard
 import com.software.sello.press
@@ -72,8 +70,7 @@ class ResumenJourneyTest {
                 .performScrollTo().performClick()
         }
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
-        rule.onNodeWithTag(ENTRY_DONE_TAG).performScrollTo().performClick()
+        rule.awaitText("Gasto anotado: 30.000 en Comida")
         rule.awaitText("Resumen")
         rule.onNodeWithText("Resumen").performClick()
         rule.awaitTag("resumen.flow")
@@ -87,9 +84,9 @@ class ResumenJourneyTest {
         }
         rule.onNodeWithTag("income.monthPreview").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("income.submit").performScrollTo().press()
-        rule.awaitTag("income.receipt")
-        rule.onNodeWithText("Listo").performScrollTo().performClick()
+        // Back where income entry was opened, saying what was saved.
         rule.awaitTag("income.history")
+        rule.awaitText("Ingreso anotado: 150.000")
         Espresso.pressBack()
         rule.awaitTag("resumen.flow")
         rule.onNodeWithContentDescription("120.000 pesos").performScrollTo().assertIsDisplayed()

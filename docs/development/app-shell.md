@@ -106,9 +106,10 @@ leaving the form does.
 - **Read aloud** as "Gasto borrado. Puedes deshacerlo durante 6 segundos." (or
   "Ingreso borrado. …"), announced when it appears.
 
-The shell can show a confirmation (SELLO-069); nothing sends one yet. SELLO-066 uses
-it for the approved [v2 save feedback](../design/v2/README.md) after a new expense or
-income, replacing the saved receipt.
+After a new expense or income is saved, the form closes and the shell shows the
+approved [v2 save feedback](../design/v2/README.md) in this confirmation look
+(SELLO-066): "Gasto anotado: 48.700 en Comida" or "Ingreso anotado: 150.000", worded
+from the record read back from storage, on whichever screen the form was opened from.
 
 ## Routes and links
 

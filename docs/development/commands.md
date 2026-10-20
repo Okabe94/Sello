@@ -18,7 +18,7 @@ keeps its own typed command, checks and outcome. There is no generic repository.
 
 | Outcome | Meaning | Next |
 | --- | --- | --- |
-| `Committed(expense, replayed)` | Saved. `replayed` is true when this operation had already committed and this call wrote nothing | Show the receipt. Confirm a new save only when `replayed` is false |
+| `Committed(expense, replayed)` | Saved. `replayed` is true when this operation had already committed and this call wrote nothing | Read the record back, say it was saved and close. Confirm a new save only when `replayed` is false |
 | `Rejected(reason)` | Certainly not saved; the reason is typed | Show the reason; the draft is still valid to correct |
 | `OutcomeUnknown(operationId)` | The commit itself failed in a way that does not say whether it took effect | Call `find(operationId)` or submit the **same** command again. Never a new identifier |
 | a `CancellationException` | The caller was cancelled. It says nothing about the save | On return, `find(operationId)` |

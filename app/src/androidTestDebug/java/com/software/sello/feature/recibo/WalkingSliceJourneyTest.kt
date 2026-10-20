@@ -33,11 +33,10 @@ import com.software.sello.awaitTag
 import com.software.sello.awaitText
 import com.software.sello.feature.category.EDITOR_SUBMIT_TAG
 import com.software.sello.feature.expense.ENTRY_CATEGORIES_TAG
-import com.software.sello.feature.expense.ENTRY_DONE_TAG
 import com.software.sello.feature.expense.ENTRY_KEYPAD_TAG
-import com.software.sello.feature.expense.ENTRY_RECEIPT_TAG
 import com.software.sello.feature.expense.ENTRY_SUBMIT_TAG
 import com.software.sello.hideKeyboard
+import com.software.sello.navigation.CORRECTION_NOTICE_TAG
 import com.software.sello.navigation.DETAIL_BACK_TAG
 import com.software.sello.navigation.MONTH_PICKER_TAG
 import com.software.sello.navigation.MONTH_SWITCHER_TAG
@@ -117,8 +116,9 @@ class WalkingSliceJourneyTest {
                 .performTextInput(note)
         }
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
-        rule.onNodeWithTag(ENTRY_DONE_TAG).performScrollTo().performClick()
+        // A confirmed save closes the form and says so over the screen it was opened from.
+        rule.awaitTag(CORRECTION_NOTICE_TAG)
+        rule.onNode(saying("Gasto anotado:")).assertExists()
     }
 
     private fun openMercado() {

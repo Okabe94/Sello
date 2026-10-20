@@ -44,21 +44,6 @@ enum class IncomeFormError {
 }
 
 /**
- * A saved income, read back from storage after its receipt confirmed it. [details] is
- * null when the income is saved but could not be read back; it is still saved.
- * [sourceKey] is the stable key; the screen names it.
- */
-data class IncomeReceiptView(val incomeId: String, val details: Details?) {
-    data class Details(
-        val amount: MoneyTextValue,
-        val sourceKey: String,
-        val sourceName: String?,
-        val date: LocalDate,
-        val note: String?
-    )
-}
-
-/**
  * The income form. [amount] is present only for a valid amount; [amountText] is what
  * was pasted when it could not be used. [sourceKey] is one of [sourceKeys]; [otherName]
  * is what was typed for "Otro" and is kept, but not sent, while another source is chosen.
@@ -85,7 +70,11 @@ data class IncomeFormState(
     val generationChanged: Boolean = false,
     val error: IncomeFormError? = null,
     val confirmDiscard: Boolean = false,
-    val receipt: IncomeReceiptView? = null,
+    /**
+     * The new income storage confirmed, by its identifier. Once it is set nothing can be
+     * sent again; the form closes and the caller says what was saved.
+     */
+    val recorded: String? = null,
     /** The form is finished and should close. */
     val closed: Boolean = false,
     /** A recorded income is being corrected, not a new one written. */
@@ -98,11 +87,11 @@ data class IncomeFormState(
 ) {
     val canSubmit: Boolean
         get() = !loading && !loadFailed && !busy && !generationChanged && missing == null &&
-            error !in Blocking
+            error !in Blocking && recorded == null
 
     /** While saving, or once nothing here can be sent as it is, the draft must not change. */
     val editable: Boolean get() = !busy && !generationChanged && error !in Blocking &&
-        receipt == null
+        recorded == null
 
     val canDelete: Boolean get() = editing && !loading && !loadFailed && editable
 
@@ -154,9 +143,6 @@ sealed interface IncomeFormAction {
     data object DiscardConfirmed : IncomeFormAction
 
     data object KeepEditing : IncomeFormAction
-
-    /** Leave the receipt. */
-    data object Done : IncomeFormAction
 
     /** Delete the recorded income being corrected. */
     data object Delete : IncomeFormAction

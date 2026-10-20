@@ -400,6 +400,25 @@ class ExpenseCorrectionsTest {
         assertEquals(CorrectionNotice.Updated, notice)
     }
 
+    @Test
+    fun aNewExpenseOrIncomeSavedWhileAnUndoIsOfferedTakesItsPlaceForFourSeconds() = test {
+        val expense = CorrectionNotice.ExpenseRecorded(amount = null, categoryName = "Comida")
+        val income = CorrectionNotice.IncomeRecorded(amount = null)
+        delete()
+        corrections.recorded(expense)
+        corrections.undo()
+        runCurrent()
+        val afterExpense = notice
+        corrections.incomeRecorded(income)
+        val afterIncome = notice
+        advanceTimeBy(4_000)
+        runCurrent()
+
+        assertEquals(listOf<CorrectionNotice?>(expense, income), listOf(afterExpense, afterIncome))
+        assertEquals(emptyList<Any>(), commands.restored)
+        assertNull(notice)
+    }
+
     // --- Income: the same offer, the income's own commands and words ---
 
     private suspend fun deleteIncome(

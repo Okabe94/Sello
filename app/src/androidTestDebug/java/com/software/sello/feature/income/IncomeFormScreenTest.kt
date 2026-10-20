@@ -22,32 +22,28 @@ class IncomeFormScreenTest {
     val rule = createComposeRule()
 
     @Test
-    fun aReceiptWithoutAnOptionalNoteDoesNotClaimItsDetailsCouldNotBeRead() {
+    fun aRecordedSaveDrawsNoReceipt() {
         val today = LocalDate.of(2026, 10, 13)
         rule.setContent {
             SelloTheme(reducedMotion = true) {
                 IncomeFormScreen(
                     IncomeFormState(
+                        loading = false,
+                        amount = MoneyTextValue(MoneySign.None, "", "5.000", "5.000 pesos"),
                         date = today,
                         today = today,
-                        receipt = IncomeReceiptView(
-                            "synthetic",
-                            IncomeReceiptView.Details(
-                                MoneyTextValue(MoneySign.None, "", "5.000", "5.000 pesos"),
-                                "salary",
-                                null,
-                                today,
-                                null
-                            )
-                        )
+                        missing = null,
+                        busy = true,
+                        recorded = "synthetic"
                     ),
                     {}
                 )
             }
         }
-        rule.onNodeWithText("El ingreso quedó guardado, pero no pudimos leer sus detalles.")
-            .assertDoesNotExist()
-        rule.onNodeWithContentDescription("5.000 pesos").assertIsDisplayed()
+
+        rule.onNodeWithTag("income.receipt").assertDoesNotExist()
+        rule.onNodeWithText("Listo").assertDoesNotExist()
+        rule.onNodeWithText("Ingreso anotado", substring = true).assertDoesNotExist()
     }
 
     @Test

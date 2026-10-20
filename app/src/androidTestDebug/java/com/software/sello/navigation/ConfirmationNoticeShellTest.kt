@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -19,9 +22,12 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.software.sello.designsystem.component.MoneySign
+import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.designsystem.component.SCAFFOLD_BAR_TAG
 import com.software.sello.designsystem.component.SCAFFOLD_DOCK_TAG
 import com.software.sello.designsystem.component.SCAFFOLD_RAIL_TAG
@@ -160,5 +166,59 @@ class ConfirmationNoticeShellTest {
         val rail = rule.onNodeWithTag(SCAFFOLD_RAIL_TAG).getUnclippedBoundsInRoot()
         assertTrue("$notice must be beside the rail $rail", notice.left >= rail.right)
         assertTheCheckIsDrawnAndTheMessageIsSaidPolitely(onScreen = false)
+    }
+
+    private fun says(notice: CorrectionNotice, shown: String, spoken: String) {
+        rule.onNodeWithText(shown).assertExists()
+        rule.onNodeWithContentDescription(spoken, useUnmergedTree = true)
+            .assert(
+                SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
+            )
+        assertTrue(
+            notice is CorrectionNotice.ExpenseRecorded || notice is CorrectionNotice.IncomeRecorded
+        )
+    }
+
+    private fun showNotice(notice: CorrectionNotice) = rule.setContent {
+        SelloTheme(reducedMotion = true) { CorrectionNoticeBar(notice) {} }
+    }
+
+    private val amount = MoneyTextValue(MoneySign.None, "", "48.700", "48.700 pesos")
+
+    @Test
+    fun aNewExpenseIsSaidWithItsStoredAmountAndCategory() {
+        val notice = CorrectionNotice.ExpenseRecorded(amount, "Comida")
+        showNotice(notice)
+
+        says(notice, "Gasto anotado: 48.700 en Comida", "Gasto anotado: 48.700 pesos en Comida")
+        rule.onNodeWithTag(SELLO_NOTICE_CHECK_TAG, useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aNewExpenseWhoseCategoryCouldNotBeNamedIsSaidWithItsAmountOnly() {
+        val notice = CorrectionNotice.ExpenseRecorded(amount, categoryName = null)
+        showNotice(notice)
+
+        says(notice, "Gasto anotado: 48.700", "Gasto anotado: 48.700 pesos")
+    }
+
+    @Test
+    fun aNewExpenseThatCouldNotBeReadBackIsStillSaidToBeSaved() {
+        val notice = CorrectionNotice.ExpenseRecorded(amount = null, categoryName = null)
+        showNotice(notice)
+
+        says(notice, "Gasto anotado", "Gasto anotado")
+    }
+
+    @Test
+    fun aNewIncomeIsSaidWithItsStoredAmountOrPlainlyWhenItCouldNotBeRead() {
+        var notice: CorrectionNotice by mutableStateOf(CorrectionNotice.IncomeRecorded(amount))
+        rule.setContent { SelloTheme(reducedMotion = true) { CorrectionNoticeBar(notice) {} } }
+        says(notice, "Ingreso anotado: 48.700", "Ingreso anotado: 48.700 pesos")
+
+        notice = CorrectionNotice.IncomeRecorded(amount = null)
+        rule.waitForIdle()
+
+        says(notice, "Ingreso anotado", "Ingreso anotado")
     }
 }

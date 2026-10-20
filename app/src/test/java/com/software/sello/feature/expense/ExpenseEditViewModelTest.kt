@@ -246,7 +246,7 @@ class ExpenseEditViewModelTest {
             )
         )
         assertTrue(form.now.closed)
-        assertNull(form.now.receipt)
+        assertNull(form.now.recorded)
         assertEquals(CorrectionNotice.Updated, corrections.notice.value)
         assertEquals(emptyList<Any>(), commands.created)
     }

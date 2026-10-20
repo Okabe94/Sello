@@ -35,6 +35,7 @@ import com.software.sello.feature.category.EDITOR_UNLIMITED_TAG
 import com.software.sello.feature.recibo.RECIBO_CATEGORIES_TAG
 import com.software.sello.feature.recibo.RECIBO_FIRST_RUN_TAG
 import com.software.sello.hideKeyboard
+import com.software.sello.navigation.CORRECTION_NOTICE_TAG
 import com.software.sello.press
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -112,13 +113,21 @@ class ExpenseEntryJourneyTest {
         spoken
     ).onFirst().performScrollTo().assertIsDisplayed()
 
+    /** A confirmed save closes the form; Recibo shows it and says what was saved. */
+    private fun savedAndBackOnRecibo(said: String) {
+        rule.awaitTag(CORRECTION_NOTICE_TAG)
+        rule.onNodeWithText(said).assertIsDisplayed()
+        rule.onNodeWithTag(ENTRY_KEYPAD_TAG).assertDoesNotExist()
+        rule.awaitTag(RECIBO_CATEGORIES_TAG)
+    }
+
     private fun expenses() = TestData.rows(
         "SELECT e.amount_minor, e.currency, c.name, e.effective_date, e.note, e.sequence, " +
             "e.version FROM expense e JOIN category c ON c.id = e.category_id ORDER BY e.sequence"
     )
 
     @Test
-    fun aNewInstallationRecordsItsFirstExpenseAndShowsTheReceiptForTheStoredRow() {
+    fun aNewInstallationRecordsItsFirstExpenseAndReturnsToReciboSayingWhatWasStored() {
         startWithCategory()
         openAnotar()
         // Nothing can be recorded without an amount.
@@ -129,11 +138,11 @@ class ExpenseEntryJourneyTest {
             .performTextInput("Pan")
         rule.onNodeWithContentDescription("Anotar gasto de 10.000 pesos en Mercado").press()
 
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
-        rule.onNodeWithText("Gasto anotado").assertIsDisplayed()
-        rule.onNodeWithContentDescription("10.000 pesos").assertIsDisplayed()
-        rule.onNodeWithText("Mercado").assertIsDisplayed()
-        rule.onNodeWithText("Pan").assertIsDisplayed()
+        // No receipt and no Listo: straight back, with the stored figures already on Recibo.
+        savedAndBackOnRecibo("Gasto anotado: 10.000 en Mercado")
+        rule.onNodeWithContentDescription("Gasto anotado: 10.000 pesos en Mercado")
+            .assertExists()
+        rule.onNodeWithText("Listo").assertDoesNotExist()
         assertEquals(listOf("10000|COP|Mercado|$today|Pan|1|1"), expenses())
         // The receipt in storage is for exactly that expense.
         assertEquals(
@@ -141,10 +150,6 @@ class ExpenseEntryJourneyTest {
             TestData.rows("SELECT subject_id FROM operation_receipt WHERE kind = 'expense.create'")
         )
         assertEquals(2, TestData.long("SELECT revision FROM profile"))
-
-        rule.onNodeWithTag(ENTRY_DONE_TAG).performScrollTo().performClick()
-
-        rule.awaitTag(RECIBO_CATEGORIES_TAG)
         rule.onNodeWithContentDescription("Has gastado este mes: 10.000 pesos. Sin límite.")
             .assertIsDisplayed()
         rule.onNodeWithContentDescription("Mercado. Has gastado 10.000 pesos. Sin límite.")
@@ -161,7 +166,7 @@ class ExpenseEntryJourneyTest {
         val save = rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().fetchSemanticsNode()
         rule.runOnUiThread { repeat(2) { save.config[SemanticsActions.OnClick].action!!.invoke() } }
 
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
+        savedAndBackOnRecibo("Gasto anotado: 5.000 en Mercado")
         assertEquals(listOf("5000|COP|Mercado|$today|null|1|1"), expenses())
         assertEquals(
             1,
@@ -170,7 +175,7 @@ class ExpenseEntryJourneyTest {
     }
 
     @Test
-    fun rebuildingTheScreenOnTheReceiptOrOnADraftNeverRecordsAgain() {
+    fun rebuildingTheScreenOnADraftOrAfterTheSaveNeverRecordsAgain() {
         val app = startWithCategory()
         openAnotar()
         press("7", "5", "0", "0")
@@ -181,11 +186,11 @@ class ExpenseEntryJourneyTest {
         assertEquals(emptyList<String>(), expenses())
 
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
+        savedAndBackOnRecibo("Gasto anotado: 7.500 en Mercado")
         app.recreate()
 
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
-        rule.onNodeWithContentDescription("7.500 pesos").assertIsDisplayed()
+        rule.awaitTag(RECIBO_CATEGORIES_TAG)
+        rule.onNodeWithTag(ENTRY_KEYPAD_TAG).assertDoesNotExist()
         assertEquals(listOf("7500|COP|Mercado|$today|null|1|1"), expenses())
     }
 
@@ -203,7 +208,7 @@ class ExpenseEntryJourneyTest {
             .assertIsSelected()
         press("9", "000")
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
+        savedAndBackOnRecibo("Gasto anotado: 9.000 en Mercado")
 
         assertEquals(listOf("9000|COP|Mercado|$today|null|1|1"), expenses())
     }
@@ -223,7 +228,7 @@ class ExpenseEntryJourneyTest {
         assertEquals(emptyList<String>(), expenses())
 
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
-        rule.awaitTag(ENTRY_RECEIPT_TAG)
+        savedAndBackOnRecibo("Gasto anotado: 48.700 en Café")
 
         assertEquals(listOf("48700|COP|Café|$today|null|1|1"), expenses())
     }

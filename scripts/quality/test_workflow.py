@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 WORKFLOW = Path(__file__).resolve().parents[2] / ".github/workflows/quality.yml"
+GRADLE_PROPERTIES = WORKFLOW.parents[2] / "gradle.properties"
 
 
 def steps(text):
@@ -57,6 +58,34 @@ class HostedWorkflowTests(unittest.TestCase):
 
     def test_main_still_gets_the_device_gate_on_a_schedule(self):
         self.assertRegex(self.code, r'schedule:\n    - cron: "\d+ \d+ \* \* \*"')
+
+    def test_gradle_cache_setup_is_pinned_and_precedes_every_gate(self):
+        cache = self.steps.get("Set up Gradle caching", "")
+        self.assertRegex(cache, r"uses: gradle/actions/setup-gradle@[0-9a-f]{40}\b")
+        self.assertNotIn("if:", cache)
+        self.assertNotIn("gradle-version:", cache)  # The locked wrapper owns the version.
+        names = list(self.steps)
+        self.assertLess(names.index("Set up Gradle caching"), names.index("Decide what this run verifies"))
+        self.assertNotRegex(self.code, r"(?m)^\s+cache: gradle\s*$")
+        self.assertNotIn("uses: actions/cache", self.code)
+
+    def test_shared_gradle_cache_is_read_only_outside_trusted_main_runs(self):
+        cache = self.steps.get("Set up Gradle caching", "")
+        self.assertIn(
+            "cache-read-only: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}",
+            cache,
+        )
+        self.assertNotIn("cache-write-only:", cache)
+        self.assertNotIn("cache-encryption-key:", cache)
+        self.assertNotIn("secrets.", cache)
+        self.assertIn("build-scan-publish: false", cache)
+        self.assertIn("dependency-graph: disabled", cache)
+        self.assertIn("add-job-summary-as-pr-comment: never", cache)
+
+    def test_gradle_task_cache_is_enabled_alongside_configuration_cache(self):
+        properties = GRADLE_PROPERTIES.read_text(encoding="utf-8")
+        self.assertRegex(properties, r"(?m)^org\.gradle\.caching=true\s*$")
+        self.assertRegex(properties, r"(?m)^org\.gradle\.configuration-cache=true\s*$")
 
     def test_no_check_is_allowed_to_fail_quietly(self):
         self.assertNotIn("continue-on-error", self.code)

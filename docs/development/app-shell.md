@@ -73,6 +73,7 @@ leaving the form does.
 | "Gasto restaurado", "Gasto actualizado", "Ingreso restaurado", "Ingreso actualizado" | Four seconds | none |
 | "Categoría actualizada", "Límite de septiembre actualizado. Sus cifras ya lo usan.", "Categoría archivada", "Categoría desarchivada" | Four seconds | none |
 | "Ya no se puede deshacer…", "No se pudo deshacer porque tus datos cambiaron…", for either kind | Four seconds | none |
+| A confirmed save (`CorrectionNotice.Confirmed`), with a check before the words its screen writes | Four seconds | none |
 
 - **The time to undo belongs to the [commands](commands.md#the-six-seconds).** The
   notice drops the offer when the same monotonic clock says it is over, and checks
@@ -80,11 +81,14 @@ leaving the form does.
 - **Drawing again changes nothing.** Rotation, a resize or another screen in between
   show the same notice with the same time left. A process that ends has no notice.
 - **A deletion runs to its end** even if the screen that asked for it is gone.
+- **The newest notice wins.** A statement or confirmation takes the place of whatever
+  is shown, an offer to undo included; that deletion stands.
 - **Read aloud** as "Gasto borrado. Puedes deshacerlo durante 6 segundos." (or
   "Ingreso borrado. …"), announced when it appears.
 
-The approved [v2 save feedback](../design/v2/README.md) will change ordinary-save
-notices; it is not implemented yet.
+The shell can show a confirmation (SELLO-069); nothing sends one yet. SELLO-066 uses
+it for the approved [v2 save feedback](../design/v2/README.md) after a new expense or
+income, replacing the saved receipt.
 
 ## Routes and links
 

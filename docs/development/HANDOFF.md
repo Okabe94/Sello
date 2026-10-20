@@ -5,7 +5,7 @@
 > subject to the user's current instructions.
 
 **Snapshot:** 2026-10-19 · **Product baseline:** `7f94c75`.
-SELLO-001–023, SELLO-061, SELLO-063 and epics E01–E05 are recorded Done in the canonical tickets.
+SELLO-001–023, SELLO-061, SELLO-063, SELLO-069 and epics E01–E05 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -55,10 +55,11 @@ forecast remains only as Resumen's estimate, and
 | [SELLO-023](../planning/mvp/epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings) | Added persisted appearance, category ordering/direction and working settings. |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
+| [SELLO-069](../planning/mvp/epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell) | The shell can show a confirmed save with the v2 check look above the dock; nothing sends one until SELLO-066. |
 
 ## Remaining work
 
-- SELLO-062 and SELLO-064–069 ([E12](../planning/mvp/epics/E12-v2-recibo.md)): the
+- SELLO-062 and SELLO-064–068 ([E12](../planning/mvp/epics/E12-v2-recibo.md)): the
   current focus. Brings Recibo to the v2 design: answer slip, month ribbon, dock and
   tabs, and brief save feedback.
 - SELLO-070–074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): after E12, brings
@@ -75,8 +76,8 @@ forecast remains only as Resumen's estimate, and
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
 The [board](../planning/mvp/BOARD.md) currently lists SELLO-024 and SELLO-028 without
-unmet ticket dependencies, plus the E12 starting tickets (SELLO-061, 063, 065, 068
-and 069); SELLO-033 now waits for E12. Their other prerequisites remain in
+unmet ticket dependencies, plus E12's SELLO-062, 065, 066 and 068; SELLO-033 now
+waits for E12. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
 ## Detail references

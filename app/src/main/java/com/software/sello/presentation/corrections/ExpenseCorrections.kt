@@ -77,6 +77,13 @@ sealed interface CorrectionNotice {
     data object IncomeUndoBlocked : CorrectionNotice
 
     data object IncomeUpdated : CorrectionNotice
+
+    /**
+     * A save that storage confirmed, said with the confirmation look: a check before
+     * [message]. Whoever saved writes the words from the record read back, so nothing is
+     * said before the save is confirmed. [spoken] can carry the full amount.
+     */
+    data class Confirmed(val message: String, val spoken: String = message) : CorrectionNotice
 }
 
 /** How a deletion ended. Only [Deleted] means the expense is gone. */
@@ -304,6 +311,12 @@ class ExpenseCorrections(
 
     /** A screen reports that an edit of an income was saved. */
     fun incomeUpdated() = said(CorrectionNotice.IncomeUpdated)
+
+    /**
+     * A screen reports a save that storage confirmed. Like every statement it takes the
+     * place of whatever is shown, an offer to undo included.
+     */
+    fun confirmed(notice: CorrectionNotice.Confirmed) = said(notice)
 
     /** A screen reports a category change its receipt confirmed. */
     fun categoryChanged(notice: CorrectionNotice) {

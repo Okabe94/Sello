@@ -92,6 +92,9 @@ What matters for placement work:
 - Tab switches save and restore tab state with `launchSingleTop`, so they build no
   duplicate top-level destinations.
 - The month picker browses back to the year 2000; later months cannot be chosen.
+- While an earlier month is selected, Recibo, Resumen, income history and category
+  detail show "Estás viendo septiembre" under the month bar with a "Volver a octubre"
+  button that selects the current month in one tap.
 - The startup-failure screen is outside the graph because the graph could not be built.
 
 ## Current screens and behaviors

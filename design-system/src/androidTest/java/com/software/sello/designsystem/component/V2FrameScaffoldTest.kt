@@ -35,7 +35,8 @@ import org.junit.runner.RunWith
 /**
  * The frame with a v2 top bar and an optional ribbon, one window dp drawn as one pixel.
  * The window can be larger than the screen, so positions are measured from its own top.
- * The slip under the band must still start on the band, as with the old title row.
+ * The slip under the band must still start on the band, as with the old title row, and
+ * a ribbon may sit under either.
  */
 @RunWith(AndroidJUnit4::class)
 class V2FrameScaffoldTest {
@@ -142,6 +143,27 @@ class V2FrameScaffoldTest {
         assertTrue("ribbon under the bar", ribbon.top >= bar.bottom - 1f)
         assertTrue("content under the ribbon", content.top >= ribbon.bottom - 1f)
         near(content.top + 50f, bounds(SCAFFOLD_BAND_TAG).bottom)
+    }
+
+    @Test
+    fun aRibbonSitsOnTheBandUnderTheTitleRowAndTheContentStillStartsOnTheBand() {
+        show(withTopBar = false, withRibbon = true)
+
+        val title = rule.onNodeWithText("Octubre 2026").assertExists().fetchSemanticsNode()
+            .boundsInRoot
+        val ribbon = bounds("ribbon")
+        val content = bounds("content")
+        assertTrue("ribbon under the title", ribbon.top >= title.bottom - 1f)
+        assertTrue("content under the ribbon", content.top >= ribbon.bottom - 1f)
+        near(content.top + 50f, bounds(SCAFFOLD_BAND_TAG).bottom)
+    }
+
+    @Test
+    fun atTwiceTheFontSizeARibbonUnderTheTitleRowStillLeavesTheContentOnTheBand() {
+        show(withTopBar = false, withRibbon = true, fontScale = 2f)
+
+        assertTrue(bounds("content").top >= bounds("ribbon").bottom - 1f)
+        near(bounds("content").top + 50f, bounds(SCAFFOLD_BAND_TAG).bottom)
     }
 
     @Test

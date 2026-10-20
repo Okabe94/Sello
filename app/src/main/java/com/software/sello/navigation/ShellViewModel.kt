@@ -45,6 +45,9 @@ sealed interface ShellAction {
 
     data class PickMonth(val month: YearMonth) : ShellAction
 
+    /** "Volver a octubre": the month the clock says is current when it is handled. */
+    data object ReturnToCurrentMonth : ShellAction
+
     data object EnteredBackground : ShellAction
 
     data object ReturnedToForeground : ShellAction
@@ -131,6 +134,9 @@ class ShellViewModel(
             is ShellAction.PickMonth -> if (session.select(action.month)) {
                 saved[KEY_PICKER] = false
             }
+
+            // Read now, not from the month shown when the ribbon was drawn.
+            ShellAction.ReturnToCurrentMonth -> session.select(session.currentMonthNow)
 
             ShellAction.EnteredBackground -> session.enteredBackground()
 

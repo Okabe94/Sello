@@ -31,6 +31,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.width
 import com.software.sello.designsystem.component.v2.AnswerSlip
 import com.software.sello.designsystem.component.v2.CompletedGoalRow
 import com.software.sello.designsystem.component.v2.FittedMoneyText
@@ -141,6 +142,33 @@ class V2ComponentTest {
             )
         }
         assertEquals(4, returns)
+    }
+
+    @Test
+    fun atFontScale13TheRibbonPutsItsReturnUnderAMessageThatKeepsTheWidth() = ribbonStacksAt(1.3f)
+
+    @Test
+    fun atTwiceTheFontSizeTheRibbonPutsItsReturnUnderAMessageThatKeepsTheWidth() =
+        ribbonStacksAt(2f)
+
+    private fun ribbonStacksAt(scale: Float) {
+        rule.inEveryScheme(fontScale = scale, width = 320.dp, content = {
+            PastMonthRibbon(
+                AnnotatedString("Estás viendo septiembre de 2025"),
+                "Volver a noviembre",
+                {},
+                Modifier.testTag("ribbon")
+            )
+        }) { scheme ->
+            val ribbon = rule.onNodeWithTag("ribbon").getUnclippedBoundsInRoot()
+            val message = rule.onNodeWithText("Estás viendo septiembre de 2025")
+                .getUnclippedBoundsInRoot()
+            val button = rule.onNodeWithText("Volver a noviembre").getUnclippedBoundsInRoot()
+            // Squeezed beside the button, the message became a column of letters.
+            assertTrue("$scheme: $message in $ribbon", message.width > ribbon.width / 2)
+            assertTrue("$scheme: $button under $message", button.top >= message.bottom)
+            assertTrue("$scheme: $button in $ribbon", button.right <= ribbon.right)
+        }
     }
 
     @Test

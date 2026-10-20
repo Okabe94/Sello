@@ -26,6 +26,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -49,6 +52,7 @@ import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
+import com.software.sello.designsystem.component.v2.PastMonthRibbon
 import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
@@ -206,7 +210,9 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 onAction = shell::onAction,
                 navigation = null,
                 onBack = { navigation.popBackStack() },
-                screenTitle = stringResource(R.string.settings_title)
+                screenTitle = stringResource(R.string.settings_title),
+                // Configuración shows nothing of the month.
+                pastMonthRibbon = false
             ) { padding ->
                 SettingsRoot(viewModels, padding)
             }
@@ -458,6 +464,40 @@ private val SideBySideWidth = 600.dp
 class ShellDetail(val title: String, val content: @Composable (PaddingValues) -> Unit)
 
 /**
+ * "Estás viendo septiembre" and "Volver a octubre". The year is added to the month
+ * viewed only when it is not the current one's: "septiembre de 2025".
+ */
+@Composable
+internal fun PastMonthNotice(
+    state: ShellState,
+    names: MonthNames,
+    onAction: (ShellAction) -> Unit
+) {
+    val month = state.selectedMonth
+    val viewed = if (month.year == state.currentMonth.year) {
+        names.inSentence(month)
+    } else {
+        stringResource(R.string.month_ribbon_month_of_year, names.inSentence(month), month.year)
+    }
+    val sentence = stringResource(R.string.month_ribbon_viewing, viewed)
+    val start = sentence.lastIndexOf(viewed)
+    PastMonthRibbon(
+        message = buildAnnotatedString {
+            append(sentence)
+            if (start >= 0) {
+                addStyle(SpanStyle(fontWeight = FontWeight.W800), start, start + viewed.length)
+            }
+        },
+        returnLabel = stringResource(
+            R.string.month_ribbon_return,
+            names.inSentence(state.currentMonth)
+        ),
+        onReturn = { onAction(ShellAction.ReturnToCurrentMonth) },
+        modifier = Modifier.testTag(PAST_MONTH_RIBBON_TAG)
+    )
+}
+
+/**
  * The frame: the month in the title, the content, and the month picker. With a
  * [detail], a window with room for two columns shows it beside the content; any other
  * window shows it instead of the content once it has been opened, under its own title
@@ -478,9 +518,17 @@ fun ShellScreen(
     onBack: (() -> Unit)? = null,
     screenTitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
+    pastMonthRibbon: Boolean = true,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
+    // Over a past month, every screen that shows it says so and offers the way back.
+    val ribbon: (@Composable () -> Unit)? =
+        if (pastMonthRibbon && state.selectedMonth != state.currentMonth) {
+            { PastMonthNotice(state, names, onAction) }
+        } else {
+            null
+        }
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val layout = selloWindowLayout(maxWidth, maxHeight)
         val sidePanel = layout.sidePanelWidth != null
@@ -509,6 +557,7 @@ fun ShellScreen(
                     onClick = { onAction(ShellAction.StartEntryIn(openedId)) }
                 ),
                 notice = notice,
+                ribbon = ribbon,
                 content = detail.content
             )
         } else {
@@ -531,6 +580,7 @@ fun ShellScreen(
                 } else {
                     null
                 },
+                ribbon = ribbon,
                 navigation = navigation,
                 navigationIcon = onBack?.let { back ->
                     {
@@ -741,5 +791,6 @@ internal fun monthBarLabel(state: ShellState, names: MonthNames): MonthBarLabel 
 )
 
 const val MONTH_SWITCHER_TAG = "shell:month-switcher"
+const val PAST_MONTH_RIBBON_TAG = "shell:past-month-ribbon"
 const val DETAIL_BACK_TAG = "shell:detail-back"
 const val CORRECTION_NOTICE_TAG = "shell:correction-notice"

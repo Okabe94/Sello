@@ -75,6 +75,21 @@ jobs:
           echo "gate=$gate" >> "$GITHUB_OUTPUT"
           echo "$EVENT: $mode at $gate" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Locate Android system image
+        if: steps.plan.outputs.gate == 'G2'
+        id: android-image
+        run: echo "path=$ANDROID_HOME/system-images/android-30/google_apis/x86_64" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Android system image
+        if: steps.plan.outputs.gate == 'G2'
+        id: android-image-cache
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ${{ steps.android-image.outputs.path }}
+          # Restore the latest vendor revision; sdkmanager still checks for updates.
+          key: android-image-v1-${{ runner.os }}-${{ runner.arch }}-api30-google_apis-x86_64-lookup
+          restore-keys: android-image-v1-${{ runner.os }}-${{ runner.arch }}-api30-google_apis-x86_64-
+
       - name: Enable KVM for the emulator
         if: steps.plan.outputs.gate == 'G2'
         run: |
@@ -89,6 +104,9 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
+          cores: 2
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: ./scripts/verify-ticket --merge-candidate "$BASE" --gate G2
 
@@ -108,6 +126,20 @@ jobs:
 
       - name: Validate completion evidence
         run: python3 docs/planning/mvp/board.py --check --base "$BASE"
+
+      - name: Identify installed Android system image
+        if: steps.plan.outputs.gate == 'G2' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        id: android-image-key
+        run: |
+          sdk_image_metadata=$(sha256sum "$ANDROID_HOME/system-images/android-30/google_apis/x86_64/source.properties")
+          echo "key=android-image-v1-${{ runner.os }}-${{ runner.arch }}-api30-google_apis-x86_64-${sdk_image_metadata%% *}" >> "$GITHUB_OUTPUT"
+
+      - name: Save Android system image
+        if: steps.plan.outputs.gate == 'G2' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.android-image-cache.outputs.cache-matched-key != steps.android-image-key.outputs.key
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ${{ steps.android-image.outputs.path }}
+          key: ${{ steps.android-image-key.outputs.key }}
 
       - name: Keep reports
         if: always()

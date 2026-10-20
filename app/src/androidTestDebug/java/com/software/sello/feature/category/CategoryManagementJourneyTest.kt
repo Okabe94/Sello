@@ -96,7 +96,7 @@ class CategoryManagementJourneyTest {
 
     private fun launch() {
         scenario = ActivityScenario.launch(Intent(context, MainActivity::class.java))
-        rule.await(saying("Te quedan 90.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 90.000 pesos."))
     }
 
     private fun openCafe() {
@@ -143,7 +143,7 @@ class CategoryManagementJourneyTest {
         Espresso.pressBack()
         rule.awaitTag(RECIBO_SUMMARY_TAG)
         pick(lastMonth)
-        rule.awaitDescription("Te sobraron 80.000 pesos. Cumplido.")
+        rule.awaitDescription("Restante del presupuesto: 80.000 pesos. Cumplido.")
         assertEquals(listOf("$lastMonth|finite|100000"), limits())
     }
 
@@ -151,7 +151,7 @@ class CategoryManagementJourneyTest {
     fun aFinishedMonthsLimitIsCorrectedWithoutTouchingThisMonth() {
         launch()
         pick(lastMonth)
-        rule.awaitDescription("Te sobraron 80.000 pesos. Cumplido.")
+        rule.awaitDescription("Restante del presupuesto: 80.000 pesos. Cumplido.")
         openCafe()
         edit()
         rule.onNodeWithTag(EDITOR_SCOPE_TAG).performScrollTo().assertIsDisplayed()
@@ -167,7 +167,7 @@ class CategoryManagementJourneyTest {
         Espresso.pressBack()
         rule.awaitTag(RECIBO_SUMMARY_TAG)
         TestCommands.showCurrentMonth()
-        rule.await(saying("Te quedan 90.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 90.000 pesos."))
     }
 
     @Test

@@ -158,13 +158,15 @@ class WalkingSliceJourneyTest {
     @Test
     fun aSavedExpenseReachesReciboItsCategoryAndItsListAndIsThereAfterStartingAgain() {
         val app = startWithMercado()
-        rule.onNodeWithContentDescription("Te quedan 300.000 pesos. Al día.").assertIsDisplayed()
+        rule.onNodeWithContentDescription(
+            "Restante del presupuesto: 300.000 pesos. Al día."
+        ).assertIsDisplayed()
 
         record("4", "8", "7", "0", "0", note = "Pan")
 
         // 300.000 less 48.700. The verdict depends on the day this runs, so it is not
         // asserted here; the sentence and both amounts are.
-        rule.await(saying("Te quedan 251.300 pesos."))
+        rule.await(saying("Restante del presupuesto: 251.300 pesos."))
         rule.onNode(saying("Mercado. Te quedan 251.300 pesos de 300.000 pesos."))
             .performScrollTo().assertIsDisplayed()
 
@@ -216,14 +218,14 @@ class WalkingSliceJourneyTest {
         Espresso.pressBack()
         rule.awaitTag(RECIBO_SUMMARY_TAG)
         rule.onNodeWithTag(CATEGORY_DETAIL_TAG).assertDoesNotExist()
-        rule.await(saying("Te quedan 250.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 250.000 pesos."))
         assertEquals(Lifecycle.State.RESUMED, app.state)
 
         // Started again, it is all read back from storage.
         app.close()
         launch()
         rule.awaitTag(RECIBO_SUMMARY_TAG)
-        rule.await(saying("Te quedan 250.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 250.000 pesos."))
         rule.onNode(saying("Mercado. Te quedan 250.000 pesos de 300.000 pesos.")).assertExists()
         openMercado()
         rule.awaitTag(second)
@@ -240,13 +242,13 @@ class WalkingSliceJourneyTest {
         TestCommands.createExpense("Mercado", TestCommands.today, 10_000, "De hoy")
 
         // This month: its own limit, with a daily amount.
-        rule.await(saying("Te quedan 290.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 290.000 pesos."))
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertExists()
 
         pick(lastMonth)
 
         // Last month: 200.000 less 150.000, judged on what was spent, nothing per day.
-        rule.awaitDescription("Te sobraron 50.000 pesos. Cumplido.")
+        rule.awaitDescription("Restante del presupuesto: 50.000 pesos. Cumplido.")
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
         rule.onNodeWithContentDescription(
             "Mercado. Te sobraron 50.000 pesos de 200.000 pesos. Cumplido."
@@ -267,7 +269,7 @@ class WalkingSliceJourneyTest {
         rule.awaitText("Otro")
         assertEquals(2, listed())
         Espresso.pressBack()
-        rule.awaitDescription("Te pasaste por 10.000 pesos. Excedido.")
+        rule.awaitDescription("Restante del presupuesto: menos 10.000 pesos. Excedido.")
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
     }
 
@@ -277,7 +279,7 @@ class WalkingSliceJourneyTest {
         repeat(25) { TestCommands.createExpense("Mercado", TestCommands.today, 1_000) }
 
         // 25 expenses of 1.000: 25.000 of 300.000.
-        rule.await(saying("Te quedan 275.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 275.000 pesos."))
         openMercado()
 
         rule.awaitText("Se muestran 20 de 25")
@@ -297,7 +299,7 @@ class WalkingSliceJourneyTest {
     fun anExpenseSavedWhileALongListIsOpenLeavesTheListAsLongAndWhereItWas() {
         startWithMercado()
         repeat(45) { TestCommands.createExpense("Mercado", TestCommands.today, 1_000) }
-        rule.await(saying("Te quedan 255.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 255.000 pesos."))
         openMercado()
         rule.awaitText("Se muestran 20 de 45")
         rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().performClick()
@@ -321,7 +323,7 @@ class WalkingSliceJourneyTest {
     fun aReadThatFailsIsShownAsAFailureWithOlderFiguresMarkedAndNeverAsAnEmptyMonth() {
         startWithMercado()
         TestCommands.createExpense("Mercado", TestCommands.today, 40_000)
-        rule.await(saying("Te quedan 260.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 260.000 pesos."))
 
         // A stored amount that breaks the rules cannot be read. The next change makes
         // the app read the month again.
@@ -330,7 +332,7 @@ class WalkingSliceJourneyTest {
 
         // What was read before stays, marked as older; it is not replaced by a guess.
         rule.awaitTag(RECIBO_STALE_TAG)
-        rule.onNode(saying("Te quedan 260.000 pesos.")).assertExists()
+        rule.onNode(saying("Restante del presupuesto: 260.000 pesos.")).assertExists()
 
         // The category was never read: it shows a failure, not "no expenses".
         openMercado()
@@ -352,7 +354,7 @@ class WalkingSliceJourneyTest {
         TestData.execute("UPDATE expense SET amount_minor = 40000 WHERE amount_minor = 0")
         rule.onNodeWithText("Reintentar").performClick()
 
-        rule.await(saying("Te quedan 255.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 255.000 pesos."))
         rule.onNodeWithTag(RECIBO_STALE_TAG).assertDoesNotExist()
         rule.onNodeWithTag(RECIBO_FAILED_TAG).assertDoesNotExist()
         openMercado()

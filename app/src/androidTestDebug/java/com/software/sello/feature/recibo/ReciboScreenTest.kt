@@ -4,11 +4,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithText
@@ -127,20 +131,27 @@ class ReciboScreenTest {
         open("f", "Nueva", ReciboStamp.NotSet)
     )
 
+    private fun inTheAnswer(words: String) = hasContentDescription(words, substring = true) and
+        hasAnyAncestor(hasTestTag(RECIBO_SUMMARY_TAG))
+
+    private fun minus(digits: String) =
+        MoneyTextValue(MoneySign.Minus, "", digits, "menos $digits pesos")
+
     private fun month(
-        headline: ReciboHeadline,
-        amount: String,
+        amount: MoneyTextValue,
         stamp: ReciboStamp,
+        label: ReciboAnswerLabel = ReciboAnswerLabel.Remaining,
         days: Int? = null,
         perDay: String? = null,
-        exhausted: Boolean = false,
+        closed: Pair<String, String>? = null,
         stale: Boolean = false
     ) = ReciboState.Month(
         ReciboSummary(
-            BudgetFigure(headline, plain(amount), stamp),
-            days,
-            perDay?.let(::plain),
-            exhausted
+            label,
+            amount,
+            stamp,
+            perDay = perDay?.let { ReciboPerDay(plain(it), days!!) },
+            closed = closed?.let { (spent, limit) -> ReciboClosedMonth(plain(spent), plain(limit)) }
         ),
         categories,
         stale
@@ -173,49 +184,100 @@ class ReciboScreenTest {
     }
 
     @Test
-    fun theMonthInProgressIsReadAsOneSentenceWithItsVerdictDaysAndDailyAmount() {
-        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+    fun theMonthInProgressSaysWhatRemainsThenWhatCanBeSpentEachDayBelowATearLine() {
+        show(month(plain("937.200"), ReciboStamp.OnTrack, days = 9, perDay = "99.100"))
 
-        rule.onNodeWithContentDescription("Te quedan 937.200 pesos. Al día.").assertIsDisplayed()
-        rule.onNodeWithText("Para 9 días").assertIsDisplayed()
-        rule.onNodeWithText("Puedes gastar al día").assertIsDisplayed()
-        rule.onNodeWithContentDescription("99.100 pesos").assertIsDisplayed()
+        val answer = rule.onNodeWithContentDescription(
+            "Restante del presupuesto: 937.200 pesos. Al día."
+        ).assertIsDisplayed().getUnclippedBoundsInRoot()
+        val perDay = rule.onNodeWithTag(RECIBO_PER_DAY_TAG)
+            .assertContentDescriptionEquals("99.100 pesos por día. 9 días, incluido hoy.")
+            .assertIsDisplayed()
+            .getUnclippedBoundsInRoot()
+        assertTrue("$perDay must be under $answer", perDay.top >= answer.bottom)
+        rule.onNodeWithTag(RECIBO_CLOSED_TAG).assertDoesNotExist()
         rule.onNodeWithTag(RECIBO_STALE_TAG).assertDoesNotExist()
+        // The v1 wording is gone from the answer; the categories keep theirs.
+        rule.onNodeWithText("Puedes gastar al día").assertDoesNotExist()
+        rule.onAllNodes(inTheAnswer("Te quedan")).assertCountEquals(0)
     }
 
     @Test
-    fun theLastDaySaysTodayAndAnOverspentMonthSaysByHowMuch() {
-        show(month(ReciboHeadline.Overspent, "50.000", ReciboStamp.Over, 1, "0", exhausted = true))
+    fun anOverrunIsSignedAndOnTheLastDayZeroPerDayIsStillShown() {
+        show(month(minus("43.700"), ReciboStamp.Over, days = 1, perDay = "0"))
 
         rule.onNodeWithContentDescription(
-            "Te pasaste por 50.000 pesos. Excedido."
+            "Restante del presupuesto: menos 43.700 pesos. Excedido."
         ).assertIsDisplayed()
-        rule.onNodeWithText("Para hoy").assertIsDisplayed()
-        rule.onNodeWithContentDescription("0 pesos").assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG)
+            .assertContentDescriptionEquals("0 pesos por día. 1 día, incluido hoy.")
+            .assertIsDisplayed()
+        rule.onAllNodes(inTheAnswer("Te pasaste")).assertCountEquals(0)
     }
 
     @Test
-    fun aFinishedMonthAndAMonthWithoutLimitsShowNoDailyAmount() {
-        show(month(ReciboHeadline.LeftOver, "500.000", ReciboStamp.WithinLimit))
+    fun atTheLimitNothingIsLeftAndZeroPerDayIsShownForEveryDayLeft() {
+        show(month(plain("0"), ReciboStamp.AtLimit, days = 16, perDay = "0"))
 
-        rule.onNodeWithContentDescription("Te sobraron 500.000 pesos. Cumplido.")
+        rule.onNodeWithContentDescription("Restante del presupuesto: 0 pesos. Al límite.")
             .assertIsDisplayed()
-        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
-        rule.onNodeWithText("Puedes gastar al día").assertDoesNotExist()
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG)
+            .assertContentDescriptionEquals("0 pesos por día. 16 días, incluido hoy.")
     }
 
     @Test
-    fun aFinishedMonthOverItsLimitAndAMonthWithNoLimitSayItInWords() {
-        show(month(ReciboHeadline.Spent, "80.000", ReciboStamp.NoLimit))
+    fun aClosedMonthSaysWhatWasLeftAndWhatItSpentOfItsLimitWithNoDailyAmount() {
+        show(
+            month(
+                plain("80.000"),
+                ReciboStamp.WithinLimit,
+                closed = "920.000" to "1.000.000"
+            )
+        )
 
-        rule.onNodeWithContentDescription("Has gastado 80.000 pesos. Sin límite.")
+        val answer = rule.onNodeWithContentDescription(
+            "Restante del presupuesto: 80.000 pesos. Cumplido."
+        ).assertIsDisplayed().getUnclippedBoundsInRoot()
+        val closed = rule.onNodeWithText("Mes cerrado · gastaste 920.000 de 1.000.000.")
+            .assertIsDisplayed()
+            .assertContentDescriptionEquals(
+                "Mes cerrado. Gastaste 920.000 pesos de 1.000.000 pesos."
+            )
+            .getUnclippedBoundsInRoot()
+        assertTrue("$closed must be under $answer", closed.top >= answer.bottom)
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aClosedMonthOverItsLimitIsSignedAndSaysExcedido() {
+        show(
+            month(
+                minus("80.000"),
+                ReciboStamp.OverLimit,
+                closed = "1.080.000" to "1.000.000"
+            )
+        )
+
+        rule.onNodeWithContentDescription(
+            "Restante del presupuesto: menos 80.000 pesos. Excedido."
+        ).assertIsDisplayed()
+        rule.onNodeWithText("Mes cerrado · gastaste 1.080.000 de 1.000.000.").assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun withNoLimitItSaysWhatWasSpentThisMonthAndNothingPerDay() {
+        show(month(plain("80.000"), ReciboStamp.NoLimit, label = ReciboAnswerLabel.Spent))
+
+        rule.onNodeWithContentDescription("Has gastado este mes: 80.000 pesos. Sin límite.")
             .assertIsDisplayed()
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(RECIBO_CLOSED_TAG).assertDoesNotExist()
     }
 
     @Test
     fun everyCategoryIsOneButtonThatSaysItsExactAmountsAndItsVerdictInWords() {
-        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+        show(month(plain("937.200"), ReciboStamp.OnTrack, days = 9, perDay = "99.100"))
 
         listOf(
             "Alimentación. Te quedan 287.600 pesos de 900.000 pesos. Al día.",
@@ -236,7 +298,7 @@ class ReciboScreenTest {
 
     @Test
     fun theCategoriesCardHeaderCarriesTheOnlyAddButton() {
-        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+        show(month(plain("937.200"), ReciboStamp.OnTrack, days = 9, perDay = "99.100"))
 
         val add = rule.onNodeWithContentDescription("Agregar categoría")
         val heading = rule.onNodeWithText("Tus categorías").getUnclippedBoundsInRoot()
@@ -262,21 +324,15 @@ class ReciboScreenTest {
     @Test
     fun olderFiguresCarryANoticeAndAWayToReadAgain() {
         show(
-            month(
-                ReciboHeadline.Remaining,
-                "937.200",
-                ReciboStamp.OnTrack,
-                9,
-                "99.100",
-                stale = true
-            )
+            month(plain("937.200"), ReciboStamp.OnTrack, days = 9, perDay = "99.100", stale = true)
         )
 
         rule.onNodeWithTag(RECIBO_STALE_TAG).assertIsDisplayed()
         rule.onNodeWithText(
             "No pudimos actualizar. Esto es lo último que se leyó y puede no estar al día."
         ).assertIsDisplayed()
-        rule.onNodeWithContentDescription("Te quedan 937.200 pesos. Al día.").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Restante del presupuesto: 937.200 pesos. Al día.")
+            .assertIsDisplayed()
         rule.onNodeWithText("Reintentar").performClick()
 
         assertEquals(listOf<ReciboAction>(ReciboAction.Retry), actions)
@@ -284,7 +340,7 @@ class ReciboScreenTest {
 
     @Test
     fun theCategoryShownBesideReciboIsMarkedAsSelectedAndNoOtherIs() {
-        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack), selected = "b")
+        show(month(plain("937.200"), ReciboStamp.OnTrack), selected = "b")
 
         rule.onNodeWithTag(reciboCategoryTag("b")).assertIsSelected()
         rule.onNodeWithTag(reciboCategoryTag("a")).assertIsNotSelected()
@@ -293,7 +349,7 @@ class ReciboScreenTest {
     @Test
     fun atTwiceTheFontSizeWithVeryLargeAmountsEverythingCanStillBeReached() {
         val huge = "8.998.000.000.000.001"
-        val state = month(ReciboHeadline.Remaining, huge, ReciboStamp.OnTrack, 31, huge).copy(
+        val state = month(minus(huge), ReciboStamp.Over, days = 31, perDay = huge).copy(
             categories = listOf(
                 limited(
                     "a",
@@ -309,8 +365,12 @@ class ReciboScreenTest {
 
         show(state, fontScale = 2f)
 
-        rule.onNodeWithContentDescription("Te quedan $huge pesos. Al día.").assertIsDisplayed()
-        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithContentDescription("Restante del presupuesto: menos $huge pesos. Excedido.")
+            .assertIsDisplayed()
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG)
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertContentDescriptionEquals("$huge pesos por día. 31 días, incluido hoy.")
         rule.onNodeWithContentDescription(
             "Un nombre de categoría largo. Te pasaste por $huge pesos de $huge pesos. Excedido."
         ).performScrollTo().assertIsDisplayed()
@@ -336,7 +396,7 @@ class ReciboScreenTest {
 
     @Test
     fun aLongPressOrAScreenReaderActionOnACategoryOffersToEditItAndPressingStillOpensIt() {
-        show(month(ReciboHeadline.Remaining, "937.200", ReciboStamp.OnTrack, 9, "99.100"))
+        show(month(plain("937.200"), ReciboStamp.OnTrack, days = 9, perDay = "99.100"))
 
         rule.onNodeWithTag(reciboCategoryTag("a")).performScrollTo().performClick()
         rule.onNodeWithTag(reciboCategoryTag("a")).performTouchInput { longClick() }

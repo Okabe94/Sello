@@ -91,7 +91,7 @@ class ExpenseCorrectionJourneyTest {
     /** Opens the app on Mercado's detail and returns the tag of its one expense. */
     private fun openMercado(): String {
         scenario = ActivityScenario.launch(Intent(context, MainActivity::class.java))
-        rule.await(saying("Te quedan 290.000 pesos."))
+        rule.await(saying("Restante del presupuesto: 290.000 pesos."))
         rule.onNodeWithTag(reciboCategoryTag(TestCommands.categoryId("Mercado")))
             .performScrollTo().performClick()
         rule.awaitTag(CATEGORY_DETAIL_TAG)

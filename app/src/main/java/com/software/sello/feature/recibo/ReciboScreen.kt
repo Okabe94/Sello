@@ -3,12 +3,11 @@ package com.software.sello.feature.recibo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,7 +35,6 @@ import com.software.sello.designsystem.component.CategoryCell
 import com.software.sello.designsystem.component.CategoryGrid
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
-import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.LineAction
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
@@ -45,6 +43,8 @@ import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
 import com.software.sello.designsystem.component.Stamp
 import com.software.sello.designsystem.component.StampInk
+import com.software.sello.designsystem.component.TearLine
+import com.software.sello.designsystem.component.v2.AnswerSlip
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -124,33 +124,103 @@ internal fun StaleSlip(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * The month's answer: the label and stamp, the signed remainder, then either what can be
+ * spent per day or how the closed month ended. "Restante del presupuesto: menos 43.700
+ * pesos. Excedido." The minus is a character on the screen and a word when read.
+ */
 @Composable
 private fun SummarySlip(summary: ReciboSummary) {
-    Slip(Modifier.testTag(RECIBO_SUMMARY_TAG)) {
-        FigureHeader(
-            headline = reciboHeadline(summary.figure.headline),
-            figure = summary.figure,
-            style = MoneyStyle.Hero,
-            showStamp = true
-        )
-        if (summary.days != null && summary.perDay != null) {
-            Spacer(Modifier.height(SelloTheme.spacing.xs))
-            LeaderLine(
-                label = stringResource(R.string.recibo_per_day),
-                caption = pluralStringResource(R.plurals.recibo_days, summary.days, summary.days),
-                modifier = Modifier.testTag(RECIBO_PER_DAY_TAG)
-            ) {
-                MoneyText(
-                    summary.perDay,
-                    color = if (summary.perDayExhausted) {
-                        SelloTheme.colors.semantic.loss
-                    } else {
-                        SelloTheme.colors.ink
-                    }
-                )
-            }
+    val label = stringResource(
+        when (summary.label) {
+            ReciboAnswerLabel.Remaining -> R.string.recibo_answer_remaining
+            ReciboAnswerLabel.Spent -> R.string.recibo_answer_spent
         }
+    )
+    val stamp = stampText(summary.stamp)
+    AnswerSlip(
+        label = label,
+        amount = summary.amount,
+        stamp = stamp,
+        ink = stampInk(summary.stamp),
+        modifier = Modifier.testTag(RECIBO_SUMMARY_TAG),
+        description = stringResource(
+            R.string.recibo_answer_description,
+            label,
+            summary.amount.spoken,
+            stamp
+        )
+    ) {
+        summary.closed?.let { ClosedMonthNote(it) }
+        summary.perDay?.let { PerDayFigure(it, over = summary.stamp == ReciboStamp.Over) }
     }
+}
+
+/** Over the limit nothing is left per day: the 0 is in loss ink, and "Excedido" says why. */
+@Composable
+private fun PerDayFigure(perDay: ReciboPerDay, over: Boolean) {
+    val days = pluralStringResource(
+        R.plurals.recibo_days_including_today,
+        perDay.days,
+        perDay.days
+    )
+    val spoken = stringResource(R.string.recibo_per_day_description, perDay.amount.spoken, days)
+    TearLine()
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .testTag(RECIBO_PER_DAY_TAG)
+            .clearAndSetSemantics { contentDescription = spoken }
+    ) {
+        // The unit moves under a figure too wide to share its line.
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            itemVerticalAlignment = Alignment.Bottom
+        ) {
+            MoneyText(
+                perDay.amount,
+                style = MoneyStyle.Card,
+                color = if (over) SelloTheme.colors.semantic.loss else SelloTheme.colors.ink
+            )
+            Text(
+                text = stringResource(R.string.recibo_per_day_unit),
+                style = MaterialTheme.typography.bodyLarge,
+                color = SelloTheme.colors.inkSoft,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+        Text(
+            text = days,
+            style = MaterialTheme.typography.bodySmall,
+            color = SelloTheme.colors.inkSoft
+        )
+    }
+}
+
+/**
+ * Spent and limit are never negative, so no sign is drawn. Read with "pesos" in place of
+ * the middle dot.
+ */
+@Composable
+private fun ClosedMonthNote(closed: ReciboClosedMonth) {
+    val spoken = stringResource(
+        R.string.recibo_month_closed_description,
+        closed.spent.spoken,
+        closed.limit.spoken
+    )
+    Text(
+        text = stringResource(
+            R.string.recibo_month_closed,
+            closed.spent.digits,
+            closed.limit.digits
+        ),
+        style = MaterialTheme.typography.bodyMedium,
+        color = SelloTheme.colors.inkSoft,
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .testTag(RECIBO_CLOSED_TAG)
+            .semantics { contentDescription = spoken }
+    )
 }
 
 /**
@@ -320,6 +390,7 @@ fun reciboCategoryTag(id: String) = "recibo:category:$id"
 
 const val RECIBO_SUMMARY_TAG = "recibo:summary"
 const val RECIBO_PER_DAY_TAG = "recibo:per-day"
+const val RECIBO_CLOSED_TAG = "recibo:closed"
 const val RECIBO_CATEGORIES_TAG = "recibo:categories"
 const val RECIBO_ADD_CATEGORY_TAG = "recibo:add-category"
 const val RECIBO_LOADING_TAG = "recibo:loading"

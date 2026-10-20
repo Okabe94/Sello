@@ -71,10 +71,10 @@ class ReciboRenderModelTest {
         // days that is 53.455,5, shown as 53.450. Below the limits: Al día.
         assertEquals(
             ReciboSummary(
-                BudgetFigure(ReciboHeadline.Remaining, plain("481.100"), ReciboStamp.OnTrack),
-                days = 9,
-                perDay = plain("53.450"),
-                perDayExhausted = false
+                ReciboAnswerLabel.Remaining,
+                plain("481.100"),
+                ReciboStamp.OnTrack,
+                perDay = ReciboPerDay(plain("53.450"), days = 9)
             ),
             state.summary
         )
@@ -157,7 +157,7 @@ class ReciboRenderModelTest {
     }
 
     @Test
-    fun aFinishedMonthSaysWhatWasLeftOrByHowMuchItWentOverAndNothingPerDay() {
+    fun aFinishedMonthShowsWhatWasLeftSignedAndWhatItSpentOfItsLimitButNothingPerDay() {
         val september = YearMonth.of(2026, 9)
         val within = shown(
             SnapshotState.Ready(
@@ -178,19 +178,19 @@ class ReciboRenderModelTest {
         // Limits 1.200.000: 700.000 leaves 500.000; 1.250.000 is 50.000 over.
         assertEquals(
             ReciboSummary(
-                BudgetFigure(ReciboHeadline.LeftOver, plain("500.000"), ReciboStamp.WithinLimit),
-                days = null,
-                perDay = null,
-                perDayExhausted = false
+                ReciboAnswerLabel.Remaining,
+                plain("500.000"),
+                ReciboStamp.WithinLimit,
+                closed = ReciboClosedMonth(spent = plain("700.000"), limit = plain("1.200.000"))
             ),
             within.summary
         )
         assertEquals(
             ReciboSummary(
-                BudgetFigure(ReciboHeadline.Overspent, plain("50.000"), ReciboStamp.OverLimit),
-                days = null,
-                perDay = null,
-                perDayExhausted = false
+                ReciboAnswerLabel.Remaining,
+                minus("50.000"),
+                ReciboStamp.OverLimit,
+                closed = ReciboClosedMonth(spent = plain("1.250.000"), limit = plain("1.200.000"))
             ),
             over.summary
         )
@@ -217,8 +217,13 @@ class ReciboRenderModelTest {
         )
 
         assertEquals(
-            BudgetFigure(ReciboHeadline.LeftOver, plain("0"), ReciboStamp.WithinLimit),
-            state.summary.figure
+            ReciboSummary(
+                ReciboAnswerLabel.Remaining,
+                plain("0"),
+                ReciboStamp.WithinLimit,
+                closed = ReciboClosedMonth(spent = plain("300.000"), limit = plain("300.000"))
+            ),
+            state.summary
         )
         assertEquals(false, state.categories.single().over)
         assertEquals(plain("0"), state.categories.single().cellAmount)
@@ -232,10 +237,10 @@ class ReciboRenderModelTest {
 
         assertEquals(
             ReciboSummary(
-                BudgetFigure(ReciboHeadline.Remaining, plain("0"), ReciboStamp.AtLimit),
-                days = 9,
-                perDay = plain("0"),
-                perDayExhausted = false
+                ReciboAnswerLabel.Remaining,
+                plain("0"),
+                ReciboStamp.AtLimit,
+                perDay = ReciboPerDay(plain("0"), days = 9)
             ),
             state.summary
         )
@@ -259,7 +264,7 @@ class ReciboRenderModelTest {
     }
 
     @Test
-    fun anOverspentMonthInProgressHasNothingLeftPerDayAndSaysSo() {
+    fun anOverspentMonthInProgressShowsAMinusAndStillSaysZeroForItsLastDay() {
         val state = shown(
             SnapshotState.Ready(
                 monthOf("2026-10-31", listOf(coffee), spent(2, "2026-10", 300_001))
@@ -268,10 +273,10 @@ class ReciboRenderModelTest {
 
         assertEquals(
             ReciboSummary(
-                BudgetFigure(ReciboHeadline.Overspent, plain("1"), ReciboStamp.Over),
-                days = 1,
-                perDay = plain("0"),
-                perDayExhausted = true
+                ReciboAnswerLabel.Remaining,
+                minus("1"),
+                ReciboStamp.Over,
+                perDay = ReciboPerDay(plain("0"), days = 1)
             ),
             state.summary
         )
@@ -284,12 +289,7 @@ class ReciboRenderModelTest {
         )
 
         assertEquals(
-            ReciboSummary(
-                BudgetFigure(ReciboHeadline.Spent, plain("80.000"), ReciboStamp.NoLimit),
-                days = null,
-                perDay = null,
-                perDayExhausted = false
-            ),
+            ReciboSummary(ReciboAnswerLabel.Spent, plain("80.000"), ReciboStamp.NoLimit),
             state.summary
         )
     }
@@ -329,7 +329,7 @@ class ReciboRenderModelTest {
         )
 
         // 9.000.000.000.000.000 less 1.999.999.999.999.
-        assertEquals(plain("8.998.000.000.000.001"), state.summary.figure.amount)
+        assertEquals(plain("8.998.000.000.000.001"), state.summary.amount)
         assertEquals(plain("1.999.999.999.999"), state.categories.single().spent)
     }
 

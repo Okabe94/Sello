@@ -102,11 +102,17 @@
     <string name="recibo_stamp_paused">En pausa</string>
     <string name="recibo_stamp_not_set">Sin configurar</string>
     <string name="recibo_summary_description">%1$s %2$s. %3$s.</string>
-    <plurals name="recibo_days">
-        <item quantity="one">Para hoy</item>
-        <item quantity="other">Para %1$d días</item>
+    <string name="recibo_answer_remaining">Restante del presupuesto</string>
+    <string name="recibo_answer_spent">Has gastado este mes</string>
+    <string name="recibo_answer_description">%1$s: %2$s. %3$s.</string>
+    <string name="recibo_per_day_unit">por día</string>
+    <plurals name="recibo_days_including_today">
+        <item quantity="one">%1$d día, incluido hoy</item>
+        <item quantity="other">%1$d días, incluido hoy</item>
     </plurals>
-    <string name="recibo_per_day">Puedes gastar al día</string>
+    <string name="recibo_per_day_description">%1$s por día. %2$s.</string>
+    <string name="recibo_month_closed">Mes cerrado · gastaste %1$s de %2$s.</string>
+    <string name="recibo_month_closed_description">Mes cerrado. Gastaste %1$s de %2$s.</string>
     <string name="recibo_categories_title">Tus categorías</string>
     <string name="recibo_cell_limited">%1$s. %2$s %3$s de %4$s. %5$s.</string>
     <string name="recibo_cell_open">%1$s. %2$s %3$s. %4$s.</string>

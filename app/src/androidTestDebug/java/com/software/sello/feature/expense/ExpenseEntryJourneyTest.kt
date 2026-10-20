@@ -145,7 +145,7 @@ class ExpenseEntryJourneyTest {
         rule.onNodeWithTag(ENTRY_DONE_TAG).performScrollTo().performClick()
 
         rule.awaitTag(RECIBO_CATEGORIES_TAG)
-        rule.onNodeWithContentDescription("Has gastado 10.000 pesos. Sin límite.")
+        rule.onNodeWithContentDescription("Has gastado este mes: 10.000 pesos. Sin límite.")
             .assertIsDisplayed()
         rule.onNodeWithContentDescription("Mercado. Has gastado 10.000 pesos. Sin límite.")
             .performScrollTo().assertIsDisplayed()

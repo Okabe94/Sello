@@ -54,22 +54,28 @@ class ReciboRenderModel(private val money: MoneyFormatter) {
     private fun summary(snapshot: MonthlySnapshot): ReciboSummary =
         when (val overall = snapshot.overall) {
             OverallBudget.NoLimit -> ReciboSummary(
-                BudgetFigure(
-                    ReciboHeadline.Spent,
-                    money.format(snapshot.spent),
-                    ReciboStamp.NoLimit
-                ),
-                days = null,
-                perDay = null,
-                perDayExhausted = false
+                ReciboAnswerLabel.Spent,
+                money.format(snapshot.spent),
+                ReciboStamp.NoLimit
             )
 
-            is OverallBudget.Limited -> ReciboSummary(
-                figure = figure(overall.budget),
-                days = overall.allowance?.availableDays,
-                perDay = overall.allowance?.let { money.format(it.amount) },
-                perDayExhausted = overall.allowance != null && overall.budget.isOverspent
-            )
+            is OverallBudget.Limited -> {
+                val budget = overall.budget
+                ReciboSummary(
+                    label = ReciboAnswerLabel.Remaining,
+                    amount = money.format(budget.remaining),
+                    stamp = figure(budget).stamp,
+                    perDay = overall.allowance?.let {
+                        ReciboPerDay(money.format(it.amount), it.availableDays)
+                    },
+                    // Spent, limit and remainder all come from this one budget.
+                    closed = if (budget.standing is BudgetStanding.Past) {
+                        ReciboClosedMonth(money.format(budget.spent), money.format(budget.limit))
+                    } else {
+                        null
+                    }
+                )
+            }
         }
 
     private fun category(line: CategoryMonth): ReciboCategory {

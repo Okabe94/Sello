@@ -108,9 +108,11 @@ recreation.
 
 **Entry:** default destination and first tab.
 
-**Behavior:** the selected month drives a summary slip (answer-first amount and
-verdict stamp, plus the daily allowance in the current month when a finite overall
-limit exists) and the category grid. Categories can be ordered by most used,
+**Behavior:** the selected month drives the answer slip ("Restante del presupuesto"
+with the status stamp and the signed remainder; in the current month, under a tear
+line, what can be spent a day and the days left including today; in a past month,
+"Mes cerrado · gastaste … de …"; with no finite limit, "Has gastado este mes") and
+the category grid. Categories can be ordered by most used,
 alphabetically, amount spent, limit or latest expense added, in either direction;
 the first-run default is most used, descending. A cell opens detail; long press and
 accessibility actions offer edit. The top bar has the settings action and

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
+import com.software.sello.designsystem.component.v2.AnswerSlip
 import com.software.sello.designsystem.component.v2.CompletedGoalRow
 import com.software.sello.designsystem.component.v2.FittedMoneyText
 import com.software.sello.designsystem.component.v2.GoalCard
@@ -98,6 +99,27 @@ class V2ComponentTest {
             rule.onNodeWithContentDescription("más 999.999.999.999 pesos").assertIsDisplayed()
             assertEquals(scheme, 1, results.last().lineCount)
             assertTrue(scheme, !results.last().hasVisualOverflow)
+        }
+    }
+
+    @Test
+    fun anAnswerSlipWithADescriptionIsReadAsThatOneSentenceAndItsDetailOnItsOwn() {
+        rule.inEveryScheme(fontScale = 2f, width = 320.dp, content = {
+            AnswerSlip(
+                "Restante del presupuesto",
+                MoneyTextValue(MoneySign.Minus, "", "999.999.999.999", "menos 999.999.999.999"),
+                "Excedido",
+                StampInk.Over,
+                description = "Restante del presupuesto: menos 999.999.999.999. Excedido."
+            ) { Text("detalle", Modifier.testTag("detail")) }
+        }) {
+            rule.onNodeWithContentDescription(
+                "Restante del presupuesto: menos 999.999.999.999. Excedido."
+            ).assertIsDisplayed()
+            // Only the sentence: the label and stamp are not read a second time.
+            rule.onNodeWithText("Restante del presupuesto").assertDoesNotExist()
+            rule.onNodeWithText("Excedido").assertDoesNotExist()
+            rule.onNodeWithTag("detail").assertTextContains("detalle")
         }
     }
 

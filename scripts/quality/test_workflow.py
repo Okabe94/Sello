@@ -82,6 +82,21 @@ class HostedWorkflowTests(unittest.TestCase):
         self.assertIn("dependency-graph: disabled", cache)
         self.assertIn("add-job-summary-as-pr-comment: never", cache)
 
+    def test_host_pushes_and_full_runs_have_separate_singleton_cache_profiles(self):
+        # Matrix context is part of setup-gradle's immutable key. A host push
+        # must not occupy the key used to publish the nightly device build.
+        profile = re.search(r"(?m)^        cache-profile:\n((?:          .+\n)+)", self.code)
+        self.assertIsNotNone(profile, "Host and device runs still share one immutable cache key")
+        self.assertEqual(
+            ["- ${{ github.event_name == 'push' && 'host' || 'device' }}"],
+            [line.strip() for line in profile.group(1).splitlines()],
+        )
+        strategy = self.code.split("    strategy:\n", 1)[1].split("    env:\n", 1)[0]
+        self.assertEqual("      matrix:\n        cache-profile:\n" + profile.group(1), strategy)
+        cache = self.steps["Set up Gradle caching"]
+        self.assertNotIn("workflow-job-context:", cache)  # Let the action read the real matrix.
+        self.assertNotIn("gradle-home-cache-strict-match:", cache)  # Retain cross-profile fallback.
+
     def test_gradle_task_cache_is_enabled_alongside_configuration_cache(self):
         properties = GRADLE_PROPERTIES.read_text(encoding="utf-8")
         self.assertRegex(properties, r"(?m)^org\.gradle\.caching=true\s*$")

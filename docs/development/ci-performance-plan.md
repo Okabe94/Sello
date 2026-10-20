@@ -23,12 +23,12 @@ own revisions, not a controlled before/after benchmark or a promised saving.
 
 ## Options and order
 
-1. **Cache Gradle downloads and build outputs — implemented locally; hosted
-   measurement pending.** Restore the
+1. **Cache Gradle downloads and build outputs — implemented; hosted reuse
+   observed.** Restore the
    wrapper, dependencies, compiled build scripts and local task-output cache
    on hosted runners. Enable Gradle build caching, track files read directly
    by tests, and let only trusted `main` runs update shared entries. This targets
-   the largest measured cost; quantify the saving after hosted runs exist.
+   the largest measured cost; initial hosted measurements are recorded below.
 2. **Tune build parallelism and emulator provisioning — pending.** Benchmark
    bounded worker/heap settings, build/emulator contention and clean API-30 AVD
    caching. Preserve all task selections and measure net wall time and cost.
@@ -72,8 +72,8 @@ follow-up work.
 - [x] Keep cache/setup reporting in the job summary and raw Gradle outcomes in
   retained gate logs. `FROM-CACHE`, `UP-TO-DATE` and executed are distinct.
 - [x] Verify focused negative/configuration checks, cache reuse and invalidation.
-- [x] Document the setup and actual focused verification. Hosted cache restore/save and
-  speedup remain unverified until the workflow runs on GitHub.
+- [x] Document the setup and actual focused verification. Initial hosted cache
+  restore/save and timing observations are now recorded below.
 
 ### Tool choice
 
@@ -132,3 +132,73 @@ After an authorized merge populates the `main` cache, compare several equivalent
 G1 and G2 hosted runs with the baseline. Record wall time, restore/save overhead,
 cache outcomes, test counts, warnings and runner cost. A cold cache must still pass
 the full gate. Do not claim a measured hosted speedup from local cache hits.
+
+### Initial hosted results
+
+PR #59 merged as `626a131`. Its first
+[main G1 run](https://github.com/Okabe94/Sello/actions/runs/39374409507) started
+without a cache, passed and saved the shared Gradle state.
+
+The [cold candidate G2](https://github.com/Okabe94/Sello/actions/runs/39372893988)
+and [warm nightly G2](https://github.com/Okabe94/Sello/actions/runs/39424800578)
+have the same input fingerprint
+`1cc09bf96d6a0b8dad4ffe4dd957eefaeeb389430bd273f5916b4d03dda92be9`:
+
+- Job: 16m10s cold versus 9m12s warm, a 6m58s (43%) observed reduction.
+- Host phase: 8m21s versus 48s; task-cache hits increased from 37 to 221.
+- Device phase: 6m01s versus 6m10s; all 533 device tests executed freshly.
+- Both passed with 522 host results, zero test failures/errors/skips and 33 lint
+  warnings. Warm host-test results were restored from cache.
+
+This is one matched pair, not a repeated benchmark. A later code-changing
+[main G1 run](https://github.com/Okabe94/Sello/actions/runs/39431339845) restored
+the cache, finished in 5m01s and restored 175 tasks while rebuilding affected UI
+modules. Its changed inputs prevent a controlled timing comparison with the pair.
+
+## Follow-up: retain device-build cache outputs
+
+Owned scope: the Quality workflow, its regression checks, this plan and the setup
+guide. Give host pushes and full-device runs distinct cache identities within the
+existing single `quality` job. Preserve gate selection, task lists, fresh device
+results, action pins and read-only PR access. No app code or ticket status changes
+are included. Hosted cache publication and net runtime savings need separate
+measurement after this configuration reaches `main`.
+
+The pinned action's [key and restore documentation](https://github.com/gradle/actions/blob/0723195856401067f7a2779048b490ace7a47d7c/docs/setup-gradle.md#cache-keys)
+and source confirm that workflow/matrix context is hashed into each key. The
+nightly run above restored the exact key already saved by the host push and logged
+`Cache hit occurred on the cache key ... not saving cache.` Its newly built
+instrumented-test outputs therefore did not update that saved Gradle state.
+
+The local implementation uses a singleton `cache-profile` matrix:
+
+- `push` uses `host`; the workflow only accepts pushes to `main`.
+- PR, scheduled and manual runs use `device`. Document-only PRs still run G1;
+  the profile changes cache preference, not gate selection.
+- The job ID/name stay `quality`. Exactly one matrix entry runs for each event.
+- Trusted `main` writes and read-only PR/non-main access stay unchanged. Default
+  restore fallback can use the other profile or the old unprofiled entries.
+- No internal action inputs, custom cache backend, dependency upgrades, secrets,
+  or cached device-test results are introduced.
+
+A PR prefers the device-profile entry even when a newer host-profile entry exists.
+This can trade newer host outputs for reusable instrumented-build outputs; measure
+net job time with real changes rather than assuming every PR becomes faster.
+Repeated runs of the same profile/SHA still use immutable entries.
+
+The focused regression check first fails because host/device runs share a key,
+then passes with separate singleton profiles. Existing tests continue to check
+event/gate selection, the one required job, cache write policy and evidence checks.
+Run the integrated G2 gate on the final local inputs; its execution report and
+result belong to that tested snapshot, not to a hosted cache-publication claim.
+
+Hosted follow-up after merge:
+
+1. Confirm the main push writes a host-profile entry, using existing cache fallback
+   if necessary; retain its G1 results.
+2. Run G2 on the same main SHA. Confirm it falls back to available state and saves
+   a distinct device-profile key, including cacheable instrumented-build outputs.
+3. Run G2 again at that SHA and verify device-build task cache hits increase while
+   all device tests still execute freshly. Compare net time including restore/save.
+4. Check a source-changing PR restores the device profile, reruns affected tasks
+   and reports the unchanged required `quality` check. Retain warnings and failures.

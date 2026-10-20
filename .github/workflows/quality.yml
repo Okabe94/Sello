@@ -27,9 +27,15 @@ concurrency:
 
 jobs:
   quality:
-    name: quality
+    # Refer to matrix context so GitHub does not append the profile to the check name.
+    name: ${{ matrix.cache-profile && 'quality' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      matrix:
+        # One entry per run: separate immutable host/device cache keys, one quality check.
+        cache-profile:
+          - ${{ github.event_name == 'push' && 'host' || 'device' }}
     env:
       # Pull requests are checked out as the merge commit; BASE is what it merges into.
       # A nightly or manual run has neither and compares the commit with itself.

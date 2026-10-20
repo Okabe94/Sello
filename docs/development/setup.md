@@ -155,7 +155,8 @@ of a second Gradle cache configuration so the two actions cannot compete.
 The job has one `cache-profile` matrix entry per run: `host` for pushes to `main`,
 `device` for PRs, nightly and manual runs. This is a cache preference; the runner
 still decides the actual G1/G2 gate, including G1 for document-only PRs. The fixed
-job name remains `quality`, and the matrix does not add a second runner.
+job name explicitly references matrix context and resolves to `quality`, so GitHub
+does not append a profile suffix; the matrix does not add a second runner.
 `setup-gradle` includes matrix context in its immutable cache key, so a host push
 cannot occupy the key needed to save a later nightly device build at the same SHA.
 Normal cross-profile restore fallback remains enabled for cold profiles and the

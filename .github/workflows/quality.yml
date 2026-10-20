@@ -27,7 +27,8 @@ concurrency:
 
 jobs:
   quality:
-    name: quality
+    # Refer to matrix context so GitHub does not append the profile to the check name.
+    name: ${{ matrix.cache-profile && 'quality' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:

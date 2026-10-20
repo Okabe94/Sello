@@ -175,7 +175,8 @@ The local implementation uses a singleton `cache-profile` matrix:
 - `push` uses `host`; the workflow only accepts pushes to `main`.
 - PR, scheduled and manual runs use `device`. Document-only PRs still run G1;
   the profile changes cache preference, not gate selection.
-- The job ID/name stay `quality`. Exactly one matrix entry runs for each event.
+- The job ID/name stay `quality`. The name expression references matrix context
+  to prevent GitHub's automatic profile suffix. Exactly one entry runs per event.
 - Trusted `main` writes and read-only PR/non-main access stay unchanged. Default
   restore fallback can use the other profile or the old unprofiled entries.
 - No internal action inputs, custom cache backend, dependency upgrades, secrets,

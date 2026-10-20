@@ -30,7 +30,9 @@ class HostedWorkflowTests(unittest.TestCase):
 
     def test_the_one_job_is_the_required_check(self):
         self.assertEqual(1, len(re.findall(r"(?m)^  \w[\w-]*:\n    name: ", self.code.split("jobs:\n", 1)[1])))
-        self.assertIn("    name: quality\n", self.code)
+        # GitHub appends matrix values to a literal job name. Referencing the
+        # matrix explicitly prevents that suffix and preserves the required check.
+        self.assertIn("    name: ${{ matrix.cache-profile && 'quality' }}\n", self.code)
 
     def test_a_pull_request_asks_the_runner_which_gate_it_needs(self):
         plan = self.steps["Decide what this run verifies"]

@@ -87,7 +87,7 @@ class WalkingSliceJourneyTest {
     private fun startWithMercado(): ActivityScenario<MainActivity> {
         val app = launch()
         rule.awaitTag(RECIBO_FIRST_RUN_TAG)
-        rule.onNodeWithText("Crear categorías").performClick()
+        rule.onNodeWithText("Crear categoría").performClick()
         rule.awaitDescription("Nombre")
         rule.onNodeWithContentDescription("Nombre").performTextInput("Mercado")
         rule.onNodeWithContentDescription("Límite en pesos").performScrollTo()

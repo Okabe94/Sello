@@ -200,6 +200,7 @@ fun V2StatesExample() {
             strings.getString(
                 R.string.v2_demo_crea_una_categoria_para_lo_que_importa
             ),
+            SelloIcon.ReceiptLong,
             actionLabel = strings.getString(R.string.v2_demo_crear_categoria),
             onAction = {
             }
@@ -215,7 +216,8 @@ fun V2StatesExample() {
             ),
             {
             },
-            title = strings.getString(R.string.v2_demo_no_pudimos_leer_tu_mes)
+            title = strings.getString(R.string.v2_demo_no_pudimos_leer_tu_mes),
+            icon = SelloIcon.Error
         )
         SlipSkeleton()
         Slip(Modifier.fillMaxWidth(), pinked = false) {

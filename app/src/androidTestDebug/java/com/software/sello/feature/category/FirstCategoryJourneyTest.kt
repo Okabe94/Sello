@@ -78,7 +78,7 @@ class FirstCategoryJourneyTest {
 
     /** Opens the form from the empty Recibo and waits until it is ready to type in. */
     private fun openFirstForm() {
-        rule.onNodeWithText("Crear categorías").performClick()
+        rule.onNodeWithText("Crear categoría").performClick()
         rule.awaitDescription("Nombre")
     }
 
@@ -91,7 +91,7 @@ class FirstCategoryJourneyTest {
     /** From Recibo, through the form, back to Recibo with the category listed. */
     private fun create(name: String, limit: String? = null) {
         val open = if (TestData.count("category") == 0L) {
-            rule.onNodeWithText("Crear categorías")
+            rule.onNodeWithText("Crear categoría")
         } else {
             rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo()
         }

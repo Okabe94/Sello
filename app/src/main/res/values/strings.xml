@@ -38,6 +38,9 @@
     </string-array>
     <string name="month_picker_open_current">Cambiar de mes. Mes actual: %1$s</string>
     <string name="month_picker_open_selected">Cambiar de mes. Mes seleccionado: %1$s</string>
+    <string name="month_ribbon_viewing">Estás viendo %1$s</string>
+    <string name="month_ribbon_month_of_year">%1$s de %2$d</string>
+    <string name="month_ribbon_return">Volver a %1$s</string>
     <string name="month_picker_previous_year">Año anterior</string>
     <string name="month_picker_next_year">Año siguiente</string>
     <string name="month_picker_title">Elige un mes</string>

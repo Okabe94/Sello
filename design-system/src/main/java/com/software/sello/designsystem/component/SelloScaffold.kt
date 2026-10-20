@@ -56,8 +56,9 @@ enum class Blotter(val height: Dp) { None(0.dp), Short(100.dp), Tall(132.dp) }
  * each pane scrolls on its own. Both bottom controls step aside for the system keyboard.
  * A [notice] is drawn over the bottom of the content, above the dock, and moves nothing.
  * A [topBar] takes the place of the title row ([title], [subtitle], [titleContent],
- * [navigationIcon] and [actions] then go unused) and a [ribbon], if given, sits on the
- * band under it; the band grows with them, so the content still starts on the band.
+ * [navigationIcon] and [actions] then go unused). A [ribbon], if given, sits on the band
+ * under the top bar or the title row; the band grows with it, so the content still
+ * starts on the band.
  * The scaffold holds no state: selection, the month and what a pane shows are the app's.
  *
  * @param blotterScroll how far, in pixels, the content has scrolled. The band shrinks
@@ -98,11 +99,12 @@ fun SelloScaffold(
         val bandLeft = blotter.height - scrolled
         val onBand = blotter != Blotter.None && bandLeft > 0.dp
         val statusBar = windowInsets.asPaddingValues().calculateTopPadding()
-        // The status bar, the v2 bar and any ribbon, as last measured.
+        // The status bar, the bar and any ribbon, as last measured.
         var topArea by remember { mutableStateOf(statusBar + TopBarHeight) }
-        if (topBar != null) {
-            // A v2 bar always sits on the band; the band then reaches as far under the
-            // content as it does under the title row.
+        val measured = topBar != null || ribbon != null
+        if (measured) {
+            // A v2 bar or a ribbon always sits on the band; the band then reaches as far
+            // under the content as it does under the title row alone.
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -142,14 +144,25 @@ fun SelloScaffold(
                     .fillMaxHeight()
                     .windowInsetsPadding(windowInsets.only(sides))
             ) {
-                if (topBar != null) {
+                if (measured) {
                     CompositionLocalProvider(LocalContentColor provides colors.onBand) {
                         Column(
                             Modifier
                                 .onSizeChanged { topArea = with(density) { it.height.toDp() } }
                                 .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
                         ) {
-                            topBar()
+                            if (topBar != null) {
+                                topBar()
+                            } else {
+                                TopBar(
+                                    title = title,
+                                    subtitle = subtitle,
+                                    titleContent = titleContent,
+                                    navigationIcon = navigationIcon,
+                                    actions = actions,
+                                    modifier = Modifier
+                                )
+                            }
                             if (ribbon != null) {
                                 Box(
                                     Modifier

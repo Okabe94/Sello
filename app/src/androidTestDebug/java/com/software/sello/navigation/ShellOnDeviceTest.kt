@@ -205,6 +205,36 @@ class ShellOnDeviceTest {
     }
 
     @Test
+    fun aPastMonthShowsTheRibbonOnReciboAndResumenThroughRecreationAndVolverReturns() {
+        val app = launchToRecibo()
+        val revision = TestData.long("SELECT revision FROM profile")
+        rule.onNodeWithTag(PAST_MONTH_RIBBON_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
+        rule.onNodeWithContentDescription(context.getString(R.string.month_picker_previous_year))
+            .performClick()
+        val march = YearMonth.of(current.year - 1, 3)
+        rule.onNodeWithContentDescription(title(march)).performClick()
+        val viewing = "Estás viendo marzo de ${march.year}"
+        val back = "Volver a " + context.resources
+            .getStringArray(R.array.month_names)[current.monthValue - 1].lowercase()
+
+        rule.onNodeWithText(viewing).assertIsDisplayed()
+        app.recreate()
+        rule.awaitTag(PAST_MONTH_RIBBON_TAG)
+        rule.onNodeWithText(viewing).assertIsDisplayed()
+        rule.onNodeWithText(context.getString(R.string.tab_resumen)).performClick()
+        rule.awaitTag("resumen.income")
+        rule.onNodeWithText(viewing).assertIsDisplayed()
+        rule.onNodeWithText(back).performClick()
+
+        rule.onNodeWithTag(PAST_MONTH_RIBBON_TAG).assertDoesNotExist()
+        monthShown(current)
+        assertEquals(current, shell().state.value.selectedMonth)
+        assertEquals(revision, TestData.long("SELECT revision FROM profile"))
+        assertEquals(0, financialRows())
+    }
+
+    @Test
     fun theSelectedMonthAndTheOpenPickerSurviveTheScreenBeingRecreated() {
         val app = launchToRecibo()
         val march = YearMonth.of(current.year - 1, 3)

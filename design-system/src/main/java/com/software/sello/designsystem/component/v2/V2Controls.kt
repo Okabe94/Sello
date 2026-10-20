@@ -291,7 +291,9 @@ fun GoalsBandTotal(
 /**
  * Says which past month is shown and goes back in one tap. A translucent pill meant to
  * sit on the band, under the [V2MonthBar]. Bold spans in [message] name the month. Plain
- * presentation data only; no selected-month or clock logic.
+ * presentation data only; no selected-month or clock logic. At large text the return
+ * goes under the message, which keeps the width; beside it the message would be
+ * squeezed into a column of letters.
  */
 @Composable
 fun PastMonthRibbon(
@@ -301,26 +303,20 @@ fun PastMonthRibbon(
     modifier: Modifier = Modifier
 ) {
     val colors = SelloTheme.colors
-    Row(
-        modifier.fillMaxWidth()
-            .background(colors.onBand.copy(alpha = 0.16f), CircleShape)
-            .padding(start = 12.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    val stacked = LocalDensity.current.fontScale >= 1.3f
+    val info: @Composable (Modifier) -> Unit = { textModifier ->
         Icon(SelloIcon.Event.painter(), null, Modifier.size(20.dp), tint = colors.onBand)
         Text(
             message,
             color = colors.onBand,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f).semantics {
-                liveRegion =
-                    LiveRegionMode.Polite
-            }
+            modifier = textModifier.semantics { liveRegion = LiveRegionMode.Polite }
         )
+    }
+    val back: @Composable (Modifier) -> Unit = { buttonModifier ->
         Text(
             returnLabel,
-            modifier = Modifier
+            modifier = buttonModifier
                 .minimumInteractiveComponentSize()
                 .heightIn(min = 40.dp)
                 .clip(CircleShape)
@@ -333,6 +329,31 @@ fun PastMonthRibbon(
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1
         )
+    }
+    if (stacked) {
+        Column(
+            modifier.fillMaxWidth()
+                .background(colors.onBand.copy(alpha = 0.16f), RoundedCornerShape(20.dp))
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) { info(Modifier.weight(1f)) }
+            back(Modifier.align(Alignment.End))
+        }
+    } else {
+        Row(
+            modifier.fillMaxWidth()
+                .background(colors.onBand.copy(alpha = 0.16f), CircleShape)
+                .padding(start = 12.dp, top = 4.dp, end = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            info(Modifier.weight(1f))
+            back(Modifier)
+        }
     }
 }
 

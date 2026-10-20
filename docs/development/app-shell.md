@@ -55,8 +55,7 @@ and Resumen the top bar is the v2 `V2MonthBar` (SELLO-068): **Octubre** large, a
 **2026** that hides from font scale 1.3, and the chevron; the button keeps the spoken
 "Cambiar de mes. Mes actual: …" label and opens the same picker. Pushed screens with a
 back arrow (Configuración, income history, a category opened on a phone) keep their
-titled `MonthSwitcher` bar. The scaffold's `ribbon` slot under the bar is empty until
-SELLO-064 shows the past-month ribbon. The month
+titled `MonthSwitcher` bar. The month
 picker is a bottom sheet, opened whole and scrollable so a large font or short window
 cannot cut months off; in a window wide enough it is a side panel.
 
@@ -64,6 +63,18 @@ cannot cut months off; in a window wide enough it is a side panel.
 current month's cell from whatever year is shown, so it follows a month that turns
 while the picker is open. A screen reader hears the destination, "Ir al mes actual:
 Octubre 2026". With a large font it goes under the title instead of being cut.
+
+While an earlier month is selected, every screen that shows the month (Recibo,
+Resumen, income history and a category's detail, but not Configuración) has the
+`PastMonthRibbon` under its bar (SELLO-064): **Estás viendo septiembre**, with the year
+when it is not the current one's ("septiembre de 2025"), and **Volver a octubre**. The
+message is a polite live region. The button sends `ReturnToCurrentMonth`, which selects
+the month the financial clock says is current when it is handled, so a tap just after
+midnight cannot pin the month that has just ended. The ribbon is drawn from the shell's
+selected and current months and keeps nothing of its own: it survives rotation and
+process death with the selection and disappears when the current month is selected,
+including when the month turns. The scaffold draws it on the band under either the v2
+bar or a titled bar, and the band grows with it.
 
 ## What is said about a correction
 

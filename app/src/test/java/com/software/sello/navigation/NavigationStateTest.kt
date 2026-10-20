@@ -378,4 +378,46 @@ class NavigationStateTest {
         assertEquals(2026, reopened)
         assertEquals(YearMonth.of(2026, 11), shell.state.value.selectedMonth)
     }
+
+    @Test
+    fun theRibbonsReturnSelectsTheCurrentMonthAndThenFollowsTheClock() {
+        val shell = shell()
+        shell.onAction(ShellAction.PickMonth(august))
+
+        shell.onAction(ShellAction.ReturnToCurrentMonth)
+        val back = shell.state.value.selectedMonth
+        clock.goTo("2026-11-01")
+
+        assertEquals(october, back)
+        assertEquals(YearMonth.of(2026, 11), shell.state.value.selectedMonth)
+    }
+
+    @Test
+    fun aReturnTappedAfterMidnightGoesToTheNewMonthNotTheOneShownBefore() {
+        val shell = shell()
+        shell.onAction(ShellAction.PickMonth(august))
+        // The ribbon was drawn while October was current; the month turns before the tap.
+        clock.goTo("2026-11-01")
+
+        shell.onAction(ShellAction.ReturnToCurrentMonth)
+
+        assertEquals(
+            YearMonth.of(2026, 11) to YearMonth.of(2026, 11),
+            shell.state.value.run { currentMonth to selectedMonth }
+        )
+    }
+
+    @Test
+    fun aMonthReturnedFromStaysTheCurrentOneAfterTheProcessIsKilled() {
+        val saved = SavedStateHandle()
+        val shell = shell(saved)
+        shell.onAction(ShellAction.PickMonth(august))
+        val past = shell(saved.afterProcessDeath()).state.value.selectedMonth
+
+        shell.onAction(ShellAction.ReturnToCurrentMonth)
+        val restored = shell(saved.afterProcessDeath()).state.value.selectedMonth
+
+        assertEquals(august, past)
+        assertEquals(october, restored)
+    }
 }

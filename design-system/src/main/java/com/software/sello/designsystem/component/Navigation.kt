@@ -63,7 +63,9 @@ class SelloNavigation(
 
 /**
  * The action that starts an entry from anywhere: the dock above the tabs, or the "+" on
- * a rail. [label] is also what it is called by a screen reader.
+ * a rail. [label] is also what it is called by a screen reader; the dock shows
+ * [actionLabel]. The v2 dock offers no long press, so [onLongClick] is only used by the
+ * v1 `EntryDock`, which SELLO-073 retires.
  */
 @Immutable
 class SelloDock(

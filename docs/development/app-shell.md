@@ -50,7 +50,10 @@ detail screen, then Resumen returns to Recibo, and Back on Recibo leaves the app
 ## Windows
 
 `ShellScreen` uses the design system's `SelloScaffold`, which keeps content clear of
-the system bars and hides the dock and tab bar while the keyboard is open. On Recibo
+the system bars and hides the dock and tab bar while the keyboard is open. The dock is
+the v2 full-width **+ Anotar** button, read as "Anotar un gasto", and the tab bar is
+`V2NavigationBar`, which marks the selected tab with a `brandSoft` pill behind its icon
+(SELLO-065); in a short or wide window the rail keeps its own "+". On Recibo
 and Resumen the top bar is the v2 `V2MonthBar` (SELLO-068): **Octubre** large, a small
 **2026** that hides from font scale 1.3, and the chevron; the button keeps the spoken
 "Cambiar de mes. Mes actual: …" label and opens the same picker. Pushed screens with a

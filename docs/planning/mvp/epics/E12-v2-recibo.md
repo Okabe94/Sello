@@ -593,9 +593,10 @@ The components and their tests exist in `designsystem/component/v2/V2Controls.kt
 
 ### Delivery evidence
 
-- **Revision:** tested snapshot is the uncommitted `sello-068-v2-month-bar` working tree
-  on `9328923ee91bf47c7b5f8942e84366c5d3983d42`; it is identified exactly by the retained
-  input fingerprint below. The commit and pull request follow this evidence; no claim
+- **Revision:** tested snapshot is the `sello-068-v2-month-bar` working tree on its
+  merge of `main` at `2694b16` (bringing in #59, Gradle caching, with no overlap), with
+  only the ticket status uncommitted; it is identified exactly by the retained input
+  fingerprint below. The commit and pull request follow this evidence; no claim
   is made that the gate tested a clean commit.
 - **Requirement mapping:** `SelloScaffold` gains optional `topBar` and `ribbon` slots:
   a top bar replaces the title row below the status bar, a ribbon sits on the band
@@ -620,8 +621,9 @@ The components and their tests exist in `designsystem/component/v2/V2Controls.kt
   Host: 522 tests; device: 541 tests; zero failures, errors or skips. Lint had zero
   errors and 32 existing warnings. The first gate run failed two new frame tests that
   measured from the screen top in a window larger than the 320 × 640 screen; they now
-  measure from the window, as `AdaptiveScaffoldTest` does.
-- **Quality run:** run 20261020T050229Z-1b99d63d; SELLO-068 G2 passed; HEAD 9328923, inputs sha256 89726d75a031; report docs/planning/mvp/quality-reports/SELLO-068.json sha256 123aa7e977b5f5798f0bbaf579495db2051420ef70b502052c5b314b6038f2fc
+  measure from the window, as `AdaptiveScaffoldTest` does. After merging `main` (#59)
+  the gate was run again and passed with the same counts.
+- **Quality run:** run 20261020T052148Z-7ece84c2; SELLO-068 G2 passed; HEAD 2694b16, inputs sha256 ababa56475c2; report docs/planning/mvp/quality-reports/SELLO-068.json sha256 9d43f499ccd1969be5096e4f0f7c6bd13bf5b723c971398865bdff0b8be5b5e1
 - **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
   (320 × 640dp, animations off), serial `emulator-5582`. On API-31 `test31`
   (`emulator-5580`) the full `:app` device suite passed (212 tests) and screenshots

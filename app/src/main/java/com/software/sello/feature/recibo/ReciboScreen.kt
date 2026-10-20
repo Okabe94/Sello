@@ -297,10 +297,10 @@ internal fun reciboHeadline(headline: ReciboHeadline): String = stringResource(
 internal fun stampText(stamp: ReciboStamp): String = stringResource(
     when (stamp) {
         ReciboStamp.OnTrack -> R.string.recibo_stamp_on_track
-        ReciboStamp.Tight -> R.string.recibo_stamp_tight
+        ReciboStamp.AtLimit -> R.string.recibo_stamp_at_limit
         ReciboStamp.Over -> R.string.recibo_stamp_over
         ReciboStamp.WithinLimit -> R.string.recibo_stamp_within_limit
-        ReciboStamp.OverLimit -> R.string.recibo_stamp_over_limit
+        ReciboStamp.OverLimit -> R.string.recibo_stamp_over
         ReciboStamp.NoLimit -> R.string.recibo_stamp_no_limit
         ReciboStamp.Paused -> R.string.recibo_stamp_paused
         ReciboStamp.NotSet -> R.string.recibo_stamp_not_set
@@ -312,7 +312,7 @@ internal fun stampInk(stamp: ReciboStamp): StampInk = when (stamp) {
 
     ReciboStamp.Over, ReciboStamp.OverLimit -> StampInk.Over
 
-    ReciboStamp.Tight, ReciboStamp.NoLimit, ReciboStamp.Paused, ReciboStamp.NotSet ->
+    ReciboStamp.AtLimit, ReciboStamp.NoLimit, ReciboStamp.Paused, ReciboStamp.NotSet ->
         StampInk.Neutral
 }
 

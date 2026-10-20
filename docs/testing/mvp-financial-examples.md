@@ -55,17 +55,20 @@ expectations, not evidence that the scaffold implements validation.
 | B01 | finite limit 100,000/spend 30,000; unlimited spend 20,000 | Total spent 50,000; remaining 50,000 |
 | B02 | all limits absent; spent 50,000 | Has gastado / Sin límite; no invented capacity/allowance/verdict |
 | B03 | 2026-10-31; limit 100,000; spent 90,000 | Remaining 10,000; 1 available day; allowance 10,000; Para hoy |
-| B04 | overall finite limits total 100,000; overall spent 110,000 | Overall remaining −10,000; overall allowance 0 in loss ink; Pasado; this is not a single-category overspend with other finite capacity remaining |
-| B05 | explicit limit 0; spent 0, then spent 1 | Al día then Pasado; no percentage division by zero |
+| B04 | overall finite limits total 100,000; overall spent 110,000 | Overall remaining −10,000; overall allowance 0 in loss ink; Excedido; this is not a single-category overspend with other finite capacity remaining |
+| B05 | explicit limit 0; spent 0, then spent 1 | Al día then Excedido; no percentage division by zero |
 | B06 | configured limit 100,000; successfully loaded empty expense list | Actual 0; forecast 0; Al día; zero is not unavailable data |
 | B07 | same configuration; storage read fails | Failed, not B06; optional visibly stale last-good value |
-| B08 | 2026-10-22; Food/Transport/Other each has finite limit 100,000; Food spent 110,000, others spent 0 | Owner-confirmed: Food remaining −10,000 and category Pasado; overall limit 300,000/spent 110,000/remaining 190,000; 10 available days → overall allowance 19,000. A category overrun alone must not zero the overall allowance |
+| B08 | 2026-10-22; Food/Transport/Other each has finite limit 100,000; Food spent 110,000, others spent 0 | Owner-confirmed: Food remaining −10,000 and category Excedido; overall limit 300,000/spent 110,000/remaining 190,000; 10 available days → overall allowance 19,000. A category overrun alone must not zero the overall allowance |
 | V01 | limit 100,000; actual 80,000; exact forecast 95,000 | Al día |
 | V02 | same actual/limit; exact forecast 95,001 or 100,000 | Justo |
 | V03 | same actual/limit; exact forecast 100,001 | Pasado |
 | V04 | actual 100,001/limit 100,000; hypothetical lower forecast | Pasado; independently exercise actual-overspend precedence |
 | V05 | 2027-02-15; spent 50,893; limit 100,000 | Exact forecast 1,425,004/15 = 95,000 + 4/15; display 95,000; **Justo**, not Al día |
 
+**Retired by SELLO-061:** V01–V05 describe the pace-based verdict that ADR 0012
+BG1 replaced; the status now compares recorded spending with the limit, so V05 is
+Al día. They stay as a record of the forecast arithmetic, which Resumen still shows.
 V01–V04 are classifier unit inputs, not assertions that every actual/forecast pair
 can be produced by the chosen pace model. For V05, compare
 `100 × 1,425,004 = 142,500,400` against `95 × 100,000 × 15 = 142,500,000`.
@@ -95,6 +98,8 @@ expense projects 310,000, not 10,000. The owner explicitly approved this model
 after that consequence was explained on 2026-10-08.
 F04/F05 verify 28/29-day February; both include today only in observed pace and
 allowance, never in future-day multiplication. Past months suppress F-style forecast.
+The "Forecast verdict" column is historical: since SELLO-061 the status ignores the
+forecast, so F01 is Al día and F07 Excedido; forecast and allowance figures are unchanged.
 
 ## COP 50 daily-allowance boundaries — approved D03
 

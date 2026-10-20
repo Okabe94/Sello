@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 24/50 · **Epics Done:** 5/10
+**Tickets Done:** 26/50 · **Epics Done:** 5/10
 
-Backlog: 26 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 24
+Backlog: 24 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 26
 
 [Workflow, gates and definition of done](README.md)
 
@@ -20,7 +20,7 @@ Backlog: 26 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 24
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Backlog | 0/4 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Backlog | 0/5 |
 | [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | Backlog | 0/4 |
-| [SELLO-E12](epics/E12-v2-recibo.md) | Make Home answer "how am I doing this month" with the factual status, wording and frame approved in Sello v2. | Backlog | 1/9 |
+| [SELLO-E12](epics/E12-v2-recibo.md) | Make Home answer "how am I doing this month" with the factual status, wording and frame approved in Sello v2. | Backlog | 3/9 |
 | [SELLO-E13](epics/E13-v2-current-app.md) | Every screen the app already has looks and behaves as approved in Sello v2, using one set of components, before new features are added. | Backlog | 0/5 |
 
 ## Ready
@@ -56,14 +56,12 @@ No tickets.
 | [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) | Prove integrated data retention and recovery failure safety | SELLO-E08 | P0 | G2 | [SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion), [SELLO-031](epics/E07-recovery-privacy.md#sello-031--deliver-fenced-two-confirmation-reset-and-recovery), [SELLO-032](epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation), [SELLO-027](epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite) |
 | [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) | Validate performance and optimized release composition | SELLO-E08 | P0 | G3 | [SELLO-027](epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite), [SELLO-032](epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) |
 | [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | Accept the complete MVP and prepare release handoff | SELLO-E08 | P0 | G3 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety), [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) |
-| [SELLO-061](epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Replace the pace verdict with the factual budget status | SELLO-E12 | P0 | G2 | None |
-| [SELLO-062](epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Rebuild the Recibo answer slip to v2 | SELLO-E12 | P0 | G2 | [SELLO-061](epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) |
+| [SELLO-062](epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Rebuild the Recibo answer slip to v2 | SELLO-E12 | P0 | G2 | None |
 | [SELLO-064](epics/E12-v2-recibo.md#sello-064--restyle-the-month-bar-and-add-the-past-month-ribbon) | Restyle the month bar and add the past-month ribbon | SELLO-E12 | P0 | G2 | [SELLO-068](epics/E12-v2-recibo.md#sello-068--wire-the-v2-month-bar-and-past-month-ribbon-into-the-app-frame) |
 | [SELLO-065](epics/E12-v2-recibo.md#sello-065--use-the-full-width-anotar-dock-and-the-v2-tab-bar) | Use the full-width Anotar dock and the v2 tab bar | SELLO-E12 | P0 | G2 | None |
-| [SELLO-066](epics/E12-v2-recibo.md#sello-066--replace-the-saved-receipt-with-brief-feedback-after-a-save) | Replace the saved receipt with brief feedback after a save | SELLO-E12 | P0 | G2 | [SELLO-069](epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell) |
+| [SELLO-066](epics/E12-v2-recibo.md#sello-066--replace-the-saved-receipt-with-brief-feedback-after-a-save) | Replace the saved receipt with brief feedback after a save | SELLO-E12 | P0 | G2 | None |
 | [SELLO-067](epics/E12-v2-recibo.md#sello-067--add-the-ajustar-presupuesto-action-to-an-overspent-recibo) | Add the Ajustar presupuesto action to an overspent Recibo | SELLO-E12 | P2 | G2 | [SELLO-062](epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) |
 | [SELLO-068](epics/E12-v2-recibo.md#sello-068--wire-the-v2-month-bar-and-past-month-ribbon-into-the-app-frame) | Wire the v2 month bar and past-month ribbon into the app frame | SELLO-E12 | P0 | G2 | None |
-| [SELLO-069](epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell) | Wire the confirmation notice into the shell | SELLO-E12 | P0 | G2 | None |
 | [SELLO-070](epics/E13-v2-current-app.md#sello-070--bring-expense-entry-and-edit-to-v2) | Bring expense entry and edit to v2 | SELLO-E13 | P0 | G2 | [SELLO-066](epics/E12-v2-recibo.md#sello-066--replace-the-saved-receipt-with-brief-feedback-after-a-save) |
 | [SELLO-071](epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2) | Bring income entry, edit and history to v2 | SELLO-E13 | P1 | G2 | [SELLO-070](epics/E13-v2-current-app.md#sello-070--bring-expense-entry-and-edit-to-v2), [SELLO-064](epics/E12-v2-recibo.md#sello-064--restyle-the-month-bar-and-add-the-past-month-ribbon) |
 | [SELLO-072](epics/E13-v2-current-app.md#sello-072--bring-resumen-to-v2-for-todays-figures) | Bring Resumen to v2 for today's figures | SELLO-E13 | P1 | G2 | [SELLO-064](epics/E12-v2-recibo.md#sello-064--restyle-the-month-bar-and-add-the-past-month-ribbon), [SELLO-065](epics/E12-v2-recibo.md#sello-065--use-the-full-width-anotar-dock-and-the-v2-tab-bar) |
@@ -97,8 +95,10 @@ No tickets.
 | [SELLO-021](epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Ship income recording, history and guarded correction workflows | SELLO-E05 | P0 | G2 | None |
 | [SELLO-022](epics/E05-mvp-workflows.md#sello-022--deliver-basic-resumen-with-exact-actuals-and-history-charts) | Deliver basic Resumen with exact actuals and history charts | SELLO-E05 | P0 | G2 | None |
 | [SELLO-023](epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings) | Ship persisted appearance, ordering and essential settings | SELLO-E05 | P1 | G2 | None |
+| [SELLO-061](epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Replace the pace verdict with the factual budget status | SELLO-E12 | P0 | G2 | None |
 | [SELLO-063](epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Update the Recibo categories card and first-use and failed states | SELLO-E12 | P0 | G2 | None |
+| [SELLO-069](epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell) | Wire the confirmation notice into the shell | SELLO-E12 | P0 | G2 | None |
 
 ## Ready promotion candidates
 
-[SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-028](epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation), [SELLO-061](epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status), [SELLO-065](epics/E12-v2-recibo.md#sello-065--use-the-full-width-anotar-dock-and-the-v2-tab-bar), [SELLO-068](epics/E12-v2-recibo.md#sello-068--wire-the-v2-month-bar-and-past-month-ribbon-into-the-app-frame), [SELLO-069](epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell)
+[SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-028](epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation), [SELLO-062](epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2), [SELLO-065](epics/E12-v2-recibo.md#sello-065--use-the-full-width-anotar-dock-and-the-v2-tab-bar), [SELLO-066](epics/E12-v2-recibo.md#sello-066--replace-the-saved-receipt-with-brief-feedback-after-a-save), [SELLO-068](epics/E12-v2-recibo.md#sello-068--wire-the-v2-month-bar-and-past-month-ribbon-into-the-app-frame)

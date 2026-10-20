@@ -59,8 +59,9 @@ owner authorization. The owner controls the distribution key.
 
 ## D03 — Forecast, allowance and verdict
 
-**Current calculation:** the app still uses `MonthlyBudgetPolicy`'s pace-based
-forecast. These rules remain in force until the replacement in ADR 0012 is ready.
+**Current calculation:** since SELLO-061, the status follows ADR 0012 BG1 (see
+"Approved design"); the pace-based forecast below remains only as Resumen's
+estimate. The other rules here stay in force until ADR 0012 replaces them.
 Let `S` be recorded spending through today, `L` total finite limits, `d` today's
 day-of-month and `N` month length. Recurring amounts are zero in MVP.
 
@@ -70,12 +71,11 @@ day-of-month and `N` month length. Recurring amounts are zero in MVP.
 - Available days are `D = N − d + 1`, including today.
 - Displayed daily allowance is `50 × floor(max(L − S, 0) / (50 × D))`.
   Round down to COP 50: 3,529 becomes 3,500; 3,564 becomes 3,550.
-- Round the displayed forecast HALF_UP to one peso. Compare its exact value:
-  on track at no more than 95% of the limit, tight above 95% through 100%,
-  over when actual spending or forecast exceeds the limit.
+- Round the displayed forecast HALF_UP to one peso. It judges nothing: the
+  status compares recorded spending with the limit (Al día, Al límite, Excedido).
 
 Use widened exact arithmetic. Rounding affects display, never recorded money,
-remaining budget or verdict comparisons. A positive allowance below 50 displays
+remaining budget or status comparisons. A positive allowance below 50 displays
 zero without implying overspending. A category overrun does not erase a positive
 overall allowance: overall remaining 190,000 over ten days gives 19,000 per day,
 even if one category is 10,000 over its own limit. Do not reallocate limits silently.

@@ -4,8 +4,8 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-17 · **Product baseline:** `df0aefa`.
-SELLO-001–023, SELLO-063 and epics E01–E05 are recorded Done in the canonical tickets.
+**Snapshot:** 2026-10-19 · **Product baseline:** `7f94c75`.
+SELLO-001–023, SELLO-061, SELLO-063, SELLO-069 and epics E01–E05 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -22,9 +22,9 @@ verification or release-acceptance claims.
 The modules are `:app`, `:domain`, `:data`, `:design-system` and the separate
 `:catalog`. The extra `:prototype` app renders v1.1 sample screens with no storage.
 [Sello v2](../design/v2/README.md) is the approved design; its redesign is not yet
-implemented. Current pace-based forecasts remain until reviewed replacement rules
-are implemented; [ADR 0012](../decisions/0012-budget-guidance-contract.md) tracks
-those definitions and open inputs.
+implemented. Recibo's status is factual under ADR 0012 BG1 (SELLO-061); the pace
+forecast remains only as Resumen's estimate, and
+[ADR 0012](../decisions/0012-budget-guidance-contract.md) tracks the open inputs.
 
 ## Completed ticket outcomes
 
@@ -53,13 +53,15 @@ those definitions and open inputs.
 | [SELLO-021](../planning/mvp/epics/E05-mvp-workflows.md#sello-021--ship-income-recording-history-and-guarded-correction-workflows) | Added income entry/history, editing/deletion and shared guarded undo, with a Room migration. |
 | [SELLO-022](../planning/mvp/epics/E05-mvp-workflows.md#sello-022--deliver-basic-resumen-with-exact-actuals-and-history-charts) | Added Resumen income/spending, net flow, allocation and exact history charts. |
 | [SELLO-023](../planning/mvp/epics/E05-mvp-workflows.md#sello-023--ship-persisted-appearance-ordering-and-essential-settings) | Added persisted appearance, category ordering/direction and working settings. |
+| [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
+| [SELLO-069](../planning/mvp/epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell) | The shell can show a confirmed save with the v2 check look above the dock; nothing sends one until SELLO-066. |
 
 ## Remaining work
 
-- SELLO-061–069 ([E12](../planning/mvp/epics/E12-v2-recibo.md)): the current focus.
-  Brings Recibo to the v2 design: factual status, answer slip, categories card,
-  month ribbon, dock and tabs, and brief save feedback.
+- SELLO-062 and SELLO-064–068 ([E12](../planning/mvp/epics/E12-v2-recibo.md)): the
+  current focus. Brings Recibo to the v2 design: answer slip, month ribbon, dock and
+  tabs, and brief save feedback.
 - SELLO-070–074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): after E12, brings
   expense and income entry, income history and Resumen to v2, retires the v1
   components v2 replaced and records a manual TalkBack and Switch Access pass. The v2
@@ -74,8 +76,8 @@ those definitions and open inputs.
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
 The [board](../planning/mvp/BOARD.md) currently lists SELLO-024 and SELLO-028 without
-unmet ticket dependencies, plus the E12 starting tickets (SELLO-061, 063, 065, 068
-and 069); SELLO-033 now waits for E12. Their other prerequisites remain in
+unmet ticket dependencies, plus E12's SELLO-062, 065, 066 and 068; SELLO-033 now
+waits for E12. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
 ## Detail references

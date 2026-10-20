@@ -2,6 +2,7 @@ package com.software.sello.feature.recibo
 
 import com.software.sello.designsystem.component.MoneySign
 import com.software.sello.designsystem.component.MoneyTextValue
+import com.software.sello.designsystem.component.StampInk
 import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.SnapshotFailure
@@ -67,8 +68,7 @@ class ReciboRenderModelTest {
 
         // Limits 900.000 + 300.000 + 200.000 + 100.000 = 1.500.000. Spent 612.400 +
         // 100.000 + 145.000 + 121.500 + 40.000 = 1.018.900. Left 481.100; over nine
-        // days that is 53.455,5, shown as 53.450. At this pace the month ends at
-        // 1.373.300, under 95 % of the limits.
+        // days that is 53.455,5, shown as 53.450. Below the limits: Al día.
         assertEquals(
             ReciboSummary(
                 BudgetFigure(ReciboHeadline.Remaining, plain("481.100"), ReciboStamp.OnTrack),
@@ -90,7 +90,7 @@ class ReciboRenderModelTest {
             state.categories.map { it.name }
         )
         val byName = state.categories.associateBy { it.name }
-        // 612.400 of 900.000: ends near 825.400, under 95 %.
+        // 612.400 of 900.000: below its limit.
         assertEquals(
             ReciboCategory(
                 id = uuid(1),
@@ -111,9 +111,9 @@ class ReciboRenderModelTest {
             ),
             byName.getValue("Alimentación")
         )
-        // 145.000 of 200.000: ends near 195.435, between 95 % and 100 %.
+        // 145.000 of 200.000: below its limit, even though this pace would end near 195.435.
         assertEquals(
-            BudgetFigure(ReciboHeadline.Remaining, plain("55.000"), ReciboStamp.Tight),
+            BudgetFigure(ReciboHeadline.Remaining, plain("55.000"), ReciboStamp.OnTrack),
             byName.getValue("Transporte").figure
         )
         // 121.500 of 100.000: the cell keeps the minus, the sentence says it in words.
@@ -222,6 +222,40 @@ class ReciboRenderModelTest {
         )
         assertEquals(false, state.categories.single().over)
         assertEquals(plain("0"), state.categories.single().cellAmount)
+    }
+
+    @Test
+    fun spendingExactlyTheLimitThisMonthIsAlLimiteWithNothingLeftPerDay() {
+        val state = shown(
+            SnapshotState.Ready(monthOf("2026-10-23", listOf(coffee), spent(2, "2026-10", 300_000)))
+        )
+
+        assertEquals(
+            ReciboSummary(
+                BudgetFigure(ReciboHeadline.Remaining, plain("0"), ReciboStamp.AtLimit),
+                days = 9,
+                perDay = plain("0"),
+                perDayExhausted = false
+            ),
+            state.summary
+        )
+        assertEquals(
+            BudgetFigure(ReciboHeadline.Remaining, plain("0"), ReciboStamp.AtLimit),
+            state.categories.single().figure
+        )
+        assertEquals(false, state.categories.single().over)
+    }
+
+    @Test
+    fun eachStampHasTheInkOfWhatItSays() {
+        assertEquals(StampInk.Good, stampInk(ReciboStamp.OnTrack))
+        assertEquals(StampInk.Good, stampInk(ReciboStamp.WithinLimit))
+        assertEquals(StampInk.Neutral, stampInk(ReciboStamp.AtLimit))
+        assertEquals(StampInk.Neutral, stampInk(ReciboStamp.NoLimit))
+        assertEquals(StampInk.Neutral, stampInk(ReciboStamp.Paused))
+        assertEquals(StampInk.Neutral, stampInk(ReciboStamp.NotSet))
+        assertEquals(StampInk.Over, stampInk(ReciboStamp.Over))
+        assertEquals(StampInk.Over, stampInk(ReciboStamp.OverLimit))
     }
 
     @Test

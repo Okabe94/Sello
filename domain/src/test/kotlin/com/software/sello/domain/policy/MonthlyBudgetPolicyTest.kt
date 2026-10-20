@@ -9,7 +9,6 @@ import com.software.sello.domain.model.CategoryName
 import com.software.sello.domain.model.DailyAllowance
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.ExpenseId
-import com.software.sello.domain.model.Forecast
 import com.software.sello.domain.model.IconKey
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.MonthlySnapshot
@@ -101,8 +100,6 @@ class MonthlyBudgetPolicyTest {
         return snapshot(today, listOf(limited(1, limit)), expenses).valueOrFail()
     }
 
-    private fun exactly(pesos: Long) = Forecast(pesos.toBigInteger(), 1, Money.cop(pesos))
-
     @Test
     fun spendingInAnUnlimitedCategoryStillCountsAgainstTheMonth() {
         // B01.
@@ -152,7 +149,7 @@ class MonthlyBudgetPolicyTest {
     }
 
     @Test
-    fun overspendingLeavesANegativeRemainderAZeroAllowanceAndPasado() {
+    fun overspendingLeavesANegativeRemainderAZeroAllowanceAndExcedido() {
         // B04 and F07.
         val read = oneCategory("2026-10-31", spent = 110_000)
 
@@ -208,37 +205,145 @@ class MonthlyBudgetPolicyTest {
     }
 
     @Test
-    fun theVerdictBoundariesAreExactlyNinetyFiveAndOneHundredPercent() {
-        // V01 to V04: limit 100.000, classifier inputs.
-        val limit = Money.cop(100_000)
-        val spent = Money.cop(80_000)
+    fun spendingBelowTheLimitIsAlDiaHoweverFastItWasRecorded() {
+        // 2026-10-16 review: 393.700 of 750.000 on day 16. The pace would project
+        // 762.794, above the limit, but nothing over the limit has been recorded.
+        val read = snapshot(
+            "2026-10-16",
+            listOf(limited(1, 750_000)),
+            listOf(expense(1, "2026-10-01", 393_700))
+        ).valueOrFail()
 
-        assertEquals(Verdict.OnTrack, MonthlyBudgetPolicy.verdict(limit, spent, exactly(95_000)))
-        assertEquals(Verdict.Tight, MonthlyBudgetPolicy.verdict(limit, spent, exactly(95_001)))
-        assertEquals(Verdict.Tight, MonthlyBudgetPolicy.verdict(limit, spent, exactly(100_000)))
-        assertEquals(Verdict.Over, MonthlyBudgetPolicy.verdict(limit, spent, exactly(100_001)))
+        assertEquals(Money.cop(356_300), read.limited().budget.remaining)
         assertEquals(
-            Verdict.Over,
-            MonthlyBudgetPolicy.verdict(limit, Money.cop(100_001), exactly(90_000))
+            DailyAllowance(Money.cop(22_250), availableDays = 16),
+            read.limited().allowance
         )
+        assertEquals(Verdict.OnTrack, read.current().verdict)
     }
 
     @Test
-    fun theVerdictUsesTheExactForecastNotTheRoundedOneShown() {
+    fun spendingBelowTheOverallLimitIsAlDia() {
+        // BG-E01: L 1.000.000, E 400.000, 10 days left (22 October).
+        val read = snapshot(
+            "2026-10-22",
+            listOf(limited(1, 1_000_000)),
+            listOf(expense(1, "2026-10-05", 400_000))
+        ).valueOrFail()
+
+        assertEquals(Money.cop(600_000), read.limited().budget.remaining)
+        assertEquals(
+            DailyAllowance(Money.cop(60_000), availableDays = 10),
+            read.limited().allowance
+        )
+        assertEquals(Verdict.OnTrack, read.current().verdict)
+    }
+
+    @Test
+    fun spendingExactlyTheLimitIsAlLimiteAndOnePesoMoreIsExcedido() {
+        // BG-E05: L 1.000.000; E 1.000.000, then 1.000.001; 10 days left.
+        val atLimit = snapshot(
+            "2026-10-22",
+            listOf(limited(1, 1_000_000)),
+            listOf(expense(1, "2026-10-05", 1_000_000))
+        ).valueOrFail()
+        val onePesoOver = snapshot(
+            "2026-10-22",
+            listOf(limited(1, 1_000_000)),
+            listOf(expense(1, "2026-10-05", 1_000_001))
+        ).valueOrFail()
+
+        assertEquals(Money.cop(0), atLimit.limited().budget.remaining)
+        assertEquals(DailyAllowance(Money.cop(0), availableDays = 10), atLimit.limited().allowance)
+        assertEquals(Verdict.AtLimit, atLimit.current().verdict)
+        assertEquals(Money.cop(-1), onePesoOver.limited().budget.remaining)
+        assertEquals(
+            DailyAllowance(Money.cop(0), availableDays = 10),
+            onePesoOver.limited().allowance
+        )
+        assertEquals(Verdict.Over, onePesoOver.current().verdict)
+    }
+
+    @Test
+    fun aCategoryOverrunLeavesAHealthyMonthAlDia() {
+        // BG-E04: L 300.000; 110.000 spent in a category limited to 100.000; 10 days left.
+        val read = snapshot(
+            "2026-10-22",
+            listOf(limited(1, 100_000, "Comida"), limited(2, 200_000)),
+            listOf(expense(1, "2026-10-05", 110_000))
+        ).valueOrFail()
+
+        val food = read.categories.first().budget!!
+        assertEquals(Money.cop(-10_000), food.remaining)
+        assertEquals(Verdict.Over, (food.standing as BudgetStanding.Current).verdict)
+        assertEquals(Money.cop(190_000), read.limited().budget.remaining)
+        assertEquals(
+            DailyAllowance(Money.cop(19_000), availableDays = 10),
+            read.limited().allowance
+        )
+        assertEquals(Verdict.OnTrack, read.current().verdict)
+    }
+
+    @Test
+    fun aCategoryIsJudgedOnWhatItRecordedAgainstItsOwnLimit() {
+        // 15 October: one category spent exactly its 100.000, another spent nothing.
+        val read = snapshot(
+            "2026-10-15",
+            listOf(limited(1, 100_000), limited(2, 200_000)),
+            listOf(expense(1, "2026-10-02", 100_000))
+        ).valueOrFail()
+
+        val full = read.categories[0].budget!!.standing as BudgetStanding.Current
+        val untouched = read.categories[1].budget!!.standing as BudgetStanding.Current
+        assertEquals(Verdict.AtLimit, full.verdict)
+        assertEquals(Verdict.OnTrack, untouched.verdict)
+        assertEquals(Verdict.OnTrack, read.current().verdict)
+    }
+
+    @Test
+    fun unlimitedSpendingCanExceedTheMonthWhileNoCategoryIsOver() {
+        // B01 with BG1: limit 100.000; 50.000 in it and 60.000 without a limit, 15 October.
+        val read = snapshot(
+            "2026-10-15",
+            listOf(limited(1, 100_000), unlimited(2)),
+            listOf(expense(1, "2026-10-02", 50_000), expense(2, "2026-10-03", 60_000))
+        ).valueOrFail()
+
+        val limitedCategory = read.categories[0].budget!!.standing as BudgetStanding.Current
+        assertEquals(Verdict.OnTrack, limitedCategory.verdict)
+        assertEquals(Money.cop(-10_000), read.limited().budget.remaining)
+        assertEquals(Verdict.Over, read.current().verdict)
+    }
+
+    @Test
+    fun theVerdictBoundariesAreTheLimitItself() {
+        // ADR 0012 BG1 table, limit 100.000, and B05's zero limit.
+        val limit = Money.cop(100_000)
+
+        assertEquals(Verdict.OnTrack, MonthlyBudgetPolicy.verdict(limit, Money.cop(99_999)))
+        assertEquals(Verdict.AtLimit, MonthlyBudgetPolicy.verdict(limit, Money.cop(100_000)))
+        assertEquals(Verdict.Over, MonthlyBudgetPolicy.verdict(limit, Money.cop(100_001)))
+        assertEquals(Verdict.OnTrack, MonthlyBudgetPolicy.verdict(Money.cop(0), Money.cop(0)))
+        assertEquals(Verdict.Over, MonthlyBudgetPolicy.verdict(Money.cop(0), Money.cop(1)))
+    }
+
+    @Test
+    fun theForecastStaysExactAndTheVerdictIgnoresIt() {
         // V05: 15 February 2027, spent 50.893. Forecast 1.425.004/15, shown as 95.000.
         val read = oneCategory("2027-02-15", spent = 50_893)
 
         assertEquals(BigInteger.valueOf(1_425_004), read.current().forecast.numerator)
         assertEquals(15, read.current().forecast.denominator)
         assertEquals(Money.cop(95_000), read.current().forecast.rounded)
-        assertEquals(Verdict.Tight, read.current().verdict)
+        // The forecast stays exact for Resumen; Recibo's status ignores it.
+        assertEquals(Verdict.OnTrack, read.current().verdict)
     }
 
     @Test
     fun theForecastAndAllowanceFollowTheApprovedDayCounts() {
         // F01, F02, F04, F05: (today, spent) to (forecast shown, days, allowance, verdict).
         val cases = listOf(
-            Triple("2026-10-01", 10_000L, listOf(310_000L, 31L, 2_900L)) to Verdict.Over,
+            Triple("2026-10-01", 10_000L, listOf(310_000L, 31L, 2_900L)) to Verdict.OnTrack,
             Triple("2026-10-15", 40_000L, listOf(82_667L, 17L, 3_500L)) to Verdict.OnTrack,
             Triple("2027-02-14", 30_000L, listOf(60_000L, 15L, 4_650L)) to Verdict.OnTrack,
             Triple("2028-02-15", 45_000L, listOf(87_000L, 15L, 3_650L)) to Verdict.OnTrack

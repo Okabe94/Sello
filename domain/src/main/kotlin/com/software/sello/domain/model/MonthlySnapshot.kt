@@ -9,34 +9,34 @@ import java.time.ZoneId
 
 /**
  * Estimated spending for the whole month at the pace recorded so far, kept as the
- * exact fraction [numerator] / [denominator] pesos. Verdicts compare this exact
- * value; [rounded] is only for showing it and is never compared.
+ * exact fraction [numerator] / [denominator] pesos. Resumen shows it as an estimate;
+ * no verdict uses it (ADR 0012 BG1). [rounded] is only for showing it.
  */
 data class Forecast(val numerator: BigInteger, val denominator: Int, val rounded: Money)
 
-/** The current month, judged on the forecast. Actual overspending is always [Over]. */
+/** The current month, judged on what was actually spent, never on pace (ADR 0012 BG1). */
 enum class Verdict {
-    /** Forecast at or below 95% of the limit. "Al día". */
+    /** Spent below the limit, or nothing spent against a zero limit. "Al día". */
     OnTrack,
 
-    /** Forecast above 95% of the limit and not above the limit. "Justo". */
-    Tight,
+    /** Spent exactly a positive limit. "Al límite". */
+    AtLimit,
 
-    /** Spent or forecast above the limit. "Pasado". */
+    /** Spent above the limit. "Excedido". */
     Over
 }
 
 /** A finished month, judged on what was actually spent. */
 enum class PastVerdict {
-    /** "Bajo el límite". Spending exactly the limit is within it. */
+    /** Spending exactly the limit is within it. "Cumplido" on Recibo. */
     WithinLimit,
 
-    /** "Pasado". */
+    /** "Excedido" on Recibo. */
     Over
 }
 
 sealed interface BudgetStanding {
-    /** The month in progress: an estimate, to be labelled as one. */
+    /** The month in progress. [forecast] is an estimate, to be labelled as one. */
     data class Current(val forecast: Forecast, val verdict: Verdict) : BudgetStanding
 
     /** A finished month: actuals only, no forecast and no allowance. */

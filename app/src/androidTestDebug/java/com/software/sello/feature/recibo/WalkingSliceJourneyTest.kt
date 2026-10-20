@@ -246,14 +246,14 @@ class WalkingSliceJourneyTest {
         pick(lastMonth)
 
         // Last month: 200.000 less 150.000, judged on what was spent, nothing per day.
-        rule.awaitDescription("Te sobraron 50.000 pesos. Bajo el límite.")
+        rule.awaitDescription("Te sobraron 50.000 pesos. Cumplido.")
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
         rule.onNodeWithContentDescription(
-            "Mercado. Te sobraron 50.000 pesos de 200.000 pesos. Bajo el límite."
+            "Mercado. Te sobraron 50.000 pesos de 200.000 pesos. Cumplido."
         ).performScrollTo().assertIsDisplayed()
 
         openMercado()
-        rule.awaitDescription("Te sobraron aquí 50.000 pesos. Bajo el límite.")
+        rule.awaitDescription("Te sobraron aquí 50.000 pesos. Cumplido.")
         inDetail(CATEGORY_DETAIL_SPENT_TAG, "150.000 pesos").assertExists()
         inDetail(CATEGORY_DETAIL_LIMIT_TAG, "200.000 pesos").assertExists()
         rule.awaitText("Del mes pasado")
@@ -263,11 +263,11 @@ class WalkingSliceJourneyTest {
         // A change made while the screen is open arrives by itself: 210.000 of 200.000.
         TestCommands.createExpense("Mercado", lastMonth.atDay(11), 60_000, "Otro")
 
-        rule.awaitDescription("Te pasaste aquí por 10.000 pesos. Sobre el límite.")
+        rule.awaitDescription("Te pasaste aquí por 10.000 pesos. Excedido.")
         rule.awaitText("Otro")
         assertEquals(2, listed())
         Espresso.pressBack()
-        rule.awaitDescription("Te pasaste por 10.000 pesos. Sobre el límite.")
+        rule.awaitDescription("Te pasaste por 10.000 pesos. Excedido.")
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
     }
 

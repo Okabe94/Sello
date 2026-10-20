@@ -105,7 +105,7 @@ class ReciboRenderModel(private val money: MoneyFormatter) {
             stamp = when (val standing = budget.standing) {
                 is BudgetStanding.Current -> when (standing.verdict) {
                     Verdict.OnTrack -> ReciboStamp.OnTrack
-                    Verdict.Tight -> ReciboStamp.Tight
+                    Verdict.AtLimit -> ReciboStamp.AtLimit
                     Verdict.Over -> ReciboStamp.Over
                 }
 

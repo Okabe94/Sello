@@ -143,7 +143,7 @@ class CategoryManagementJourneyTest {
         Espresso.pressBack()
         rule.awaitTag(RECIBO_SUMMARY_TAG)
         pick(lastMonth)
-        rule.awaitDescription("Te sobraron 80.000 pesos. Bajo el límite.")
+        rule.awaitDescription("Te sobraron 80.000 pesos. Cumplido.")
         assertEquals(listOf("$lastMonth|finite|100000"), limits())
     }
 
@@ -151,7 +151,7 @@ class CategoryManagementJourneyTest {
     fun aFinishedMonthsLimitIsCorrectedWithoutTouchingThisMonth() {
         launch()
         pick(lastMonth)
-        rule.awaitDescription("Te sobraron 80.000 pesos. Bajo el límite.")
+        rule.awaitDescription("Te sobraron 80.000 pesos. Cumplido.")
         openCafe()
         edit()
         rule.onNodeWithTag(EDITOR_SCOPE_TAG).performScrollTo().assertIsDisplayed()

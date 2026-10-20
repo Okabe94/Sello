@@ -40,14 +40,19 @@ enum class ReciboHeadline {
 
 /** The verdict, in words on the screen and in what a screen reader says. */
 enum class ReciboStamp {
+    /** Spent below the limit. "Al día". */
     OnTrack,
-    Tight,
+
+    /** Spent exactly a positive limit. "Al límite". */
+    AtLimit,
+
+    /** Spent above the limit. "Excedido". */
     Over,
 
-    /** A finished month that stayed within its limit. */
+    /** A finished month that stayed within its limit. "Cumplido". */
     WithinLimit,
 
-    /** A finished month that went over its limit. */
+    /** A finished month that went over its limit. "Excedido". */
     OverLimit,
     NoLimit,
 

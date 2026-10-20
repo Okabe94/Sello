@@ -95,10 +95,9 @@
     <string name="recibo_headline_left_over">Te sobraron</string>
     <string name="recibo_headline_spent">Has gastado</string>
     <string name="recibo_stamp_on_track">Al día</string>
-    <string name="recibo_stamp_tight">Justo</string>
-    <string name="recibo_stamp_over">Pasado</string>
-    <string name="recibo_stamp_within_limit">Bajo el límite</string>
-    <string name="recibo_stamp_over_limit">Sobre el límite</string>
+    <string name="recibo_stamp_at_limit">Al límite</string>
+    <string name="recibo_stamp_over">Excedido</string>
+    <string name="recibo_stamp_within_limit">Cumplido</string>
     <string name="recibo_stamp_no_limit">Sin límite</string>
     <string name="recibo_stamp_paused">En pausa</string>
     <string name="recibo_stamp_not_set">Sin configurar</string>

@@ -88,7 +88,7 @@ fun SelloNotice(
             Icon(
                 SelloIcon.Check.painter(),
                 null,
-                Modifier.size(22.dp),
+                Modifier.size(22.dp).testTag(SELLO_NOTICE_CHECK_TAG),
                 colors.semantic.onGain.takeIf { colors.isDark } ?: colors.semantic.gain
             )
         }
@@ -260,3 +260,6 @@ private const val BUSY_ALPHA = 0.5f
 private const val SWIPE_THRESHOLD = 0.4f
 
 const val ACTION_LINE_MENU_TAG = "action-line:menu"
+
+/** The confirmation check of a [SelloNotice]; decorative, so it says nothing. */
+const val SELLO_NOTICE_CHECK_TAG = "sello-notice:check"

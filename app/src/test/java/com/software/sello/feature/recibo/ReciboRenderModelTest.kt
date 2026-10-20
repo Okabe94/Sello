@@ -276,7 +276,8 @@ class ReciboRenderModelTest {
                 ReciboAnswerLabel.Remaining,
                 minus("1"),
                 ReciboStamp.Over,
-                perDay = ReciboPerDay(plain("0"), days = 1)
+                perDay = ReciboPerDay(plain("0"), days = 1),
+                adjustable = true
             ),
             state.summary
         )
@@ -353,5 +354,58 @@ class ReciboRenderModelTest {
         assertEquals(ReciboState.Failed, first)
         assertEquals(shown(SnapshotState.Ready(earlier)).copy(stale = true), later)
         assertEquals(true, (later as ReciboState.Month).stale)
+    }
+
+    @Test
+    fun onlyAMonthInProgressThatIsExcedidoOffersToAdjustTheBudget() {
+        val september = YearMonth.of(2026, 9)
+        fun adjustable(today: String, rows: List<Expense>, month: YearMonth? = null) = shown(
+            SnapshotState.Ready(
+                if (month == null) {
+                    monthOf(today, listOf(coffee, art), rows)
+                } else {
+                    monthOf(today, listOf(coffee, art), rows, month)
+                }
+            )
+        ).summary.adjustable
+
+        // Café's limit is 300.000; Arte has none.
+        assertEquals(
+            listOf(false, false, true, false, false),
+            listOf(
+                adjustable("2026-10-23", spent(2, "2026-10", 100_000)),
+                adjustable("2026-10-23", spent(2, "2026-10", 300_000)),
+                adjustable("2026-10-23", spent(2, "2026-10", 300_001)),
+                adjustable("2026-10-23", spent(2, "2026-09", 400_000), september),
+                adjustable("2026-10-23", spent(2, "2026-09", 100_000), september)
+            )
+        )
+    }
+
+    @Test
+    fun aMonthOverOnlyBecauseOfCategoriesWithoutALimitStillOffersToAdjust() {
+        // Café keeps 50.000 of its 300.000, but 300.000 more went to Arte, which has no
+        // limit: 550.000 against 300.000 overall. No single category is over.
+        val state = shown(
+            SnapshotState.Ready(
+                monthOf(
+                    "2026-10-23",
+                    listOf(coffee, art),
+                    spent(2, "2026-10", 250_000) + spent(5, "2026-10", 300_000)
+                )
+            )
+        )
+
+        assertEquals(ReciboStamp.Over to true, state.summary.stamp to state.summary.adjustable)
+        assertEquals(false, state.categories.any { it.over })
+    }
+
+    @Test
+    fun withNoLimitThereIsNothingToAdjust() {
+        val state = shown(
+            SnapshotState.Ready(monthOf("2026-10-23", listOf(art), spent(5, "2026-10", 80_000)))
+        )
+
+        assertEquals(false, state.summary.adjustable)
     }
 }

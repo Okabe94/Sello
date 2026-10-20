@@ -73,7 +73,10 @@ class ReciboRenderModel(private val money: MoneyFormatter) {
                         ReciboClosedMonth(money.format(budget.spent), money.format(budget.limit))
                     } else {
                         null
-                    }
+                    },
+                    // A finished month is not adjusted from here.
+                    adjustable = (budget.standing as? BudgetStanding.Current)?.verdict ==
+                        Verdict.Over
                 )
             }
         }

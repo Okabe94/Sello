@@ -1,12 +1,27 @@
 package com.software.sello.feature.recibo
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -19,6 +34,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
@@ -27,7 +43,14 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.designsystem.component.MoneySign
 import com.software.sello.designsystem.component.MoneyTextValue
+import com.software.sello.designsystem.component.SCAFFOLD_SECONDARY_TAG
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.navigation.ShellDetail
+import com.software.sello.navigation.ShellScreen
+import com.software.sello.navigation.ShellState
+import com.software.sello.presentation.month.monthNames
+import java.time.YearMonth
+import kotlin.math.abs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -144,17 +167,47 @@ class ReciboScreenTest {
         days: Int? = null,
         perDay: String? = null,
         closed: Pair<String, String>? = null,
-        stale: Boolean = false
+        stale: Boolean = false,
+        adjustable: Boolean = false,
+        shownCategories: List<ReciboCategory> = categories
     ) = ReciboState.Month(
         ReciboSummary(
             label,
             amount,
             stamp,
             perDay = perDay?.let { ReciboPerDay(plain(it), days!!) },
-            closed = closed?.let { (spent, limit) -> ReciboClosedMonth(plain(spent), plain(limit)) }
+            closed = closed?.let { (spent, limit) ->
+                ReciboClosedMonth(plain(spent), plain(limit))
+            },
+            adjustable = adjustable
         ),
-        categories,
+        shownCategories,
         stale
+    )
+
+    private val adjust get() =
+        rule.onNodeWithContentDescription("Ajustar presupuesto, ir a tus categorías")
+
+    /** Enough categories that the card can be brought to the top of any phone's list. */
+    private val many = (1..24).map {
+        limited(
+            "m$it",
+            "Categoría $it",
+            ReciboHeadline.Remaining,
+            "1.000",
+            ReciboStamp.OnTrack,
+            "2.000"
+        )
+    }
+
+    private fun overspent(stale: Boolean = false, shown: List<ReciboCategory> = categories) = month(
+        minus("43.700"),
+        ReciboStamp.Over,
+        days = 9,
+        perDay = "0",
+        stale = stale,
+        adjustable = true,
+        shownCategories = shown
     )
 
     @Test
@@ -414,5 +467,129 @@ class ReciboScreenTest {
             ),
             actions
         )
+    }
+
+    @Test
+    fun anExcedidoMonthInProgressOffersAjustarPresupuestoAsOneButtonUnderItsAnswer() {
+        show(overspent())
+
+        val link = adjust.assertIsDisplayed().assertHasClickAction()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+        val node = link.fetchSemanticsNode()
+        assertTrue(
+            with(node.layoutInfo.density) { node.touchBoundsInRoot.height.toDp() } >= 47.9.dp
+        )
+        val answer = rule.onNodeWithTag(RECIBO_SUMMARY_TAG).getUnclippedBoundsInRoot()
+        val shown = link.getUnclippedBoundsInRoot()
+        assertTrue(
+            "$shown inside $answer",
+            shown.top >= answer.top && shown.bottom <= answer.bottom
+        )
+        rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertExists()
+    }
+
+    @Test
+    fun noOtherAnswerOffersIt() {
+        val others = listOf(
+            month(plain("937.200"), ReciboStamp.OnTrack, days = 9, perDay = "99.100"),
+            month(plain("0"), ReciboStamp.AtLimit, days = 9, perDay = "0"),
+            month(minus("80.000"), ReciboStamp.OverLimit, closed = "1.080.000" to "1.000.000"),
+            month(plain("80.000"), ReciboStamp.NoLimit, label = ReciboAnswerLabel.Spent)
+        )
+        var state by mutableStateOf<ReciboState>(others.first())
+        rule.setContent {
+            SelloTheme(reducedMotion = true) { ReciboScreen(state, {}, PaddingValues(12.dp)) }
+        }
+
+        others.forEach { other ->
+            state = other
+            rule.waitForIdle()
+            rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertExists()
+            rule.onNodeWithTag(RECIBO_ADJUST_TAG).assertDoesNotExist()
+        }
+    }
+
+    @Test
+    fun ajustarPresupuestoBringsTheCategoriesCardToTheTopAndFocusesItsHeading() {
+        show(overspent(shown = many))
+        val listTop = rule.onRoot().getUnclippedBoundsInRoot().top
+
+        adjust.performClick()
+        rule.waitForIdle()
+
+        val card = rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).getUnclippedBoundsInRoot()
+        assertTrue("$card at the top", abs((card.top - listTop).value) <= 1f)
+        rule.onNodeWithTag(RECIBO_CATEGORIES_HEADING_TAG).assertIsFocused().assertIsDisplayed()
+        // Nothing is opened: each category still opens its detail and limit itself.
+        assertEquals(emptyList<ReciboAction>(), actions)
+    }
+
+    @Test
+    fun whenTheCardIsAlreadyInViewItOnlyMovesFocusToTheHeading() {
+        show(overspent(shown = categories.take(1)))
+        val before = rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).getUnclippedBoundsInRoot()
+
+        adjust.performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag(RECIBO_CATEGORIES_HEADING_TAG).assertIsFocused()
+        assertEquals(emptyList<ReciboAction>(), actions)
+        assertTrue(
+            rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).getUnclippedBoundsInRoot().top <= before.top
+        )
+    }
+
+    @Test
+    fun withOlderFiguresAndAtTwiceTheFontSizeItStillWorks() {
+        show(overspent(stale = true, shown = many), fontScale = 2f)
+
+        adjust.performScrollTo().assertIsDisplayed().performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag(RECIBO_STALE_TAG).assertExists()
+        rule.onNodeWithTag(RECIBO_CATEGORIES_HEADING_TAG).assertIsFocused().assertIsDisplayed()
+    }
+
+    @Test
+    fun besideItsDetailInATwoColumnWindowItStillFocusesTheHeading() {
+        rule.setContent {
+            CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
+                SelloTheme(reducedMotion = true) {
+                    Box(Modifier.requiredSize(900.dp, 700.dp)) {
+                        ShellScreen(
+                            ShellState(
+                                currentMonth = YearMonth.of(2026, 10),
+                                selectedMonth = YearMonth.of(2026, 10),
+                                monthPickerOpen = false,
+                                pickerYear = 2026,
+                                pendingEntry = null,
+                                detailCategoryId = "a"
+                            ),
+                            monthNames(),
+                            {},
+                            detail = ShellDetail("Alimentación") { padding ->
+                                Text("detalle", Modifier.padding(padding).testTag("detail"))
+                            }
+                        ) { padding ->
+                            ReciboScreen(
+                                overspent(shown = categories.take(2)),
+                                { actions += it },
+                                padding,
+                                selectedCategoryId = "a"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        rule.onNodeWithTag("detail").assertExists()
+        rule.onNodeWithTag(SCAFFOLD_SECONDARY_TAG).assertExists()
+
+        adjust.performClick()
+        rule.waitForIdle()
+
+        rule.onNodeWithTag(RECIBO_CATEGORIES_HEADING_TAG).assertIsFocused()
+        rule.onNodeWithTag("detail").assertExists()
+        assertEquals(emptyList<ReciboAction>(), actions)
     }
 }

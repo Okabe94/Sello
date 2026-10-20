@@ -27,6 +27,7 @@ import java.time.YearMonth
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ResumenSnapshotTest {
@@ -163,11 +164,13 @@ class ResumenSnapshotTest {
     }
 
     @Test
-    fun actualVerdictNeverUsesRecibosProjectedOverspending() {
+    fun actualVerdictNeverUsesTheProjectedOverspending() {
+        // The pace projects more than the limit; neither Resumen nor Recibo judges on it.
         val snapshot = read(listOf(expense(1, 50_000))).valueOrFail()
-        val forecast = (snapshot.budget.overall as OverallBudget.Limited).budget.standing
+        val current = (snapshot.budget.overall as OverallBudget.Limited).budget.standing
             as BudgetStanding.Current
-        assertEquals(Verdict.Over, forecast.verdict)
+        assertTrue(current.forecast.rounded.minorUnits > 100_000)
+        assertEquals(Verdict.OnTrack, current.verdict)
         assertEquals(PastVerdict.WithinLimit, snapshot.actualVerdict)
         assertEquals(
             PastVerdict.Over,

@@ -110,8 +110,9 @@ belong in `gradle/libs.versions.toml`, not this long-lived document.
 ## 4. Financial contracts
 
 **Design transition:** [ADR 0011](docs/decisions/0011-goal-centered-design.md) approves
-retiring pace-based home judgment. The D03 calculations, thresholds and worked
-examples below describe the delivered financial contract and remain in force until
+retiring pace-based home judgment. SELLO-061 replaced the forecast-based verdict
+with ADR 0012 BG1's factual status; the D03 forecast, allowance and worked examples
+below otherwise describe the delivered financial contract and remain in force until
 explicitly replaced through scoped implementation with approved independent examples.
 [ADR 0012](docs/decisions/0012-budget-guidance-contract.md) records approved
 factual status/tone and a headline after upcoming-payment reservation,
@@ -151,7 +152,7 @@ deferred beyond MVP. Remaining implementation inputs are listed in the
 | --- | --- |
 | Budget | `remaining = month limits − effective expenses`; unlimited-category spending still counts. No limits means “Has gastado / Sin límite”. Preserve each month's limits; later edits must not rewrite prior months. |
 | Allowance/projection | Days available include today; allowance is `max(remaining − recurringDue, 0) / availableDays`. Projection is `spent + recurringDue + variableDailyPace × remainingDays`; recurring charges are excluded from variable pace and never counted twice. MVP recurringDue is genuinely zero. |
-| Verdict | Current: Al día at projected ≤95%; Justo above 95% through 100%; Pasado if actual or projected exceeds limit. Past: actuals only, no allowance. Recibo's forecast and Resumen's actual-spend verdict must be labeled distinctly. |
+| Verdict | Current (ADR 0012 BG1): recorded spending only, never pace. Al día below the limit, including a zero limit with zero spending; Al límite at exactly a positive limit; Excedido above it. Past: Cumplido at or below the limit, Excedido above; actuals only, no allowance. Resumen's forecast estimate and actual-spend verdict must be labeled distinctly. |
 | Income allocation | `destined = sum(configured finite category limits)`; recorded income minus destined is planning capacity, **not account balance**. Goal/investment records do not independently allocate income. A user-created saving/investment category counts by its limit like any other category. Expenses are not subtracted again. This category-only rule supersedes the previous future contribution sum; see ADR 0012 BG4. |
 | Recorded net flow | Monthly recorded income minus recorded expenses; not an account balance including opening funds or unrecorded activity. |
 | Goals | Contributions are historical records, not bank transfers. Derive milestone dates from actual crossings; projected dates require explicit assumptions. |
@@ -161,8 +162,8 @@ deferred beyond MVP. Remaining implementation inputs are listed in the
   divided by elapsed day-of-month including today; projection uses future days
   excluding today and is an estimate even on day 1. Round the displayed daily
   planning allowance **down to multiples of COP 50**, not recorded money or remaining
-  budget. Forecast display rounds HALF_UP to one peso; verdicts compare exact
-  pre-rounding projections. See [approved D03](docs/decisions/0001-mvp-contract.md#d03--forecast-allowance-and-verdict)
+  budget. Forecast display rounds HALF_UP to one peso; no verdict uses the
+  forecast. See [approved D03](docs/decisions/0001-mvp-contract.md#d03--forecast-allowance-and-verdict)
   for widened arithmetic and positive-sub-50 allowance behavior.
 - **MUST** compute overall allowance from overall finite limits minus all applicable
   spending, not an individual category's deficit. Preserve category overruns without
@@ -176,8 +177,8 @@ deferred beyond MVP. Remaining implementation inputs are listed in the
   Resumen's new hierarchy supports historical understanding and adjustments; its
   delivered net-flow figure retains the same financial meaning.
 - **MUST** approve worked day-cutoff/short-month/projection examples for any
-  forecast still used. Retain existing 95%/100% boundary coverage until the reviewed
-  replacement policy is implemented. Before investments, separately approve
+  forecast still used. The BG1 status replaced the 95%/100% forecast verdict
+  (SELLO-061); its boundaries are the limit itself and the zero-limit case. Before investments, separately approve
   annual-rate convention and dated-cash-flow examples; nominal and effective rates
   cannot be mixed. Estimates never silently become recorded financial movements.
 - **MUST** distinguish explicit zero budgets from unlimited categories. Allow

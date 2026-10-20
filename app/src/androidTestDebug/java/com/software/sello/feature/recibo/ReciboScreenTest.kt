@@ -110,7 +110,7 @@ class ReciboScreenTest {
             "Transporte",
             ReciboHeadline.Remaining,
             "55.000",
-            ReciboStamp.Tight,
+            ReciboStamp.AtLimit,
             "200.000"
         ),
         limited(
@@ -188,7 +188,7 @@ class ReciboScreenTest {
         show(month(ReciboHeadline.Overspent, "50.000", ReciboStamp.Over, 1, "0", exhausted = true))
 
         rule.onNodeWithContentDescription(
-            "Te pasaste por 50.000 pesos. Pasado."
+            "Te pasaste por 50.000 pesos. Excedido."
         ).assertIsDisplayed()
         rule.onNodeWithText("Para hoy").assertIsDisplayed()
         rule.onNodeWithContentDescription("0 pesos").assertIsDisplayed()
@@ -198,7 +198,7 @@ class ReciboScreenTest {
     fun aFinishedMonthAndAMonthWithoutLimitsShowNoDailyAmount() {
         show(month(ReciboHeadline.LeftOver, "500.000", ReciboStamp.WithinLimit))
 
-        rule.onNodeWithContentDescription("Te sobraron 500.000 pesos. Bajo el límite.")
+        rule.onNodeWithContentDescription("Te sobraron 500.000 pesos. Cumplido.")
             .assertIsDisplayed()
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
         rule.onNodeWithText("Puedes gastar al día").assertDoesNotExist()
@@ -219,8 +219,8 @@ class ReciboScreenTest {
 
         listOf(
             "Alimentación. Te quedan 287.600 pesos de 900.000 pesos. Al día.",
-            "Transporte. Te quedan 55.000 pesos de 200.000 pesos. Justo.",
-            "Entretenimiento. Te pasaste por 21.500 pesos de 100.000 pesos. Pasado.",
+            "Transporte. Te quedan 55.000 pesos de 200.000 pesos. Al límite.",
+            "Entretenimiento. Te pasaste por 21.500 pesos de 100.000 pesos. Excedido.",
             "Arte. Has gastado 80.000 pesos. Sin límite.",
             "Vieja. Has gastado 80.000 pesos. En pausa. Archivada.",
             "Nueva. Has gastado 80.000 pesos. Sin configurar."
@@ -312,7 +312,7 @@ class ReciboScreenTest {
         rule.onNodeWithContentDescription("Te quedan $huge pesos. Al día.").assertIsDisplayed()
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).performScrollTo().assertIsDisplayed()
         rule.onNodeWithContentDescription(
-            "Un nombre de categoría largo. Te pasaste por $huge pesos de $huge pesos. Pasado."
+            "Un nombre de categoría largo. Te pasaste por $huge pesos de $huge pesos. Excedido."
         ).performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag(RECIBO_ADD_CATEGORY_TAG).performScrollTo().assertIsDisplayed()
     }

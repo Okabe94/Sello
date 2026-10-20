@@ -260,7 +260,7 @@ class CategoryDetailScreenTest {
 
         show(ready(ExpenseListState.Rows(rows, more = false), category = over))
 
-        rule.onNodeWithContentDescription("Te pasaste aquí por 21.500 pesos. Sobre el límite.")
+        rule.onNodeWithContentDescription("Te pasaste aquí por 21.500 pesos. Excedido.")
             .assertIsDisplayed()
     }
 
@@ -299,7 +299,7 @@ class CategoryDetailScreenTest {
     fun atTwiceTheFontSizeWithVeryLargeAmountsEverythingCanStillBeReached() {
         val huge = "8.998.000.000.000.001"
         val category = food.copy(
-            figure = BudgetFigure(ReciboHeadline.Remaining, plain(huge), ReciboStamp.Tight),
+            figure = BudgetFigure(ReciboHeadline.Remaining, plain(huge), ReciboStamp.AtLimit),
             spent = plain(huge),
             limit = plain(huge)
         )
@@ -317,7 +317,7 @@ class CategoryDetailScreenTest {
             showName = true
         )
 
-        rule.onNodeWithContentDescription("Te quedan aquí $huge pesos. Justo.")
+        rule.onNodeWithContentDescription("Te quedan aquí $huge pesos. Al límite.")
             .performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag(CATEGORY_DETAIL_SPENT_TAG).performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag(CATEGORY_DETAIL_LIMIT_TAG).performScrollTo().assertIsDisplayed()

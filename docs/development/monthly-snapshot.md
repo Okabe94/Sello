@@ -50,17 +50,18 @@ floating-point number and SQL does no sums.
 | Figure | Rule |
 | --- | --- |
 | Forecast | `S × N / d`, kept as an exact fraction; shown rounded half up to a peso. Today counts towards the pace, not towards the days still to come. An estimate, to be labelled as one |
-| Verdict, current month | `Over` if spent or the exact forecast is above `L`; `OnTrack` if the forecast is at most 95% of `L`; otherwise `Tight`. Compared before rounding |
+| Verdict, current month | `Over` if more than `L` was spent; `AtLimit` if exactly a positive `L`; otherwise `OnTrack`, including nothing spent against a zero `L`. The forecast is not used (ADR 0012 BG1) |
 | Verdict, past month | `Over` only if more than `L` was spent; otherwise `WithinLimit`. No forecast |
 | Available days | `N − d + 1`, today included |
 | Daily allowance | `50 × floor(max(remaining, 0) / (50 × available days))`. Rounded down to 50 pesos. Current month only. The only figure rounded this way |
 
-On Recibo, `OnTrack`, `Tight`, `Over` read Al día, Justo, Pasado; a past month
-reads Bajo el límite or Sobre el límite. Labels and colours belong to presentation.
+On Recibo, `OnTrack`, `AtLimit`, `Over` read Al día, Al límite, Excedido; a past
+month reads Cumplido or Excedido. Labels and colours belong to presentation. Resumen
+keeps its own words for the actual result and labels the forecast as an estimate.
 
-These are the rules in the code today. [ADR 0012](../decisions/0012-budget-guidance-contract.md)
-approves the statuses and daily guidance that replace them; until a scoped change
-implements those, keep these calculations and their tests.
+These are the rules in the code today. The status follows
+[ADR 0012](../decisions/0012-budget-guidance-contract.md) BG1 since SELLO-061; its
+reserved-payment statuses and daily guidance wait for recurrence.
 
 A total that does not fit an exact amount is `SnapshotFailure.Unrepresentable`. A
 month after the current one is `FutureMonth`. A damaged row is `Storage(Integrity)`.

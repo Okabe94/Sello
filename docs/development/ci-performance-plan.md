@@ -29,7 +29,8 @@ own revisions, not a controlled before/after benchmark or a promised saving.
    on hosted runners. Enable Gradle build caching, track files read directly
    by tests, and let only trusted `main` runs update shared entries. This targets
    the largest measured cost; initial hosted measurements are recorded below.
-2. **Tune build parallelism and emulator provisioning — pending.** Benchmark
+2. **Tune build parallelism and emulator provisioning — image-cache experiment
+   implemented locally; hosted measurement pending.** Benchmark
    bounded worker/heap settings, build/emulator contention and clean API-30 AVD
    caching. Preserve all task selections and measure net wall time and cost.
 3. **Split device work between two runners — pending.** Candidate suite times
@@ -203,3 +204,106 @@ Hosted follow-up after merge:
    all device tests still execute freshly. Compare net time including restore/save.
 4. Check a source-changing PR restores the device profile, reruns affected tasks
    and reports the unchanged required `quality` check. Retain warnings and failures.
+
+### Device-cache follow-up observations
+
+PR #62 merged as `28f1660`. Main G1 passed in 2m06s. Two manual G2
+[attempts](https://github.com/Okabe94/Sello/actions/runs/39443100610) at that SHA
+passed with identical input fingerprints, 522 host results, 544 freshly executed
+device tests, zero failures/errors/skips and 33 lint warnings. Separate host/device
+keys were saved, and the repeat restored the device key exactly.
+
+Device-phase cache hits increased from 33 to 69, including instrumented-test Kotlin
+compilation. Jobs took 8m10s and 8m51s; reported device suites took 262s and 302s.
+The portion outside those suites fell from about 57s to 21s, including build,
+installation and runner overhead. This pair proves cache reuse but does not
+establish another overall time saving. Source-changing PR performance still needs
+observation.
+
+## Option 2: system-image provisioning experiment
+
+Owned scope: the Quality workflow, hosted-workflow regression checks, setup guide
+and this plan. Measure SDK provisioning and try caching only the vendor API-30
+`google_apis/x86_64` system image. Preserve fresh AVD creation, cold boot, the full
+G2 task list, fresh device results, gate selection and trusted-main cache writes.
+No live AVD, snapshot, app data, permission, app dependency or ticket changes are
+included. Keep emulator CPU/RAM and Gradle workers unchanged during this first
+comparison; evaluate resource tuning separately after its hosted measurements.
+
+The two full-run logs above show 86–87s from emulator-action startup to the gate:
+about 52–58s installing/checking SDK packages, including 27–34s for the system
+image; about 25–32s creating and booting the AVD; and remaining animation/setup
+work. Image download is the first isolated target.
+
+### Implementation and tool choice
+
+- Restore only `$ANDROID_HOME/system-images/android-30/google_apis/x86_64` for G2.
+  SDK installation/update checks remain in the existing emulator action. A cache
+  miss takes the existing download path.
+- Save only after successful G2/evidence validation on trusted `main`. Use OS,
+  host architecture, API/target/image architecture and the installed
+  `source.properties` SHA-256 in the saved key. Prefix restores find the latest
+  saved vendor revision; compare matched versus installed keys to avoid rewriting
+  an unchanged image. A newly published SDK revision can still be installed and
+  saved under a new key.
+- Force fresh AVD creation and cold boot explicitly, using the action's existing
+  two-core/default-RAM settings. No AVD, VM snapshot, ADB key, app data, result file,
+  Gradle output or signing material is included in the SDK cache.
+- Use the official MIT-licensed `actions/cache/restore` and `actions/cache/save`
+  **v5.1.0**, commit `caa296126883cff596d87d8935842f9db880ef25`, from its
+  [official release](https://github.com/actions/cache/releases/tag/v5.1.0).
+  Its Node 24 runtime requires runner 2.327.1 or newer; the measured hosted runner
+  was 2.337.0. The v5 interface matches the pinned emulator action's caching
+  guidance. No app/Gradle/JDK/emulator version or permission change is introduced.
+
+The focused configuration checks first fail for missing SDK restore/publication
+and explicit fresh-AVD guards, then pass after implementation. The pre-existing
+Gradle guard now permits the separate SDK-only restore/save actions while still
+rejecting another combined cache action or a second Gradle cache path.
+
+### Verification and hosted comparison
+
+Local probes used the vendor API-30 image revision 16 on a 16-logical-CPU host:
+
+- A clean SDK install took 40.031s.
+- The 3,442,815,438-byte image directory compressed to 1,209,207,005 bytes
+  (about 1.13 GiB) with tar/zstd in 4.134s.
+- Three archive restores took 2.778s, 2.749s and 2.703s. Every restored file
+  matched the vendor-installed source by SHA-256.
+- The normal `sdkmanager --install` update check on the restored image took
+  11.642s. A warm setup still includes that check and GitHub cache transfer time.
+- Alternating fresh AVD probes booted the vendor image in 19.475s/18.842s and
+  the restored image in 18.777s/18.885s. Each reported API 30, two cores and no
+  preinstalled Sello packages. No boot-time improvement is inferred.
+
+The workflow regression check also executes the actual key-generation script
+against synthetic revision metadata: unchanged metadata reuses the key and a
+revision change produces a new key. Probe data/logs are under ignored
+`build/reports/ci-performance/system-image/`. Run the integrated G2 gate on the
+final local inputs with an isolated fresh AVD using the restored image. Its
+execution report identifies the exact tested snapshot. Local archive timing
+excludes GitHub transfer time and cannot establish hosted savings.
+
+Local validation at HEAD `515cc22` plus the four owned files passed all 141
+quality-tool tests, 32 board tests, architecture checks, actionlint v1.7.7 and the
+host gate (522 results, no failures/errors/skips, 32 lint warnings). Full G2 run
+`20261020T160148Z-47277918` executed 544 device tests with one failure:
+`DataStoreUserPreferencesPersistenceTest.preferencesSurviveReopeningTheActualFile`
+reported two active DataStores for the same file. The test cancels its first scope
+without awaiting completion before reopening the file. It remains unchanged.
+
+Focused diagnostics passed 10/10 executions on the restored image, then reproduced
+the same overlap error in 8/100 executions on the original vendor image. This
+confirms a pre-existing test-lifecycle race independent of caching; the first
+failed gate remains retained under ignored `build/reports/quality/UNTICKETED/`.
+Diagnostic logs are alongside the image probes. A final G2 rerun uses the restored
+image after wiping only the dedicated synthetic AVD, with no test/assertion or
+gate changes. Its result is reported separately; a passing rerun does not resolve
+the intermittent test defect. Fixing scope cancellation/join belongs in a focused
+test-maintenance change.
+
+After an authorized PR/merge, compare several cold/miss and warm full runs with the
+same app/test code and gate. Retain image metadata, runner/emulator versions,
+archive bytes, cache restore/save time, SDK/package setup, boot time, complete job
+time, test counts/freshness and warnings. Resource tuning remains a separate
+experiment; do not change CPU, RAM and Gradle workers together with image caching.

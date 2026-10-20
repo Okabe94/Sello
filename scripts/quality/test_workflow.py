@@ -1,5 +1,9 @@
 """The hosted workflow must keep reporting on every candidate and must not lose a check silently."""
+import os
 import re
+import subprocess
+import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -69,7 +73,66 @@ class HostedWorkflowTests(unittest.TestCase):
         names = list(self.steps)
         self.assertLess(names.index("Set up Gradle caching"), names.index("Decide what this run verifies"))
         self.assertNotRegex(self.code, r"(?m)^\s+cache: gradle\s*$")
-        self.assertNotIn("uses: actions/cache", self.code)
+        # SDK image caching must not introduce a second cache of Gradle state.
+        for step in self.steps.values():
+            self.assertNotRegex(step, r"uses: actions/cache@")
+            if "uses: actions/cache/" in step:
+                self.assertIn("path: ${{ steps.android-image.outputs.path }}", step)
+
+    def test_sdk_image_cache_is_separate_and_only_used_for_the_device_gate(self):
+        locate = self.steps.get("Locate Android system image", "")
+        restore = self.steps.get("Restore Android system image", "")
+        self.assertIn("if: steps.plan.outputs.gate == 'G2'", locate)
+        self.assertIn('path=$ANDROID_HOME/system-images/android-30/google_apis/x86_64', locate)
+        self.assertIn("if: steps.plan.outputs.gate == 'G2'", restore)
+        self.assertRegex(restore, r"uses: actions/cache/restore@[0-9a-f]{40}\b")
+        self.assertIn("path: ${{ steps.android-image.outputs.path }}", restore)
+        names = list(self.steps)
+        self.assertLess(names.index("Decide what this run verifies"), names.index("Locate Android system image"))
+        self.assertLess(names.index("Restore Android system image"), names.index("Verify on a device (G2 on API 30)"))
+
+    def test_sdk_image_cache_publication_is_main_only_and_tracks_installed_metadata(self):
+        identify = self.steps.get("Identify installed Android system image", "")
+        save = self.steps.get("Save Android system image", "")
+        trusted = "steps.plan.outputs.gate == 'G2' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'"
+        self.assertIn("if: " + trusted, identify)
+        self.assertIn("if: " + trusted, save)
+        self.assertIn('sha256sum "$ANDROID_HOME/system-images/android-30/google_apis/x86_64/source.properties"', identify)
+        self.assertIn("steps.android-image-cache.outputs.cache-matched-key != steps.android-image-key.outputs.key", save)
+        self.assertRegex(save, r"uses: actions/cache/save@[0-9a-f]{40}\b")
+        self.assertIn("key: ${{ steps.android-image-key.outputs.key }}", save)
+        self.assertIn("path: ${{ steps.android-image.outputs.path }}", save)
+
+        # Execute the workflow's key-generation code: a vendor revision change
+        # must produce a new immutable cache key, while identical metadata reuses it.
+        script = textwrap.dedent(identify.split("run: |\n", 1)[1])
+        script = script.replace("${{ runner.os }}", "Linux").replace("${{ runner.arch }}", "X64")
+        with tempfile.TemporaryDirectory() as directory:
+            sdk = Path(directory) / "sdk"
+            metadata = sdk / "system-images/android-30/google_apis/x86_64/source.properties"
+            metadata.parent.mkdir(parents=True)
+            output = Path(directory) / "output"
+            environment = dict(os.environ, ANDROID_HOME=str(sdk), GITHUB_OUTPUT=str(output))
+
+            def key(revision):
+                metadata.write_text(f"Pkg.Revision={revision}\n", encoding="utf-8")
+                output.write_text("", encoding="utf-8")
+                subprocess.run(["bash", "-eu", "-c", script], env=environment, check=True, capture_output=True)
+                return output.read_text(encoding="utf-8").strip()
+
+            original = key(16)
+            self.assertRegex(original, r"^key=android-image-v1-Linux-X64-api30-google_apis-x86_64-[0-9a-f]{64}$")
+            self.assertEqual(original, key(16))
+            self.assertNotEqual(original, key(17))
+
+    def test_each_device_run_still_creates_a_fresh_avd_and_cold_boots(self):
+        device = self.steps["Verify on a device (G2 on API 30)"]
+        self.assertIn("force-avd-creation: true", device)
+        self.assertIn("-no-snapshot", device)
+        self.assertIn("api-level: 30", device)
+        self.assertIn("target: google_apis", device)
+        self.assertIn("arch: x86_64", device)
+        self.assertIn("cores: 2", device)
 
     def test_shared_gradle_cache_is_read_only_outside_trusted_main_runs(self):
         cache = self.steps.get("Set up Gradle caching", "")

@@ -1,14 +1,12 @@
 # Reproducible Sello setup
 
-**Verified:** 2026-10-08 · **Owner:** SELLO-002
-Version decisions and limits: [ADR 0005](../decisions/0005-toolchain.md).
-Modules and identities below were bootstrapped by SELLO-003; the app is still the
-Compose greeting and the catalog an empty shell, with no financial implementation.
+Versions and their limits: [ADR 0005](../decisions/0005-toolchain.md). Gates and the
+quality runner: the [execution guide](../planning/mvp/EXECUTION_GUIDE.md#quality-runner).
 
 ## Prerequisites
 
-- Git; Python 3 standard library for board checks; JDK **25** (tested JetBrains
-  25.0.2); Android SDK command-line tools and platform-tools.
+- Git; Python 3 standard library for board checks; JDK **25**; Android SDK
+  command-line tools and platform-tools.
 - SDK platform **37.0** / API 37 and build tools **36.0.0**. API 30 is the minimum
   supported app runtime, not the SDK platform used to compile it.
 - For device checks: emulator plus an API-30 system image or an explicitly selected
@@ -61,9 +59,9 @@ ANDROID_CLI="$ANDROID_HOME/cmdline-tools/latest/bin/android"
 
 Older SDK managers use `sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-37.0" "build-tools;36.0.0"`.
 The installed sdkmanager wrapper reports deprecation; use the actual installed
-CLI's help, not an assumed syntax. Install platform-tools/emulator for device work;
-that tooling need not be committed to the project. The new image installed for
-this verification was `system-images/android-30/google_apis/x86_64`, revision 16.
+CLI's help, not an assumed syntax. Install platform-tools, the emulator and
+`system-images/android-30/google_apis/x86_64` for device work; that tooling is not
+committed to the project.
 
 ## Modules, identities and tasks
 
@@ -74,25 +72,26 @@ this verification was `system-images/android-30/google_apis/x86_64`, revision 16
 | `:design-system` | Android library + Compose, `com.software.sello.designsystem` | none | `:design-system:testDebugUnitTest` | `:design-system:connectedDebugAndroidTest` |
 | `:app` | Android application, `com.software.sello` | `:domain`, `:design-system`, `:data` | `:app:testDebugUnitTest` | `:app:connectedDebugAndroidTest` |
 | `:catalog` | Android application, `com.software.sello.catalog` | `:design-system` | `:catalog:testDebugUnitTest` | `:catalog:connectedDebugAndroidTest` |
+| `:prototype` | Android application, `com.software.sello.prototype` | `:design-system` | — | — |
 
 | Artifact | Application ID | Launcher label |
 | --- | --- | --- |
 | `:app` release (customer) | `com.software.sello` | Sello |
 | `:app` debug | `com.software.sello.debug` | Sello Debug |
 | `:catalog` debug | `com.software.sello.catalog` | Sello Catalog |
+| `:prototype` debug | `com.software.sello.prototype` | Sello Prototipo |
 
-- Only `:app` and `:catalog` have tests today. `:domain`, `:data` and
-  `:design-system` report `NO-SOURCE` for their test tasks. That is a configured
-  task, not an executed suite.
+- `:prototype` is the owner's debugging app: v1.1 sample screens with no storage. It
+  is never shipped and has no tests; the gate's ktlint and lint still cover it. See its
+  [README](../../prototype/README.md).
 - `:app`'s Gradle edge to `:data` exists for the composition root only. Gradle
   cannot enforce that package rule; `scripts/quality/architecture.py` does.
-- `:data` applies KSP with Room 2.8.4 and `room.schemaLocation` set to
-  `data/schemas/`. No database exists yet, so that directory is created by the
-  first real schema in SELLO-011. Do not add a placeholder database to fill it.
-- `:domain` now holds the clock and dispatcher ports; `:app` has 29 JVM tests for
-  the clocks, scope ownership and graph. See [time and composition](time-and-composition.md).
+- `:data` applies KSP with Room and exports schemas to `data/schemas/`.
 - The debug label comes from `app/src/debug/res/values/strings.xml`. The class name
   stays `com.software.sello.MainActivity`; only the application ID gains `.debug`.
+- Dependencies are locked per module. After a deliberate dependency change, run
+  `./scripts/update-dependency-locks` and review the lockfile diff
+  ([ADR 0006](../decisions/0006-quality-tooling.md)).
 
 Inspect the graph and built identities:
 
@@ -106,15 +105,12 @@ Inspect the graph and built identities:
 
 ## Build and focused inspection
 
+The host gate runs every module's tests, ktlint, lint and the assemblies; its exact
+task list is in the [board README](../planning/mvp/README.md):
+
 ```bash
-./scripts/verify-ticket SELLO-0XX   # the ticket's whole gate; see the execution guide
-./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
-  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
-  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
-./gradlew :app:assembleDebugAndroidTest :catalog:assembleDebugAndroidTest \
-  :data:assembleDebugAndroidTest :design-system:assembleDebugAndroidTest
-python3 -m unittest discover -s docs/planning/mvp -p test_board.py
-python3 docs/planning/mvp/board.py --check
+./scripts/verify-ticket SELLO-0XX             # the ticket's own gate
+./scripts/verify-ticket SELLO-0XX --gate G1   # the host gate alone
 ```
 
 Inspect actual compiler versions independently of Gradle's embedded Kotlin:
@@ -130,7 +126,7 @@ Inspect actual compiler versions independently of Gradle's embedded Kotlin:
 Expected app compiler and Compose compiler plugin: **2.4.20**. `--version` reports
 embedded Kotlin **2.3.20**, which is not the app compiler. Java/Kotlin output remains
 JVM 11. Build warning counts and resolved artifacts belong in ticket evidence;
-do not upgrade or baseline them incidentally to this setup task.
+do not upgrade or baseline them incidentally.
 
 For independent-output validation in a clean source checkout:
 
@@ -175,26 +171,24 @@ adb -s "$ANDROID_SERIAL" install -r catalog/build/outputs/apk/debug/catalog-debu
 adb -s "$ANDROID_SERIAL" shell am start -W \
   -n com.software.sello.debug/com.software.sello.MainActivity
 adb -s "$ANDROID_SERIAL" shell am start -W -n com.software.sello.catalog/.CatalogActivity
-./gradlew :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest
+./scripts/verify-ticket SELLO-0XX --gate G2   # the device gate
 ```
 
 Wait for boot completion `1` with a bounded condition check; device connectivity
-alone is not readiness. Confirm API `30`, visible `Hello Android!` in the debug app
-and `Sello Catalog` in the catalog, not just successful installs. The instrumented
-tests check package identity and launcher label only. The unsigned release APK
-cannot be installed, so customer/debug coexistence on a device needs the owner's
-signed build. Shut down only the emulator you created:
-`adb -s "$ANDROID_SERIAL" emu kill`.
+alone is not readiness. Confirm API `30`, that the debug app opens on Recibo and that
+the catalog opens, not just successful installs. The unsigned release APK cannot be
+installed, so customer/debug coexistence on a device needs the owner's signed build.
+Shut down only the emulator you created: `adb -s "$ANDROID_SERIAL" emu kill`.
 
 ## Troubleshooting and signing
 
 | Symptom | Meaning / action |
 | --- | --- |
-| `JAVA_HOME is set to an invalid directory` | Launcher cannot start. Point it at an installed JDK 25; daemon settings cannot repair an invalid launcher path. This failure was exercised. |
-| `SDK location not found` | Set a valid ANDROID_HOME or ignored sdk.dir; install required packages. Tested without local.properties and with an invalid SDK path. |
+| `JAVA_HOME is set to an invalid directory` | Launcher cannot start. Point it at an installed JDK 25; daemon settings cannot repair an invalid launcher path. |
+| `SDK location not found` | Set a valid ANDROID_HOME or ignored sdk.dir; install required packages. |
 | Different daemon JDK than expected | Inspect daemon criteria and buildEnvironment; don't assume changing JAVA_HOME overrides them. |
 | Missing SDK license/platform or repository access | Resolve actual install/license/network failure; don't bypass checks or silently change SDK/versions. |
-| KSP adds forbidden kotlin.sourceSets | Use pinned KSP 2.3.12/KSP2, not the rejected older candidate. Don't disable built-in Kotlin validation. |
+| KSP adds forbidden kotlin.sourceSets | Use the pinned KSP2 version. Don't disable built-in Kotlin validation. |
 | Child Kotlin JVM plugin has an unknown classpath version | Declare the catalog's versioned JVM plugin at root with apply false before AGP/Compose, then apply it in the child. |
 | No device or boot not completed | APK assembly is not launch/instrumentation evidence; provide an isolated emulator or record the missing gate. |
 

@@ -1,10 +1,10 @@
 # Recibo and category detail
 
-**Owner:** SELLO-018 · Decisions: [D03, D06](../decisions/0001-mvp-contract.md) ·
-Design: [Recibo](../design/sello-spec.html#s-recibo),
-[Detalle de categoría](../design/sello-spec.html#s-categoria) · Builds on the
-[monthly snapshot](monthly-snapshot.md), [Anotar](expense-entry.md) and the
-[app shell](app-shell.md).
+Decisions: [D03, D06](../decisions/0001-mvp-contract.md) ·
+Design: [Sello v2 Recibo](../design/v2/home.html); [Detalle de
+categoría](../design/sello-spec.html#s-categoria) (v1.1; not redesigned in v2) ·
+Builds on the [monthly snapshot](monthly-snapshot.md), [Anotar](expense-entry.md) and
+the [app shell](app-shell.md).
 
 The screens that answer "how much is left, and where did it go". Their rule: every
 figure comes from one snapshot of the month, and no screen adds, subtracts or judges
@@ -32,12 +32,20 @@ Al día."
 How full a category's circle is drawn is the only number that is not exact. It is
 geometry: it is never shown as a figure, compared or turned back into money.
 
+The approved [v2 Recibo](../design/v2/home.html) changes the stamps
+([ADR 0012](../decisions/0012-budget-guidance-contract.md)), always shows the per-day
+line in the current month, closes a past month with one line and adds a review
+invitation; none of it is implemented yet.
+
 ## Order of the categories
 
-`CategoryOrderPolicy.mostUsed` (D06, "Más usadas"): most expenses in the selected
-month first; equal ones by name ignoring case and accents, then by identifier; a
-category without a finite limit that month always after those with one. Choosing
-another order is SELLO-023.
+`CategoryOrderPolicy` (D06). Configuración offers Más usadas (the default),
+Alfabético, Monto gastado, Límite and Último gasto agregado, each from highest to lowest or
+lowest to highest, using only the expenses of the month on screen. Whatever the choice,
+categories with a finite limit that month come first, those with no expenses that
+month come last within each group, and ties go by name ignoring case and accents,
+then by identifier. If the setting cannot be read, the last good one is used, or Más
+usadas.
 
 ## Category detail
 
@@ -61,11 +69,10 @@ per read) and a cursor for the next. Rules:
 - The rows kept on screen during that read are marked `Rows.refreshing`: they are of
   an earlier snapshot than the figures above them. They are replaced whole when the
   read finishes, so the list never drops to its first page and grows back, and "Ver
-  más" asks nothing meanwhile. Nothing is drawn for `refreshing` (owner decision,
-  2026-10-11: the read takes milliseconds and an indicator would flicker).
-- Every listed row is drawn, on screen or not, inside one slip; there is no lazy list
-  (SELLO-056, parked: the slip is one surface and a lazy list would mean splitting
-  it). Each row is keyed by its expense identifier, so a new expense at the top adds
+  más" asks nothing meanwhile. Nothing is drawn for `refreshing`: the read takes
+  milliseconds and an indicator would flicker.
+- Every listed row is drawn, on screen or not, inside one slip; there is no lazy list,
+  because the slip is one surface and a lazy list would mean splitting it. Each row is keyed by its expense identifier, so a new expense at the top adds
   one row instead of redrawing all of them. Measured on the API 30 emulator, debug
   build, including about 80 ms of test overhead: one new expense at the top of 40 /
   200 / 500 rows took 100 / 250 / 400 ms before the key and 46 / 66 / 100 ms with it;
@@ -86,7 +93,8 @@ month on screen. A long press on a category's cell in Recibo offers the same in 
 menu, and a screen reader is offered it by name; pressing a cell still only opens it.
 
 The detail of a month that is over always says that its limit can still be corrected
-and that other months do not change. An archived category stays listed, marked
+and that other months do not change. Until dismissed, it also shows the first-time
+announcement "Puedes corregir el límite de este mes anterior.", alone or beside Recibo. An archived category stays listed, marked
 "Archivada", in every month where it has a limit or expenses.
 
 ## Correcting and deleting an expense
@@ -144,6 +152,6 @@ side of the screen, as it already did at the top and bottom.
 
 ## Not here yet
 
-The weekly and six-month charts, "En números" and the comparison with last month;
-the gear and
-other tabs; swiping between months; and the count-up and stamp-landing motion.
+The comparison with last month, swiping between months, and the count-up and
+stamp-landing motion. The charts are on
+[Resumen](current-app-experience.md#4-resumen).

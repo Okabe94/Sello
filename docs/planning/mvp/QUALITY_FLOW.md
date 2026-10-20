@@ -1,42 +1,37 @@
 # Mandatory ticket quality flow
 
-**Contract owner:** SELLO-004, which delivered the runner and validator described
-here. Commands and failure recovery are in the
+Commands and failure recovery are in the
 [execution guide](EXECUTION_GUIDE.md#quality-runner); choices are in
-[ADR 0006](../../decisions/0006-quality-tooling.md).
-Bootstrap tickets SELLO-001–003 use their existing verification recipes. Every
-subsequent ticket explicitly depends on SELLO-004; future implementation tickets
-must inherit this flow too. Ordinary unticketed work still follows architecture
-gates; do not invent a ticket ID to run checks.
+[ADR 0006](../../decisions/0006-quality-tooling.md). Every ticket follows this flow
+except the bootstrap tickets SELLO-001–003, which kept their own verification.
+Unticketed work still runs the gates; do not invent a ticket ID to run checks.
 
 ## Executor flow
 
 1. Read the canonical ticket, approved inputs and predecessor evidence; verify
-   prerequisites before Ready. SELLO-004 must be Done before downstream work starts.
+   prerequisites before Ready.
 2. Implement within owned boundaries; run meaningful focused red→green tests.
-3. Run the entrypoint delivered by 004, targeted as
-   `./scripts/verify-ticket SELLO-017`. It MUST derive the minimum G1/G2/G3 profile
+3. Run `./scripts/verify-ticket SELLO-017`. It MUST derive the minimum G1/G2/G3 profile
    from the canonical ticket, execute required checks and retain a structured report.
    No downgrade/skip-as-success flag is allowed. Higher verification is permitted.
 4. Record `Quality run` in the canonical ticket's Delivery evidence: run ID,
    ticket/profile, tested snapshot, outcome and retained artifact reference.
    Validate evidence and regenerate/check the board before opening the pull request.
-5. Open the pull request with the ticket already marked Done, as described in
-   [Done is proposed, merging approves](#done-is-proposed-merging-approves).
-   A designated reviewer verifies acceptance, report freshness and actual results.
-   Only approved acceptance plus passing required checks permits the merge, and so
-   Done on `main`. Self-review is not independent approval. Re-run after relevant
-   edits or reopen on regression.
+5. Open the final pull request with the ticket already marked Done
+   ([below](#done-is-proposed-merging-approves)). A ticket may span several PRs.
+   Partial PRs keep it In Progress, describe the delivered scope and remaining work,
+   and run the applicable checks without claiming complete ticket acceptance.
+   Self-review is not independent approval. Re-run after relevant edits or reopen on
+   regression.
 
 ## Done is proposed, merging approves
 
-Adopted 2026-10-10 by the project owner, from SELLO-013 onward.
-
-A pull request describes what `main` will say once it is merged. The ticket's pull
-request therefore carries the ticket as **Done**, with its complete Delivery
-evidence, from the moment it is opened. Nothing reaches `main` without the
-designated reviewer's go-ahead, so `main` never says Done for work that was not
-approved.
+A pull request describes what `main` will say once it is merged. The ticket's final
+pull request therefore carries the ticket as **Done**, with its complete Delivery
+evidence, from the moment it is opened. Earlier parts keep the ticket In Progress.
+A designated reviewer verifies acceptance, report freshness and actual results, and
+nothing reaches `main` without their go-ahead and passing required checks, so `main`
+never says Done for work that was not approved.
 
 - **The approval is the merge.** The `Review` evidence field names the pull request
   and says that its merge is the reviewer's acceptance. It must not claim an
@@ -45,7 +40,7 @@ approved.
 - **The last ticket of an epic carries the epic too.** When the ticket is the last
   one open in its epic, mark the epic Done in the same commit as the ticket's Done
   and evidence, before the pull request is opened. Doing it afterwards costs a whole
-  hosted run for one status line (it did on SELLO-018; adopted 2026-10-11).
+  hosted run for one status line.
 - **On the branch, Done means "proposed".** Until merged it is a request, not a
   fact. Do not start work that depends on the ticket from an unmerged branch.
 - **Changes requested** are pushed to the same pull request. If they touch
@@ -53,19 +48,20 @@ approved.
   board check rejects a stale report.
 - **Not approved or abandoned:** close the pull request. `main` still shows the
   ticket as it was, so there is nothing to revert.
-- **Why:** writing Done in a second commit after approval re-ran the whole hosted
-  gate on unchanged code. One pull request now needs one hosted run.
+- **Why:** one pull request needs one hosted run; writing Done in a second commit
+  would re-run the whole gate on unchanged code.
 - The `Review` status remains for work that is waiting on something other than
   this merge, for example a device or person that is not available yet.
 - After merging, the executor may start the next ticket while the hosted run on
   `main` finishes, and must report and fix a failure there before anything else merges.
 
-## Runner and evidence contract — implementation owed by 004
+## Runner and evidence contract
+
+Standing rules for the runner, validator and CI; a change to the tooling must keep them.
 
 - **MUST** expose one local/CI entrypoint; document requirements and actionable
   failures. Reject unknown tickets, unfinished prerequisites, unavailable required
   tasks/SDK/devices/keys, failed checks and missing results with nonzero exit.
-  SELLO-004 can run its own G1 before it is Done; 001–003 do not require this runner.
 - **MUST** report a schema version, unique run ID, ticket ID, gate, HEAD and dirty
   input fingerprint, environment/toolchain, commands/exit codes/results, timestamps,
   warnings and artifact/device references. Never include personal data or secrets.
@@ -88,8 +84,7 @@ approved.
   CI artifacts with a documented retention/retrieval policy. A fresh checkout must
   not depend on another developer's ignored file. A missing retained artifact is
   missing evidence, not permission to trust a free-text field.
-- **MUST** configure the chosen host's required quality check and protected merge
-  policy when host/admin access exists. CI re-executes checks for the actual merge
+- **MUST** keep the host's required quality check and protected merge. CI re-executes checks for the actual merge
   candidate; a local report alone cannot authorize merge. Cover workflow/path-filter
   bypasses and gate-policy edits in review. Never expose signing secrets to untrusted PRs.
 - **SHOULD** offer an affected-area focused command, but it never substitutes for

@@ -1,6 +1,6 @@
 # Time sources and composition
 
-**Owner:** SELLO-005 · Rules: [architecture](../../ARCHITECTURE.md) §§2, 4, 9.
+Rules: [architecture](../../ARCHITECTURE.md) §§2, 4, 9.
 
 ## Three clocks, never interchangeable
 
@@ -46,14 +46,13 @@ zone change triggers a recompute but cannot change the financial zone.
 
 ## Composition
 
-`composition/PlatformModule.kt` is the only place that knows the adapters,
-`composition/StorageModule.kt` the only place that knows `:data`, and
-`composition/PresentationModule.kt` the only place that builds view models
-([app shell](app-shell.md)). Every
-collaborator is a required constructor parameter and the financial clock is
-created with the graph, so a missing binding or an uninitialized zone fails at
-startup. New workflows are bound when they exist; do not register a placeholder
-that reports success.
+The `composition` package is the only place in `:app` that references `:data` or
+Koin. `PlatformModule` binds the adapters, `StorageModule` the financial storage,
+`PreferencesModule` the preference ports and `PresentationModule` builds every view
+model ([app shell](app-shell.md)). Every collaborator is a required constructor
+parameter and the financial clock is created with the graph, so a missing binding or
+an uninitialized zone fails at startup. New workflows are bound when they exist; do
+not register a placeholder that reports success.
 
 `ControlledFinancialClock` and `financialTimeOverride` live in
 `app/src/debug/.../devtools` and are absent from release builds. The debug app
@@ -76,8 +75,3 @@ one built without the graph. A link that arrives while failed is dropped.
   a stored financial zone.
 
 Startup is deliberately synchronous ([ADR 0008](../decisions/0008-unreadable-storage-start-over.md)).
-
-## Not here yet
-
-Preference contracts: none is defined because nothing consumes one before
-SELLO-023. When added, the contract belongs in `:domain` with no DataStore type.

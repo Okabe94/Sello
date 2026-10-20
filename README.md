@@ -5,6 +5,12 @@ a deliberately smaller, tested MVP and the Sello visual language.
 
 ## Start here
 
+- [Sello v2 design](docs/design/v2/README.md): the locked screens and shared
+  components, the visual source of truth ([ADR 0013](docs/decisions/0013-sello-v2-design.md)).
+- [Design philosophy](docs/design/philosophy.md): the purpose, working motto and
+  principles for new screens, with [superseded decisions and transition](docs/decisions/0011-goal-centered-design.md).
+- [Screen and interaction briefs](docs/design/screen-briefs/README.md): the product
+  intent and open policy behind each v2 screen.
 - [Current app experience baseline](docs/development/current-app-experience.md):
   the implemented screens, navigation, behavior, adaptive layout and component
   families to use as the starting point for UI/UX work.
@@ -38,8 +44,7 @@ a deliberately smaller, tested MVP and the Sello visual language.
   saving once and the receipt.
 - [Quality flow](docs/planning/mvp/QUALITY_FLOW.md): `./scripts/verify-ticket`, the
   evidence every ticket needs and what CI enforces.
-- [Local visual reference](docs/design/README.md): Sello snapshot and provenance.
-- [Inspected baseline](docs/planning/mvp/BASELINE.md): what actually builds today.
+- [Design references](docs/design/README.md): Sello v2, the v1.1 snapshot and provenance.
 
 The app currently implements Recibo and Resumen tabs, expense and income
 entry/history, category and limit management, corrections with guarded undo,

@@ -1,8 +1,13 @@
 # Sello prototype
 
+> **Built from the old design.** This prototype walks the v1.1 reference, which is no
+> longer the design to build from. The current design is [Sello v2](../docs/design/v2/README.md)
+> ([ADR 0013](../docs/decisions/0013-sello-v2-design.md)). The comparison below predates v2.
+
 A throwaway, navigable husk of the [Sello visual reference](../docs/design/sello-spec.html).
 It turns the reference's 17 screens into an app you can walk through, to inform future
-work. **It is not product code, is never merged into `main` and is never shipped.**
+work. **It is not product code and is never shipped;** the owner uses it to debug
+functionality.
 
 - Separate app: `com.software.sello.prototype`, launcher label "Sello Prototipo".
 - Depends only on `:design-system`. No domain, data, storage or clock; every figure is

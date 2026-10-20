@@ -9,7 +9,7 @@
 - **Type:** Task
 - **Priority:** P0
 - **Status:** Backlog
-- **Depends on:** SELLO-018, SELLO-019, SELLO-020, SELLO-021, SELLO-022, SELLO-023, SELLO-009, SELLO-004
+- **Depends on:** SELLO-018, SELLO-019, SELLO-020, SELLO-021, SELLO-022, SELLO-023, SELLO-009, SELLO-063, SELLO-064, SELLO-065, SELLO-066, SELLO-067, SELLO-004
 - **Gate:** G2
 
 ### Outcome
@@ -40,8 +40,11 @@ broken by layout/accessibility fixes.
 ### Context and starting points
 Component-level previews cannot prove complete forms/navigation usable on actual
 devices. Inputs are completed daily-use routes, approved D10 matrix and the catalog.
-Read [a11y](../../../design/sello-spec.html#a11y), adaptive/navigation guidance and
+Read [Sello v2](../../../design/v2/README.md) (large text, reduced motion, exact spoken amounts), the v1.1 [a11y](../../../design/sello-spec.html#a11y) section, adaptive/navigation guidance and
 [process-restoration procedure](../EXECUTION_GUIDE.md#device-and-process-restoration).
+
+From SELLO-E12 (2026-10-16): the journeys include the v2 Recibo delivered by
+SELLO-061–069, so this ticket starts after that epic.
 
 ### Implementation plan
 1. Create `docs/testing/ui-acceptance-matrix.md` listing build/API/window/font/theme/
@@ -171,7 +174,7 @@ financial history and recoverable files. Reports support the final acceptance de
 Debug responsiveness and unshrunk DI do not establish release behavior. Inputs are
 approved D10 targets/device profile, all recovery/privacy/a11y evidence and actual
 signing access. Read architecture §10, source-library shrinking/signing docs and
-[baseline](../BASELINE.md)'s currently unoptimized release configuration.
+the currently unoptimized release configuration in `app/build.gradle.kts`.
 
 ### Implementation plan
 1. Create `docs/testing/performance-profile.md` with reviewed targets, device/API,

@@ -56,8 +56,8 @@ class ResumenJourneyTest {
     @Test
     fun realEntrySummarySourceLinksAndRecreationReconcileWithStorage() {
         scenario = ActivityScenario.launch(MainActivity::class.java)
-        rule.awaitText("Crear categorías")
-        rule.onNodeWithText("Crear categorías").performClick()
+        rule.awaitText("Crear categoría")
+        rule.onNodeWithText("Crear categoría").performClick()
         rule.awaitDescription("Nombre")
         rule.onNodeWithContentDescription("Nombre").performTextInput("Comida")
         rule.onNodeWithContentDescription(

@@ -192,6 +192,7 @@ fun MotionExample() {
 private fun MotionRow(name: String, spec: AnimationSpec<Float>) {
     val progress = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
+    val reduced = SelloTheme.reducedMotion
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -203,8 +204,12 @@ private fun MotionRow(name: String, spec: AnimationSpec<Float>) {
             TextButton(
                 onClick = {
                     scope.launch {
-                        progress.snapTo(0f)
-                        progress.animateTo(1f, spec)
+                        if (reduced) {
+                            progress.snapTo(1f)
+                        } else {
+                            progress.snapTo(0f)
+                            progress.animateTo(1f, spec)
+                        }
                     }
                 }
             ) { Text(stringResource(R.string.catalog_motion_play)) }

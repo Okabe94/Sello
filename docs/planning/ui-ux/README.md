@@ -1,10 +1,12 @@
 # Sello UI/UX audit package
 
-This directory preserves the evidence and analysis used to turn the owner's
-[`ui_issues.md`](../../../ui_issues.md) inventory into the canonical
-[SELLO-E12](../mvp/epics/E12-coherent-experience.md) planning epic. It is an
-observation and planning package, not proof that any issue has been fixed or that
-an earlier product decision has been reversed.
+This directory preserves the evidence and analysis behind the owner's
+[`ui_issues.md`](../../../ui_issues.md) inventory. The redesign epic first proposed
+from it was not adopted: Sello v2 ([ADR 0013](../../decisions/0013-sello-v2-design.md))
+and its epics [E12](../mvp/epics/E12-v2-recibo.md) and
+[E13](../mvp/epics/E13-v2-current-app.md) replaced it. It is an observation package,
+not proof that any issue has been fixed or that an earlier product decision has been
+reversed.
 
 ## Baseline and method
 
@@ -33,13 +35,11 @@ available so visible presentation can be compared with accessibility semantics.
 
 - [`reports/2026-10-15-ui-ux-audit.md`](reports/2026-10-15-ui-ux-audit.md) maps
   every item in `ui_issues.md` to its observed status, evidence, governing contract
-  and proposed ticket.
+  and where it stands in E12 and E13, including the findings no ticket covers yet.
 - [`evidence/20261015/`](evidence/20261015/) contains 47 numbered capture artifacts
   (approximately 8 MiB): PNG screenshots, UIAutomator XML hierarchies, MP4 interaction
   recordings and two contact sheets. [`SHA256SUMS`](evidence/20261015/SHA256SUMS)
   makes the retained bytes independently verifiable.
-- [SELLO-E12](../mvp/epics/E12-coherent-experience.md) turns the findings into
-  decision-gated, independently verifiable implementation tickets.
 
 ## Evidence conventions
 
@@ -64,5 +64,4 @@ The classifications in the report mean:
 
 These labels can be combined. They are triage, not a claim of priority, acceptance,
 independent review or completion. They describe evidence, not the kind of requested
-work: the report and E12 separately sort tickets as **Actual bug**, **Feature change
-request** or **UI change request**, with severity ordered inside each class.
+work.

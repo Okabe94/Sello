@@ -1,7 +1,7 @@
 # Sello MVP delivery board
 
-**Created:** 2026-10-08 · **Scope authority:** [ARCHITECTURE.md](../../../ARCHITECTURE.md)
-· **Baseline:** `0a31cc2` · **At creation:** 0/36 implementation tickets Done
+**Scope authority:** [ARCHITECTURE.md](../../../ARCHITECTURE.md) and
+[ADR 0001](../../decisions/0001-mvp-contract.md).
 
 This is the repository-owned Jira/Kanban plan, not a claim that a hosted Jira
 project exists. Start with [BOARD.md](BOARD.md); open an epic for complete tickets.
@@ -13,10 +13,11 @@ dates, story points, or assignees are fabricated before the team sizes the work.
 Begin with [EXECUTION_GUIDE.md](EXECUTION_GUIDE.md): checkout inspection, current
 versus target files/modules, tools/environment, focused and integrated commands,
 device/process-restoration procedures, official sources and delivery templates.
-[DECISION_INPUTS.md](DECISION_INPUTS.md) lists decisions SELLO-001 must ratify and
-independent numerical/recovery examples. The [local design reference](../../design/README.md)
-does not depend on a legacy worktree. Downstream decision/test/runbook paths are
-explicit deliverables of their owning tickets, not documents claimed to exist today.
+Decisions are in [ADR 0001](../../decisions/0001-mvp-contract.md), independent
+numerical/recovery examples in the [example corpus](../../testing/mvp-financial-examples.md)
+and the design in the [design reference](../../design/README.md). Decision, test and
+runbook paths a ticket names are deliverables of that ticket, not documents claimed
+to exist today.
 
 Each ticket includes its reason/starting contracts, ordered implementation plan,
 concrete cases/pitfalls and verification recipe in addition to acceptance/tests.
@@ -28,27 +29,23 @@ record the exact input/owner/action instead of guessing or claiming completion.
 
 ## Release contract
 
-The MVP includes manual COP expenses/income; categories and historical monthly
-budgets; Recibo/detail; basic Resumen with actual totals, simple charts, projection
-and verdict; editing/deletion/guarded undo; preferences; backup/restore/reset;
-debug live testing; and a separately installable component catalog. Recibo and
-Resumen are the only product tabs. Only working capabilities appear in navigation.
+What is in and out of the MVP is [D01](../../decisions/0001-mvp-contract.md#d01--scope-and-first-release).
+Recibo and Resumen are the only product tabs, and only working capabilities appear
+in navigation. Sello v2 shows Metas and more; showing a feature in v2 does not add
+it to MVP scope.
 
-Goals, investments, recurrence, batch entry, analytical exports, detailed
-comparisons/records, FX and budget notifications remain post-MVP. Widgets and
-notification ingestion are excluded. **The sandbox must support extension to
-recurrence testing when recurrence ships, not introduce a hidden recurrence engine
-into this MVP.** MVP time scenarios exercise dates, budgets, projections, graph
-growth, history, restart and recovery through actual financial commands.
-Signed budget carryover is approved for post-MVP planning, not MVP implementation;
-[ADR 0002](../../decisions/0002-signed-carryover-direction.md) defines
-preparation through retained history/domain boundaries, not extra MVP tables/jobs.
-MVP renews configured monthly budgets without carryover and retains historical results.
+**The sandbox must support extension to recurrence testing when recurrence ships,
+not introduce a hidden recurrence engine into this MVP.** MVP time scenarios
+exercise dates, budgets, projections, graph growth, history, restart and recovery
+through actual financial commands. MVP renews configured monthly budgets without
+carryover and retains historical results; signed carryover is post-MVP
+([ADR 0002](../../decisions/0002-signed-carryover-direction.md)) and adds no MVP
+tables or jobs.
 
 ## Post-MVP follow-up
 
 [ROADMAP.md](ROADMAP.md) tracks SELLO-E09/037–043 separately from the original eight
-MVP epics/36 tickets and the E11/E12 MVP backlogs. Its seven tickets cover
+MVP epics/36 tickets. Its seven tickets cover
 approved policy, exact domain replay,
 transactional storage, portable recovery, accessible opt-in UI, live scenarios and
 integrated release. SELLO-037 depends on SELLO-036 Done; every successor inherits
@@ -65,33 +62,12 @@ The generator validates both increments together, rejects MVP dependencies on
 post-MVP tickets, and renders separate boards/issue/dependency exports. Future
 epics MUST declare their increment explicitly; do not infer scope from ticket number.
 
-## Consolidated bug backlog
+## Retired stabilization planning
 
-[SELLO-E11](epics/E11-bug-stabilization.md) holds 16 MVP stabilization tickets
-(`SELLO-045`–`SELLO-060`), registered 2026-10-11 at the owner's request. It merges
-seven UX drafts, seven technical findings and two handoff defects, ordered by
-severity and exposure with source aliases preserved. Supported Task/native IDs
-avoid workflow-tool changes. All are Backlog/G2; unresolved product decisions and
-performance measurements remain explicit prerequisites, not implied approvals.
-See [preserved reports and evidence](../bugs/README.md). E01–E08 remain the original
-delivery plan; E09/E10 remain post-MVP, and E11 expands the MVP board to nine epics
-and 52 tickets without changing existing ticket statuses or acceptance.
-
-## Coherent experience redesign backlog
-
-[SELLO-E12](epics/E12-coherent-experience.md) holds nine MVP decision, redesign and
-integrated-acceptance tickets (`SELLO-061`–`SELLO-069`), registered 2026-10-15 from
-the owner's [`ui_issues.md`](../../../ui_issues.md), the approved Sello design and
-architecture, merged PR 47's current-experience/navigation inventory, and a synthetic
-[emulator evidence package](../ui-ux/README.md). The package distinguishes reproduced
-defects from subjective redesign requests and conflicts with approved contracts.
-The epic sorts its children into severity-ordered actual-bug, feature-change-request
-and UI-change-request lanes; reproduced presentation alone is not mislabeled as a bug
-when adopting the requested behavior first needs a product decision.
-SELLO-061 must ratify category-progress meaning, Resumen's question, income placement,
-receipt lifecycle and keypad strategy before dependent changes. All children remain
-Backlog/G2; no product decision, implementation, device acceptance or review is
-claimed. E12 expands the MVP board to ten epics and 61 tickets.
+The SELLO-E11 stabilization epic (`SELLO-045`–`SELLO-060`) and its bug archive are
+retired and not part of the board or issue exports. References to retired IDs in
+historical records do not register current work or imply that unresolved proposals
+were delivered. Retired IDs must not be reused.
 
 ## Epics and accountable outcomes
 
@@ -105,8 +81,8 @@ claimed. E12 expands the MVP board to ten epics and 61 tickets.
 | [SELLO-E06](epics/E06-live-testing.md) | Isolated time travel, repeatable histories and recovery exploration | SELLO-024–027 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Portable backups, resumable restore, safe reset and privacy boundaries | SELLO-028–032 |
 | [SELLO-E08](epics/E08-release.md) | Executed device, recovery, performance and production-release evidence | SELLO-033–036 |
-| [SELLO-E11](epics/E11-bug-stabilization.md) | Severity-ordered first-slice correctness, accessibility and measured performance stabilization | SELLO-045–060 |
-| [SELLO-E12](epics/E12-coherent-experience.md) | Decision-gated coherent design, UI/UX and navigation remediation with integrated accessibility acceptance | SELLO-061–069 |
+| [SELLO-E12](epics/E12-v2-recibo.md) | Recibo status, answer slip, frame and save feedback matching Sello v2 | SELLO-061–069 |
+| [SELLO-E13](epics/E13-v2-current-app.md) | Entry, income, Resumen and one component set matching Sello v2 | SELLO-070–074 |
 
 An epic is Done only when all child tickets are Done and its integrated outcome
 works. Foundation tasks do not masquerade as user features; each still has a
@@ -114,11 +90,9 @@ verifiable artifact and leaves the existing app launchable.
 
 ## Workflow and readiness
 
-Every ticket after SELLO-004 explicitly depends on it and MUST follow
-[QUALITY_FLOW.md](QUALITY_FLOW.md): focused tests → mandatory ticket-derived gate
-→ validated evidence → pull request proposing Done → approved by merging. The runner/report validator are
-004 deliverables, not installed tooling. Current board validation enforces the
-dependency and non-placeholder evidence field only; hosted enforcement is not active.
+Every ticket MUST follow [QUALITY_FLOW.md](QUALITY_FLOW.md): focused tests →
+mandatory ticket-derived gate → validated evidence → pull request proposing Done →
+approved by merging.
 
 `Backlog → Ready → In Progress → Done`; `Blocked` is an explicit detour. A ticket's
 pull request already marks it Done and merging that pull request is the approval;
@@ -136,9 +110,8 @@ is for work waiting on something other than that merge.
 - Limit implementation WIP to **one ticket per contributor**, and Review to two
   tickets per reviewer. Read dependency links, not epic numbering, as execution order.
   Do not parallelize overlapping schemas, composition wiring or financial policies.
-- Only SELLO-001 and SELLO-002 start Ready. No implementation ticket is complete
-  because this plan or the initial Git commit exists. Reopen Done tickets only
-  with a stated regression; never silently weaken acceptance.
+- Reopen Done tickets only with a stated regression; never silently weaken
+  acceptance.
 
 ## Definition of done — every ticket
 
@@ -148,9 +121,9 @@ is for work waiting on something other than that merge.
    pure build/docs tasks instead show negative/configuration/link checks as applicable.
 3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
    command/environment, revision, result counts, report paths, and device/API where
-   relevant. A skipped gate is an outstanding requirement, not a pass.
-   For SELLO-004 onward, use the mandatory runner delivered by 004 and record
-   validated `Quality run` evidence before Review/Done; see QUALITY_FLOW.md.
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
 4. Existing completed journeys still work. No successful stubs, inaccessible
    placeholders, destructive migrations, compile failures, or failed read → zero.
 5. Applicable catalog examples and sandbox scenarios grow with the change.
@@ -167,21 +140,15 @@ Use these required evidence fields (no placeholder values): `Revision`,
 `Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
 `Review`, each written as `- **Field:** evidence`. State why a red test/device gate
 is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
-SELLO-004 and later additionally require `Quality run` before Review as well as
-Done; bootstrap tickets 001–003 are exempt from that field.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
 
 ## Gate profiles
 
-Use the agreed JDK/SDK environment from SELLO-002; the inspected local baseline is:
+Use the environment from [setup](../../development/setup.md).
 
-```bash
-export ANDROID_HOME=/home/okabe94/Android/Sdk
-export JAVA_HOME=/opt/android-studio/jbr
-export PATH="$JAVA_HOME/bin:$PATH"
-```
-
-- **G0 — scaffold:** `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease --continue`.
-  Used until module bootstrap lands; unsigned release assembly is not publishing.
+- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
+  at least G1.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -233,14 +200,13 @@ python3 -m unittest discover -s docs/planning/mvp -p test_board.py
 ```
 
 The generator checks IDs, required ticket/executor-brief sections, dependency existence/cycles,
-active/ready status prerequisites, and required completion-evidence fields. CSV includes
-scope in each description. The same commands also regenerate/check `ROADMAP.md`,
-`roadmap-jira-import.csv` and `roadmap-dependency-links.csv`. MVP exports include ten
-epics/61 tickets; roadmap exports contain only post-MVP issues, while their links
-can reference MVP prerequisites. Import MVP issues first and map both sets' local
-IDs when applying roadmap dependency links; no hosted import has been performed.
-CSV includes
-full ticket descriptions/tests/checkpoints and numeric hierarchy IDs. Jira imports
+active/ready status prerequisites, and required completion-evidence fields. The
+same commands also regenerate/check `ROADMAP.md`, `roadmap-jira-import.csv` and
+`roadmap-dependency-links.csv`. MVP exports include eight epics/36 tickets; roadmap
+exports contain only post-MVP issues, while their links can reference MVP
+prerequisites. Import MVP issues first and map both sets' local IDs when applying
+roadmap dependency links. CSV includes scope, full ticket descriptions/tests/
+checkpoints and numeric hierarchy IDs. Jira imports
 require a configured target project and field/work-type/workflow mapping: map Issue
 ID + Parent to the importer hierarchy fields, Summary, Description, Priority,
 Status and Labels. Task/Story and Backlog/Ready may require project-specific mapping.
@@ -254,9 +220,3 @@ Dependency links are a separate export: map local IDs to assigned keys and creat
 in Jira, define the synchronization owner/process before maintaining two status sets.
 
 Official import guidance: https://support.atlassian.com/jira-cloud-administration/docs/import-data-from-a-csv-file/
-
-## Baseline evidence
-
-See [BASELINE.md](BASELINE.md) for actual repository/build/device observations.
-The initial app is still the generated greeting with sample tests; architecture
-modules, financial workflows, catalog, sandbox and CI are planned, not implemented.

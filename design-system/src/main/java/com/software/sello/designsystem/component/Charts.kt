@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -84,7 +85,8 @@ fun ColumnsChart(
     onSelect: ((String) -> Unit)? = null,
     reference: ChartReference? = null,
     height: Dp = 150.dp,
-    emptyText: String? = null
+    emptyText: String? = null,
+    stripedCurrent: Boolean = false
 ) {
     ChartFrame(points, summary, modifier, selectedId, onSelect, reference, height, emptyText) {
             point,
@@ -123,7 +125,32 @@ fun ColumnsChart(
                         val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
                         drawPath(bar, ink, style = Stroke(1.5.dp.toPx(), pathEffect = dash))
                     } else {
-                        drawPath(bar, ink)
+                        drawPath(
+                            bar,
+                            ink.copy(
+                                alpha = if (stripedCurrent &&
+                                    point.period == ChartPeriod.Current
+                                ) {
+                                    0.15f
+                                } else {
+                                    ink.alpha
+                                }
+                            )
+                        )
+                        if (stripedCurrent && point.period == ChartPeriod.Current) {
+                            clipPath(bar) {
+                                var x = -size.height
+                                while (x < size.width) {
+                                    drawLine(
+                                        ink,
+                                        Offset(x, size.height),
+                                        Offset(x + size.height, 0f),
+                                        2.dp.toPx()
+                                    )
+                                    x += 7.dp.toPx()
+                                }
+                            }
+                        }
                     }
                     if (selected) drawPath(bar, colors.ink, style = Stroke(2.dp.toPx()))
                 }

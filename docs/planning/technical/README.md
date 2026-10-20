@@ -1,7 +1,9 @@
 # Technical assessments
 
 [ASSESSMENT-2026-10-11.md](ASSESSMENT-2026-10-11.md) is preserved as the original
-technical reassessment. Its seven proposed findings now have canonical children
-in [SELLO-E11](../mvp/epics/E11-bug-stabilization.md); the alias mapping and
-severity-based order live there. Its confidence estimates are not severity scores.
-Assessment evidence is historical, not acceptance for a future fix.
+technical reassessment. Its findings and proposed technical ticket IDs are historical,
+not current work assignments. The owner retired the associated stabilization epic
+and stale bug archive on 2026-10-16; see the
+[planning retirement note](../mvp/README.md#retired-stabilization-planning).
+Its confidence estimates are not severity scores. Assessment evidence is not
+acceptance for a future fix.

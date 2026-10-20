@@ -8,7 +8,6 @@ testing and release build/signing; actual evidence is still required. These are 
 Numbers use comma grouping here for readability; amounts are integer COP unless
 an exact intermediate is shown. UI grouping is es-CO (`1.234`).
 Policies/assumptions: [decision record](../decisions/0001-mvp-contract.md).
-M/B/V/H/I/G baseline cases originate in [decision inputs](../planning/mvp/DECISION_INPUTS.md).
 All reads below succeed unless explicitly stated. MVP recurringDue = 0.
 
 ## Installation and distribution — approved D02

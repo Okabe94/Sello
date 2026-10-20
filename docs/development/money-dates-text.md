@@ -16,29 +16,29 @@ never substitutes zero, empty or a "repaired" value.
 | A manual entry's date | `EffectiveDates.forManualEntry(date, today)` | `today` comes from `FinancialClock`; later dates are `InFuture`; one the stored text cannot hold is `OutOfRange`. |
 | A selectable month | `EffectiveDates.forSelection(month, today)` | Up to the current month, and storable. |
 | A month given a limit | `EffectiveDates.isStorable(month)` | The command refuses a month that would not read back. |
-
-**Storable** means the stored text reads back as the same value, asked of the same
-two functions that write and read. In practice that is years 0000 to 9999: four plain
-digits, no sign. It is what the format can hold, not a product rule about which years
-make sense. A command refuses anything else before writing (`ExpenseRejection.InvalidDate`,
-`CategoryRejection.InvalidMonth`), because a stored `-0001-01-01` commits with a
-receipt and then fails every read that meets it. Known and left alone: reading the
-month of December 9999 computes its upper bound as January 10000, which the text
-order does not handle; it needs the financial clock to be in year 9999.
 | A category name | `CategoryName.of(raw)` | Trimmed, composed (NFC), 1–24 code points. Compare `uniquenessKey` for duplicates, including archived categories; never display or store the key as the name. |
 | A note | `Note.of(raw)` | Null or blank means no note; otherwise up to 60 code points. |
 | An income source | `IncomeSource.of(key, otherName)` | Stable keys `salary`, `freelance`, `passive_income`, `transfer`, `other`. Labels are resources in presentation. |
 
+**Storable** means the stored text reads back as the same value, asked of the same
+two functions that write and read. In practice that is years 0000 to 9999: four plain
+digits, no sign. It is what the format can hold, not a product rule about which years
+make sense. A command refuses anything else before writing
+(`ExpenseRejection.InvalidDate`, `CategoryRejection.InvalidMonth`), because a stored `-0001-01-01` commits with a
+receipt and then fails every read that meets it. Known and left alone: reading the
+month of December 9999 computes its upper bound as January 10000, which the text
+order does not handle; it needs the financial clock to be in year 9999.
+
 ## For consumers
 
-- **Controls (SELLO-008):** the keypad emits ungrouped digits and stops at
+- **Controls:** the keypad emits ungrouped digits and stops at
   `TransactionAmount.MAX_DIGITS`; pasted text goes through `CopAmountInput.parse`
   unchanged. Show the error for the original text; do not strip characters first.
 - **Room ([storage](storage.md)) and backup (SELLO-028/030):** decode a stored amount with
   `TransactionAmount.of` and a stored name with `CategoryName.of`. A failure is a typed
   read or validation failure for the whole operation, not a skipped or clipped record.
   Enforce category uniqueness on `uniquenessKey` with a real constraint.
-- **Calculations (SELLO-012 onward):** build totals with `ExactTotal`. A
+- **Calculations:** build totals with `ExactTotal`. A
   `MoneyError.Overflow` is a result to surface, not to replace with a maximum.
 - Financial identity holds no `Instant` and no label. Audit time comes from
   `AuditClock` and belongs to the record's audit fields.
@@ -47,13 +47,13 @@ order does not handle; it needs the financial clock to be in year 9999.
 
 ## Showing money
 
-Formatting and drawing have different owners (SELLO-007):
+Formatting and drawing have different owners:
 
 - `MoneyFormatter` in `:app` (`presentation.money`) turns a `Money` into a
   `MoneyTextValue`: sign, currency code (none for pesos, ADR 0007), the full es-CO
-  grouped figure and the words a
-  screen reader says, taken from string resources through `ResourceMoneyLabels`. It
-  never abbreviates; short forms such as `3,53 M` are for chart axes only.
+  grouped figure and the words a screen reader says, taken from string resources
+  through `ResourceMoneyLabels`. It never abbreviates; short forms such as `3,53 M`
+  are for chart axes only.
 - `MoneyText` in `:design-system` only draws a `MoneyTextValue`. It does not know
   `Money`, compute or round. `CountingMoneyText` animates between two amounts but always
   announces, and ends on, the exact target; with reduced motion it does not count.
@@ -78,4 +78,4 @@ Formatting and drawing have different owners (SELLO-007):
   no separators. The cursor sits between digits; either side of a separator is the
   position after the digit before it, so a deletion always removes a digit.
 - A loading `SelloButton` ignores presses, which prevents an accidental double tap. It
-  does not make a command idempotent; operation IDs do (SELLO-013).
+  does not make a command idempotent; operation IDs do.

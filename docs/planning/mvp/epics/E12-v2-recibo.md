@@ -478,7 +478,7 @@ Catalog and shell tests, a manual check of month change and restart, then
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-015, SELLO-004
 - **Gate:** G2
 
@@ -524,11 +524,47 @@ and the selected tab has a line above it. Code: `EntryDock`, `SelloNavigationBar
 ### Verification recipe
 Design-system and shell device tests, then `./scripts/verify-ticket SELLO-065 --retain`.
 
+### Delivery evidence
+
+- **Revision:** tested snapshot is the `sello-065-v2-dock-and-tabs` working tree on
+  `main` at `f3df3ed`, with only the ticket status uncommitted; it is identified
+  exactly by the retained input fingerprint below. The commit and pull request follow
+  this evidence; no claim is made that the gate tested a clean commit.
+- **Requirement mapping:** `SelloScaffold` draws `V2Dock` (one full-width brand button
+  with a + icon and `SelloDock.actionLabel`, "Anotar") in place of `EntryDock`, keeping
+  the dock's tag, margins, keyboard rule and spoken label (`SelloDock.label`, "Anotar
+  un gasto"), and `V2NavigationBar` (a `brandSoft` pill behind the selected tab's
+  icon, selectable tabs with the `Tab` role) in place of `SelloNavigationBar`. Every
+  screen with a dock or tabs goes through the scaffold, so Recibo, Resumen, income
+  history, category detail and Configuración all change; entry opens as before,
+  including from a past month. The rail and its "+" are unchanged. `V2Dock` has no long
+  press; nothing in the app used `SelloDock.onLongClick`, now documented as v1-only.
+  `EntryDock` and `SelloNavigationBar` stay for SELLO-073.
+- **Red / Green:** `V2BottomControlsTest`'s dock test failed on the field-style dock,
+  which read "Anotar un gasto" with no "Anotar" button text; it passed after the swap.
+  The same class covers the selected tab and both labels, the dock and 48dp targets at
+  font scale 2.0 on 320 × 640dp; `AdaptiveScaffoldTest`, `KeyboardInsetsTest`,
+  `V2FrameScaffoldTest`, `CorrectionControlsTest` and every `:app` navigation test
+  passed unchanged.
+- **Gate results:** `./scripts/verify-ticket SELLO-065 --retain` passed all six checks.
+  Host: 525 tests; device: 561 tests; zero failures, errors or skips. Lint had zero
+  errors and 32 existing warnings.
+- **Quality run:** run 20261020T184534Z-2921dff1; SELLO-065 G2 passed; HEAD f3df3ed, inputs sha256 35d0eb7c75bf; report docs/planning/mvp/quality-reports/SELLO-065.json sha256 559ef455041d5e212a119b986920ed124207c6dc68ff914ca9a2d56775c1e898
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
+  (320 × 640dp, animations off), serial `emulator-5582`. On the same AVD a debug build
+  showed the dock and tab bar on Recibo and Resumen in the light and dark themes and at
+  font scale 2.0, labels whole. No personal history or physical device was used; no
+  manual TalkBack session or hosted CI run is claimed.
+- **Review:** executor self-review covered the spoken label, every scaffold route, the
+  rail, the keyboard rule and large text. Done is proposed by this ticket's pull
+  request; its merge is the designated owner acceptance under `QUALITY_FLOW.md`. No
+  owner approval, merge or hosted CI pass is claimed.
+
 ## SELLO-066 — Replace the saved receipt with brief feedback after a save
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-017, SELLO-021, SELLO-069, SELLO-004
 - **Gate:** G2
 
@@ -582,6 +618,58 @@ needs **Listo**. The shell already shows `SelloNotice` for corrections
 ### Verification recipe
 Focused ViewModel tests, then the entry and income journeys on a device, then
 `./scripts/verify-ticket SELLO-066 --retain`.
+
+### Delivery evidence
+
+- **Revision:** tested snapshot is the `sello-066-brief-save-feedback` working tree on
+  `main` at `9869337`, with only the ticket status uncommitted; it is identified
+  exactly by the retained input fingerprint below. The commit and pull request follow
+  this evidence; no claim is made that the gate tested a clean commit.
+- **Requirement mapping:** after `Committed` for a new expense or income, the form
+  keeps the saved identifier in saved state, reads the record back
+  (`ExpenseReads.byId`, `IncomeReads.byId`), sends `CorrectionNotice.ExpenseRecorded`
+  (amount and category name) or `IncomeRecorded` (amount) through `ExpenseCorrections`
+  and closes; `recorded` also stops any second submit. The shell's
+  `CorrectionNoticeBar` words it, "Gasto anotado: 48.700 en Comida" or "Ingreso
+  anotado: 150.000", in the SELLO-069 confirmation look (ink background, paper text,
+  check, polite live region with the amount in pesos), for 4 seconds, with no undo or
+  dismissal, on whichever screen the form was opened from (Recibo, Resumen, a
+  category, income history). A read-back that fails still says "Gasto anotado" or
+  "Ingreso anotado" and sends nothing more. An unknown outcome keeps the form with
+  "Comprobar si se guardó" and no notice; a definite failure keeps the draft; edits
+  keep "Gasto actualizado" / "Ingreso actualizado". Haptics run once per saved record,
+  before the form closes. A form restored after process death that finds a saved
+  identifier says it and closes; one that finds only an operation asks storage about
+  it, never sending again. Newest wins, as SELLO-069 decided: the notice replaces an
+  offer to undo, whose deletion stands. `ExpenseReceiptView`, `IncomeReceiptView`, the
+  receipt panes, the `Done` actions, their tags and ten strings are removed.
+- **Red / Green:** with the form keeping the saved identifier but neither closing nor
+  saying anything, the closed-after-commit, read-back, unreadable, unknown-outcome and
+  process-death tests in `ExpenseFormViewModelTest` (7) and `IncomeFormViewModelTest`
+  (6) failed; they passed after the change. `ExpenseCorrectionsTest` covers a save
+  replacing an undo offer for 4 seconds; `ConfirmationNoticeShellTest` covers the four
+  wordings and what is read aloud; `ExpenseEntryJourneyTest`, `IncomeJourneyTest`,
+  `ResumenJourneyTest` and `WalkingSliceJourneyTest` save through the installed app and
+  wait for the notice instead of pressing Listo, including after recreation and a
+  double press.
+- **Gate results:** `./scripts/verify-ticket SELLO-066 --retain` passed all six checks.
+  Host: 526 tests; device: 564 tests; zero failures, errors or skips. Lint had zero
+  errors and 32 existing warnings.
+- **Quality run:** run 20261020T191656Z-d7adf910; SELLO-066 G2 passed; HEAD 9869337, inputs sha256 78739e979890; report docs/planning/mvp/quality-reports/SELLO-066.json sha256 68a1d2588475ae7b0c263c6faad5f9ed32c673f771e33d383bb9766f124a8e62
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
+  (320 × 640dp, animations off), serial `emulator-5582`. On the same AVD a debug build
+  with one synthetic category (limit 400.000) saved 48.900 from Recibo and returned
+  straight to it with "Gasto anotado: 48.900 en Comida" above the dock, 351.100 left
+  and 29.250 por día; the notice was gone four seconds later. The unknown outcome and
+  process death are covered at the view model with the real recovery path: the
+  installed app has no way to force an unknown outcome, and an instrumented test cannot
+  kill its own process. No personal history or physical device was used; no manual
+  TalkBack session or hosted CI run is claimed.
+- **Review:** executor self-review covered the read-back source of the words, a failed
+  read-back, double sends, edits, the restored form and precedence over an undo offer.
+  Done is proposed by this ticket's pull request; its merge is the designated owner
+  acceptance under `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass is
+  claimed.
 
 ## SELLO-067 — Add the Ajustar presupuesto action to an overspent Recibo
 

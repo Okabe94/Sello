@@ -60,20 +60,6 @@ data class PreviewLine(val kind: Kind, val amount: MoneyTextValue) {
 data class EntryPreview(val month: PreviewLine, val category: PreviewLine?)
 
 /**
- * A saved expense, read back from storage after its receipt confirmed it. [details]
- * is null when the expense is saved but could not be read back; it is still saved.
- */
-data class ExpenseReceiptView(val expenseId: String, val details: Details?) {
-    data class Details(
-        val amount: MoneyTextValue,
-        val categoryName: String,
-        val iconKey: String,
-        val date: LocalDate,
-        val note: String?
-    )
-}
-
-/**
  * The entry form. [amount] is present only for a valid amount; [amountText] is what
  * was pasted when it could not be used. Nothing typed is ever changed into something else.
  */
@@ -97,7 +83,11 @@ data class ExpenseEntryState(
     val busy: Boolean = false,
     val error: EntryError? = null,
     val confirmDiscard: Boolean = false,
-    val receipt: ExpenseReceiptView? = null,
+    /**
+     * The new expense storage confirmed, by its identifier. Once it is set nothing can be
+     * sent again; the form closes and the caller says what was saved.
+     */
+    val recorded: String? = null,
     /** The form is finished and should close. */
     val closed: Boolean = false,
     /** A recorded expense is being corrected, not a new one written. */
@@ -109,13 +99,14 @@ data class ExpenseEntryState(
     val pastMonths: List<YearMonth> = emptyList()
 ) {
     val canSubmit: Boolean
-        get() = !loading && !loadFailed && !busy && missing == null && error !in Blocking
+        get() = !loading && !loadFailed && !busy && missing == null && error !in Blocking &&
+            recorded == null
 
     /**
      * While saving, while a save's outcome is unknown, or once the expense is known to
      * be gone or changed underneath this form, the draft must not change.
      */
-    val editable: Boolean get() = !busy && error !in Blocking && receipt == null
+    val editable: Boolean get() = !busy && error !in Blocking && recorded == null
 
     /** A recorded expense can be deleted from here once it has been read. */
     val canDelete: Boolean get() = editing && !loading && !loadFailed && editable
@@ -160,9 +151,6 @@ sealed interface ExpenseEntryAction {
     data object DiscardConfirmed : ExpenseEntryAction
 
     data object KeepEditing : ExpenseEntryAction
-
-    /** Leave the receipt. */
-    data object Done : ExpenseEntryAction
 
     /** Delete the recorded expense being corrected. */
     data object Delete : ExpenseEntryAction

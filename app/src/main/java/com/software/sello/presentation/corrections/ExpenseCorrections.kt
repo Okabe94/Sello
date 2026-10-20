@@ -1,5 +1,6 @@
 package com.software.sello.presentation.corrections
 
+import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.IncomeId
 import com.software.sello.domain.model.OperationId
@@ -84,6 +85,17 @@ sealed interface CorrectionNotice {
      * said before the save is confirmed. [spoken] can carry the full amount.
      */
     data class Confirmed(val message: String, val spoken: String = message) : CorrectionNotice
+
+    /**
+     * A new expense storage confirmed, as it was read back: "Gasto anotado: 48.700 en
+     * Comida". [amount] is null when it is saved but could not be read back, and
+     * [categoryName] when its category could not be named; it is saved all the same.
+     */
+    data class ExpenseRecorded(val amount: MoneyTextValue?, val categoryName: String?) :
+        CorrectionNotice
+
+    /** The same for a new income: "Ingreso anotado: 2.000.000". */
+    data class IncomeRecorded(val amount: MoneyTextValue?) : CorrectionNotice
 }
 
 /** How a deletion ended. Only [Deleted] means the expense is gone. */
@@ -317,6 +329,12 @@ class ExpenseCorrections(
      * place of whatever is shown, an offer to undo included.
      */
     fun confirmed(notice: CorrectionNotice.Confirmed) = said(notice)
+
+    /** A screen reports a new expense its receipt confirmed, read back from storage. */
+    fun recorded(notice: CorrectionNotice.ExpenseRecorded) = said(notice)
+
+    /** A screen reports a new income its receipt confirmed, read back from storage. */
+    fun incomeRecorded(notice: CorrectionNotice.IncomeRecorded) = said(notice)
 
     /** A screen reports a category change its receipt confirmed. */
     fun categoryChanged(notice: CorrectionNotice) {

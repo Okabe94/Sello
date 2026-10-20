@@ -210,7 +210,7 @@ class IncomeFormViewModelTest {
         model.onAction(IncomeFormAction.Submit)
 
         assertEquals(1, commands.created.size)
-        assertEquals(incomeId(900).value, model.state.value.receipt?.incomeId)
+        assertEquals(incomeId(900).value, model.state.value.recorded)
     }
 
     @Test
@@ -300,15 +300,16 @@ class IncomeFormViewModelTest {
     }
 
     @Test
-    fun aValidIncomeSendsOneCommandWithExactlyWhatWasEnteredAndShowsWhatStorageHolds() {
+    fun aValidIncomeSendsOneCommandWithExactlyWhatWasEnteredThenClosesSayingWhatStorageHolds() {
         val form = ready()
         form.type("150000")
         form.onAction(IncomeFormAction.SourcePicked("freelance"))
         form.onAction(IncomeFormAction.DatePicked(LocalDate.of(2026, 10, 20)))
         form.onAction(IncomeFormAction.NoteChanged("Marca"))
-        // What the receipt shows is read back, not taken from the draft.
+        // What is said is read back, not taken from the draft.
         reads.stored[incomeId(900)] =
             storedIncome(900, "2026-10-20", 150_000, IncomeSource.Freelance, "Marca")
+        val saidBefore = corrections.notice.value
 
         form.onAction(IncomeFormAction.Submit)
 
@@ -331,20 +332,9 @@ class IncomeFormViewModelTest {
                 sent.note?.value
             )
         )
-        assertEquals(
-            IncomeReceiptView(
-                uuid(900),
-                IncomeReceiptView.Details(
-                    shown("150.000"),
-                    "freelance",
-                    null,
-                    LocalDate.of(2026, 10, 20),
-                    "Marca"
-                )
-            ),
-            form.now.receipt
-        )
-        assertFalse(form.now.closed)
+        assertNull(saidBefore)
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
+        assertEquals(CorrectionNotice.IncomeRecorded(shown("150.000")), corrections.notice.value)
     }
 
     @Test
@@ -433,7 +423,7 @@ class IncomeFormViewModelTest {
             val form = ready()
             form.type("5000")
             form.onAction(IncomeFormAction.Submit)
-            Triple(form.now.error, form.now.amount, form.now.receipt)
+            Triple(form.now.error, form.now.amount, form.now.recorded)
         }
 
         assertEquals(refusals.map { Triple(it.second, shown("5.000"), null) }, seen)
@@ -450,10 +440,11 @@ class IncomeFormViewModelTest {
         assertFalse(form.now.confirmDiscard)
         form.onAction(IncomeFormAction.DiscardConfirmed)
         assertFalse(form.now.closed)
+        assertNull(corrections.notice.value)
         commands.found = { Outcome.Success(commands.committed(it)) }
         form.onAction(IncomeFormAction.Retry)
         assertEquals(1, commands.created.size)
-        assertEquals(uuid(900), form.now.receipt?.incomeId)
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
     }
 
     @Test
@@ -469,9 +460,9 @@ class IncomeFormViewModelTest {
         form.onAction(IncomeFormAction.Retry)
 
         assertEquals(IncomeFormError.Unknown, unknown.error)
-        assertFalse(unknown.canSubmit || unknown.editable)
+        assertFalse(unknown.canSubmit || unknown.editable || unknown.closed)
         assertEquals(1, commands.created.size)
-        assertEquals(uuid(900), form.now.receipt?.incomeId)
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
     }
 
     @Test
@@ -501,11 +492,27 @@ class IncomeFormViewModelTest {
         )
         assertEquals(1, commands.created.size)
         assertEquals(listOf(commands.created.single().operationId), commands.looked)
-        assertEquals(uuid(900), restoredMidSave.now.receipt?.incomeId)
+        assertEquals(uuid(900) to true, restoredMidSave.now.recorded to restoredMidSave.now.closed)
+        assertTrue(corrections.notice.value is CorrectionNotice.IncomeRecorded)
     }
 
     @Test
-    fun backAsksOnlyWhenSomethingWasTypedAndLeavingTheReceiptJustLeaves() {
+    fun aSavedIncomeThatCannotBeReadBackIsStillSaidToBeSavedAndNotSentAgain() {
+        val form = ready()
+        form.type("5000")
+        // Saved, then the read back fails.
+        reads.failure = StorageFailure.Unavailable("x")
+
+        form.onAction(IncomeFormAction.Submit)
+        form.onAction(IncomeFormAction.Submit)
+
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
+        assertEquals(CorrectionNotice.IncomeRecorded(amount = null), corrections.notice.value)
+        assertEquals(1, commands.created.size)
+    }
+
+    @Test
+    fun backAsksOnlyWhenSomethingWasTypedAndASavedIncomeClosesByItself() {
         val empty = ready()
         empty.onAction(IncomeFormAction.Back)
         val typed = ready()
@@ -514,7 +521,6 @@ class IncomeFormViewModelTest {
         val asked = typed.now
         typed.onAction(IncomeFormAction.KeepEditing)
         typed.onAction(IncomeFormAction.Submit)
-        typed.onAction(IncomeFormAction.Done)
 
         assertTrue(empty.now.closed)
         assertTrue(asked.confirmDiscard && !asked.closed)
@@ -592,7 +598,7 @@ class IncomeFormViewModelTest {
             )
         )
         assertTrue(form.now.closed)
-        assertNull(form.now.receipt)
+        assertNull(form.now.recorded)
         assertEquals(CorrectionNotice.IncomeUpdated, corrections.notice.value)
         assertEquals(emptyList<Any>(), commands.created)
     }

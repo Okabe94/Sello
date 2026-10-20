@@ -88,7 +88,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** Owns the view model, Back, and the one-time feedback when a receipt appears. */
+/** Owns the view model, Back, and the one-time feedback when a new expense is saved. */
 @Composable
 fun ExpenseEntryRoot(
     viewModels: ViewModelProvider.Factory,
@@ -101,17 +101,19 @@ fun ExpenseEntryRoot(
 ) {
     val viewModel: ExpenseEntryViewModel = viewModel(factory = viewModels)
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(state.closed) { if (state.closed) onClosed() }
-
-    // Feedback for a save that already happened. It runs once per receipt and nothing
-    // depends on it: if the device cannot vibrate, the expense is saved all the same.
+    // Feedback for a save that already happened, once per saved expense and before the
+    // form closes. Nothing depends on it: if the device cannot vibrate, the expense is
+    // saved all the same. The caller says what was saved.
     val haptics = LocalHapticFeedback.current
     var acknowledged by rememberSaveable { mutableStateOf<String?>(null) }
-    val receipt = state.receipt?.expenseId
-    LaunchedEffect(receipt) {
-        if (receipt != null && acknowledged != receipt) {
-            acknowledged = receipt
-            runCatching { haptics.performHapticFeedback(HapticFeedbackType.LongPress) }
+    LaunchedEffect(state.closed) {
+        if (state.closed) {
+            val recorded = state.recorded
+            if (recorded != null && acknowledged != recorded) {
+                acknowledged = recorded
+                runCatching { haptics.performHapticFeedback(HapticFeedbackType.LongPress) }
+            }
+            onClosed()
         }
     }
     BackHandler { viewModel.onAction(ExpenseEntryAction.Back) }
@@ -145,7 +147,7 @@ fun ExpenseEntryScreen(
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // Sideways or wide: the slip at the left, the keypad always in view at the right.
-        val form = state.receipt == null && !state.loading && !state.loadFailed
+        val form = !state.loading && !state.loadFailed
         val split = form && selloWindowLayout(maxWidth, maxHeight).twoPane
         SelloScaffold(
             title = stringResource(
@@ -182,10 +184,6 @@ fun ExpenseEntryScreen(
             }
         ) { padding ->
             when {
-                state.receipt != null -> Pane(padding) {
-                    Receipt(state.receipt, dates, state.today, onAction)
-                }
-
                 state.loading -> Pane(padding) {
                     SlipSkeleton(Modifier.testTag(ENTRY_LOADING_TAG))
                 }
@@ -619,57 +617,6 @@ private fun categoryLabel(kind: PreviewLine.Kind, name: String) = stringResource
     name
 )
 
-/** Shown only for an expense a receipt confirmed. The stamp decorates; it proves nothing. */
-@Composable
-private fun Receipt(
-    receipt: ExpenseReceiptView,
-    dates: DateLabels,
-    today: LocalDate,
-    onAction: (ExpenseEntryAction) -> Unit
-) {
-    Slip(modifier = Modifier.fillMaxWidth().testTag(ENTRY_RECEIPT_TAG)) {
-        Text(
-            text = stringResource(R.string.expense_receipt_title),
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.semantics { heading() }
-        )
-        Stamp(
-            text = stringResource(R.string.expense_receipt_stamp),
-            ink = StampInk.Done,
-            modifier = Modifier.padding(vertical = SelloTheme.spacing.md),
-            size = StampSize.Large,
-            land = true
-        )
-        val details = receipt.details
-        if (details == null) {
-            Text(
-                text = stringResource(R.string.expense_receipt_unreadable),
-                style = MaterialTheme.typography.bodyMedium,
-                color = SelloTheme.colors.inkSoft
-            )
-        } else {
-            LeaderLine(
-                stringResource(R.string.expense_receipt_category),
-                details.categoryName,
-                icon = CategoryIcons.iconFor(details.iconKey)
-            )
-            LeaderLine(
-                stringResource(R.string.expense_receipt_date),
-                dates.day(details.date, today)
-            )
-            details.note?.let { LeaderLine(stringResource(R.string.expense_receipt_note), it) }
-            TotalLine(stringResource(R.string.expense_receipt_total)) {
-                MoneyText(details.amount, style = MoneyStyle.Total)
-            }
-        }
-    }
-    SelloButton(
-        text = stringResource(R.string.expense_receipt_done),
-        onClick = { onAction(ExpenseEntryAction.Done) },
-        modifier = Modifier.fillMaxWidth().testTag(ENTRY_DONE_TAG)
-    )
-}
-
 /** Days after [today] cannot be chosen. The picker works in whole days, with no time or zone. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -767,8 +714,6 @@ private const val PINNED_SHARE = 0.6f
 const val ENTRY_MISSING_TAG = "expense-entry:missing"
 const val ENTRY_ERROR_TAG = "expense-entry:error"
 const val ENTRY_SUBMIT_TAG = "expense-entry:submit"
-const val ENTRY_RECEIPT_TAG = "expense-entry:receipt"
-const val ENTRY_DONE_TAG = "expense-entry:done"
 const val ENTRY_DELETE_TAG = "expense-entry:delete"
 const val ENTRY_PAST_MONTHS_TAG = "expense-entry:past-months"
 const val ENTRY_PAST_EXPENSE_ANNOUNCEMENT_TAG = "expense-entry:past-expense-announcement"

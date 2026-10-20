@@ -73,14 +73,17 @@ fun IncomeFormRoot(
 ) {
     val model: IncomeFormViewModel = viewModel(factory = viewModels)
     val state by model.state.collectAsStateWithLifecycle()
-    LaunchedEffect(state.closed) { if (state.closed) onClosed() }
+    // Once per saved income and before the form closes; the caller says what was saved.
     val haptics = LocalHapticFeedback.current
     var acknowledged by rememberSaveable { mutableStateOf<String?>(null) }
-    val receipt = state.receipt?.incomeId
-    LaunchedEffect(receipt) {
-        if (receipt != null && acknowledged != receipt) {
-            acknowledged = receipt
-            runCatching { haptics.performHapticFeedback(HapticFeedbackType.LongPress) }
+    LaunchedEffect(state.closed) {
+        if (state.closed) {
+            val recorded = state.recorded
+            if (recorded != null && acknowledged != recorded) {
+                acknowledged = recorded
+                runCatching { haptics.performHapticFeedback(HapticFeedbackType.LongPress) }
+            }
+            onClosed()
         }
     }
     BackHandler { model.onAction(IncomeFormAction.Back) }
@@ -95,7 +98,7 @@ fun IncomeFormScreen(
     onExpense: (() -> Unit)? = null
 ) {
     BoxWithConstraints(modifier.fillMaxSize()) {
-        val split = state.receipt == null && !state.loading && !state.loadFailed &&
+        val split = !state.loading && !state.loadFailed &&
             selloWindowLayout(maxWidth, maxHeight).twoPane
         SelloScaffold(
             title = stringResource(
@@ -128,29 +131,6 @@ fun IncomeFormScreen(
         ) { padding ->
             IncomePane(padding) {
                 when {
-                    state.receipt != null -> {
-                        Slip(Modifier.testTag("income.receipt")) {
-                            Stamp(
-                                stringResource(R.string.income_received),
-                                ink = StampInk.Good,
-                                size = StampSize.Large,
-                                land = true
-                            )
-                            val details = state.receipt.details
-                            if (details == null) {
-                                Text(stringResource(R.string.income_receipt_unreadable))
-                            } else {
-                                MoneyText(details.amount, style = MoneyStyle.Total)
-                                Text(incomeSourceLabel(details.sourceKey, details.sourceName))
-                                Text(dateLabels().day(details.date, state.today))
-                                details.note?.let { Text(it) }
-                            }
-                        }
-                        SelloButton(stringResource(R.string.expense_receipt_done), {
-                            onAction(IncomeFormAction.Done)
-                        })
-                    }
-
                     state.loading -> SlipSkeleton(Modifier.testTag("income.loading"))
 
                     state.loadFailed -> ErrorSlip(

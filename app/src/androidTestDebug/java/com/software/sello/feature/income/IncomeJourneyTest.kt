@@ -65,7 +65,10 @@ class IncomeJourneyTest {
         scenario?.recreate()
         rule.awaitTag("income.keypad")
         rule.onNodeWithTag("income.submit").performScrollTo().press()
-        rule.awaitTag("income.receipt")
+        // No receipt: back to the income history, saying what was stored.
+        rule.awaitTag("income.history")
+        rule.awaitText("Ingreso anotado: 150.000")
+        rule.onNodeWithText("Listo").assertDoesNotExist()
         assertEquals(
             listOf("150000|COP|freelance|null|1"),
             TestData.rows(
@@ -80,8 +83,6 @@ class IncomeJourneyTest {
         )
         assertEquals(0L, TestData.count("expense"))
         assertEquals(0L, TestData.count("month_limit"))
-        rule.onNodeWithText("Listo").performScrollTo().performClick()
-        rule.awaitTag("income.history")
         val id = TestData.rows("SELECT id FROM income").single()
         rule.awaitTag("income.line.$id")
         rule.onNodeWithTag("income.line.$id").performScrollTo().performClick()
@@ -126,7 +127,7 @@ class IncomeJourneyTest {
         scenario?.recreate()
         rule.awaitTag("income.amount")
         rule.onNodeWithTag("income.submit").performScrollTo().press()
-        rule.awaitTag("income.receipt")
+        rule.awaitText("Ingreso anotado: 5.000")
         assertEquals(listOf("5000"), TestData.rows("SELECT amount_minor FROM income"))
         assertEquals(0L, TestData.count("expense"))
     }

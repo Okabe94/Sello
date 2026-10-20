@@ -17,8 +17,10 @@ categories and monthly budgets.
 
 - A healthy start opens **Recibo**. The two top-level destinations are **Recibo** and
   **Resumen**.
-- The global expense action is **Anotar un gasto**: a dock on ordinary phone layouts
-  and a `+` in the navigation rail where a rail is present.
+- The global expense action is **Anotar un gasto**: on ordinary phone layouts a
+  full-width **+ Anotar** button (`V2Dock`, read as "Anotar un gasto") above the v2 tab
+  bar, whose selected tab has a soft pill behind its icon; a `+` in the navigation rail
+  where a rail is present.
 - Recibo, Resumen, category detail and income history share one selected month.
 - Expenses, income, categories and limits are stored in Room. Appearance, Recibo
   ordering and dismissed correction announcements are stored in DataStore.
@@ -187,7 +189,9 @@ an expense/income switch. Amount input is integer COP up to 12 digits on the Sel
 keypad; future dates are unavailable. A preview below a tear line says what the month
 and category would look like, without saving. Saving is single-operation and
 receipt-backed; an unknown outcome changes the action to "Comprobar si se guardó".
-The saved receipt is read back from storage and optional haptics run only after commit.
+A confirmed save closes the form; the screen it was opened from shows "Gasto anotado:
+48.700 en Comida" (or "Ingreso anotado: …") above the dock, worded from the record
+read back from storage. Optional haptics run only after commit.
 
 Edit reuses the form, requires a real change, has no mode switch, offers delete in the
 top bar and closes after a confirmed update instead of showing a receipt. A changed
@@ -255,7 +259,7 @@ Reusable components live under
 
 | Family | Components normally composed together | Main consumers and coupling |
 | --- | --- | --- |
-| App frame | `SelloTheme` + `SelloScaffold` + `SelloNavigationBar`/`SelloNavigationRail` + `EntryDock` + `V2MonthBar` (tabs) or `MonthSwitcher` (pushed screens) + `MonthGrid` + `selloWindowLayout` | Every shell screen; frame changes affect navigation, keyboard/insets, month picking and responsive behavior together. |
+| App frame | `SelloTheme` + `SelloScaffold` + `V2NavigationBar`/`SelloNavigationRail` + `V2Dock` + `V2MonthBar` (tabs) or `MonthSwitcher` (pushed screens) + `MonthGrid` + `selloWindowLayout` | Every shell screen; frame changes affect navigation, keyboard/insets, month picking and responsive behavior together. |
 | Paper and exact answers | `Slip` + `TearLine` + `LeaderLine`/`KeyValue`/`TotalLine` + `MoneyText` + `Stamp` | Recibo, Resumen, entry previews/receipts and detail. These establish the answer-first paper language. |
 | Money entry | `AmountField` + `AmountKeypad` + `FieldMessage` + `SelloButton`; `DigitGrouping` for typed limits | Expense/income forms and category limit editing. Key positions, validation space and submit placement are intentionally coordinated. |
 | Choices and forms | `ChipFlow` + `SelloChip`; `SegmentedSwitch`/`SwitchRow`; `FormField`; `IconChoiceGrid` | Entry source/category choices, settings, category editor and note/name fields. |

@@ -36,11 +36,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.software.sello.designsystem.component.v2.V2Dock
+import com.software.sello.designsystem.component.v2.V2NavigationBar
 import com.software.sello.designsystem.theme.SelloTheme
 
 /** How far the band colour reaches below the status bar: 0, 100dp or 132dp. */
@@ -238,8 +241,10 @@ fun SelloScaffold(
                     }
                 }
                 if (showDock) {
-                    EntryDock(
-                        dock = dock,
+                    // One full-width "+ Anotar", read as what it records: "Anotar un gasto".
+                    V2Dock(
+                        label = dock.actionLabel,
+                        onClick = dock.onClick,
                         modifier = Modifier
                             .padding(horizontal = ContentMargin, vertical = 8.dp)
                             .then(
@@ -252,6 +257,7 @@ fun SelloScaffold(
                                 }
                             )
                             .testTag(SCAFFOLD_DOCK_TAG)
+                            .semantics { contentDescription = dock.label }
                     )
                 }
                 if (showBar) {
@@ -260,7 +266,7 @@ fun SelloScaffold(
                             .testTag(SCAFFOLD_BAR_TAG)
                             .background(colors.paper)
                             .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Bottom))
-                    ) { SelloNavigationBar(navigation) }
+                    ) { V2NavigationBar(navigation) }
                 }
             }
         }

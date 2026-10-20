@@ -12,6 +12,7 @@ import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseRejection
 import com.software.sello.domain.port.SnapshotState
 import com.software.sello.navigation.HandFinancialClock
+import com.software.sello.presentation.corrections.CorrectionNotice
 import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import com.software.sello.presentation.money.MoneyLabels
@@ -73,14 +74,8 @@ class ExpenseFormViewModelTest {
 
     private fun shown(digits: String) = MoneyTextValue(MoneySign.None, "", digits, "$digits pesos")
 
-    private fun form(saved: SavedStateHandle = SavedStateHandle()) = ExpenseEntryViewModel(
-        saved,
-        commands,
-        reads,
-        snapshots,
-        clock,
-        { uuid(nextId++) },
-        money,
+    /** What the frame is told: one for the whole test, as in the app. */
+    private val corrections by lazy {
         ExpenseCorrections(
             commands,
             HandIncomeCommands(),
@@ -90,6 +85,19 @@ class ExpenseFormViewModelTest {
             { uuid(nextId++) },
             CoroutineScope(Dispatchers.Main)
         )
+    }
+
+    private val said get() = corrections.notice.value
+
+    private fun form(saved: SavedStateHandle = SavedStateHandle()) = ExpenseEntryViewModel(
+        saved,
+        commands,
+        reads,
+        snapshots,
+        clock,
+        { uuid(nextId++) },
+        money,
+        corrections
     )
 
     /** A form over a month with the given categories, already read. */
@@ -132,7 +140,7 @@ class ExpenseFormViewModelTest {
         assertEquals(LocalDate.of(2026, 10, 22), form.now.date)
         assertEquals(Missing.Amount, form.now.missing)
         assertNull(form.now.amount)
-        assertNull(form.now.receipt)
+        assertNull(form.now.recorded)
     }
 
     @Test
@@ -453,7 +461,7 @@ class ExpenseFormViewModelTest {
     }
 
     @Test
-    fun theReceiptShowsWhatStorageHoldsOnlyAfterTheSaveIsConfirmed() {
+    fun aConfirmedSaveClosesTheFormAndSaysWhatStorageHoldsNotWhatWasTyped() {
         commands.hold = CompletableDeferred()
         // Storage is the authority: what it returns is shown, whatever the draft said.
         reads.stored[expenseId(900)] = storedExpense(900, 1, "2026-10-21", 10_000, "Pan")
@@ -462,24 +470,17 @@ class ExpenseFormViewModelTest {
 
         form.submit()
         val saving = form.now
+        val saidWhileSaving = said
         commands.hold!!.complete(Unit)
 
         assertTrue(saving.busy)
-        assertNull(saving.receipt)
-        assertEquals(
-            ExpenseReceiptView(
-                uuid(900),
-                ExpenseReceiptView.Details(
-                    amount = shown("10.000"),
-                    categoryName = "Alimentación",
-                    iconKey = "restaurant",
-                    date = LocalDate.of(2026, 10, 21),
-                    note = "Pan"
-                )
-            ),
-            form.now.receipt
-        )
+        assertNull(saving.recorded)
+        assertFalse(saving.closed)
+        assertNull(saidWhileSaving)
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
+        assertEquals(CorrectionNotice.ExpenseRecorded(shown("10.000"), "Alimentación"), said)
         assertFalse(form.now.busy)
+        assertEquals(1, commands.created.size)
     }
 
     @Test
@@ -504,14 +505,18 @@ class ExpenseFormViewModelTest {
     }
 
     @Test
-    fun aSavedExpenseThatCannotBeReadBackIsStillShownAsSaved() {
+    fun aSavedExpenseThatCannotBeReadBackIsStillSaidToBeSavedAndNotSentAgain() {
         reads.failure = StorageFailure.Unavailable("SQLiteException")
         val form = ready(food)
         form.type("10000")
 
         form.submit()
+        form.submit()
 
-        assertEquals(ExpenseReceiptView(uuid(900), details = null), form.now.receipt)
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
+        assertEquals(CorrectionNotice.ExpenseRecorded(amount = null, categoryName = null), said)
+        assertFalse(form.now.canSubmit)
+        assertEquals(1, commands.created.size)
     }
 
     // --- Rejections: certain, nothing saved, the draft stays ---
@@ -533,7 +538,7 @@ class ExpenseFormViewModelTest {
         assertEquals(EntryError.CategoryGone, refused.error)
         assertNull(refused.categoryId)
         assertEquals(shown("10.000"), refused.amount)
-        assertNull(refused.receipt)
+        assertNull(refused.recorded)
         assertEquals(listOf(uuid(500), uuid(501)), commands.created.map { it.operationId.value })
     }
 
@@ -559,7 +564,8 @@ class ExpenseFormViewModelTest {
 
             assertEquals("$reason", error, form.now.error)
             assertEquals("$reason", shown("10.000") to "Pan", form.now.amount to form.now.note)
-            assertNull("$reason", form.now.receipt)
+            assertNull("$reason", form.now.recorded)
+            assertNull("$reason", said)
             assertFalse("$reason", form.now.busy)
         }
     }
@@ -592,7 +598,7 @@ class ExpenseFormViewModelTest {
 
         assertEquals(1, commands.created.size)
         assertEquals(listOf(uuid(500)), commands.looked.map { it.value })
-        assertEquals(uuid(900), form.now.receipt?.expenseId)
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
     }
 
     @Test
@@ -603,7 +609,9 @@ class ExpenseFormViewModelTest {
 
         form.submit()
 
-        assertNull(form.now.receipt)
+        assertNull(form.now.recorded)
+        assertNull(said)
+        assertFalse(form.now.closed)
         assertNull(form.now.error)
         assertTrue(form.now.editable && form.now.canSubmit)
         assertEquals(shown("10.000"), form.now.amount)
@@ -624,11 +632,11 @@ class ExpenseFormViewModelTest {
         form.onAction(ExpenseEntryAction.Retry)
 
         assertEquals(EntryError.Unknown, unknown.error)
-        assertFalse(unknown.editable || unknown.canSubmit)
-        assertNull(unknown.receipt)
+        assertFalse(unknown.editable || unknown.canSubmit || unknown.closed)
+        assertNull(unknown.recorded)
         assertEquals(1, commands.created.size)
         assertEquals(listOf(uuid(500), uuid(500)), commands.looked.map { it.value })
-        assertEquals(uuid(900), form.now.receipt?.expenseId)
+        assertEquals(uuid(900) to true, form.now.recorded to form.now.closed)
     }
 
     // --- Rotation and the process being killed ---
@@ -676,7 +684,7 @@ class ExpenseFormViewModelTest {
 
         // The rejection was certain, so there is nothing to ask storage about.
         assertEquals(emptyList<Any>(), commands.looked)
-        assertNull(restored.now.receipt)
+        assertNull(restored.now.recorded)
         assertEquals(shown("10.000"), restored.now.amount)
     }
 
@@ -710,7 +718,8 @@ class ExpenseFormViewModelTest {
 
         assertEquals(1, commands.created.size)
         assertEquals(listOf(uuid(500)), commands.looked.map { it.value })
-        assertEquals(shown("10.000"), restored.now.receipt?.details?.amount)
+        assertTrue(restored.now.closed)
+        assertEquals(CorrectionNotice.ExpenseRecorded(shown("10.000"), "Alimentación"), said)
     }
 
     @Test
@@ -727,14 +736,14 @@ class ExpenseFormViewModelTest {
         val waiting = restored.now
         restored.submit()
 
-        assertNull(waiting.receipt)
+        assertNull(waiting.recorded)
         assertEquals(shown("10.000"), waiting.amount)
         assertTrue(waiting.canSubmit)
         assertEquals(listOf(uuid(500), uuid(501)), commands.created.map { it.operationId.value })
     }
 
     @Test
-    fun aReceiptShownAgainAfterARestartSendsNothingAndIsReadFromStorage() {
+    fun aSaveConfirmedJustBeforeTheProcessDiedIsSaidAfterTheRestartWithoutSendingAgain() {
         reads.stored[expenseId(900)] = storedExpense(900, 1, "2026-10-22", 10_000)
         val saved = SavedStateHandle()
         val first = ready(food, saved = saved)
@@ -742,11 +751,13 @@ class ExpenseFormViewModelTest {
         first.submit()
         val readsBefore = reads.reads
 
+        corrections.dismiss()
         val restored = form(saved.afterProcessDeath())
         restored.submit()
         restored.type("5")
 
-        assertEquals(first.now.receipt, restored.now.receipt)
+        assertEquals(uuid(900) to true, restored.now.recorded to restored.now.closed)
+        assertEquals(CorrectionNotice.ExpenseRecorded(shown("10.000"), "Alimentación"), said)
         assertEquals(1, commands.created.size)
         assertEquals(emptyList<Any>(), commands.looked)
         assertEquals(readsBefore + 1, reads.reads)
@@ -755,7 +766,7 @@ class ExpenseFormViewModelTest {
     // --- Leaving ---
 
     @Test
-    fun backLeavesAnUntouchedFormAsksAboutATypedOneAndLeavesAReceiptAtOnce() {
+    fun backLeavesAnUntouchedFormAsksAboutATypedOneAndASavedOneHasAlreadyClosed() {
         val untouched = ready(food, coffee)
         untouched.pick(1)
         untouched.onAction(ExpenseEntryAction.Back)
@@ -772,13 +783,14 @@ class ExpenseFormViewModelTest {
         val saved = ready(food)
         saved.type("10000")
         saved.submit()
+        val closedBySaving = saved.now.closed
         saved.onAction(ExpenseEntryAction.Back)
 
         assertTrue(untouched.now.closed)
         assertTrue(asked.confirmDiscard && !asked.closed)
         assertEquals(false to shown("5"), kept.confirmDiscard to kept.amount)
         assertTrue(typed.now.closed)
-        assertTrue(saved.now.closed && !saved.now.confirmDiscard)
+        assertTrue(closedBySaving && saved.now.closed && !saved.now.confirmDiscard)
         assertEquals(1, commands.created.size)
     }
 
@@ -790,19 +802,5 @@ class ExpenseFormViewModelTest {
         form.onAction(ExpenseEntryAction.Back)
 
         assertTrue(form.now.confirmDiscard)
-    }
-
-    @Test
-    fun listoLeavesOnlyOnceThereIsAReceipt() {
-        val form = ready(food)
-        form.onAction(ExpenseEntryAction.Done)
-        val before = form.now.closed
-        form.type("10000")
-        form.submit()
-
-        form.onAction(ExpenseEntryAction.Done)
-
-        assertFalse(before)
-        assertTrue(form.now.closed)
     }
 }

@@ -191,6 +191,32 @@ The options, baseline and verification live in the
 [CI performance plan](ci-performance-plan.md). Hosted speedup is measured after
 cache restore/save is observed on GitHub, not inferred from a local cache hit.
 
+## Android system-image caching in CI
+
+G2 restores only `$ANDROID_HOME/system-images/android-30/google_apis/x86_64`
+through commit-pinned `actions/cache/restore` v5.1.0. The emulator action still runs
+`sdkmanager` to check/install current packages. A cache miss uses the normal SDK
+download path. G1 does not use this cache.
+
+After a successful G2 and evidence validation on trusted `main`,
+`actions/cache/save` v5.1.0 saves a key containing the OS, host architecture,
+API/target/image architecture and SHA-256 of the installed `source.properties`.
+Restores use a prefix to find the latest saved image revision; saves compare the
+matched key with the installed metadata key. If Google publishes a new revision,
+`sdkmanager` can update it and the next successful main G2 saves a new key. PRs
+and non-main refs never save entries. This is a separate SDK cache, not a second
+Gradle cache.
+
+The cached files are the vendor SDK image. AVD directories, running VM snapshots,
+ADB keys, app databases and test results are outside its path. Each device run
+still force-creates an AVD and cold-boots with `-no-snapshot`. Emulator cores stay
+at the action's existing default of two; RAM and Gradle worker settings are unchanged.
+
+Compare cache restore/upload time, SDK installation, boot time and the complete G2
+job before claiming a speedup. The first main G2 populates this cache; subsequent
+PR/full runs can restore it. A compressed system image is large, so cache transfer
+time must be included in the comparison.
+
 ## Device smoke
 
 Use a dedicated synthetic AVD; do not wipe/reset an owner's device or reuse their

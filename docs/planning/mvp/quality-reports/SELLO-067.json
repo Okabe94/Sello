@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "run_id": "20261020T204727Z-a9f2697d",
+  "ticket": "SELLO-067",
+  "gate": {
+    "required": "G2",
+    "executed": "G2"
+  },
+  "outcome": "passed",
+  "failures": [],
+  "warnings": [
+    "gradle-host: 32 lint warnings",
+    "tested an uncommitted working tree, not a clean commit"
+  ],
+  "snapshot": {
+    "head": "9ece94c34950845dd6e86865c755cf36a72bd88d",
+    "dirty": true,
+    "dirty_files": [
+      "app/src/androidTestDebug/java/com/software/sello/feature/recibo/ReciboScreenTest.kt",
+      "app/src/main/java/com/software/sello/feature/recibo/ReciboRenderModel.kt",
+      "app/src/main/java/com/software/sello/feature/recibo/ReciboScreen.kt",
+      "app/src/main/java/com/software/sello/feature/recibo/ReciboState.kt",
+      "app/src/main/res/values/strings.xml",
+      "app/src/test/java/com/software/sello/feature/recibo/ReciboRenderModelTest.kt",
+      "docs/development/HANDOFF.md",
+      "docs/development/current-app-experience.md",
+      "docs/development/recibo-and-detail.md",
+      "docs/planning/mvp/BOARD.md",
+      "docs/planning/mvp/epics/E12-v2-recibo.md",
+      "docs/planning/mvp/jira-import.csv"
+    ],
+    "fingerprint": {
+      "algorithm": "sha256",
+      "value": "143abe8cef71c3c6b2ad65b57e715ae03cfd26e0da7e95b00242f8ccf5355ab8",
+      "files": 718
+    },
+    "acceptance": "0308dcdd36a435ae1c8a85d1e2c191fd0c7363747a850d7e3501f89510883dd3"
+  },
+  "environment": {
+    "os": "Linux x86_64",
+    "python": "3.14.8",
+    "java": "openjdk version \"25.0.3\" 2026-04-21",
+    "git": "git version 2.56.0",
+    "gradle": "9.5.0",
+    "agp": "9.3.3",
+    "kotlin": "2.4.20"
+  },
+  "devices": [
+    {
+      "serial": "emulator-5582",
+      "api": "30",
+      "model": "sdk_gphone_x86_64"
+    }
+  ],
+  "checks": [
+    {
+      "name": "board-check",
+      "command": "python3 docs/planning/mvp/board.py --check --skip-evidence",
+      "log": "board-check.log",
+      "started_at": "2026-10-20T20:47:27+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-20T20:47:27+00:00"
+    },
+    {
+      "name": "board-tests",
+      "command": "python3 -m unittest discover -s docs/planning/mvp -p test_board.py",
+      "log": "board-tests.log",
+      "started_at": "2026-10-20T20:47:27+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-20T20:47:28+00:00"
+    },
+    {
+      "name": "quality-tests",
+      "command": "python3 -m unittest discover -s scripts/quality -p test_*.py",
+      "log": "quality-tests.log",
+      "started_at": "2026-10-20T20:47:28+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-20T20:47:30+00:00"
+    },
+    {
+      "name": "architecture",
+      "command": "python3 scripts/quality/architecture.py",
+      "log": "architecture.log",
+      "started_at": "2026-10-20T20:47:30+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-20T20:47:31+00:00"
+    },
+    {
+      "name": "gradle-host",
+      "command": "./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue",
+      "log": "gradle-host.log",
+      "started_at": "2026-10-20T20:47:31+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-20T20:47:56+00:00",
+      "results": {
+        "suites": 54,
+        "tests": 529,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "lint": {
+        "reports": 5,
+        "errors": 0,
+        "warnings": 32
+      }
+    },
+    {
+      "name": "gradle-device",
+      "command": "./gradlew :data:connectedDebugAndroidTest :design-system:connectedDebugAndroidTest :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest --continue",
+      "log": "gradle-device.log",
+      "started_at": "2026-10-20T20:47:56+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-10-20T20:51:53+00:00",
+      "results": {
+        "suites": 4,
+        "tests": 570,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "started_at": "2026-10-20T20:47:27+00:00",
+  "finished_at": "2026-10-20T20:51:53+00:00"
+}

@@ -36,6 +36,15 @@ its exact amounts: "Restante del presupuesto: menos 43.700 pesos. Excedido.", "0
 por día. 1 día, incluido hoy.", "Alimentación. Te quedan 287.600 pesos de 900.000
 pesos. Al día."
 
+In the month in progress, an Excedido answer slip ends with **Ajustar presupuesto ›**
+(SELLO-067), read "Ajustar presupuesto, ir a tus categorías". It is never offered for a
+finished month. It opens nothing: Recibo scrolls so the categories card is at the top
+(at once with reduced motion) and focus moves to its **Tus categorías** heading; each
+category opens its detail and limit editor as before. Beside a detail in a wide
+window, where the card is already in view, it only moves focus. A month can be over
+its limit with no category over its own, through categories without a limit; the card
+lists every category, so the link still helps.
+
 How full a category's circle is drawn is the only number that is not exact. It is
 geometry: it is never shown as a figure, compared or turned back into money.
 

@@ -82,14 +82,16 @@ enum class ReciboAnswerLabel {
 /**
  * The month as a whole, as the answer slip shows it. [amount] carries its sign: a
  * month over its limit shows a minus. [perDay] exists only in the month in progress
- * with a limit; [closed] only in a finished month with one.
+ * with a limit; [closed] only in a finished month with one. [adjustable] offers
+ * "Ajustar presupuesto" and is true only for a month in progress that is Excedido.
  */
 data class ReciboSummary(
     val label: ReciboAnswerLabel,
     val amount: MoneyTextValue,
     val stamp: ReciboStamp,
     val perDay: ReciboPerDay? = null,
-    val closed: ReciboClosedMonth? = null
+    val closed: ReciboClosedMonth? = null,
+    val adjustable: Boolean = false
 )
 
 /** What can be spent each day from today to the end of the month, today included. */

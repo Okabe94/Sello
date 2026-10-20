@@ -1,6 +1,6 @@
 # SELLO-E12 — Bring Recibo to the approved Sello v2 design
 
-- **Status:** Backlog
+- **Status:** Done
 - **Increment:** MVP
 - **Goal:** Make Home answer "how am I doing this month" with the factual status, wording and frame approved in Sello v2.
 - **Exit:** Recibo's status, answer slip, categories, month bar, dock, tabs and save feedback match the v2 Recibo states in today's scope, with existing journeys, recovery and accessibility intact.
@@ -675,7 +675,7 @@ Focused ViewModel tests, then the entry and income journeys on a device, then
 
 - **Type:** Story
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-062, SELLO-004
 - **Gate:** G2
 
@@ -722,6 +722,51 @@ editor is described in [category-editor.md](../../../development/category-editor
 
 ### Verification recipe
 Focused screen tests, then `./scripts/verify-ticket SELLO-067 --retain`.
+
+### Delivery evidence
+
+- **Revision:** tested snapshot is the `sello-067-adjust-budget-link` working tree on
+  `main` at `9ece94c`, with only the ticket and epic status uncommitted; it is
+  identified exactly by the retained input fingerprint below. The commit and pull
+  request follow this evidence; no claim is made that the gate tested a clean commit.
+- **Requirement mapping:** `ReciboSummary.adjustable` is true only when the overall
+  budget's standing is `Current` with `Verdict.Over`: never for a finished month, a
+  month within or at its limit, or one without a limit. `ReciboScreen` then ends the
+  answer slip with **Ajustar presupuesto ›** (brand ink, chevron, 48dp row, one button
+  read "Ajustar presupuesto, ir a tus categorías"), after the per-day lines as in the
+  v2 mockup. Tapping it scrolls Recibo's own list by the categories card's distance
+  from the list's top, at once with reduced motion and animated otherwise, which puts
+  the card at the top or the list at its end, then requests focus on the focusable
+  **Tus categorías** heading. It sends no action: nothing navigates, and each category
+  opens its detail and limit editor under its current/past-month rules as before.
+  The link lives only in the Month state, where the card is always drawn, stale
+  figures included.
+- **Red / Green:** with `adjustable` always false, `ReciboRenderModelTest`'s
+  Excedido-only, over-without-an-overspent-category and overspent-month tests failed;
+  they passed after the change. `ReciboScreenTest` covers the link's place, role,
+  label and target; its absence for Al día, Al límite, a finished Excedido month and
+  no limit; the card brought to the top with its heading focused and no action sent;
+  a card already in view; older figures at font scale 2.0; and, in a 900 × 700dp
+  window with the detail beside the list, focus moving with the detail kept.
+- **Gate results:** `./scripts/verify-ticket SELLO-067 --retain` passed all six checks.
+  Host: 529 tests; device: 570 tests; zero failures, errors or skips. Lint had zero
+  errors and 32 existing warnings.
+- **Quality run:** run 20261020T204727Z-a9f2697d; SELLO-067 G2 passed; HEAD 9ece94c, inputs sha256 143abe8cef71; report docs/planning/mvp/quality-reports/SELLO-067.json sha256 5e0a8251b4cc2830008a7758849758701d2d0f72be054e04bec49f9e9a93733a
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
+  (320 × 640dp, animations off), serial `emulator-5582`. On the same AVD a debug build
+  with one synthetic category (limit 100.000) and an expense of 143.700 showed
+  −43.700 Excedido, 0 por día and the link; tapping it scrolled the short list to its
+  end. Focus is checked through Compose semantics; whether TalkBack follows it was
+  not checked by hand. No personal history or physical device was used; no manual
+  TalkBack session or hosted CI run is claimed.
+- **Epic:** with this ticket every E12 ticket (SELLO-061–069) is Done: Recibo's
+  status, answer slip, categories, month bar, dock, tabs and save feedback follow the
+  v2 Recibo states in today's scope. This pull request proposes E12 Done.
+- **Review:** executor self-review covered the current-month-only rule, overspending
+  through categories without a limit, the scroll on short and long lists, reduced
+  motion and the two-column layout. Done is proposed by this ticket's pull request;
+  its merge is the designated owner acceptance under `QUALITY_FLOW.md`. No owner
+  approval, merge or hosted CI pass is claimed.
 
 ## SELLO-068 — Wire the v2 month bar and past-month ribbon into the app frame
 

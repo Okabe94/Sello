@@ -4,8 +4,8 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-20 · **Product baseline:** `9869337`.
-SELLO-001–023, SELLO-061–066, SELLO-068, SELLO-069 and epics E01–E05 are recorded Done in the canonical tickets.
+**Snapshot:** 2026-10-20 · **Product baseline:** `9ece94c`.
+SELLO-001–023, SELLO-061–069 and epics E01–E05 and E12 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -59,17 +59,16 @@ forecast remains only as Resumen's estimate, and
 | [SELLO-064](../planning/mvp/epics/E12-v2-recibo.md#sello-064--restyle-the-month-bar-and-add-the-past-month-ribbon) | A past month shows "Estás viendo septiembre" with "Volver a octubre" on every screen that shows the month, Configuración aside; at large text the button goes under the message. |
 | [SELLO-065](../planning/mvp/epics/E12-v2-recibo.md#sello-065--use-the-full-width-anotar-dock-and-the-v2-tab-bar) | The dock is one full-width **+ Anotar** button (still read "Anotar un gasto") and the tab bar marks the selected tab with a pill; the rail is unchanged. `EntryDock` and `SelloNavigationBar` wait for SELLO-073. |
 | [SELLO-066](../planning/mvp/epics/E12-v2-recibo.md#sello-066--replace-the-saved-receipt-with-brief-feedback-after-a-save) | A confirmed new expense or income closes the form and the screen it came from says "Gasto anotado: 48.700 en Comida" or "Ingreso anotado: …" for 4 seconds; the receipt and Listo are gone. |
+| [SELLO-067](../planning/mvp/epics/E12-v2-recibo.md#sello-067--add-the-ajustar-presupuesto-action-to-an-overspent-recibo) | An Excedido month in progress offers **Ajustar presupuesto ›**, which brings the categories card to the top and focuses its heading. E12 is complete. |
 | [SELLO-068](../planning/mvp/epics/E12-v2-recibo.md#sello-068--wire-the-v2-month-bar-and-past-month-ribbon-into-the-app-frame) | Recibo and Resumen use the v2 month bar; the frame has an empty ribbon slot for SELLO-064. Pushed screens keep their titled bar. |
 | [SELLO-069](../planning/mvp/epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell) | The shell can show a confirmed save with the v2 check look above the dock; nothing sends one until SELLO-066. |
 
 ## Remaining work
 
-- SELLO-067 ([E12](../planning/mvp/epics/E12-v2-recibo.md)): the current focus. The
-  Ajustar presupuesto link finishes Recibo's v2 design.
-- SELLO-070–074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): after E12, brings
-  expense and income entry, income history and Resumen to v2, retires the v1
-  components v2 replaced and records a manual TalkBack and Switch Access pass. The v2
-  components themselves are in pull request #54.
+- SELLO-070–074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the current
+  focus now that E12 is done. Brings expense and income entry, income history and
+  Resumen to v2, retires the v1 components v2 replaced and records a manual TalkBack
+  and Switch Access pass.
 - SELLO-024–027: sandbox sessions, seeded scenarios and recovery diagnostics.
   A controlled debug financial clock exists; the full sandbox tools do not.
 - SELLO-028–032: backup, restore, reset and their privacy verification. Restore
@@ -80,8 +79,8 @@ forecast remains only as Resumen's estimate, and
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
 The [board](../planning/mvp/BOARD.md) currently lists SELLO-024 and SELLO-028 without
-unmet ticket dependencies, plus E12's SELLO-067; SELLO-033 now
-waits for E12. Their other prerequisites remain in
+unmet ticket dependencies, plus E13's SELLO-070 and SELLO-072 and E08's SELLO-033,
+whose E12 prerequisites are now met. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
 ## Detail references

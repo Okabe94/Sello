@@ -1,6 +1,10 @@
 package com.software.sello.feature.recibo
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -8,7 +12,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -16,18 +22,32 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.software.sello.R
 import com.software.sello.designsystem.component.ButtonKind
@@ -49,6 +69,7 @@ import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.category.CategoryIcons
+import kotlinx.coroutines.launch
 
 /**
  * Recibo: what is left this month and where it is going. [selectedCategoryId] marks
@@ -62,11 +83,32 @@ fun ReciboScreen(
     modifier: Modifier = Modifier,
     selectedCategoryId: String? = null
 ) {
+    val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val reducedMotion = SelloTheme.reducedMotion
+    val heading = remember { FocusRequester() }
+    // Where the list is seen and where the categories card is, as last laid out.
+    var viewport by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var card by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    // "Ajustar presupuesto": the categories card at the top of the list, and its heading
+    // focused. Nothing is opened; each category opens its detail and limit as before.
+    val toCategories: () -> Unit = {
+        scope.launch {
+            val shown = viewport
+            val target = card
+            if (shown != null && target != null && shown.isAttached && target.isAttached) {
+                val by = target.positionInWindow().y - shown.positionInWindow().y
+                if (reducedMotion) scroll.scrollBy(by) else scroll.animateScrollBy(by)
+            }
+            heading.requestFocus()
+        }
+    }
     Column(
         verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .onGloballyPositioned { viewport = it }
+            .verticalScroll(scroll)
             .padding(contentPadding)
     ) {
         when (state) {
@@ -91,8 +133,14 @@ fun ReciboScreen(
                 if (state.stale) {
                     StaleSlip({ onAction(ReciboAction.Retry) }, Modifier.testTag(RECIBO_STALE_TAG))
                 }
-                SummarySlip(state.summary)
-                CategoriesSlip(state.categories, selectedCategoryId, onAction)
+                SummarySlip(state.summary, toCategories)
+                CategoriesSlip(
+                    state.categories,
+                    selectedCategoryId,
+                    onAction,
+                    heading,
+                    Modifier.onGloballyPositioned { card = it }
+                )
             }
 
             ReciboState.Failed -> ErrorSlip(
@@ -130,7 +178,7 @@ internal fun StaleSlip(onRetry: () -> Unit, modifier: Modifier = Modifier) {
  * pesos. Excedido." The minus is a character on the screen and a word when read.
  */
 @Composable
-private fun SummarySlip(summary: ReciboSummary) {
+private fun SummarySlip(summary: ReciboSummary, onAdjust: () -> Unit) {
     val label = stringResource(
         when (summary.label) {
             ReciboAnswerLabel.Remaining -> R.string.recibo_answer_remaining
@@ -153,6 +201,38 @@ private fun SummarySlip(summary: ReciboSummary) {
     ) {
         summary.closed?.let { ClosedMonthNote(it) }
         summary.perDay?.let { PerDayFigure(it, over = summary.stamp == ReciboStamp.Over) }
+        if (summary.adjustable) AdjustBudgetLink(onAdjust)
+    }
+}
+
+/** "Ajustar presupuesto ›", only for a month in progress that is Excedido. */
+@Composable
+private fun AdjustBudgetLink(onClick: () -> Unit) {
+    val spoken = stringResource(R.string.recibo_adjust_budget_description)
+    val ink = SelloTheme.colors.brand
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .heightIn(min = SelloTheme.spacing.minTouchTarget)
+            .clickable(role = Role.Button, onClick = onClick)
+            .clearAndSetSemantics {
+                contentDescription = spoken
+                role = Role.Button
+                onClick(label = null) {
+                    onClick()
+                    true
+                }
+            }
+            .testTag(RECIBO_ADJUST_TAG)
+    ) {
+        Text(
+            text = stringResource(R.string.recibo_adjust_budget),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.W800,
+            color = ink
+        )
+        Icon(SelloIcon.ChevronRight.painter(), null, Modifier.size(20.dp), tint = ink)
     }
 }
 
@@ -274,15 +354,23 @@ internal fun FigureHeader(
 private fun CategoriesSlip(
     categories: List<ReciboCategory>,
     selectedCategoryId: String?,
-    onAction: (ReciboAction) -> Unit
+    onAction: (ReciboAction) -> Unit,
+    heading: FocusRequester,
+    modifier: Modifier = Modifier
 ) {
     // Only the answer slip above keeps the pinked edge; this card is plain paper.
-    Slip(Modifier.testTag(RECIBO_CATEGORIES_TAG), pinked = false) {
+    Slip(modifier.testTag(RECIBO_CATEGORIES_TAG), pinked = false) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = stringResource(R.string.recibo_categories_title),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f).semantics { heading() }
+                // Focusable so "Ajustar presupuesto" can bring focus here.
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(heading)
+                    .focusable()
+                    .semantics { heading() }
+                    .testTag(RECIBO_CATEGORIES_HEADING_TAG)
             )
             IconButton(
                 onClick = { onAction(ReciboAction.CreateCategory) },
@@ -392,6 +480,8 @@ const val RECIBO_SUMMARY_TAG = "recibo:summary"
 const val RECIBO_PER_DAY_TAG = "recibo:per-day"
 const val RECIBO_CLOSED_TAG = "recibo:closed"
 const val RECIBO_CATEGORIES_TAG = "recibo:categories"
+const val RECIBO_CATEGORIES_HEADING_TAG = "recibo:categories:heading"
+const val RECIBO_ADJUST_TAG = "recibo:adjust-budget"
 const val RECIBO_ADD_CATEGORY_TAG = "recibo:add-category"
 const val RECIBO_LOADING_TAG = "recibo:loading"
 const val RECIBO_FIRST_RUN_TAG = "recibo:first-run"

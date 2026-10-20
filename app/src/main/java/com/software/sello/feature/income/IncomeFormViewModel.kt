@@ -26,6 +26,7 @@ import com.software.sello.domain.port.IncomeRejection
 import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.domain.port.ResumenSnapshotState
 import com.software.sello.domain.port.ResumenSnapshots
+import com.software.sello.presentation.corrections.CorrectionNotice
 import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
 import java.time.LocalDate
@@ -70,7 +71,7 @@ class IncomeFormViewModel(
         val busy: Boolean = false,
         val generationChanged: Boolean = false,
         val error: IncomeFormError? = null,
-        val receipt: IncomeReceiptView? = null,
+        val recorded: String? = null,
         val closed: Boolean = false,
         val confirmDiscard: Boolean = false,
         val datePickerOpen: Boolean = false,
@@ -121,7 +122,7 @@ class IncomeFormViewModel(
         ->
         if (!editing && month is IncomeMonthState.Ready &&
             draft.amount.toTransactionAmount() is Outcome.Success &&
-            !progress.busy && !progress.generationChanged && progress.receipt == null &&
+            !progress.busy && !progress.generationChanged && progress.recorded == null &&
             draft.date <= today.date
         ) {
             YearMonth.from(draft.date) to progress.attempt
@@ -172,7 +173,7 @@ class IncomeFormViewModel(
         }
         viewModelScope.launch {
             when {
-                saved.get<String>(SAVED) != null -> showReceipt(requireNotNull(saved[SAVED]))
+                saved.get<String>(SAVED) != null -> announce(requireNotNull(saved[SAVED]))
                 saved.get<String>(OPERATION) != null -> recover()
                 editing && progress.value.original == null -> loadOriginal()
             }
@@ -267,7 +268,7 @@ class IncomeFormViewModel(
 
             IncomeFormAction.Back -> when {
                 now.busy || saved.get<String>(OPERATION) != null -> Unit
-                now.receipt != null -> progress.update { it.copy(closed = true) }
+                now.recorded != null -> progress.update { it.copy(closed = true) }
                 typed() -> progress.update { it.copy(confirmDiscard = true) }
                 else -> progress.update { it.copy(closed = true) }
             }
@@ -280,12 +281,6 @@ class IncomeFormViewModel(
                 progress.update {
                     it.copy(confirmDiscard = false, closed = true)
                 }
-            }
-
-            IncomeFormAction.Done -> if (now.receipt !=
-                null
-            ) {
-                progress.update { it.copy(closed = true) }
             }
 
             IncomeFormAction.Delete -> if (now.canDelete) delete()
@@ -433,31 +428,23 @@ class IncomeFormViewModel(
         } else {
             saved[SAVED] = id.value
             saved[OPERATION] = null
-            showReceipt(id.value)
+            announce(id.value)
         }
     }
 
-    private suspend fun showReceipt(id: String) {
+    /**
+     * Reads the stored income back and says what storage holds, not the draft; then the
+     * form closes. A read that fails still says it was saved: it was, and nothing more is
+     * sent.
+     */
+    private suspend fun announce(id: String) {
+        progress.update { it.copy(busy = true, error = null, recorded = id) }
         val parsed = (IncomeId.of(id) as? Outcome.Success)?.value
         val income = (parsed?.let { reads.byId(it) } as? Outcome.Success)?.value
-        progress.update {
-            it.copy(
-                busy = false,
-                error = null,
-                receipt = IncomeReceiptView(
-                    id,
-                    income?.let { record ->
-                        IncomeReceiptView.Details(
-                            money.format(record.amount.money),
-                            record.source.key,
-                            (record.source as? IncomeSource.Other)?.name?.value,
-                            record.date,
-                            record.note?.value
-                        )
-                    }
-                )
-            )
-        }
+        corrections.incomeRecorded(
+            CorrectionNotice.IncomeRecorded(income?.let { money.format(it.amount.money) })
+        )
+        progress.update { it.copy(busy = false, closed = true) }
     }
 
     private fun delete() {
@@ -518,7 +505,7 @@ class IncomeFormViewModel(
         val waiting = editing && progress.original == null && progress.error == null
         val snapshot = (previewState as? ResumenSnapshotState.Ready)?.snapshot
         val canPreview = !editing && amount != null && month is IncomeMonthState.Ready &&
-            !progress.busy && !progress.generationChanged && progress.receipt == null &&
+            !progress.busy && !progress.generationChanged && progress.recorded == null &&
             draft.date <= today
         val matchingSnapshot = canPreview && snapshot != null &&
             snapshot.budget.generation == month.month.generation &&
@@ -531,10 +518,10 @@ class IncomeFormViewModel(
         }
         return IncomeFormState(
             loading =
-                progress.receipt == null && !progress.loadFailed &&
+                progress.recorded == null && !progress.loadFailed &&
                     (month is IncomeMonthState.Loading || waiting),
             loadFailed =
-                progress.receipt == null &&
+                progress.recorded == null &&
                     (month is IncomeMonthState.Failed || progress.loadFailed),
             amount = amount?.let { money.format(it.money) },
             amountText = (draft.amount as? AmountDraft.Rejected)?.original,
@@ -579,7 +566,7 @@ class IncomeFormViewModel(
             generationChanged = progress.generationChanged,
             error = progress.error,
             confirmDiscard = progress.confirmDiscard,
-            receipt = progress.receipt,
+            recorded = progress.recorded,
             closed = progress.closed,
             editing = editing,
             monthPreview = (preview as? Outcome.Success)?.value?.let(money::format),

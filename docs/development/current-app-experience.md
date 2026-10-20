@@ -189,7 +189,9 @@ an expense/income switch. Amount input is integer COP up to 12 digits on the Sel
 keypad; future dates are unavailable. A preview below a tear line says what the month
 and category would look like, without saving. Saving is single-operation and
 receipt-backed; an unknown outcome changes the action to "Comprobar si se guardó".
-The saved receipt is read back from storage and optional haptics run only after commit.
+A confirmed save closes the form; the screen it was opened from shows "Gasto anotado:
+48.700 en Comida" (or "Ingreso anotado: …") above the dock, worded from the record
+read back from storage. Optional haptics run only after commit.
 
 Edit reuses the form, requires a real change, has no mode switch, offers delete in the
 top bar and closes after a confirmed update instead of showing a receipt. A changed

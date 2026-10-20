@@ -163,6 +163,11 @@
     <string name="correction_too_late">Ya no se puede deshacer. El gasto quedó borrado.</string>
     <string name="correction_blocked">No se pudo deshacer porque tus datos cambiaron. El gasto quedó borrado.</string>
     <string name="correction_updated">Gasto actualizado</string>
+    <string name="notice_expense_recorded">Gasto anotado: %1$s en %2$s</string>
+    <string name="notice_expense_recorded_amount">Gasto anotado: %1$s</string>
+    <string name="notice_expense_recorded_plain">Gasto anotado</string>
+    <string name="notice_income_recorded">Ingreso anotado: %1$s</string>
+    <string name="notice_income_recorded_plain">Ingreso anotado</string>
     <string name="income_deleted">Ingreso borrado</string>
     <string name="income_deleted_spoken">Ingreso borrado. Puedes deshacerlo durante 6 segundos.</string>
     <string name="income_restored">Ingreso restaurado</string>
@@ -294,14 +299,6 @@
     <string name="expense_edit_discard_title">¿Descartar los cambios?</string>
     <string name="expense_edit_discard_message">El gasto queda como estaba.</string>
     <string name="expense_edit_discard_keep">Seguir editando</string>
-    <string name="expense_receipt_stamp">Recibido</string>
-    <string name="expense_receipt_title">Gasto anotado</string>
-    <string name="expense_receipt_category">Categoría</string>
-    <string name="expense_receipt_date">Fecha</string>
-    <string name="expense_receipt_note">Nota</string>
-    <string name="expense_receipt_total">Total</string>
-    <string name="expense_receipt_unreadable">Tu gasto quedó guardado, pero no pudimos leer su detalle ahora.</string>
-    <string name="expense_receipt_done">Listo</string>
     <string name="startup_failure_title">No pudimos abrir tus datos</string>
     <string name="startup_failure_body">Sello no pudo leer lo que tienes guardado. No se borró nada.</string>
     <string name="startup_failure_newer_hint">Si instalaste una versión anterior de Sello, instala la más reciente antes de empezar de cero.</string>
@@ -327,9 +324,7 @@
     <string name="income_source_invalid">Escribe un nombre de 1 a 24 caracteres, sin caracteres de control.</string>
     <string name="income_note_invalid">La nota admite hasta 60 caracteres, sin caracteres de control.</string>
     <string name="income_amount_invalid">Escribe un monto entero entre 1 y 999.999.999.999 COP.</string>
-    <string name="income_received">Recibido</string>
     <string name="income_save">Anotar ingreso</string>
-    <string name="income_receipt_unreadable">El ingreso quedó guardado, pero no pudimos leer sus detalles.</string>
     <string name="income_load_failed">No pudimos leer los ingresos. Inténtalo de nuevo.</string>
     <string name="income_not_saved">No se pudo guardar el ingreso. Lo que escribiste sigue aquí.</string>
     <string name="income_not_deleted">No se pudo borrar. El ingreso sigue anotado.</string>

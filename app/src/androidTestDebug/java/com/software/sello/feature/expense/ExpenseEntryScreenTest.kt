@@ -97,7 +97,6 @@ class ExpenseEntryScreenTest {
         rule.onNodeWithTag(ENTRY_MISSING_TAG).assertDoesNotExist()
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
         rule.onNodeWithTag(ENTRY_PREVIEW_TAG).assertDoesNotExist()
-        rule.onNodeWithTag(ENTRY_RECEIPT_TAG).assertDoesNotExist()
     }
 
     @Test
@@ -206,46 +205,17 @@ class ExpenseEntryScreenTest {
     }
 
     @Test
-    fun theReceiptShowsTheStoredExpenseItsStampAndOnlyAWayOut() {
-        val stamped = SemanticsMatcher.expectValue(
-            SemanticsProperties.ContentDescription,
-            listOf("Recibido")
-        )
-        show(
-            complete.copy(
-                receipt = ExpenseReceiptView(
-                    "e",
-                    ExpenseReceiptView.Details(
-                        shown("48.700"),
-                        "Alimentación",
-                        "restaurant",
-                        LocalDate.of(2026, 10, 8),
-                        "Pan y café"
-                    )
-                )
-            )
-        )
+    fun aRecordedSaveDrawsNoReceiptAndOffersNothingMoreToSend() {
+        // The moment between the confirmed save and the form closing.
+        show(complete.copy(recorded = "e", busy = true))
 
-        rule.onNodeWithText("Gasto anotado").assertIsDisplayed()
-        rule.onNode(stamped.or(hasText("Recibido", ignoreCase = true))).assertExists()
-        rule.onNodeWithText("Alimentación").assertIsDisplayed()
-        rule.onNodeWithText("jue 8 oct").assertIsDisplayed()
-        rule.onNodeWithText("Pan y café").assertIsDisplayed()
-        rule.onNodeWithContentDescription("48.700 pesos").assertIsDisplayed()
-        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).assertDoesNotExist()
-        rule.onNodeWithTag(ENTRY_KEYPAD_TAG).assertDoesNotExist()
-        rule.onNodeWithText("Listo").performScrollTo().performClick()
+        rule.onNodeWithText("Gasto anotado").assertDoesNotExist()
+        rule.onNodeWithText("Recibido", ignoreCase = true).assertDoesNotExist()
+        rule.onNodeWithText("Listo").assertDoesNotExist()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithTag(ENTRY_SUBMIT_TAG).performClick()
 
-        assertEquals(listOf<ExpenseEntryAction>(ExpenseEntryAction.Done), actions)
-    }
-
-    @Test
-    fun aSavedExpenseThatCouldNotBeReadBackStillSaysItIsSaved() {
-        show(complete.copy(receipt = ExpenseReceiptView("e", details = null)))
-
-        rule.onNodeWithText("Gasto anotado").assertIsDisplayed()
-        rule.onNodeWithText("Tu gasto quedó guardado, pero no pudimos leer su detalle ahora.")
-            .assertIsDisplayed()
+        assertEquals(emptyList<ExpenseEntryAction>(), actions)
     }
 
     @Test

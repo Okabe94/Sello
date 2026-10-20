@@ -26,6 +26,7 @@ import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.domain.port.SnapshotState
+import com.software.sello.presentation.corrections.CorrectionNotice
 import com.software.sello.presentation.corrections.DeleteResult
 import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
@@ -48,7 +49,8 @@ import kotlinx.coroutines.launch
  * Records one expense through the real command. The draft, the identifier of a save
  * in progress and the saved expense's identifier are kept in [saved], so rotation or
  * the process being killed neither loses the draft nor records the expense twice.
- * The receipt is shown only for an expense a receipt confirmed, read back from storage.
+ * A new expense is announced only once a receipt confirmed it, in the words of what
+ * storage holds, and the form then closes.
  *
  * The preview comes from the shared snapshot and policy. Nothing is added or
  * compared here.
@@ -86,7 +88,7 @@ class ExpenseEntryViewModel(
         val busy: Boolean = false,
         val error: EntryError? = null,
         val confirmDiscard: Boolean = false,
-        val receipt: ExpenseReceiptView? = null,
+        val recorded: String? = null,
         val closed: Boolean = false,
         val attempt: Int = 0,
         /** Correcting: the recorded expense as it was read, or null until it has been. */
@@ -151,7 +153,7 @@ class ExpenseEntryViewModel(
         viewModelScope.launch {
             val savedExpense = saved.get<String>(KEY_SAVED_EXPENSE)
             when {
-                savedExpense != null -> showReceipt(savedExpense)
+                savedExpense != null -> announce(savedExpense)
                 saved.get<String>(KEY_OPERATION) != null -> recover()
             }
         }
@@ -329,7 +331,7 @@ class ExpenseEntryViewModel(
 
             ExpenseEntryAction.Back -> when {
                 now.busy -> Unit
-                now.receipt != null -> progress.update { it.copy(closed = true) }
+                now.recorded != null -> progress.update { it.copy(closed = true) }
                 isTyped() -> progress.update { it.copy(confirmDiscard = true) }
                 else -> progress.update { it.copy(closed = true) }
             }
@@ -338,9 +340,6 @@ class ExpenseEntryViewModel(
                 progress.update { it.copy(confirmDiscard = false, closed = true) }
 
             ExpenseEntryAction.KeepEditing -> progress.update { it.copy(confirmDiscard = false) }
-
-            ExpenseEntryAction.Done ->
-                if (now.receipt != null) progress.update { it.copy(closed = true) }
 
             ExpenseEntryAction.Delete -> if (now.canDelete) delete()
         }
@@ -507,29 +506,31 @@ class ExpenseEntryViewModel(
         }
         saved[KEY_SAVED_EXPENSE] = expenseId.value
         saved[KEY_OPERATION] = null
-        showReceipt(expenseId.value)
+        announce(expenseId.value)
     }
 
-    /** Reads the stored expense back; what is shown is what storage holds, not the draft. */
-    private suspend fun showReceipt(expenseId: String) {
+    /**
+     * Reads the stored expense back and says what storage holds, not the draft; then the
+     * form closes. A read that fails still says it was saved: it was, and nothing more is
+     * sent.
+     */
+    private suspend fun announce(expenseId: String) {
+        progress.update { it.copy(busy = true, error = null, recorded = expenseId) }
         val id = (ExpenseId.of(expenseId) as? Outcome.Success)?.value
         val expense = (id?.let { reads.byId(it) } as? Outcome.Success)?.value
         // The category's name comes from the same read the form uses; wait for it once.
         val read = month.first { it !is SnapshotState.Loading }
-        val details = expense?.let {
-            val category = (read as? SnapshotState.Ready)?.snapshot?.categories
+        val category = expense?.let {
+            (read as? SnapshotState.Ready)?.snapshot?.categories
                 ?.firstOrNull { line -> line.category.id == it.categoryId }?.category
-            ExpenseReceiptView.Details(
-                amount = money.format(it.amount.money),
-                categoryName = category?.name?.value.orEmpty(),
-                iconKey = category?.icon?.value.orEmpty(),
-                date = it.date,
-                note = it.note?.value
+        }
+        corrections.recorded(
+            CorrectionNotice.ExpenseRecorded(
+                amount = expense?.let { money.format(it.amount.money) },
+                categoryName = category?.name?.value
             )
-        }
-        progress.update {
-            it.copy(busy = false, error = null, receipt = ExpenseReceiptView(expenseId, details))
-        }
+        )
+        progress.update { it.copy(busy = false, closed = true) }
     }
 
     private fun render(
@@ -563,9 +564,9 @@ class ExpenseEntryViewModel(
         val waitingForOriginal = editing && original == null && progress.error == null
         val currentMonth = YearMonth.from(today)
         return ExpenseEntryState(
-            loading = progress.receipt == null && !progress.originalUnreadable &&
+            loading = progress.recorded == null && !progress.originalUnreadable &&
                 (month is SnapshotState.Loading || waitingForOriginal),
-            loadFailed = progress.receipt == null &&
+            loadFailed = progress.recorded == null &&
                 (month is SnapshotState.Failed || progress.originalUnreadable),
             amount = amount?.let { money.format(it.money) },
             amountText = (draft.amount as? AmountDraft.Rejected)?.original,
@@ -589,7 +590,7 @@ class ExpenseEntryViewModel(
             busy = progress.busy,
             error = progress.error,
             confirmDiscard = progress.confirmDiscard,
-            receipt = progress.receipt,
+            recorded = progress.recorded,
             closed = progress.closed,
             editing = editing,
             pastMonths = original?.let {

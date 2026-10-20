@@ -6,9 +6,9 @@ the [monthly snapshot](monthly-snapshot.md) and the [app shell](app-shell.md).
 
 Its rule: what is shown as saved is only ever what storage confirmed.
 
-This file describes the form as built. The approved v2 entry design is not
-implemented yet; it opens with no category chosen, edits the note in a composer
-docked above the keyboard, and replaces the receipt with a short confirmation on Home.
+This file describes the form as built. The rest of the approved v2 entry design is not
+implemented yet: it opens with no category chosen and edits the note in a composer
+docked above the keyboard. Its short confirmation after a save is built (SELLO-066).
 
 ## Getting there
 
@@ -59,16 +59,23 @@ settled by `find` with that same identifier and never by sending again.
 
 Every message says that nothing was recorded.
 
-## The receipt
+## After a confirmed save
 
 After `Committed`, the saved expense's identifier is stored in saved state and the
-expense is **read back from storage** (`ExpenseReads.byId`). The receipt shows that
-row: amount, category, date, note, and the "Recibido" stamp. If the row cannot be
-read the receipt still says the expense is saved, without details. Reopening the
-receipt after rotation or a restart reads it again and sends nothing.
+expense is **read back from storage** (`ExpenseReads.byId`). The form then tells
+`ExpenseCorrections` what storage holds (`CorrectionNotice.ExpenseRecorded`) and
+closes: the screen it was opened from shows **Gasto anotado: 48.700 en Comida** above
+the dock for 4 seconds, in the confirmation look, read aloud politely with the amount
+in pesos, with no undo and nothing to dismiss. Nothing is said before the save is
+confirmed; an unknown outcome keeps the form with "Comprobar si se guardó". If the row
+cannot be read back the notice says only "Gasto anotado": the expense is saved and
+nothing is offered to send again; without its category's name it says "Gasto anotado:
+48.700". After a restart the restored form finds the saved identifier, says it and
+closes, sending nothing. A notice that comes later takes its place, and it takes the
+place of an offer to undo, whose deletion stands.
 
-The stamp's landing and the vibration are feedback for a save that already happened.
-They run once per receipt and nothing depends on them.
+The vibration is feedback for a save that already happened. It runs once per saved
+expense, before the form closes, and nothing depends on it.
 
 ## Correcting a recorded expense
 
@@ -125,8 +132,7 @@ the two-line "Comprobar si se guardó" button lifts the keys, which are off then
 ## Leaving
 
 Back with an amount or a note typed asks "¿Descartar este gasto?"; when correcting,
-a change asks "¿Descartar los cambios?". On the receipt it simply leaves. While saving
-it does nothing.
+a change asks "¿Descartar los cambios?". While saving it does nothing.
 
 ## Not here yet
 

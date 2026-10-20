@@ -149,7 +149,8 @@ fun V2NavigationBar(navigation: SelloNavigation, modifier: Modifier = Modifier) 
 /**
  * The tab's top bar on the band: the month, its year and a chevron form one button that
  * opens the month picker; [actions] (settings, add) sit at the trailing edge as round
- * 48dp icon buttons. From font scale 1.3 the year is left out so the month keeps its room.
+ * 48dp icon buttons. From font scale 1.3 the year is left out so the month keeps its room;
+ * [description] still says it. [buttonModifier] goes on the month button itself.
  */
 @Composable
 fun V2MonthBar(
@@ -158,6 +159,7 @@ fun V2MonthBar(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     description: String = "$month $year",
+    buttonModifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     val colors = SelloTheme.colors
@@ -168,7 +170,7 @@ fun V2MonthBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
-            Modifier
+            buttonModifier
                 .heightIn(min = 48.dp)
                 .clickable(role = Role.Button, onClick = onClick)
                 .clearAndSetSemantics {

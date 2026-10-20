@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +49,7 @@ import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
+import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -479,15 +481,6 @@ fun ShellScreen(
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
-    // "Mes actual" is said only of the month the financial day is in.
-    val openPicker = stringResource(
-        if (state.selectedMonth == state.currentMonth) {
-            R.string.month_picker_open_current
-        } else {
-            R.string.month_picker_open_selected
-        },
-        title
-    )
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val layout = selloWindowLayout(maxWidth, maxHeight)
         val sidePanel = layout.sidePanelWidth != null
@@ -519,8 +512,25 @@ fun ShellScreen(
                 content = detail.content
             )
         } else {
+            // A tab gets the v2 month bar; a pushed screen keeps its titled bar and back arrow.
+            val tab = screenTitle == null && onBack == null
+            val bar = monthBarLabel(state, names)
             SelloScaffold(
                 title = screenTitle ?: title,
+                topBar = if (tab) {
+                    {
+                        V2MonthBar(
+                            month = bar.month,
+                            year = bar.year,
+                            onClick = { onAction(ShellAction.OpenMonthPicker) },
+                            description = bar.spoken,
+                            buttonModifier = Modifier.testTag(MONTH_SWITCHER_TAG),
+                            actions = actions
+                        )
+                    }
+                } else {
+                    null
+                },
                 navigation = navigation,
                 navigationIcon = onBack?.let { back ->
                     {
@@ -544,7 +554,7 @@ fun ShellScreen(
                         onClick = { onAction(ShellAction.OpenMonthPicker) },
                         modifier = Modifier
                             .testTag(MONTH_SWITCHER_TAG)
-                            .semantics { contentDescription = openPicker }
+                            .semantics { contentDescription = bar.spoken }
                     )
                 },
                 blotter = Blotter.Short,
@@ -710,6 +720,25 @@ internal fun CorrectionNoticeBar(notice: CorrectionNotice, onUndo: () -> Unit) {
         )
     }
 }
+
+/** What the month bar shows and says, made from one month so they cannot disagree. */
+@Immutable
+internal data class MonthBarLabel(val month: String, val year: String, val spoken: String)
+
+/** "Mes actual" is said only of the month the financial day is in. */
+@Composable
+internal fun monthBarLabel(state: ShellState, names: MonthNames): MonthBarLabel = MonthBarLabel(
+    month = names.name(state.selectedMonth),
+    year = state.selectedMonth.year.toString(),
+    spoken = stringResource(
+        if (state.selectedMonth == state.currentMonth) {
+            R.string.month_picker_open_current
+        } else {
+            R.string.month_picker_open_selected
+        },
+        names.title(state.selectedMonth)
+    )
+)
 
 const val MONTH_SWITCHER_TAG = "shell:month-switcher"
 const val DETAIL_BACK_TAG = "shell:detail-back"

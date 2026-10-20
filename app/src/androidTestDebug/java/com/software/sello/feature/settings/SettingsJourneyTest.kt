@@ -2,9 +2,12 @@ package com.software.sello.feature.settings
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -115,7 +118,7 @@ class SettingsJourneyTest {
         Espresso.pressBack()
         rule.awaitTag(RECIBO_SUMMARY_TAG)
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertExists()
-        rule.onNodeWithText(monthTitle(selected)).assertExists()
+        monthShown(selected)
         assertEquals(expenseRows, TestData.count("expense"))
         assertEquals(spent, TestData.long("SELECT SUM(amount_minor) FROM expense"))
     }
@@ -151,6 +154,12 @@ class SettingsJourneyTest {
         inSettings(SETTINGS_ORDER_TAG, "Alfabético").assertIsSelected()
         inSettings(SETTINGS_DIRECTION_TAG, "Menor a mayor").assertIsSelected()
         assertEquals(Lifecycle.State.RESUMED, scenario!!.state)
+    }
+
+    /** The month bar names [month]; its words are one button, so it is read as a label. */
+    private fun monthShown(month: YearMonth) {
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertIsDisplayed()
+            .assert(hasContentDescription(monthTitle(month), substring = true))
     }
 
     private fun monthTitle(month: YearMonth): String = context.getString(

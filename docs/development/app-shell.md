@@ -50,7 +50,13 @@ detail screen, then Resumen returns to Recibo, and Back on Recibo leaves the app
 ## Windows
 
 `ShellScreen` uses the design system's `SelloScaffold`, which keeps content clear of
-the system bars and hides the dock and tab bar while the keyboard is open. The month
+the system bars and hides the dock and tab bar while the keyboard is open. On Recibo
+and Resumen the top bar is the v2 `V2MonthBar` (SELLO-068): **Octubre** large, a small
+**2026** that hides from font scale 1.3, and the chevron; the button keeps the spoken
+"Cambiar de mes. Mes actual: …" label and opens the same picker. Pushed screens with a
+back arrow (Configuración, income history, a category opened on a phone) keep their
+titled `MonthSwitcher` bar. The scaffold's `ribbon` slot under the bar is empty until
+SELLO-064 shows the past-month ribbon. The month
 picker is a bottom sheet, opened whole and scrollable so a large font or short window
 cannot cut months off; in a window wide enough it is a side panel.
 

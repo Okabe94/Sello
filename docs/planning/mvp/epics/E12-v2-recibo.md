@@ -544,7 +544,7 @@ Focused screen tests, then `./scripts/verify-ticket SELLO-067 --retain`.
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-006, SELLO-004
 - **Gate:** G2
 
@@ -590,6 +590,51 @@ The components and their tests exist in `designsystem/component/v2/V2Controls.kt
 ### Verification recipe
 `:design-system`, `:catalog` and shell device tests, then
 `./scripts/verify-ticket SELLO-068 --retain`.
+
+### Delivery evidence
+
+- **Revision:** tested snapshot is the uncommitted `sello-068-v2-month-bar` working tree
+  on `9328923ee91bf47c7b5f8942e84366c5d3983d42`; it is identified exactly by the retained
+  input fingerprint below. The commit and pull request follow this evidence; no claim
+  is made that the gate tested a clean commit.
+- **Requirement mapping:** `SelloScaffold` gains optional `topBar` and `ribbon` slots:
+  a top bar replaces the title row below the status bar, a ribbon sits on the band
+  under it, and the band grows by their measured height so content still starts 50dp
+  on the band (`SCAFFOLD_BAND_TAG`). Without them nothing changes. `V2MonthBar` gains
+  `buttonModifier` for its month button. On Recibo and Resumen (no back arrow or
+  screen title) `ShellScreen` draws `V2MonthBar` with `MonthNames.name`, the year,
+  the existing "Cambiar de mes. Mes actual/seleccionado: …" label from
+  `monthBarLabel`, the same picker action and the settings action; pushed screens
+  (Configuración, income history, a category opened on a phone) keep their titled
+  `MonthSwitcher` bar. `V2MonthBar` and `PastMonthRibbon` hold no month logic.
+  `V2FrameScaffoldTest` proves the replacement, the ribbon order, the band overlap
+  with and without a ribbon and at font scale 2.0, and a single picker tap;
+  `ShellScreenLayoutTest`, `MonthSwitcherLabelTest`, `ShellOnDeviceTest` and
+  `SettingsJourneyTest` read the month from the button's spoken label, because the bar
+  speaks as one button. The catalog scaffold example shows the v2 bar with its ribbon
+  slot filled and emptied (`V2CatalogInteractionTest`).
+- **Red / Green:** with the slots stubbed, the replacement, ribbon and month-button
+  tests failed; on the old shell the tab-title test failed finding the one-line
+  "Agosto 2026" title. All passed after the change.
+- **Gate results:** `./scripts/verify-ticket SELLO-068 --retain` passed all six checks.
+  Host: 522 tests; device: 541 tests; zero failures, errors or skips. Lint had zero
+  errors and 32 existing warnings. The first gate run failed two new frame tests that
+  measured from the screen top in a window larger than the 320 × 640 screen; they now
+  measure from the window, as `AdaptiveScaffoldTest` does.
+- **Quality run:** run 20261020T050229Z-1b99d63d; SELLO-068 G2 passed; HEAD 9328923, inputs sha256 89726d75a031; report docs/planning/mvp/quality-reports/SELLO-068.json sha256 123aa7e977b5f5798f0bbaf579495db2051420ef70b502052c5b314b6038f2fc
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
+  (320 × 640dp, animations off), serial `emulator-5582`. On API-31 `test31`
+  (`emulator-5580`) the full `:app` device suite passed (212 tests) and screenshots
+  showed the v2 bar on Recibo and Resumen, the slip starting on the band, and
+  Configuración keeping its titled bar. There, `V2CatalogInteractionTest`'s
+  `expenseCategoriesEndWithANuevaButtonThatIsNotAChoice` fails because the tall
+  screen leaves nothing to scroll; it passes on `ci30` and is unrelated to this
+  ticket. No personal history or physical device was used; no manual TalkBack session
+  or hosted CI run is claimed.
+- **Review:** executor self-review covered the band overlap, the unchanged spoken label
+  and picker, pushed screens and the rail. Done is proposed by this ticket's pull
+  request; its merge is the designated owner acceptance under `QUALITY_FLOW.md`. No
+  owner approval, merge or hosted CI pass is claimed.
 
 ## SELLO-069 — Wire the confirmation notice into the shell
 

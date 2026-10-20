@@ -7094,7 +7094,8 @@ Catalog and shell tests, a manual check of month change and restart, then
 ### Delivery evidence
 
 - **Revision:** tested snapshot is the `sello-064-past-month-ribbon` working tree on
-  `main` at `67eebb2`, with only the ticket status uncommitted; it is identified
+  its merge of `main` at `0ac23eb` (bringing in `28f1660`, CI build caches, with no
+  overlap), with only the ticket status uncommitted; it is identified
   exactly by the retained input fingerprint below. The commit and pull request follow
   this evidence; no claim is made that the gate tested a clean commit.
 - **Scope decision:** the owner chose, on 2026-10-20, to show the ribbon on every
@@ -7125,8 +7126,9 @@ Catalog and shell tests, a manual check of month change and restart, then
   2.0.
 - **Gate results:** `./scripts/verify-ticket SELLO-064 --retain` passed all six checks.
   Host: 525 tests; device: 558 tests; zero failures, errors or skips. Lint had zero
-  errors and 32 existing warnings.
-- **Quality run:** run 20261020T143948Z-6cda68d7; SELLO-064 G2 passed; HEAD 67eebb2, inputs sha256 047c0278bad2; report docs/planning/mvp/quality-reports/SELLO-064.json sha256 25bb7273a511719c902eec16bc84799360248fbc980882b3a612da8bb60a3f75
+  errors and 32 existing warnings. After merging `main` the gate was run again and
+  passed with the same counts.
+- **Quality run:** run 20261020T150426Z-9aa00f1b; SELLO-064 G2 passed; HEAD 0ac23eb, inputs sha256 a35b4e7315d8; report docs/planning/mvp/quality-reports/SELLO-064.json sha256 86e9ad70dfbdba4e680bf5f8cbf0f7bd407bec788cb7894e7f9b0ea019ab5a8f
 - **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
   (320 × 640dp, animations off), serial `emulator-5582`. On the same AVD a debug build
   showed, with September selected, the ribbon on Recibo and Resumen at font scale 1.0,

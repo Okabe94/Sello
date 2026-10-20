@@ -144,6 +144,37 @@ use `git clean/reset` to manufacture a clean checkout. A separate source export
 via `git archive HEAD` is safe but excludes uncommitted changes; test those
 explicitly before claiming the latest snapshot was verified.
 
+## Gradle caching in CI
+
+The Quality workflow uses commit-pinned `gradle/actions/setup-gradle` v5.0.2
+to restore downloaded dependencies, wrapper distributions, compiled build scripts
+and Gradle's local task-output cache. Only trusted jobs on `main` save entries;
+pull requests and other refs use them read-only. Keep `actions/setup-java` free
+of a second Gradle cache configuration so the two actions cannot compete.
+
+`org.gradle.caching=true` enables task-output reuse locally and in CI. Gradle
+still selects the full gate task graph and checks each cacheable task's inputs.
+Data unit tests also track the complete schema directory and Kotlin storage sources
+that `ExportedSchemaTest` reads directly. Changes to those files invalidate
+its test-task result even when compiled classes are unchanged, including unexpected
+schema filenames that the retention test must reject.
+
+Configuration caching remains enabled within a job. Its project state is not
+uploaded: no `cache-encryption-key` secret is configured. No application data,
+emulator snapshot, signing material or project output directory is added to the
+cache paths. Build Scan publication, dependency submission and PR comments stay off.
+
+Use the action's job summary for cache restore/save information and task outcomes,
+and the retained quality logs/XML for gate evidence. Distinguish executed tests
+from `FROM-CACHE` and `UP-TO-DATE` task results; cached host results describe prior
+execution for matching Gradle inputs. Device results must still be fresh for each
+G2 run. To investigate cache behavior, run a focused task with `--info`; use
+`--no-build-cache --rerun-tasks` when fresh execution is needed.
+
+The options, baseline and verification live in the
+[CI performance plan](ci-performance-plan.md). Hosted speedup is measured after
+cache restore/save is observed on GitHub, not inferred from a local cache hit.
+
 ## Device smoke
 
 Use a dedicated synthetic AVD; do not wipe/reset an owner's device or reuse their

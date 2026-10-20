@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
@@ -29,6 +32,16 @@ android {
 
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// ExportedSchemaTest reads these files directly, beyond the compiled test classpath.
+tasks.withType<Test>().configureEach {
+    inputs.dir("schemas")
+        .withPropertyName("exportedSchemas")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(fileTree("src/main") { include("**/*.kt") })
+        .withPropertyName("storageSources")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 dependencies {

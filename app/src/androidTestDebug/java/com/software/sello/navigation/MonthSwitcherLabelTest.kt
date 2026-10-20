@@ -86,13 +86,16 @@ class MonthSwitcherLabelTest {
     @Test
     fun whatIsSpokenAndWhatIsShownNameTheSameMonth() {
         state = showing(current = "2026-10", selected = "2026-09")
-        show()
+        var label: MonthBarLabel? = null
+        rule.setContent {
+            SelloTheme(reducedMotion = true) {
+                label = monthBarLabel(state, monthNames())
+                ShellScreen(state, monthNames(), {}) {}
+            }
+        }
 
-        val shown = rule.onNodeWithTag(MONTH_SWITCHER_TAG, useUnmergedTree = true)
-            .fetchSemanticsNode().children
-            .mapNotNull { it.config.getOrNull(SemanticsProperties.Text)?.firstOrNull()?.text }
-
-        assertEquals(listOf("Septiembre 2026"), shown)
-        assertEquals(true, spoken()!!.single().endsWith("Septiembre 2026"))
+        // The bar draws [month] large and [year] small; both come from the same month.
+        assertEquals(MonthBarLabel("Septiembre", "2026", spoken()!!.single()), label)
+        assertEquals(true, label!!.spoken.endsWith("${label!!.month} ${label!!.year}"))
     }
 }

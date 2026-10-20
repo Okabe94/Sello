@@ -40,6 +40,22 @@ class V2CatalogInteractionTest {
     }
 
     @Test
+    fun theScaffoldShowsTheV2MonthBarWithItsRibbonSlotFilledAndEmptied() {
+        rule.onNodeWithTag("link:navigation.scaffold").performScrollTo().performClick()
+        rule.onNodeWithTag("scaffold:ribbon").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Cambiar de mes. Mes seleccionado: Septiembre 2026")
+            .assertIsDisplayed()
+
+        rule.onNodeWithText("Volver a octubre").performClick()
+        rule.onNodeWithTag("scaffold:ribbon").assertDoesNotExist()
+        rule.onNodeWithContentDescription("Cambiar de mes. Mes actual: Octubre 2026")
+            .assertIsDisplayed()
+
+        rule.onNodeWithTag("scaffold:month").performClick()
+        rule.onNodeWithTag("scaffold:ribbon").assertIsDisplayed()
+    }
+
+    @Test
     fun noteComposerCountsUnicodeCharactersAndSavesThem() {
         rule.onNodeWithTag("link:v2.note-composer").performScrollTo().performClick()
         rule.onNodeWithTag("v2:composer:open").performClick()

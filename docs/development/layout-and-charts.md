@@ -39,7 +39,8 @@ what is extended and what is new. None of that is implemented yet.
 - `SelloNavigation` takes any list of destinations (two today) and reports every
   selection, including the current tab again; the app owns back stacks and what a
   reselect does. `SelloDock` is the same action for the dock and for the rail's "+".
-- `MonthSwitcher` is a title that reports a tap. `MonthGrid` draws the cells it is
+- `MonthSwitcher` is a title that reports a tap; tabs use `V2MonthBar` through the
+  scaffold's `topBar` slot, with an optional `ribbon` on the band under it. `MonthGrid` draws the cells it is
   given; the app decides which months are enabled (never a future one), have data or
   are current, using `EffectiveDates.forSelection`.
 

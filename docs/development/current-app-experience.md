@@ -250,7 +250,7 @@ Reusable components live under
 
 | Family | Components normally composed together | Main consumers and coupling |
 | --- | --- | --- |
-| App frame | `SelloTheme` + `SelloScaffold` + `SelloNavigationBar`/`SelloNavigationRail` + `EntryDock` + `MonthSwitcher`/`MonthGrid` + `selloWindowLayout` | Every shell screen; frame changes affect navigation, keyboard/insets, month picking and responsive behavior together. |
+| App frame | `SelloTheme` + `SelloScaffold` + `SelloNavigationBar`/`SelloNavigationRail` + `EntryDock` + `V2MonthBar` (tabs) or `MonthSwitcher` (pushed screens) + `MonthGrid` + `selloWindowLayout` | Every shell screen; frame changes affect navigation, keyboard/insets, month picking and responsive behavior together. |
 | Paper and exact answers | `Slip` + `TearLine` + `LeaderLine`/`KeyValue`/`TotalLine` + `MoneyText` + `Stamp` | Recibo, Resumen, entry previews/receipts and detail. These establish the answer-first paper language. |
 | Money entry | `AmountField` + `AmountKeypad` + `FieldMessage` + `SelloButton`; `DigitGrouping` for typed limits | Expense/income forms and category limit editing. Key positions, validation space and submit placement are intentionally coordinated. |
 | Choices and forms | `ChipFlow` + `SelloChip`; `SegmentedSwitch`/`SwitchRow`; `FormField`; `IconChoiceGrid` | Entry source/category choices, settings, category editor and note/name fields. |

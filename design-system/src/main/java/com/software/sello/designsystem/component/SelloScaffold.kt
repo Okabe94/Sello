@@ -27,8 +27,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
@@ -50,6 +55,9 @@ enum class Blotter(val height: Dp) { None(0.dp), Short(100.dp), Tall(132.dp) }
  * [navigation] and the dock's "+", and [secondaryPane], if given, sits beside [content];
  * each pane scrolls on its own. Both bottom controls step aside for the system keyboard.
  * A [notice] is drawn over the bottom of the content, above the dock, and moves nothing.
+ * A [topBar] takes the place of the title row ([title], [subtitle], [titleContent],
+ * [navigationIcon] and [actions] then go unused) and a [ribbon], if given, sits on the
+ * band under it; the band grows with them, so the content still starts on the band.
  * The scaffold holds no state: selection, the month and what a pane shows are the app's.
  *
  * @param blotterScroll how far, in pixels, the content has scrolled. The band shrinks
@@ -72,6 +80,8 @@ fun SelloScaffold(
     windowInsets: WindowInsets = WindowInsets.safeDrawing,
     notice: (@Composable () -> Unit)? = null,
     secondaryPane: (@Composable (PaddingValues) -> Unit)? = null,
+    topBar: (@Composable () -> Unit)? = null,
+    ribbon: (@Composable () -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val colors = SelloTheme.colors
@@ -87,13 +97,26 @@ fun SelloScaffold(
         val scrolled = with(density) { blotterScroll().toDp() }
         val bandLeft = blotter.height - scrolled
         val onBand = blotter != Blotter.None && bandLeft > 0.dp
-        if (onBand) {
-            val statusBar = windowInsets.asPaddingValues().calculateTopPadding()
+        val statusBar = windowInsets.asPaddingValues().calculateTopPadding()
+        // The status bar, the v2 bar and any ribbon, as last measured.
+        var topArea by remember { mutableStateOf(statusBar + TopBarHeight) }
+        if (topBar != null) {
+            // A v2 bar always sits on the band; the band then reaches as far under the
+            // content as it does under the title row.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(topArea + (bandLeft - TopBarHeight).coerceAtLeast(0.dp))
+                    .background(colors.band)
+                    .testTag(SCAFFOLD_BAND_TAG)
+            )
+        } else if (onBand) {
             Box(
                 Modifier
                     .fillMaxWidth()
                     .height(statusBar + maxOf(bandLeft, TopBarHeight))
                     .background(colors.band)
+                    .testTag(SCAFFOLD_BAND_TAG)
             )
         }
 
@@ -119,18 +142,38 @@ fun SelloScaffold(
                     .fillMaxHeight()
                     .windowInsetsPadding(windowInsets.only(sides))
             ) {
-                CompositionLocalProvider(
-                    LocalContentColor provides if (onBand) colors.onBand else colors.ink
-                ) {
-                    TopBar(
-                        title = title,
-                        subtitle = subtitle,
-                        titleContent = titleContent,
-                        navigationIcon = navigationIcon,
-                        actions = actions,
-                        modifier = Modifier
-                            .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
-                    )
+                if (topBar != null) {
+                    CompositionLocalProvider(LocalContentColor provides colors.onBand) {
+                        Column(
+                            Modifier
+                                .onSizeChanged { topArea = with(density) { it.height.toDp() } }
+                                .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
+                        ) {
+                            topBar()
+                            if (ribbon != null) {
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .background(colors.band)
+                                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                                ) { ribbon() }
+                            }
+                        }
+                    }
+                } else {
+                    CompositionLocalProvider(
+                        LocalContentColor provides if (onBand) colors.onBand else colors.ink
+                    ) {
+                        TopBar(
+                            title = title,
+                            subtitle = subtitle,
+                            titleContent = titleContent,
+                            navigationIcon = navigationIcon,
+                            actions = actions,
+                            modifier = Modifier
+                                .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Top))
+                        )
+                    }
                 }
                 // Without bottom controls the content itself must clear the system bar.
                 val bottomInset = if (showBar || showDock) {
@@ -252,6 +295,7 @@ private val TopBarHeight = 50.dp
 private val ContentMargin = 12.dp
 private val NoticeGap = 8.dp
 
+const val SCAFFOLD_BAND_TAG = "sello:scaffold:band"
 const val SCAFFOLD_RAIL_TAG = "sello:scaffold:rail"
 const val SCAFFOLD_BAR_TAG = "sello:scaffold:bar"
 const val SCAFFOLD_DOCK_TAG = "sello:scaffold:dock"

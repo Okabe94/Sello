@@ -10,8 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -169,7 +171,10 @@ class ShellScreenLayoutTest {
     fun theTitleIsTheSelectedMonthAndOpensThePicker() {
         showOnThisScreen(pickerOpen = false)
 
-        rule.onNodeWithText("Agosto 2026").assertIsDisplayed()
+        // The v2 month bar: one button saying the month, not a one-line "Agosto 2026" title.
+        rule.onNodeWithText("Agosto 2026").assertDoesNotExist()
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertIsDisplayed()
+            .assert(hasContentDescription("Agosto 2026", substring = true))
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
 
         assertEquals(listOf<ShellAction>(ShellAction.OpenMonthPicker), actions)

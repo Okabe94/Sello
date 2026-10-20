@@ -17,6 +17,9 @@ class MonthNames(
     /** "Octubre 2026". */
     fun title(month: YearMonth): String = titleFormat.format(full[month.monthValue - 1], month.year)
 
+    /** "Octubre", as the large word of the month bar. */
+    fun name(month: YearMonth): String = full[month.monthValue - 1]
+
     /** "octubre", as inside a sentence. */
     fun inSentence(month: YearMonth): String = full[month.monthValue - 1].lowercase()
 

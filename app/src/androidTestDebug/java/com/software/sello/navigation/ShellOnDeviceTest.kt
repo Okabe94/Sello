@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -51,6 +53,12 @@ class ShellOnDeviceTest {
     private val context: Context get() = InstrumentationRegistry.getInstrumentation().targetContext
     private val current get() = YearMonth.from(koin.get<FinancialClock>().today.value.date)
     private var scenario: ActivityScenario<MainActivity>? = null
+
+    /** The month bar names [month]; its words are one button, so it is read as a label. */
+    private fun monthShown(month: YearMonth) {
+        rule.onNodeWithTag(MONTH_SWITCHER_TAG).assertIsDisplayed()
+            .assert(hasContentDescription(title(month), substring = true))
+    }
 
     private fun title(month: YearMonth) = context.getString(
         R.string.month_title,
@@ -108,7 +116,7 @@ class ShellOnDeviceTest {
         launchToRecibo()
 
         rule.onNodeWithTag(RECIBO_FIRST_RUN_TAG).assertIsDisplayed()
-        rule.onNodeWithText(title(current)).assertIsDisplayed()
+        monthShown(current)
         rule.onNodeWithText(context.getString(R.string.recibo_first_run_title)).assertIsDisplayed()
         rule.onNodeWithTag(SCAFFOLD_BAR_TAG).assertIsDisplayed()
         rule.onNodeWithText(context.getString(R.string.tab_recibo)).assertIsDisplayed()
@@ -127,15 +135,15 @@ class ShellOnDeviceTest {
         rule.onNodeWithContentDescription(title(march)).performClick()
         rule.onNodeWithText(context.getString(R.string.tab_resumen)).performClick()
         rule.awaitTag("resumen.income")
-        rule.onNodeWithText(title(march)).assertIsDisplayed()
+        monthShown(march)
 
         app.recreate()
 
         rule.awaitTag("resumen.income")
-        rule.onNodeWithText(title(march)).assertIsDisplayed()
+        monthShown(march)
         Espresso.pressBack()
         rule.awaitTag(RECIBO_FIRST_RUN_TAG)
-        rule.onNodeWithText(title(march)).assertIsDisplayed()
+        monthShown(march)
         assertEquals(0, financialRows())
     }
 
@@ -168,7 +176,7 @@ class ShellOnDeviceTest {
         rule.onNodeWithContentDescription(title(march)).performClick()
 
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertDoesNotExist()
-        rule.onNodeWithText(title(march)).assertIsDisplayed()
+        monthShown(march)
         assertEquals(march, shell().state.value.selectedMonth)
         assertEquals(short(march), "Mar")
     }
@@ -182,7 +190,7 @@ class ShellOnDeviceTest {
             .performClick()
         val march = YearMonth.of(current.year - 1, 3)
         rule.onNodeWithContentDescription(title(march)).performClick()
-        rule.onNodeWithText(title(march)).assertIsDisplayed()
+        monthShown(march)
 
         // The picker opens on last year; the current month's cell is not on it.
         rule.onNodeWithTag(MONTH_SWITCHER_TAG).performClick()
@@ -190,7 +198,7 @@ class ShellOnDeviceTest {
         rule.onNodeWithTag(MONTH_PICKER_CURRENT_TAG).performClick()
 
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertDoesNotExist()
-        rule.onNodeWithText(title(current)).assertIsDisplayed()
+        monthShown(current)
         assertEquals(current, shell().state.value.selectedMonth)
         assertEquals(revision, TestData.long("SELECT revision FROM profile"))
         assertEquals(0, TestData.financialRows())
@@ -211,7 +219,7 @@ class ShellOnDeviceTest {
         rule.awaitTag(MONTH_PICKER_TAG)
         rule.onNodeWithTag(MONTH_PICKER_TAG).assertIsDisplayed()
         Espresso.pressBack()
-        rule.onNodeWithText(title(march)).assertIsDisplayed()
+        monthShown(march)
     }
 
     @Test

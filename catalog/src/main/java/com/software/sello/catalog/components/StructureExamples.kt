@@ -25,6 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.software.sello.designsystem.component.Blotter
 import com.software.sello.designsystem.component.ButtonKind
@@ -54,6 +58,8 @@ import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipHeading
 import com.software.sello.designsystem.component.Stamp
 import com.software.sello.designsystem.component.StampInk
+import com.software.sello.designsystem.component.v2.PastMonthRibbon
+import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -265,20 +271,48 @@ fun MonthSwitcherExample() {
     }
 }
 
-/** The frame with real components inside it. Change Window to see it rearrange. */
+/**
+ * The frame with real components inside it. Change Window to see it rearrange. The top
+ * bar is the v2 month bar; the ribbon slot under it holds a past month until "Volver a
+ * octubre" is pressed, and pressing the month brings it back.
+ */
 @Composable
 fun ScaffoldExample() {
     val scroll = rememberScrollState()
     var entries by rememberSaveable { mutableIntStateOf(0) }
     var opened by rememberSaveable { mutableStateOf(Categories.first().name) }
+    var past by rememberSaveable { mutableStateOf(true) }
     SelloScaffold(
         title = "Octubre 2026",
-        titleContent = { MonthSwitcher("Octubre 2026", {}) },
+        topBar = {
+            V2MonthBar(
+                month = if (past) "Septiembre" else "Octubre",
+                year = "2026",
+                onClick = { past = true },
+                description = "Cambiar de mes. " +
+                    if (past) "Mes seleccionado: Septiembre 2026" else "Mes actual: Octubre 2026",
+                buttonModifier = Modifier.testTag("scaffold:month")
+            ) {
+                IconButton(onClick = {}) { Icon(SelloIcon.Settings.painter(), "Configuración") }
+            }
+        },
+        ribbon = if (past) {
+            {
+                PastMonthRibbon(
+                    buildAnnotatedString {
+                        append("Estás viendo ")
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("septiembre") }
+                    },
+                    "Volver a octubre",
+                    { past = false },
+                    Modifier.testTag("scaffold:ribbon")
+                )
+            }
+        } else {
+            null
+        },
         blotter = Blotter.Tall,
         blotterScroll = { scroll.value },
-        actions = {
-            IconButton(onClick = {}) { Icon(SelloIcon.Settings.painter(), "Configuración") }
-        },
         navigation = rememberTabs(TwoTabs),
         dock = SelloDock("Anotar un gasto", "Anotar", { entries++ }),
         // The catalog's own chrome already keeps clear of the system bars.

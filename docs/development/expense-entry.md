@@ -6,9 +6,8 @@ the [monthly snapshot](monthly-snapshot.md) and the [app shell](app-shell.md).
 
 Its rule: what is shown as saved is only ever what storage confirmed.
 
-This file describes the form as built. The rest of the approved v2 entry design is not
-implemented yet: it opens with no category chosen and edits the note in a composer
-docked above the keyboard. Its short confirmation after a save is built (SELLO-066).
+This file describes the form as built: the approved v2 entry (SELLO-070), with the short
+confirmation after a save from SELLO-066.
 
 ## Getting there
 
@@ -24,23 +23,20 @@ docked above the keyboard. Its short confirmation after a save is built (SELLO-0
 
 | Field | Rule |
 | --- | --- |
-| Amount | Keypad only, through `AmountDraft`: up to twelve digits, a thirteenth is refused and signalled. Pasted text is taken whole or kept exactly as it was with the reason. Never zero, never changed into another amount |
-| Category | One of the categories that are not archived. Chosen at opening, once: the one the caller asked for if it can take an expense; otherwise the one used last; otherwise the only one. Otherwise none, and the person chooses |
+| Amount | The compact Sello pad only, through `AmountDraft`: up to twelve digits; the figure steps down in size as digits are added. A thirteenth is refused, the figure shakes and **Máximo 12 dígitos** takes the label's place until the next key that changes the amount. Pasted text (the slip's paste button) is taken whole or kept exactly as it was with the reason. Never zero, never changed into another amount |
+| Category | One of the categories that are not archived, as chips in at most two rows that scroll sideways, ending with **Nueva**. None is chosen at opening, so Anotar waits for one, except the one a caller asked for ("Anotar aquí", a link) if it can take an expense. **Nueva** opens the [category editor](category-editor.md); the editor hands the new category's identifier back through the entry's navigation result, and the form chooses it once the month offers it, with the draft kept |
 | Date | The financial day the form was opened; it stays that day if the draft is restored later. Any earlier day can be picked; a later one cannot |
-| Note | Optional, up to 60 characters, one line. Blank means no note |
+| Note | Optional, up to 60 characters as people count them (code points), one line; blank means no note. Its row ("Agregar nota", or the note with Editar) opens a composer docked above the keyboard, saying what it belongs to ("Gasto en **Comida** · **48.700**"), with the cursor at the end. Over 60 the text is kept, the counter and message turn red ("Máximo 60 caracteres. Tu texto sigue aquí.") and ✓ is off; Cancelar keeps the note as it was. An open composer and its text survive the process being killed |
 
 The button is off until there is an amount, a category and a valid note. A missing
-category or a note to correct is said in a line above the keypad; a missing amount
+category or a note to correct is said in a line just above the button; a missing amount
 is not, because the slip already shows "Sin monto". The button is read aloud as the
-whole sentence: "Anotar gasto de 48.700 pesos en Alimentación".
+whole sentence: "Anotar gasto de 48.700 pesos en Alimentación"; while saving it says
+"Guardando…".
 
-## The preview
-
-Under the tear line: what the month and the category would look like after saving,
-labelled "Vista previa, si lo anotas". It comes from the snapshot of the month the
-draft is dated in and `ExpensePreviewPolicy`: what would remain, how far over, or
-what would have been spent when there is no limit. It is an estimate for the draft.
-It is never stored, never shown as saved, and going over a limit does not block saving.
+There is no live preview of the month, as in v2 (owner decision, 2026-10-20): the
+confirmation after saving and Recibo show the real figures. `ExpensePreviewPolicy`
+stays in the domain, unused by this form.
 
 ## Saving once
 
@@ -55,7 +51,7 @@ settled by `find` with that same identifier and never by sending again.
 | Category missing or archived | "Esa categoría ya no acepta gastos" | Kept; the category is deselected |
 | Future date | "La fecha no puede ser posterior a hoy" | Kept |
 | Data replaced meanwhile | "Tus datos cambiaron mientras tanto" | Kept; the next attempt uses the new generation |
-| Storage failed | "No se pudo guardar" | Kept |
+| Storage failed | "No se guardó. Tu borrador sigue aquí." | Kept |
 
 Every message says that nothing was recorded.
 
@@ -115,19 +111,19 @@ titled "Editar gasto", its button is "Guardar cambios" and the top bar has "Borr
 
 ## Layout
 
-One column on a phone: the slip, category, date and note scroll; the keypad and the
-button stay in view at the bottom. While the system keyboard is up for the note the
-keypad steps aside. Sideways or wide, the slip is at the left and the keypad and
-button at the right.
+`V2EntryLayout`, top to bottom: ✕ and the Gasto/Ingreso switch (not when correcting),
+the amount slip (label, date pill, the chosen category's icon, the figure), the chips
+with Nueva and the note row, then **Anotar gasto** and the compact pad. Only the chips
+and note scroll; in a window too short to keep two chip rows with the amount pinned,
+the amount scrolls with them. Sideways, or 600dp wide or more, the slip and choices are
+at the left and the button and pad at the right. The composer's keyboard covers the
+form without resizing or flipping it.
 
-**No key moves.** The keypad and the button are held from the bottom of their
-column, 16dp apart (`spacing.lg`), and everything the form says (what is missing,
-why a save failed) is laid out above the keypad and outside its scroll. A message
-appearing or going therefore changes the space above the keys, never where a key
-is. Do not put anything whose height changes between the keypad and the button, or
-below them. Two limits: in a window too short for the message and the keys together
-the top row is partly covered while the message shows, and at twice the font size
-the two-line "Comprobar si se guardó" button lifts the keys, which are off then.
+**No key moves.** The button sits 8dp above the pad, both held from the bottom, and
+everything the form says (what is missing, why a save failed) is laid out above the
+button. A message appearing or going changes the space above the button, never where
+the button or a key is. At twice the font size the two-line "Comprobar si se guardó"
+button lifts the keys, which are off then.
 
 ## Leaving
 

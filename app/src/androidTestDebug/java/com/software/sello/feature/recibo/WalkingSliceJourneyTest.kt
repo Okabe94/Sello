@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -34,6 +35,7 @@ import com.software.sello.awaitText
 import com.software.sello.feature.category.EDITOR_SUBMIT_TAG
 import com.software.sello.feature.expense.ENTRY_CATEGORIES_TAG
 import com.software.sello.feature.expense.ENTRY_KEYPAD_TAG
+import com.software.sello.feature.expense.ENTRY_NOTE_TAG
 import com.software.sello.feature.expense.ENTRY_SUBMIT_TAG
 import com.software.sello.hideKeyboard
 import com.software.sello.navigation.CORRECTION_NOTICE_TAG
@@ -105,15 +107,18 @@ class WalkingSliceJourneyTest {
         rule.awaitDescription("Anotar un gasto")
         rule.onNodeWithContentDescription("Anotar un gasto").performClick()
         rule.awaitTag(ENTRY_KEYPAD_TAG)
+        // Nothing is chosen for the person: Mercado is picked.
         rule.onNode(hasText("Mercado") and hasAnyAncestor(hasTestTag(ENTRY_CATEGORIES_TAG)))
+            .performClick()
             .assertIsSelected()
         keys.forEach { key ->
             rule.onNode(hasText(key) and hasAnyAncestor(hasTestTag(ENTRY_KEYPAD_TAG)))
-                .performScrollTo().performClick()
+                .performClick()
         }
         if (note != null) {
-            rule.onNodeWithContentDescription("Nota (opcional)").performScrollTo()
-                .performTextInput(note)
+            rule.onNodeWithTag(ENTRY_NOTE_TAG).performScrollTo().performClick()
+            rule.onNode(hasSetTextAction()).performTextInput(note)
+            rule.onNodeWithContentDescription("Listo").performClick()
         }
         rule.onNodeWithTag(ENTRY_SUBMIT_TAG).press()
         // A confirmed save closes the form and says so over the screen it was opened from.

@@ -42,13 +42,18 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.software.sello.R
+import com.software.sello.designsystem.component.AddChip
 import com.software.sello.designsystem.component.AmountField
 import com.software.sello.designsystem.component.AmountKeypad
 import com.software.sello.designsystem.component.ButtonKind
@@ -75,6 +80,11 @@ import com.software.sello.designsystem.component.StampSize
 import com.software.sello.designsystem.component.TearLine
 import com.software.sello.designsystem.component.TotalLine
 import com.software.sello.designsystem.component.selloWindowLayout
+import com.software.sello.designsystem.component.v2.EntryAmountSlip
+import com.software.sello.designsystem.component.v2.EntryLine
+import com.software.sello.designsystem.component.v2.NoteComposer
+import com.software.sello.designsystem.component.v2.V2ChipRows
+import com.software.sello.designsystem.component.v2.V2EntryLayout
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -97,10 +107,19 @@ fun ExpenseEntryRoot(
     announcements: CorrectionAnnouncementState = CorrectionAnnouncementState(loading = false),
     onDismissPastExpense: () -> Unit = {},
     announcementFailed: Boolean = false,
+    createdCategoryId: String? = null,
+    onCreatedCategoryTaken: () -> Unit = {},
     onClosed: () -> Unit
 ) {
     val viewModel: ExpenseEntryViewModel = viewModel(factory = viewModels)
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // A category created from Nueva, handed back by the editor: chosen here, taken once.
+    LaunchedEffect(createdCategoryId) {
+        if (createdCategoryId != null) {
+            viewModel.onAction(ExpenseEntryAction.CategoryCreated(createdCategoryId))
+            onCreatedCategoryTaken()
+        }
+    }
     // Feedback for a save that already happened, once per saved expense and before the
     // form closes. Nothing depends on it: if the device cannot vibrate, the expense is
     // saved all the same. The caller says what was saved.
@@ -145,91 +164,93 @@ fun ExpenseEntryScreen(
     announcementBusy: Boolean = false,
     announcementFailed: Boolean = false
 ) {
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        // Sideways or wide: the slip at the left, the keypad always in view at the right.
-        val form = !state.loading && !state.loadFailed
-        val split = form && selloWindowLayout(maxWidth, maxHeight).twoPane
-        SelloScaffold(
-            title = stringResource(
-                if (state.editing) R.string.expense_edit_title else R.string.expense_entry_title
-            ),
-            navigationIcon = {
-                IconButton(onClick = { onAction(ExpenseEntryAction.Back) }) {
-                    Icon(
-                        SelloIcon.ArrowBack.painter(),
-                        stringResource(R.string.expense_entry_close)
-                    )
-                }
-            },
-            actions = {
-                // Only for an expense that is recorded and has been read: nothing else
-                // is there to delete. Undo is offered afterwards, so it does not ask first.
-                if (state.editing && !state.loading && !state.loadFailed) {
-                    val description = stringResource(R.string.expense_edit_delete_description)
-                    SelloButton(
-                        text = stringResource(R.string.expense_edit_delete),
-                        onClick = { onAction(ExpenseEntryAction.Delete) },
-                        kind = ButtonKind.Text,
-                        enabled = state.canDelete,
-                        modifier = Modifier
-                            .testTag(ENTRY_DELETE_TAG)
-                            .semantics { contentDescription = description }
-                    )
-                }
-            },
-            secondaryPane = if (split) {
-                { padding -> ControlsPane(state, onAction, padding) }
-            } else {
-                null
+    SelloScaffold(
+        title = stringResource(
+            if (state.editing) R.string.expense_edit_title else R.string.expense_entry_title
+        ),
+        modifier = modifier,
+        navigationIcon = {
+            IconButton(onClick = { onAction(ExpenseEntryAction.Back) }) {
+                Icon(SelloIcon.Close.painter(), stringResource(R.string.expense_entry_close))
             }
-        ) { padding ->
-            when {
-                state.loading -> Pane(padding) {
-                    SlipSkeleton(Modifier.testTag(ENTRY_LOADING_TAG))
-                }
+        },
+        actions = {
+            // Only for an expense that is recorded and has been read: nothing else
+            // is there to delete. Undo is offered afterwards, so it does not ask first.
+            if (state.editing && !state.loading && !state.loadFailed) {
+                val description = stringResource(R.string.expense_edit_delete_description)
+                SelloButton(
+                    text = stringResource(R.string.expense_edit_delete),
+                    onClick = { onAction(ExpenseEntryAction.Delete) },
+                    kind = ButtonKind.Text,
+                    enabled = state.canDelete,
+                    modifier = Modifier
+                        .testTag(ENTRY_DELETE_TAG)
+                        .semantics { contentDescription = description }
+                )
+            }
+        }
+    ) { padding ->
+        when {
+            state.loading -> Pane(padding) { SlipSkeleton(Modifier.testTag(ENTRY_LOADING_TAG)) }
 
-                state.loadFailed -> Pane(padding) {
-                    ErrorSlip(
-                        message = stringResource(
-                            if (state.editing) {
-                                R.string.expense_edit_load_failed
-                            } else {
-                                R.string.expense_entry_load_failed
-                            }
-                        ),
-                        onRetry = { onAction(ExpenseEntryAction.Retry) },
-                        modifier = Modifier.testTag(ENTRY_LOAD_FAILED_TAG)
-                    )
-                }
+            state.loadFailed -> Pane(padding) {
+                ErrorSlip(
+                    message = stringResource(
+                        if (state.editing) {
+                            R.string.expense_edit_load_failed
+                        } else {
+                            R.string.expense_entry_load_failed
+                        }
+                    ),
+                    onRetry = { onAction(ExpenseEntryAction.Retry) },
+                    modifier = Modifier.testTag(ENTRY_LOAD_FAILED_TAG)
+                )
+            }
 
-                split -> Pane(padding) {
-                    Draft(
+            // The amount, the action and the pad hold still; only the choices scroll.
+            // A wide or short window puts the action and pad beside the rest.
+            else -> V2EntryLayout(
+                modifier = Modifier.padding(padding),
+                header = {
+                    if (!state.editing && onIncome != null) {
+                        SegmentedSwitch(
+                            listOf(
+                                stringResource(R.string.entry_expense),
+                                stringResource(R.string.entry_income)
+                            ),
+                            0,
+                            { if (it == 1 && state.editable) onIncome() },
+                            Modifier.testTag("entry.kind"),
+                            enabled = state.editable
+                        )
+                    }
+                },
+                amount = { Amount(state, dates, onAction) },
+                choices = {
+                    Choices(
                         state,
-                        dates,
                         onAction,
-                        onIncome,
                         onCreateCategory,
                         showPastExpenseAnnouncement,
                         dismissPastExpenseAnnouncement,
                         announcementBusy,
                         announcementFailed
                     )
+                },
+                action = { Action(state, onAction) },
+                keypad = {
+                    AmountKeypad(
+                        onDigit = { onAction(ExpenseEntryAction.Digit(it)) },
+                        onTripleZero = { onAction(ExpenseEntryAction.TripleZero) },
+                        onBackspace = { onAction(ExpenseEntryAction.Backspace) },
+                        onClearAll = { onAction(ExpenseEntryAction.ClearAmount) },
+                        modifier = Modifier.testTag(ENTRY_KEYPAD_TAG),
+                        enabled = state.editable,
+                        compact = true
+                    )
                 }
-
-                else -> Stacked(
-                    state,
-                    dates,
-                    onAction,
-                    padding,
-                    maxHeight * PINNED_SHARE,
-                    onIncome,
-                    onCreateCategory,
-                    showPastExpenseAnnouncement,
-                    dismissPastExpenseAnnouncement,
-                    announcementBusy,
-                    announcementFailed
-                )
-            }
+            )
         }
     }
     if (state.confirmDiscard) {
@@ -265,6 +286,7 @@ fun ExpenseEntryScreen(
         )
     }
     if (state.datePickerOpen) DayPicker(state.date, state.today, onAction)
+    state.noteDraft?.let { NoteSheet(state, it, onAction) }
 }
 
 @Composable
@@ -275,162 +297,78 @@ private fun Pane(padding: PaddingValues, content: @Composable () -> Unit) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(padding)
-            .imePadding()
     ) { content() }
 }
 
 /**
- * One column: the slip, category, date and note scroll at the top, and the keypad
- * with the button stay in view at the bottom, so the button is never scrolled away.
- * While the system keyboard is up for the note, the keypad steps aside for it.
+ * The slip being written: "Gasto en pesos" (or why the amount cannot be used, in its
+ * place), the date, the chosen category's icon and the amount, which steps down in
+ * size as digits are added.
  */
 @Composable
-private fun Stacked(
+private fun Amount(
     state: ExpenseEntryState,
     dates: DateLabels,
-    onAction: (ExpenseEntryAction) -> Unit,
-    padding: PaddingValues,
-    pinnedMax: Dp,
-    onIncome: (() -> Unit)?,
-    onCreateCategory: (() -> Unit)?,
-    showPastExpenseAnnouncement: Boolean,
-    dismissPastExpenseAnnouncement: () -> Unit,
-    announcementBusy: Boolean,
-    announcementFailed: Boolean
+    onAction: (ExpenseEntryAction) -> Unit
 ) {
-    val keyboardOpen = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    Column(modifier = Modifier.fillMaxSize().padding(padding).imePadding()) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
-            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
-        ) {
-            Draft(
-                state,
-                dates,
-                onAction,
-                onIncome,
-                onCreateCategory,
-                showPastExpenseAnnouncement,
-                dismissPastExpenseAnnouncement,
-                announcementBusy,
-                announcementFailed
+    val day = dates.day(state.date, state.today)
+    val dateDescription = stringResource(R.string.expense_entry_date, day)
+    EntryAmountSlip(
+        label = stringResource(R.string.expense_entry_amount_label),
+        amount = state.amount,
+        modifier = Modifier.testTag(ENTRY_AMOUNT_TAG),
+        error = when {
+            state.atLimit -> stringResource(R.string.expense_entry_amount_limit)
+            else -> state.amountProblem?.let { stringResource(it.text()) }
+        },
+        date = {
+            FieldPill(
+                text = day,
+                icon = SelloIcon.Event,
+                onClick = { onAction(ExpenseEntryAction.OpenDatePicker) },
+                modifier = Modifier
+                    .testTag(ENTRY_DATE_TAG)
+                    .semantics { contentDescription = dateDescription },
+                enabled = state.editable
             )
+        },
+        icon = state.category?.let { CategoryIcons.iconFor(it.iconKey) },
+        limitPulse = state.limitPulse,
+        rejectedText = state.amountText,
+        onPaste = if (state.editable) {
+            { onAction(ExpenseEntryAction.Paste(it)) }
+        } else {
+            null
         }
-        // Above the keys, never between them and the button: the keys are held from
-        // the bottom, so what is said here comes and goes without moving one of them.
-        Said(state)
-        // Scrolls on its own only when a very large font makes it taller than its share.
-        Column(
-            modifier = Modifier
-                .heightIn(max = pinnedMax)
-                .verticalScroll(rememberScrollState())
-                .padding(top = SelloTheme.spacing.sm)
-                .testTag(ENTRY_PINNED_TAG)
-        ) { Keys(state, onAction, keypad = !keyboardOpen) }
-    }
+    )
 }
 
 /**
- * The right-hand column of a sideways or wide window. What is said sits at the top
- * and the keys are held from the bottom, as in one column, so nothing said moves a
- * key or the button. If the keys do not fit they scroll from the bottom for the same
- * reason.
+ * Category chips in at most two rows, ending with Nueva for a new expense; the note's
+ * row; then what is missing or went wrong, and what a correction would change.
  */
 @Composable
-private fun ControlsPane(
+private fun Choices(
     state: ExpenseEntryState,
     onAction: (ExpenseEntryAction) -> Unit,
-    padding: PaddingValues
-) {
-    Column(modifier = Modifier.fillMaxSize().padding(padding).imePadding()) {
-        Said(state)
-        Box(contentAlignment = Alignment.BottomCenter, modifier = Modifier.weight(1f)) {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState(), reverseScrolling = true)
-                    .padding(top = SelloTheme.spacing.sm)
-            ) { Keys(state, onAction) }
-        }
-    }
-}
-
-/** The slip being written, the category choice, the date and the note. */
-@Composable
-private fun Draft(
-    state: ExpenseEntryState,
-    dates: DateLabels,
-    onAction: (ExpenseEntryAction) -> Unit,
-    onIncome: (() -> Unit)?,
     onCreateCategory: (() -> Unit)?,
     showPastExpenseAnnouncement: Boolean,
     dismissPastExpenseAnnouncement: () -> Unit,
     announcementBusy: Boolean,
     announcementFailed: Boolean
 ) {
-    if (!state.editing && onIncome != null) {
-        SegmentedSwitch(
-            listOf(stringResource(R.string.entry_expense), stringResource(R.string.entry_income)),
-            0,
-            { if (it == 1 && state.editable) onIncome() },
-            Modifier.testTag("entry.kind")
-        )
-    }
-    if (!state.editing && state.categories.isEmpty() && onCreateCategory != null) {
-        SelloButton(
-            stringResource(R.string.recibo_create_categories),
-            onCreateCategory,
-            enabled = state.editable
-        )
-    }
-    val day = dates.day(state.date, state.today)
-    Slip(modifier = Modifier.fillMaxWidth().testTag(ENTRY_SLIP_TAG)) {
-        Text(
-            text = stringResource(
-                if (state.editing) R.string.expense_edit_line else R.string.expense_entry_new_line,
-                day
-            ),
-            style = MaterialTheme.typography.labelMedium,
-            color = SelloTheme.colors.inkSoft
-        )
-        Text(
-            text = state.category?.name ?: stringResource(R.string.expense_entry_no_category),
-            style = MaterialTheme.typography.titleMedium,
-            color = if (state.category == null) SelloTheme.colors.inkSoft else SelloTheme.colors.ink
-        )
-        AmountField(
-            amount = state.amount,
-            modifier = Modifier.testTag(ENTRY_AMOUNT_TAG),
-            rejectedText = state.amountText,
-            message = state.amountProblem?.let { FieldMessage(stringResource(it.text())) },
-            limitPulse = state.limitPulse,
-            onPaste = if (state.editable) {
-                { onAction(ExpenseEntryAction.Paste(it)) }
-            } else {
-                null
-            }
-        )
-        state.preview?.let { preview ->
-            TearLine()
-            Text(
-                text = stringResource(R.string.expense_entry_preview),
-                style = MaterialTheme.typography.labelMedium,
-                color = SelloTheme.colors.inkSoft,
-                modifier = Modifier.testTag(ENTRY_PREVIEW_TAG)
+    val addNew = onCreateCategory.takeIf { !state.editing }
+    val count = state.categories.size + if (addNew != null) 1 else 0
+    V2ChipRows(count, Modifier.testTag(ENTRY_CATEGORIES_TAG)) { index ->
+        val category = state.categories.getOrNull(index)
+        if (category == null) {
+            AddChip(
+                stringResource(R.string.expense_entry_new_category),
+                { addNew?.invoke() },
+                Modifier.testTag(ENTRY_NEW_CATEGORY_TAG),
+                enabled = state.editable
             )
-            PreviewRow(preview.month, monthLabel(preview.month.kind))
-            preview.category?.let { line ->
-                PreviewRow(line, categoryLabel(line.kind, state.category?.name.orEmpty()))
-            }
-        }
-    }
-    Text(
-        text = stringResource(R.string.expense_entry_categories),
-        style = MaterialTheme.typography.labelLarge,
-        color = SelloTheme.colors.inkSoft,
-        modifier = Modifier.semantics { heading() }
-    )
-    ChipFlow(modifier = Modifier.testTag(ENTRY_CATEGORIES_TAG)) {
-        state.categories.forEach { category ->
+        } else {
             SelloChip(
                 label = category.name,
                 selected = category.id == state.categoryId,
@@ -440,16 +378,19 @@ private fun Draft(
             )
         }
     }
-    val dateDescription = stringResource(R.string.expense_entry_date, day)
-    FieldPill(
-        text = day,
-        icon = SelloIcon.Event,
-        onClick = { onAction(ExpenseEntryAction.OpenDatePicker) },
-        modifier = Modifier
-            .testTag(ENTRY_DATE_TAG)
-            .semantics { contentDescription = dateDescription }
+    EntryLine(
+        text = state.note.ifBlank { stringResource(R.string.expense_entry_add_note) },
+        icon = SelloIcon.EditNote,
+        onClick = { onAction(ExpenseEntryAction.OpenNote) },
+        modifier = Modifier.testTag(ENTRY_NOTE_TAG),
+        action = stringResource(R.string.expense_entry_edit_note),
+        placeholder = state.note.isBlank(),
+        enabled = state.editable
     )
-    // Said by the date, before anything is saved: which other months' figures this touches.
+    state.noteProblem?.let {
+        FieldMessageText(FieldMessage(stringResource(it.text())))
+    }
+    // Before anything is saved: which other months' figures a correction touches.
     if (state.pastMonths.isNotEmpty()) {
         val months = monthNames()
         val named = state.pastMonths.map(months::inSentence)
@@ -486,23 +427,6 @@ private fun Draft(
             modifier = Modifier.testTag(ENTRY_PAST_EXPENSE_ANNOUNCEMENT_TAG)
         )
     }
-    FormField(
-        label = stringResource(R.string.expense_entry_note),
-        value = state.note,
-        onValueChange = { onAction(ExpenseEntryAction.NoteChanged(it)) },
-        modifier = Modifier.testTag(ENTRY_NOTE_TAG),
-        message = state.noteProblem?.let { FieldMessage(stringResource(it.text())) },
-        counter = stringResource(
-            R.string.expense_entry_note_counter,
-            state.note.trim().codePointCount(0, state.note.trim().length),
-            Note.MAX_CODE_POINTS
-        ),
-        enabled = state.editable,
-        keyboardOptions = KeyboardOptions(
-            capitalization = KeyboardCapitalization.Sentences,
-            imeAction = ImeAction.Done
-        )
-    )
 }
 
 /**
@@ -511,111 +435,127 @@ private fun Draft(
  */
 @Composable
 private fun Said(state: ExpenseEntryState) {
-    val top = Modifier.padding(top = SelloTheme.spacing.sm)
     state.error?.let { error ->
         FieldMessageText(
             FieldMessage(stringResource(error.text(state.editing))),
-            top.testTag(ENTRY_ERROR_TAG)
+            Modifier.testTag(ENTRY_ERROR_TAG)
         )
     }
     val missing = state.missing?.text()
     if (missing != null && !state.busy && state.error != EntryError.Unknown) {
         FieldMessageText(
             FieldMessage(stringResource(missing), isError = false),
-            top.testTag(ENTRY_MISSING_TAG)
+            Modifier.testTag(ENTRY_MISSING_TAG)
         )
     }
 }
 
-/** The keypad and the one button, always the same distance apart. */
+/**
+ * What is missing or went wrong, then the one button: record, save the correction, or
+ * ask again about an unknown outcome. Held with the pad, so what is said is always in
+ * view and grows upwards without moving the button or a key.
+ */
 @Composable
-private fun Keys(
+private fun Action(state: ExpenseEntryState, onAction: (ExpenseEntryAction) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm)) {
+        Said(state)
+        SubmitButton(state, onAction)
+    }
+}
+
+@Composable
+private fun SubmitButton(state: ExpenseEntryState, onAction: (ExpenseEntryAction) -> Unit) {
+    if (state.error == EntryError.Unknown) {
+        SelloButton(
+            text = stringResource(R.string.expense_entry_check_again),
+            onClick = { onAction(ExpenseEntryAction.Retry) },
+            modifier = Modifier.fillMaxWidth().testTag(ENTRY_SUBMIT_TAG),
+            loading = state.busy
+        )
+        return
+    }
+    // Read aloud as the whole sentence, so it is clear what will be recorded and where.
+    val label = stringResource(
+        when {
+            state.busy -> R.string.expense_entry_saving
+            state.editing -> R.string.expense_edit_submit
+            else -> R.string.expense_entry_submit
+        }
+    )
+    val category = state.category
+    val sentence = if (state.amount != null && category != null && !state.busy) {
+        stringResource(
+            if (state.editing) {
+                R.string.expense_edit_submit_description
+            } else {
+                R.string.expense_entry_submit_description
+            },
+            state.amount.spoken,
+            category.name
+        )
+    } else {
+        label
+    }
+    SelloButton(
+        text = label,
+        onClick = { onAction(ExpenseEntryAction.Submit) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(ENTRY_SUBMIT_TAG)
+            .semantics { contentDescription = sentence },
+        enabled = state.canSubmit,
+        loading = state.busy
+    )
+}
+
+/**
+ * The note, written in a composer docked above the keyboard. It says what the note
+ * belongs to; over 60 characters the text stays and it cannot be finished.
+ */
+@Composable
+private fun NoteSheet(
     state: ExpenseEntryState,
-    onAction: (ExpenseEntryAction) -> Unit,
-    keypad: Boolean = true
+    draft: String,
+    onAction: (ExpenseEntryAction) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.lg)) {
-        if (keypad) {
-            AmountKeypad(
-                onDigit = { onAction(ExpenseEntryAction.Digit(it)) },
-                onTripleZero = { onAction(ExpenseEntryAction.TripleZero) },
-                onBackspace = { onAction(ExpenseEntryAction.Backspace) },
-                onClearAll = { onAction(ExpenseEntryAction.ClearAmount) },
-                modifier = Modifier.testTag(ENTRY_KEYPAD_TAG),
-                enabled = state.editable
-            )
+    val kind = stringResource(R.string.entry_expense)
+    val facts = SpanStyle(color = SelloTheme.colors.ink, fontWeight = FontWeight.Bold)
+    val category = state.category
+    val context = buildAnnotatedString {
+        append(kind)
+        category?.let {
+            append(stringResource(R.string.expense_entry_note_in))
+            withStyle(facts) { append(it.name) }
         }
-        if (state.error == EntryError.Unknown) {
-            SelloButton(
-                text = stringResource(R.string.expense_entry_check_again),
-                onClick = { onAction(ExpenseEntryAction.Retry) },
-                modifier = Modifier.fillMaxWidth().testTag(ENTRY_SUBMIT_TAG),
-                loading = state.busy
-            )
-        } else {
-            // Read aloud as the whole sentence, so it is clear what will be recorded and where.
-            val label = stringResource(
-                if (state.editing) R.string.expense_edit_submit else R.string.expense_entry_submit
-            )
-            val sentence = if (state.amount != null && state.category != null) {
-                stringResource(
-                    if (state.editing) {
-                        R.string.expense_edit_submit_description
-                    } else {
-                        R.string.expense_entry_submit_description
-                    },
-                    state.amount.spoken,
-                    state.category!!.name
-                )
-            } else {
-                label
-            }
-            SelloButton(
-                text = label,
-                onClick = { onAction(ExpenseEntryAction.Submit) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag(ENTRY_SUBMIT_TAG)
-                    .semantics { contentDescription = sentence },
-                enabled = state.canSubmit,
-                loading = state.busy
-            )
+        state.amount?.let {
+            append(" · ")
+            withStyle(facts) { append(it.digits) }
         }
     }
+    val spoken = listOfNotNull(
+        stringResource(R.string.expense_entry_note_spoken) +
+            (category?.let { stringResource(R.string.expense_entry_note_for, it.name) } ?: ""),
+        state.amount?.spoken
+    ).joinToString(", ")
+    NoteComposer(
+        context = context,
+        value = draft,
+        onValueChange = { onAction(ExpenseEntryAction.NoteDraftChanged(it)) },
+        counter = stringResource(
+            R.string.expense_entry_note_counter,
+            state.noteDraftLength,
+            Note.MAX_CODE_POINTS
+        ),
+        hint = stringResource(R.string.expense_entry_note_optional),
+        error = state.noteDraftProblem?.let { stringResource(it.composerText()) },
+        doneLabel = stringResource(R.string.expense_entry_note_done),
+        cancelLabel = stringResource(R.string.expense_entry_note_cancel),
+        onDone = { onAction(ExpenseEntryAction.NoteDone) },
+        onCancel = { onAction(ExpenseEntryAction.NoteCancelled) },
+        contextIcon = category?.let { CategoryIcons.iconFor(it.iconKey) } ?: SelloIcon.ReceiptLong,
+        contextDescription = spoken
+    )
 }
-
-@Composable
-private fun PreviewRow(line: PreviewLine, label: String) {
-    LeaderLine(label) {
-        MoneyText(
-            line.amount,
-            color = if (line.kind == PreviewLine.Kind.Over) {
-                SelloTheme.colors.semantic.loss
-            } else {
-                SelloTheme.colors.ink
-            }
-        )
-    }
-}
-
-@Composable
-private fun monthLabel(kind: PreviewLine.Kind) = stringResource(
-    when (kind) {
-        PreviewLine.Kind.Remaining -> R.string.expense_entry_preview_month_remaining
-        PreviewLine.Kind.Over -> R.string.expense_entry_preview_month_over
-        PreviewLine.Kind.Spent -> R.string.expense_entry_preview_month_spent
-    }
-)
-
-@Composable
-private fun categoryLabel(kind: PreviewLine.Kind, name: String) = stringResource(
-    when (kind) {
-        PreviewLine.Kind.Remaining -> R.string.expense_entry_preview_category_remaining
-        PreviewLine.Kind.Over -> R.string.expense_entry_preview_category_over
-        PreviewLine.Kind.Spent -> R.string.expense_entry_preview_category_spent
-    },
-    name
-)
 
 /** Days after [today] cannot be chosen. The picker works in whole days, with no time or zone. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -664,6 +604,12 @@ private fun NoteProblem.text() = when (this) {
     NoteProblem.NotAllowed -> R.string.expense_entry_note_not_allowed
 }
 
+/** In the composer the text is still there, so it says so. */
+private fun NoteProblem.composerText() = when (this) {
+    NoteProblem.TooLong -> R.string.expense_entry_note_composer_too_long
+    NoteProblem.NotAllowed -> R.string.expense_entry_note_not_allowed
+}
+
 private fun Missing.text(): Int? = when (this) {
     Missing.Amount -> null
     Missing.Category -> R.string.expense_entry_missing_category
@@ -699,15 +645,13 @@ private fun EntryError.text(editing: Boolean) = when (this) {
 
 const val ENTRY_LOADING_TAG = "expense-entry:loading"
 const val ENTRY_LOAD_FAILED_TAG = "expense-entry:load-failed"
-const val ENTRY_SLIP_TAG = "expense-entry:slip"
 const val ENTRY_AMOUNT_TAG = "expense-entry:amount"
-const val ENTRY_PREVIEW_TAG = "expense-entry:preview"
 const val ENTRY_CATEGORIES_TAG = "expense-entry:categories"
+const val ENTRY_NEW_CATEGORY_TAG = "expense-entry:new-category"
 const val ENTRY_DATE_TAG = "expense-entry:date"
 const val ENTRY_DATE_CONFIRM_TAG = "expense-entry:date-confirm"
 const val ENTRY_NOTE_TAG = "expense-entry:note"
 const val ENTRY_KEYPAD_TAG = "expense-entry:keypad"
-const val ENTRY_PINNED_TAG = "expense-entry:pinned"
 
 /** The most of the window the keypad and button may take. */
 private const val PINNED_SHARE = 0.6f

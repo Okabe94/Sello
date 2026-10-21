@@ -48,17 +48,6 @@ enum class EntryError {
 
 data class EntryCategory(val id: String, val name: String, val iconKey: String)
 
-/** One line of the preview. [over] means the figure is how far past the limit it would go. */
-data class PreviewLine(val kind: Kind, val amount: MoneyTextValue) {
-    enum class Kind { Remaining, Over, Spent }
-}
-
-/**
- * What the month and the category would look like after saving. It is an estimate
- * from the draft, shown as such; it is never what was saved.
- */
-data class EntryPreview(val month: PreviewLine, val category: PreviewLine?)
-
 /**
  * The entry form. [amount] is present only for a valid amount; [amountText] is what
  * was pasted when it could not be used. Nothing typed is ever changed into something else.
@@ -71,6 +60,8 @@ data class ExpenseEntryState(
     val amountProblem: AmountProblem? = null,
     /** Goes up each time a key is refused because twelve digits is the most there can be. */
     val limitPulse: Int = 0,
+    /** The last key was refused for that reason: "Máximo 12 dígitos" until the next one counts. */
+    val atLimit: Boolean = false,
     val categories: List<EntryCategory> = emptyList(),
     val categoryId: String? = null,
     val date: LocalDate,
@@ -78,7 +69,14 @@ data class ExpenseEntryState(
     val datePickerOpen: Boolean = false,
     val note: String = "",
     val noteProblem: NoteProblem? = null,
-    val preview: EntryPreview? = null,
+    /**
+     * The note being written in its composer, or null while the composer is closed. It
+     * becomes [note] only when finished within the limit; [noteDraftLength] counts it
+     * as people see it.
+     */
+    val noteDraft: String? = null,
+    val noteDraftProblem: NoteProblem? = null,
+    val noteDraftLength: Int = 0,
     val missing: Missing? = Missing.Amount,
     val busy: Boolean = false,
     val error: EntryError? = null,
@@ -140,6 +138,20 @@ sealed interface ExpenseEntryAction {
     data class DatePicked(val date: LocalDate) : ExpenseEntryAction
 
     data class NoteChanged(val text: String) : ExpenseEntryAction
+
+    /** Open the note's composer on what is written now. */
+    data object OpenNote : ExpenseEntryAction
+
+    data class NoteDraftChanged(val text: String) : ExpenseEntryAction
+
+    /** Keep what the composer holds as the note, if it is within the limit. */
+    data object NoteDone : ExpenseEntryAction
+
+    /** Close the composer; the note stays as it was. */
+    data object NoteCancelled : ExpenseEntryAction
+
+    /** The category editor, opened from Nueva, created this category: choose it. */
+    data class CategoryCreated(val id: String) : ExpenseEntryAction
 
     data object Submit : ExpenseEntryAction
 

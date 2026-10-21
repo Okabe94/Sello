@@ -152,7 +152,7 @@ data.
 
 - **Type:** Story
 - **Priority:** P1
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** SELLO-070, SELLO-064, SELLO-004
 - **Gate:** G2
 
@@ -204,10 +204,9 @@ inventory; the allocated and unallocated figures already exist for Resumen. Refe
 
 ### Delivery evidence
 
-- **Revision:** tested snapshot is the `sello-071-v2-income` working tree on `main` at
-  `169bea6`, with only the ticket status uncommitted; it is identified exactly by the
-  retained input fingerprint below. The commit and pull request follow this evidence;
-  no claim is made that the gate tested a clean commit.
+- **Revision:** tested commit `b5fa2ff`, the ticket's commit merged with `main` at
+  `7a055f0` (two-runner device CI, no overlap), with the ticket In Progress; the commit
+  that marks it Done changes only its status and this evidence.
 - **Decisions:** the owner chose, on 2026-10-20, to drop the income form's month
   preview as v2 and SELLO-070 did (`IncomePreviewPolicy` stays in the domain, unused by
   the form, which no longer takes `ResumenSnapshots`), and to keep income history on the
@@ -249,8 +248,9 @@ inventory; the allocated and unallocated figures already exist for Resumen. Refe
   list after saving.
 - **Gate results:** `./scripts/verify-ticket SELLO-071 --retain` passed all six checks.
   Host: 533 tests; device: 591 tests; zero failures, errors or skips. Lint had zero
-  errors and 32 existing warnings.
-- **Quality run:** run 20261021T043324Z-932ce4ef; SELLO-071 G2 passed; HEAD 169bea6, inputs sha256 cbd714505e13; report docs/planning/mvp/quality-reports/SELLO-071.json sha256 cdee1404ff37b305397d2e7b5f47496894130f8816b55788098bbc45dc88c008
+  errors and 32 existing warnings. A first run on the working tree passed with the same
+  counts before `main` moved; this run followed the merge.
+- **Quality run:** run 20261021T043839Z-ae6bfada; SELLO-071 G2 passed; HEAD b5fa2ff, inputs sha256 3937592f3e58; report docs/planning/mvp/quality-reports/SELLO-071.json sha256 bb417b6d22e4bb2a67459a12d0682a8262834934d25204dd37d661343eeb6cd7
 - **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
   (320 × 640dp, animations off), serial `emulator-5582`. On the same AVD a debug build
   showed the empty "Ingresos de octubre" screen with its dock, the green form (+60.000),

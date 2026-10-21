@@ -152,21 +152,17 @@ and Gradle's local task-output cache. Only trusted jobs on `main` save entries;
 pull requests and other refs use them read-only. Keep `actions/setup-java` free
 of a second Gradle cache configuration so the two actions cannot compete.
 
-The job has one `cache-profile` matrix entry per run: `host` for pushes to `main`,
-`device` for PRs, nightly and manual runs. This is a cache preference; the runner
-still decides the actual G1/G2 gate, including G1 for document-only PRs. The fixed
-job name explicitly references matrix context and resolves to `quality`, so GitHub
-does not append a profile suffix; the matrix does not add a second runner.
-`setup-gradle` includes matrix context in its immutable cache key, so a host push
-cannot occupy the key needed to save a later nightly device build at the same SHA.
-Normal cross-profile restore fallback remains enabled for cold profiles and the
-transition from the earlier unprofiled cache.
+Host checks and device groups have separate job/matrix cache identities.
+`setup-gradle` includes that context in its immutable key, so a host push cannot
+occupy the entry used to save a device group's builds at the same SHA. Normal
+restore fallback remains enabled for cold identities and migration from the older
+single-job profiles. The first runs after this topology change can rebuild more
+tasks before the new main entries exist.
 
-PRs prefer the latest device-profile cache on `main`. That entry may be older than
-the latest host-profile cache; Gradle still validates task inputs and rebuilds
-affected outputs. Once a profile has saved a key for a SHA, another run of the
-same profile/SHA cannot update it. Separating profiles fixes the host/device
-collision; it does not make GitHub's cache entries mutable.
+Gradle validates task inputs and rebuilds affected outputs. Once an identity has
+saved a key for a SHA, another run at that identity/SHA cannot update it. Each
+successful trusted-main part can publish its cache independently; a cache entry
+does not prove the full gate passed. PRs and non-main refs remain read-only.
 
 `org.gradle.caching=true` enables task-output reuse locally and in CI. Gradle
 still selects the full gate task graph and checks each cacheable task's inputs.
@@ -198,12 +194,12 @@ through commit-pinned `actions/cache/restore` v5.1.0. The emulator action still 
 `sdkmanager` to check/install current packages. A cache miss uses the normal SDK
 download path. G1 does not use this cache.
 
-After a successful G2 and evidence validation on trusted `main`,
-`actions/cache/save` v5.1.0 saves a key containing the OS, host architecture,
+After the support device group and evidence validation pass on trusted `main`,
+that group alone uses `actions/cache/save` v5.1.0 to save a key containing the OS, host architecture,
 API/target/image architecture and SHA-256 of the installed `source.properties`.
 Restores use a prefix to find the latest saved image revision; saves compare the
 matched key with the installed metadata key. If Google publishes a new revision,
-`sdkmanager` can update it and the next successful main G2 saves a new key. PRs
+`sdkmanager` can update it and the next successful main support group saves a new key. PRs
 and non-main refs never save entries. This is a separate SDK cache, not a second
 Gradle cache.
 
@@ -216,6 +212,51 @@ Compare cache restore/upload time, SDK installation, boot time and the complete 
 job before claiming a speedup. The first main G2 populates this cache; subsequent
 PR/full runs can restore it. A compressed system image is large, so cache transfer
 time must be included in the comparison.
+
+## Parallel hosted G2
+
+The planning job keeps the existing event policy: PRs need G2 except for qualifying
+documents-only candidates, main pushes need G1, and scheduled/manual runs need G2.
+Host checks run once. For G2, two independent runners execute whole module suites:
+`app` and `support` (`data`, `design-system`, `catalog`). Each creates a fresh,
+cold-booted API-30 emulator. Sibling groups continue after a failure for diagnostics.
+
+The only required result is the final `quality` job. It runs even if an upstream
+job fails or is cancelled. It requires successful planning and host jobs, plus
+both device groups for G2; G1 requires the device job to be skipped. The collector
+checks every module's fresh XML, check commands, outcome, toolchain, commit, input
+fingerprint, base, event and workflow run/attempt. Missing or inconsistent parts
+fail the gate. Device skips fail too. A part cannot be retained as ticket evidence.
+
+Parts and raw logs/results are retained as `quality-part-<attempt>-<part>` artifacts
+for 90 days. The collector downloads only the current attempt, verifies artifact
+digests, and writes standard full reports plus the source parts under
+`quality-reports`. The download action's flat single-artifact layout is accepted
+only for G1 host evidence. Re-run the complete workflow for a fresh comparison; retrying
+only a failed group cannot reuse successful groups from a previous attempt.
+The pinned `actions/download-artifact` v8.0.2 reads the current run without new
+credentials or GitHub permissions. Normal local `verify-ticket` commands still
+execute the whole gate on one device.
+
+To exercise collection locally, choose a fresh output directory and two isolated
+API-30 emulators. Keep inputs unchanged until collection finishes. For example:
+
+```bash
+export QUALITY_EXECUTION_ID=local-device-split-001
+export QUALITY_PARTS_DIR=build/reports/quality-parts/local-device-split-001
+./scripts/verify-ticket --merge-candidate HEAD --ci-event workflow_dispatch \
+  --ci-part host --ci-output "$QUALITY_PARTS_DIR"
+ANDROID_SERIAL=emulator-5584 ./scripts/verify-ticket --merge-candidate HEAD \
+  --ci-event workflow_dispatch --ci-part app --ci-output "$QUALITY_PARTS_DIR"
+ANDROID_SERIAL=emulator-5586 ./scripts/verify-ticket --merge-candidate HEAD \
+  --ci-event workflow_dispatch --ci-part support --ci-output "$QUALITY_PARTS_DIR"
+./scripts/verify-ticket --merge-candidate HEAD --ci-event workflow_dispatch \
+  --ci-collect "$QUALITY_PARTS_DIR"
+```
+
+These local commands may run sequentially to avoid sharing a Gradle workspace;
+GitHub supplies separate runners/workspaces. Local passing collection proves full
+coverage and report integration, not hosted parallelism or a measured speedup.
 
 ## Device smoke
 

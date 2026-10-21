@@ -16,6 +16,13 @@ DEVICE_TASKS = (
     ":data:connectedDebugAndroidTest", ":design-system:connectedDebugAndroidTest",
     ":app:connectedDebugAndroidTest", ":catalog:connectedDebugAndroidTest",
 )
+DEVICE_GROUPS = {
+    "app": (":app:connectedDebugAndroidTest",),
+    "support": (
+        ":data:connectedDebugAndroidTest", ":design-system:connectedDebugAndroidTest",
+        ":catalog:connectedDebugAndroidTest",
+    ),
+}
 HOST_RESULTS = "*/build/test-results/**/TEST-*.xml"
 DEVICE_RESULTS = "*/build/outputs/androidTest-results/connected/**/TEST-*.xml"
 LINT_RESULTS = "*/build/reports/lint-results-debug.xml"
@@ -33,6 +40,21 @@ class Check:
     results: str = ""
     fresh_results: bool = False
     lint: bool = False
+    result_modules: tuple = ()
+
+
+def device_check(name="gradle-device", tasks=DEVICE_TASKS):
+    return Check(
+        name, ("./gradlew", *tasks, "--continue"), needs_device=True,
+        results=DEVICE_RESULTS, fresh_results=True,
+        result_modules=tuple(task.split(":")[1] for task in tasks),
+    )
+
+
+def validate_device_groups():
+    grouped = [task for tasks in DEVICE_GROUPS.values() for task in tasks]
+    if sorted(grouped) != sorted(DEVICE_TASKS) or len(grouped) != len(set(grouped)):
+        raise Unavailable("device groups must cover every device task exactly once")
 
 
 def plan(gate):
@@ -52,10 +74,7 @@ def plan(gate):
         Check("gradle-host", ("./gradlew", *HOST_TASKS, "--continue"), results=HOST_RESULTS, lint=True),
     ]
     if gate == "G2":
-        checks.append(Check(
-            "gradle-device", ("./gradlew", *DEVICE_TASKS, "--continue"),
-            needs_device=True, results=DEVICE_RESULTS, fresh_results=True,
-        ))
+        checks.append(device_check())
     return checks
 
 
@@ -69,6 +88,19 @@ def test_results(root, pattern, newer_than=None):
         for name in ("tests", "failures", "errors", "skipped"):
             totals[name] += int(suite.get(name, 0))
     return totals
+
+
+def device_results(root, modules, newer_than=None):
+    return {
+        module: test_results(
+            root, DEVICE_RESULTS.replace("*/", f"{module}/", 1), newer_than,
+        )
+        for module in modules
+    }
+
+
+def sum_results(results):
+    return {name: sum(result[name] for result in results) for name in ("suites", "tests", "failures", "errors", "skipped")}
 
 
 def lint_results(root):

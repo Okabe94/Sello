@@ -176,8 +176,20 @@ def run_check(check, root, directory, execute):
     if record["exit_code"] != 0:
         failures.append(f"{check.name} exited {record['exit_code']}")
     if check.results:
-        results = gates.test_results(root, check.results, started_mtime if check.fresh_results else None)
+        newer_than = started_mtime if check.fresh_results else None
+        if check.result_modules:
+            modules = gates.device_results(root, check.result_modules, newer_than)
+            record["modules"] = modules
+            for module, counts in modules.items():
+                if counts["tests"] == 0:
+                    failures.append(f"{check.name}: {module} produced no fresh test results")
+                if counts["skipped"]:
+                    failures.append(f"{check.name}: {module} skipped device tests")
+            results = gates.sum_results(modules.values())
+        else:
+            results = gates.test_results(root, check.results, newer_than)
         record["results"] = results
+        record["fresh_results"] = check.fresh_results
         if results["tests"] == 0:
             failures.append(f"{check.name} produced no test results")
         if results["failures"] + results["errors"]:
@@ -222,6 +234,16 @@ def run(ticket_id, root, requested_gate=None, execute=default_execute,
         if record.get("lint", {}).get("warnings"):
             warnings.append(f"{check.name}: {record['lint']['warnings']} lint warnings")
         print(f"[{ticket_id} {executed}] {check.name}: {'FAILED' if problems else 'ok'}", file=stream, flush=True)
+    return finish_run(
+        root, ticket_id, required, executed, before, tools, attached, records,
+        failures, warnings, started_at, run_id, directory, stream, retain,
+    )
+
+
+def finish_run(root, ticket_id, required, executed, before, tools, attached, records,
+               failures, warnings, started_at, run_id, directory, stream=sys.stderr, retain=False,
+               execution=None):
+    """Write an honest full-gate report from executed checks, local or collected."""
     if snapshot(root)["fingerprint"] != before["fingerprint"]:
         failures.append("inputs changed while checks were running")
     if before["dirty"]:
@@ -241,6 +263,8 @@ def run(ticket_id, root, requested_gate=None, execute=default_execute,
         "started_at": started_at,
         "finished_at": now(),
     }
+    if execution is not None:
+        report["execution"] = execution
     path = directory / "report.json"
     path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     for failure in failures:

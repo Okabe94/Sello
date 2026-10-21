@@ -87,6 +87,15 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
 - **MUST** keep the host's required quality check and protected merge. CI re-executes checks for the actual merge
   candidate; a local report alone cannot authorize merge. Cover workflow/path-filter
   bypasses and gate-policy edits in review. Never expose signing secrets to untrusted PRs.
+- **MUST** treat distributed CI parts as incomplete execution, not full-gate or
+  retained ticket evidence. The final collector requires all checks/modules for
+  the selected gate, matching commit/inputs/base/event/run/attempt, compatible
+  toolchains, successful job outcomes and fresh device results without skips.
+  Missing, failed, cancelled, stale or inconsistent parts fail `quality`. Keep
+  the underlying part reports, logs and raw results with the full report.
+  Validate every selected ticket's prerequisites and gate before executing a
+  candidate-wide part; bind the collected report separately to each ticket's
+  current acceptance fingerprint. Normal local ticket/batch execution is unchanged.
 - **SHOULD** offer an affected-area focused command, but it never substitutes for
   the integrated ticket gate. Additional enforcement plugins/hooks **COULD** improve
   feedback; they cannot replace trusted CI or designated review.
@@ -108,6 +117,10 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
   candidate passed its own gate before it could merge; `main` gets the device gate
   every night. `main` requires the check to pass and the pull request to be up to
   date. There is no path filter, so the check always reports.
+  Host checks execute once; G2 device work runs on independent app and support
+  (data/design-system/catalog) runners. The final `quality` job checks upstream
+  outcomes and collects the same complete gate through `verify-ticket` before
+  validating completion evidence. See the [parallel CI commands](../../development/setup.md#parallel-hosted-g2).
 
 These tools prove that checks ran on a known snapshot. They do not judge whether
 acceptance is met; the designated review still does. Agent instructions are policy,

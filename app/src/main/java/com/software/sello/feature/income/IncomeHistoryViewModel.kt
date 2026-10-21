@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.domain.model.IncomeSource
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.ResumenSnapshot
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.IncomeCursor
 import com.software.sello.domain.port.IncomeMonth
 import com.software.sello.domain.port.IncomeMonthState
 import com.software.sello.domain.port.IncomeReads
+import com.software.sello.domain.port.ResumenSnapshotState
+import com.software.sello.domain.port.ResumenSnapshots
 import com.software.sello.navigation.MonthSession
 import com.software.sello.presentation.money.MoneyFormatter
 import java.time.LocalDate
@@ -26,6 +29,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/**
+ * Where the month's income went, from the same summary Resumen shows: what the category
+ * budgets take and what is left unassigned, signed when the budgets add up to more than
+ * came in ([over]). [allocatedShare] is how much of the bar is drawn solid; it is
+ * geometry only, never shown as a number or turned back into money.
+ */
+data class IncomeSplit(
+    val income: MoneyTextValue,
+    val allocated: MoneyTextValue,
+    val unallocated: MoneyTextValue,
+    val over: Boolean,
+    val allocatedShare: Float
+)
 
 data class IncomeLine(
     val id: String,
@@ -61,12 +78,37 @@ sealed interface IncomeHistoryAction {
 class IncomeHistoryViewModel(
     private val reads: IncomeReads,
     private val session: MonthSession,
+    snapshots: ResumenSnapshots,
     private val money: MoneyFormatter,
     clock: FinancialClock
 ) : ViewModel() {
     val today = clock.today.map {
         it.date
     }.stateIn(viewModelScope, SharingStarted.Eagerly, clock.today.value.date)
+
+    /** Null while it is read, or when it could not be: never shown as zero. */
+    val split: StateFlow<IncomeSplit?> = session.selectedMonth
+        .flatMapLatest(snapshots::observe)
+        .map { read -> (read as? ResumenSnapshotState.Ready)?.snapshot?.let(::split) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private fun split(summary: ResumenSnapshot): IncomeSplit {
+        val income = summary.income.minorUnits
+        val allocated = summary.allocated.minorUnits
+        val share = when {
+            income <= 0 -> 0f
+            allocated >= income -> 1f
+            else -> (allocated.toDouble() / income.toDouble()).toFloat().coerceIn(0f, 1f)
+        }
+        return IncomeSplit(
+            income = money.format(summary.income),
+            allocated = money.format(summary.allocated),
+            unallocated = money.format(summary.unallocated),
+            over = summary.unallocated.minorUnits < 0,
+            allocatedShare = share
+        )
+    }
+
     private val shown = MutableStateFlow<IncomeHistoryState>(IncomeHistoryState.Loading)
     val state: StateFlow<IncomeHistoryState> = shown.asStateFlow()
     private val attempts = MutableStateFlow(0)

@@ -9,6 +9,9 @@ enum class IncomeAmountProblem { NotAnAmount, Zero, TooLarge }
 
 enum class IncomeTextProblem { TooLong, NotAllowed }
 
+/** What the composer docked above the keyboard is writing. */
+enum class IncomeComposer { Note, SourceName }
+
 /**
  * What still has to be filled in before the income can be recorded, most important
  * first. [SourceName] is for "Otro", which needs a name. [Changes] is only for a
@@ -56,6 +59,8 @@ data class IncomeFormState(
     val amountProblem: IncomeAmountProblem? = null,
     /** Goes up each time a key is refused because twelve digits is the most there can be. */
     val limitPulse: Int = 0,
+    /** The last key was refused for that reason: "Máximo 12 dígitos" until the next one counts. */
+    val atLimit: Boolean = false,
     val sourceKeys: List<String> = emptyList(),
     val sourceKey: String = "",
     val otherName: String = "",
@@ -65,6 +70,14 @@ data class IncomeFormState(
     val datePickerOpen: Boolean = false,
     val note: String = "",
     val noteProblem: IncomeTextProblem? = null,
+    /**
+     * The composer open for the note or Otro's name, or null. What it holds becomes that
+     * text only when finished within its limit; [composerLength] counts it as people see it.
+     */
+    val composer: IncomeComposer? = null,
+    val composerDraft: String = "",
+    val composerProblem: IncomeTextProblem? = null,
+    val composerLength: Int = 0,
     val missing: IncomeMissing? = IncomeMissing.Amount,
     val busy: Boolean = false,
     val generationChanged: Boolean = false,
@@ -79,9 +92,6 @@ data class IncomeFormState(
     val closed: Boolean = false,
     /** A recorded income is being corrected, not a new one written. */
     val editing: Boolean = false,
-    val monthPreview: MoneyTextValue? = null,
-    val previewLoading: Boolean = false,
-    val previewUnavailable: Boolean = false,
     /** Months other than the current one whose income saving or deleting would change. */
     val pastMonths: List<YearMonth> = emptyList()
 ) {
@@ -132,6 +142,17 @@ sealed interface IncomeFormAction {
     data class DatePicked(val date: LocalDate) : IncomeFormAction
 
     data class NoteChanged(val text: String) : IncomeFormAction
+
+    /** Open the composer on the note, or on Otro's name, as written now. */
+    data class OpenComposer(val what: IncomeComposer) : IncomeFormAction
+
+    data class ComposerChanged(val text: String) : IncomeFormAction
+
+    /** Keep what the composer holds, if it is within the limit. */
+    data object ComposerDone : IncomeFormAction
+
+    /** Close the composer; the text stays as it was. */
+    data object ComposerCancelled : IncomeFormAction
 
     data object Submit : IncomeFormAction
 

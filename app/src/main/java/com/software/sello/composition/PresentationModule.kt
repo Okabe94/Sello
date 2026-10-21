@@ -52,11 +52,12 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     initializer { AppearanceViewModel(koin.get()) }
     initializer { SettingsViewModel(koin.get(), koin.get()) }
     initializer { ResumenViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get()) }
-    initializer { IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
+    initializer {
+        IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+    }
     initializer {
         IncomeFormViewModel(
             createSavedStateHandle(),
-            koin.get(),
             koin.get(),
             koin.get(),
             koin.get(),

@@ -95,50 +95,9 @@ class IncomeFormViewModelTest {
     private fun shown(digits: String) = MoneyTextValue(MoneySign.None, "", digits, "$digits pesos")
 
     private fun form(saved: SavedStateHandle = SavedStateHandle()) =
-        IncomeFormViewModel(saved, commands, reads, snapshots, clock, {
+        IncomeFormViewModel(saved, commands, reads, clock, {
             uuid(nextId++)
         }, money, corrections)
-
-    private val previewOverride = MutableStateFlow<ResumenSnapshotState?>(null)
-    private val previewRevision = MutableStateFlow<Long?>(null)
-    private val snapshots = object : ResumenSnapshots {
-        override suspend fun read(month: YearMonth): Outcome<ResumenSnapshot, SnapshotFailure> =
-            error("The form observes")
-
-        override fun observe(month: YearMonth) = combine(
-            reads.observeMonth(month),
-            clock.today,
-            previewOverride,
-            previewRevision
-        ) { state, today, override, revision ->
-            when {
-                override != null -> override
-
-                state is IncomeMonthState.Loading -> ResumenSnapshotState.Loading
-
-                state is IncomeMonthState.Failed -> ResumenSnapshotState.Failed(
-                    SnapshotFailure.Storage(state.failure),
-                    null
-                )
-
-                state is IncomeMonthState.Ready -> {
-                    val original = resumenSnapshot(income = state.month.total.minorUnits)
-                    ResumenSnapshotState.Ready(
-                        original.copy(
-                            budget = original.budget.copy(
-                                month = month,
-                                asOf = today.date,
-                                generation = state.month.generation,
-                                revision = revision ?: state.month.revision
-                            )
-                        )
-                    )
-                }
-
-                else -> error("Unknown income state")
-            }
-        }
-    }
 
     /** A new-income form with the month already read. */
     private fun ready(saved: SavedStateHandle = SavedStateHandle()): IncomeFormViewModel {
@@ -149,85 +108,87 @@ class IncomeFormViewModelTest {
     private fun editing(income: Income = logo) =
         SavedStateHandle(mapOf(IncomeFormViewModel.KEY_EDITED_INCOME to income.id.value))
 
+    // --- The composer, for the note and Otro's name ---
+
     @Test
-    fun newIncomePreviewIsExactAndCorrectingDoesNotCountTheIncomeTwice() {
-        reads.stored[logo.id] = logo
-        val model = ready()
-        model.onAction(IncomeFormAction.Paste("150000"))
-        assertEquals(shown("1.000.000"), model.state.value.monthPreview)
-        assertEquals(1, reads.stored.size)
-        val edit = ready(editing())
-        edit.onAction(IncomeFormAction.Paste("150000"))
-        assertEquals(null, edit.state.value.monthPreview)
+    fun theNoteIsWrittenInTheComposerAndOnlyAValidOneIsKept() {
+        val form = ready()
+        form.onAction(IncomeFormAction.OpenComposer(IncomeComposer.Note))
+        val opened = form.now
+        form.onAction(IncomeFormAction.ComposerChanged("Marca"))
+        form.onAction(IncomeFormAction.ComposerDone)
+        val kept = form.now
+        form.onAction(IncomeFormAction.OpenComposer(IncomeComposer.Note))
+        form.onAction(IncomeFormAction.ComposerChanged("Otra"))
+        form.onAction(IncomeFormAction.ComposerCancelled)
+
+        assertEquals(IncomeComposer.Note to "", opened.composer to opened.composerDraft)
+        assertEquals("Marca" to null, kept.note to kept.composer)
+        assertEquals("Marca" to null, form.now.note to form.now.composer)
     }
 
     @Test
-    fun invalidOrFutureDraftsAndReadFailuresNeverClaimAUsablePreview() {
-        val model = ready()
-        model.onAction(IncomeFormAction.Paste("0"))
-        assertEquals(null, model.state.value.monthPreview)
-        model.onAction(IncomeFormAction.Paste("150000"))
-        clock.goTo("2026-10-21")
-        assertEquals(null, model.state.value.monthPreview)
-        clock.goTo("2026-10-22")
-        reads.of(october).value = IncomeMonthState.Failed(StorageFailure.Unavailable("test"), null)
-        assertEquals(null, model.state.value.monthPreview)
-        assertTrue(model.state.value.loadFailed)
+    fun otrosNameIsWrittenInTheComposerAndIsNeverLostWhenItCloses() {
+        val form = ready()
+        form.type("5000")
+        form.onAction(IncomeFormAction.SourcePicked("other"))
+        val needsName = form.now.missing
+        form.onAction(IncomeFormAction.OpenComposer(IncomeComposer.SourceName))
+        form.onAction(IncomeFormAction.ComposerChanged("Bono"))
+        form.onAction(IncomeFormAction.ComposerDone)
+        val named = form.now
+        form.onAction(IncomeFormAction.OpenComposer(IncomeComposer.SourceName))
+        val reopened = form.now.composerDraft
+        form.onAction(IncomeFormAction.ComposerChanged(""))
+        form.onAction(IncomeFormAction.ComposerCancelled)
+
+        assertEquals(IncomeMissing.SourceName, needsName)
+        assertEquals("Bono" to null, named.otherName to named.missing)
+        assertEquals("Bono", reopened)
+        assertEquals("Bono", form.now.otherName)
     }
 
     @Test
-    fun anOverflowingMonthHasAnExplicitUnavailablePreviewInsteadOfAWrappedTotal() {
-        val model = ready()
-        reads.of(october).value = IncomeMonthState.Ready(
-            com.software.sello.domain.port.IncomeMonth(
-                october,
-                7,
-                3,
-                com.software.sello.domain.model.Money.cop(Long.MAX_VALUE),
-                1
-            )
+    fun overItsLimitTheComposerKeepsTheTextAndCannotBeFinished() {
+        val form = ready()
+        form.onAction(IncomeFormAction.OpenComposer(IncomeComposer.SourceName))
+        // Twenty-four faces are twenty-four characters, though each is two UTF-16 units.
+        form.onAction(IncomeFormAction.ComposerChanged("\uD83D\uDE00".repeat(24)))
+        val full = form.now
+        form.onAction(IncomeFormAction.ComposerChanged("\uD83D\uDE00".repeat(25)))
+        form.onAction(IncomeFormAction.ComposerDone)
+
+        assertEquals(24 to null, full.composerLength to full.composerProblem)
+        assertEquals(
+            25 to IncomeTextProblem.TooLong,
+            form.now.composerLength to form.now.composerProblem
         )
-        model.onAction(IncomeFormAction.Paste("1"))
-        assertEquals(null, model.state.value.monthPreview)
-        assertTrue(model.state.value.previewUnavailable)
+        assertEquals(IncomeComposer.SourceName, form.now.composer)
+        assertEquals("", form.now.otherName)
     }
 
     @Test
-    fun anUnavailableOptionalPreviewDoesNotBreakTheExistingIncomeWriteJourney() {
-        val model = ready()
-        model.onAction(IncomeFormAction.Paste("150000"))
-        previewOverride.value = ResumenSnapshotState.Failed(
-            SnapshotFailure.Unrepresentable,
-            resumenSnapshot(income = 900_000)
-        )
-        assertFalse(model.state.value.loadFailed)
-        assertTrue(model.state.value.canSubmit)
-        assertEquals(null, model.state.value.monthPreview)
-        assertTrue(model.state.value.previewUnavailable)
+    fun anOpenComposerAndItsTextComeBackAfterTheProcessIsKilled() {
+        val saved = SavedStateHandle()
+        val first = ready(saved)
+        first.onAction(IncomeFormAction.OpenComposer(IncomeComposer.Note))
+        first.onAction(IncomeFormAction.ComposerChanged("Prim"))
 
-        reads.stored[incomeId(900)] =
-            storedIncome(900, "2026-10-22", 150_000, IncomeSource.Salary)
-        model.onAction(IncomeFormAction.Submit)
+        val restored = form(saved.afterProcessDeath()).now
 
-        assertEquals(1, commands.created.size)
-        assertEquals(incomeId(900).value, model.state.value.recorded)
+        assertEquals(IncomeComposer.Note to "Prim", restored.composer to restored.composerDraft)
+        assertEquals("", restored.note)
     }
 
     @Test
-    fun previewWaitsUntilIncomeAndSummaryAreFromTheSameRevision() {
-        reads.stored[logo.id] = logo
-        previewRevision.value = 0
-        val model = ready()
+    fun maximoDoceDigitosStaysUntilTheNextKeyThatChangesTheAmount() {
+        val form = ready()
+        form.type("999999999999")
+        form.type("9")
+        val refused = form.now.atLimit
+        form.onAction(IncomeFormAction.Backspace)
 
-        model.onAction(IncomeFormAction.Paste("150000"))
-
-        assertNull(model.state.value.monthPreview)
-        assertTrue(model.state.value.previewLoading)
-
-        previewRevision.value = null
-
-        assertEquals(shown("1.000.000"), model.state.value.monthPreview)
-        assertFalse(model.state.value.previewLoading)
+        assertEquals(true to false, refused to form.now.atLimit)
     }
 
     /** The form opened on [income], with it in storage and its months read. */

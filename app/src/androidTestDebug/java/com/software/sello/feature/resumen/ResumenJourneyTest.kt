@@ -79,14 +79,13 @@ class ResumenJourneyTest {
         rule.awaitTag("resumen.flow")
         rule.onNodeWithText("Ver ingresos").performScrollTo().performClick()
         rule.awaitTag("income.history")
-        rule.onNodeWithText("Anotar ingreso").performClick()
+        rule.onNodeWithContentDescription("Anotar un ingreso").performClick()
         rule.awaitTag("income.keypad")
         listOf("1", "5", "0", "000").forEach { key ->
             rule.onNode(hasText(key) and hasAnyAncestor(hasTestTag("income.keypad")))
-                .performScrollTo().performClick()
+                .performClick()
         }
-        rule.onNodeWithTag("income.monthPreview").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithTag("income.submit").performScrollTo().press()
+        rule.onNodeWithTag("income.submit").press()
         // Back where income entry was opened, saying what was saved.
         rule.awaitTag("income.history")
         rule.awaitText("Ingreso anotado: 150.000")

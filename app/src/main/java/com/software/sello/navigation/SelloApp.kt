@@ -225,6 +225,7 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
             val model: IncomeHistoryViewModel = viewModel(factory = viewModels)
             val history by model.state.collectAsStateWithLifecycle()
             val today by model.today.collectAsStateWithLifecycle()
+            val split by model.split.collectAsStateWithLifecycle()
             ShellScreen(
                 state,
                 monthNames(),
@@ -232,10 +233,18 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 navigation = null,
                 onBack = { navigation.popBackStack() },
                 screenTitle = stringResource(R.string.income_history_title),
+                titleLabel = incomeHistoryTitle(state, monthNames()),
+                // Here the dock records income, as in v2.
+                dock = SelloDock(
+                    label = stringResource(R.string.dock_income_label),
+                    actionLabel = stringResource(R.string.income_save),
+                    onClick = { navigation.navigate(IncomeEntryRoute) }
+                ),
                 notice = notice?.let { { CorrectionNoticeBar(it, corrections::undo) } }
             ) { padding ->
                 IncomeHistoryScreen(
                     history,
+                    split,
                     today,
                     model::onAction,
                     { navigation.navigate(IncomeEntryRoute) },
@@ -524,6 +533,8 @@ fun ShellScreen(
     screenTitle: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
     pastMonthRibbon: Boolean = true,
+    titleLabel: String? = null,
+    dock: SelloDock? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
@@ -599,10 +610,10 @@ fun ShellScreen(
                 },
                 actions = actions,
                 titleContent = {
-                    val label = if (screenTitle == null) {
-                        title
-                    } else {
-                        stringResource(R.string.screen_title_month, screenTitle, title)
+                    val label = when {
+                        titleLabel != null -> titleLabel
+                        screenTitle == null -> title
+                        else -> stringResource(R.string.screen_title_month, screenTitle, title)
                     }
                     MonthSwitcher(
                         label = label,
@@ -613,7 +624,8 @@ fun ShellScreen(
                     )
                 },
                 blotter = Blotter.Short,
-                dock = SelloDock(
+                // A screen can offer its own entry, as income history does.
+                dock = dock ?: SelloDock(
                     label = stringResource(R.string.dock_entry_label),
                     actionLabel = stringResource(R.string.dock_entry_action),
                     onClick = { onAction(ShellAction.StartEntry) }
@@ -688,6 +700,18 @@ private fun EntryDestination(
 }
 
 const val SETTINGS_ACTION_TAG = "navigation:settings"
+
+/** "Ingresos de octubre", with the year when it is not the current one's. */
+@Composable
+internal fun incomeHistoryTitle(state: ShellState, names: MonthNames): String {
+    val month = state.selectedMonth
+    val named = if (month.year == state.currentMonth.year) {
+        names.inSentence(month)
+    } else {
+        stringResource(R.string.month_ribbon_month_of_year, names.inSentence(month), month.year)
+    }
+    return stringResource(R.string.income_history_title_month, named)
+}
 
 /** "Gasto anotado: 48.700 en Comida", with as much as could be read back. */
 @Composable

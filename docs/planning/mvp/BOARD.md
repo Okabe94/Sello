@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 33/50 · **Epics Done:** 6/10
 
-Backlog: 17 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 33
+Backlog: 16 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 33
 
 [Workflow, gates and definition of done](README.md)
 
@@ -29,7 +29,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-071](epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2) | Bring income entry, edit and history to v2 | SELLO-E13 | P1 | G2 | None |
 
 ## Review
 
@@ -56,7 +58,6 @@ No tickets.
 | [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) | Prove integrated data retention and recovery failure safety | SELLO-E08 | P0 | G2 | [SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion), [SELLO-031](epics/E07-recovery-privacy.md#sello-031--deliver-fenced-two-confirmation-reset-and-recovery), [SELLO-032](epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation), [SELLO-027](epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite) |
 | [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) | Validate performance and optimized release composition | SELLO-E08 | P0 | G3 | [SELLO-027](epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite), [SELLO-032](epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) |
 | [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | Accept the complete MVP and prepare release handoff | SELLO-E08 | P0 | G3 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety), [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) |
-| [SELLO-071](epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2) | Bring income entry, edit and history to v2 | SELLO-E13 | P1 | G2 | None |
 | [SELLO-072](epics/E13-v2-current-app.md#sello-072--bring-resumen-to-v2-for-todays-figures) | Bring Resumen to v2 for today's figures | SELLO-E13 | P1 | G2 | None |
 | [SELLO-073](epics/E13-v2-current-app.md#sello-073--retire-the-v1-components-v2-replaced) | Retire the v1 components v2 replaced | SELLO-E13 | P1 | G2 | [SELLO-071](epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2), [SELLO-072](epics/E13-v2-current-app.md#sello-072--bring-resumen-to-v2-for-todays-figures) |
 | [SELLO-074](epics/E13-v2-current-app.md#sello-074--review-the-v2-screens-with-talkback-and-switch-access) | Review the v2 screens with TalkBack and Switch Access | SELLO-E13 | P1 | G2 | [SELLO-073](epics/E13-v2-current-app.md#sello-073--retire-the-v1-components-v2-replaced) |
@@ -101,4 +102,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-028](epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-071](epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2), [SELLO-072](epics/E13-v2-current-app.md#sello-072--bring-resumen-to-v2-for-todays-figures)
+[SELLO-024](epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls), [SELLO-028](epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-072](epics/E13-v2-current-app.md#sello-072--bring-resumen-to-v2-for-todays-figures)

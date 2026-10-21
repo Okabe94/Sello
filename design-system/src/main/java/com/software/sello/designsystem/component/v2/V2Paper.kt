@@ -379,15 +379,15 @@ private fun EntryPanes(
 private val PinnedAmountMinHeight = 600.dp
 
 /**
- * A screen's answer: a label with its stamp, then one large amount, in loss ink when
- * [ink] is [StampInk.Over]. With [description], the label, stamp and amount are read
- * as that one sentence; [detail] is read on its own.
+ * A screen's answer: a label with its stamp, if it has one, then one large amount, in
+ * loss ink when [ink] is [StampInk.Over]. With [description], the label, stamp and
+ * amount are read as that one sentence; [detail] is read on its own.
  */
 @Composable
 fun AnswerSlip(
     label: String,
     amount: MoneyTextValue,
-    stamp: String,
+    stamp: String?,
     ink: StampInk,
     modifier: Modifier = Modifier,
     description: String? = null,
@@ -401,7 +401,9 @@ fun AnswerSlip(
         }
         Column(answer.fillMaxWidth()) {
             // Stacked at large text so the rotated stamp never steals the label's width.
-            if (LocalDensity.current.fontScale >= 1.3f) {
+            if (stamp == null) {
+                Text(label, color = SelloTheme.colors.inkSoft)
+            } else if (LocalDensity.current.fontScale >= 1.3f) {
                 Text(label, color = SelloTheme.colors.inkSoft)
                 Stamp(stamp, ink, Modifier.padding(vertical = 8.dp), angle = -5f)
             } else {

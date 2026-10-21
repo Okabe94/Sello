@@ -1,13 +1,7 @@
 name: Quality
 
-# No path filters: every merge candidate reports this check, including changes to this
-# file. What a run executes is decided inside the job, by scripts/verify-ticket:
-#   pull request  the device gate (G2), or the host gate (G1) when the candidate advances
-#                 no ticket and touches only documents
-#   push to main  the host gate: the candidate passed its own gate on its merge commit,
-#                 and main only takes candidates that are up to date
-#   nightly       the device gate on main, so anything only a device shows is still seen
-# See docs/decisions/0009-hosted-gate-scope.md.
+# Every candidate reports one required quality check. Parts are execution evidence,
+# not independently successful gates. Event/gate policy remains ADR 0009.
 on:
   pull_request:
   push:
@@ -19,27 +13,43 @@ on:
 permissions:
   contents: read
 
-# One run per branch and kind of event: a newer push replaces an older one, and the
-# nightly run and a push to main never cancel each other.
 concurrency:
   group: quality-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
+env:
+  BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+  EVENT: ${{ github.event_name }}
+
 jobs:
-  quality:
-    # Refer to matrix context so GitHub does not append the profile to the check name.
-    name: ${{ matrix.cache-profile && 'quality' }}
+  plan:
+    name: Select gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      gate: ${{ steps.plan.outputs.gate }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Decide what this run verifies
+        id: plan
+        run: |
+          case "$EVENT" in
+            pull_request) mode=candidate; gate=$(./scripts/verify-ticket --candidate-gate "$BASE") ;;
+            push)         mode=landed;    gate=G1 ;;
+            *)            mode=full;      gate=G2 ;;
+          esac
+          echo "gate=$gate" >> "$GITHUB_OUTPUT"
+          echo "$EVENT: $mode at $gate" >> "$GITHUB_STEP_SUMMARY"
+
+  host:
+    name: Host checks
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    strategy:
-      matrix:
-        # One entry per run: separate immutable host/device cache keys, one quality check.
-        cache-profile:
-          - ${{ github.event_name == 'push' && 'host' || 'device' }}
-    env:
-      # Pull requests are checked out as the merge commit; BASE is what it merges into.
-      # A nightly or manual run has neither and compares the commit with itself.
-      BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,51 +64,79 @@ jobs:
       - name: Set up Gradle caching
         uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
         with:
-          # Only trusted main jobs publish entries; every PR reads the shared cache.
           cache-read-only: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
           add-job-summary: always
           add-job-summary-as-pr-comment: never
           build-scan-publish: false
           dependency-graph: disabled
 
-      - name: Decide what this run verifies
-        id: plan
-        env:
-          EVENT: ${{ github.event_name }}
-        run: |
-          case "$EVENT" in
-            pull_request) mode=candidate; gate=$(./scripts/verify-ticket --candidate-gate "$BASE") ;;
-            push)         mode=landed;    gate=G1 ;;
-            *)            mode=full;      gate=G2 ;;
-          esac
-          echo "mode=$mode" >> "$GITHUB_OUTPUT"
-          echo "gate=$gate" >> "$GITHUB_OUTPUT"
-          echo "$EVENT: $mode at $gate" >> "$GITHUB_STEP_SUMMARY"
+      - name: Accept Android SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Verify host part
+        run: ./scripts/verify-ticket --merge-candidate "$BASE" --ci-part host --ci-event "$EVENT"
+
+      - name: Keep host part
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: quality-part-${{ github.run_attempt }}-host
+          retention-days: 90
+          if-no-files-found: error
+          path: build/reports/quality-parts/quality-part-${{ github.run_attempt }}-host/
+
+  device:
+    name: Device tests (${{ matrix.group }})
+    needs: plan
+    if: needs.plan.outputs.gate == 'G2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [app, support]
+    env:
+      DEVICE_GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle caching
+        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        with:
+          # Job identity separates host/device caches; matrix context separates groups.
+          cache-read-only: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+          add-job-summary: always
+          add-job-summary-as-pr-comment: never
+          build-scan-publish: false
+          dependency-graph: disabled
 
       - name: Locate Android system image
-        if: steps.plan.outputs.gate == 'G2'
         id: android-image
         run: echo "path=$ANDROID_HOME/system-images/android-30/google_apis/x86_64" >> "$GITHUB_OUTPUT"
 
       - name: Restore Android system image
-        if: steps.plan.outputs.gate == 'G2'
         id: android-image-cache
         uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.android-image.outputs.path }}
-          # Restore the latest vendor revision; sdkmanager still checks for updates.
           key: android-image-v1-${{ runner.os }}-${{ runner.arch }}-api30-google_apis-x86_64-lookup
           restore-keys: android-image-v1-${{ runner.os }}-${{ runner.arch }}-api30-google_apis-x86_64-
 
       - name: Enable KVM for the emulator
-        if: steps.plan.outputs.gate == 'G2'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Verify on a device (G2 on API 30)
-        if: steps.plan.outputs.gate == 'G2'
+      - name: Verify device part on API 30
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 30
@@ -108,49 +146,72 @@ jobs:
           force-avd-creation: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
-          script: ./scripts/verify-ticket --merge-candidate "$BASE" --gate G2
+          script: ./scripts/verify-ticket --merge-candidate "$BASE" --ci-part "$DEVICE_GROUP" --ci-event "$EVENT"
 
-      # The emulator action accepts these on the device path; the host path has to itself,
-      # or the build cannot fetch the SDK packages it needs.
-      - name: Accept Android SDK licences
-        if: steps.plan.outputs.gate == 'G1'
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-
-      - name: Verify documents only on the host (G1)
-        if: steps.plan.outputs.mode == 'candidate' && steps.plan.outputs.gate == 'G1'
-        run: ./scripts/verify-ticket --merge-candidate "$BASE" --gate G1
-
-      - name: Verify what landed on main on the host (G1)
-        if: steps.plan.outputs.mode == 'landed'
-        run: ./scripts/verify-ticket --landed "$BASE"
-
-      - name: Validate completion evidence
+      - name: Validate completion evidence before cache publication
         run: python3 docs/planning/mvp/board.py --check --base "$BASE"
 
       - name: Identify installed Android system image
-        if: steps.plan.outputs.gate == 'G2' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: matrix.group == 'support' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         id: android-image-key
         run: |
           sdk_image_metadata=$(sha256sum "$ANDROID_HOME/system-images/android-30/google_apis/x86_64/source.properties")
           echo "key=android-image-v1-${{ runner.os }}-${{ runner.arch }}-api30-google_apis-x86_64-${sdk_image_metadata%% *}" >> "$GITHUB_OUTPUT"
 
       - name: Save Android system image
-        if: steps.plan.outputs.gate == 'G2' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.android-image-cache.outputs.cache-matched-key != steps.android-image-key.outputs.key
+        if: matrix.group == 'support' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.android-image-cache.outputs.cache-matched-key != steps.android-image-key.outputs.key
         uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ${{ steps.android-image.outputs.path }}
           key: ${{ steps.android-image-key.outputs.key }}
 
-      - name: Keep reports
+      - name: Keep device part
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: quality-part-${{ github.run_attempt }}-${{ matrix.group }}
+          retention-days: 90
+          if-no-files-found: error
+          path: build/reports/quality-parts/quality-part-${{ github.run_attempt }}-${{ matrix.group }}/
+
+  quality:
+    name: quality
+    needs: [plan, host, device]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        id: checkout
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download execution parts
+        id: parts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: quality-part-${{ github.run_attempt }}-*
+          path: build/ci-parts
+          merge-multiple: false
+          digest-mismatch: error
+
+      - name: Collect full gate evidence
+        if: always() && steps.checkout.outcome == 'success' && steps.parts.outcome == 'success'
+        env:
+          QUALITY_PLAN_RESULT: ${{ needs.plan.result }}
+          QUALITY_HOST_RESULT: ${{ needs.host.result }}
+          QUALITY_DEVICE_RESULT: ${{ needs.device.result }}
+        run: ./scripts/verify-ticket --merge-candidate "$BASE" --ci-collect build/ci-parts --ci-event "$EVENT"
+
+      - name: Validate completion evidence
+        run: python3 docs/planning/mvp/board.py --check --base "$BASE"
+
+      - name: Keep full gate reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: quality-reports
           retention-days: 90
-          if-no-files-found: warn
-          path: |
-            build/reports/quality/
-            */build/reports/lint-results-debug.*
-            */build/reports/ktlint/
-            */build/test-results/
-            */build/outputs/androidTest-results/
+          if-no-files-found: error
+          path: build/reports/quality/

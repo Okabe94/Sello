@@ -33,7 +33,7 @@ own revisions, not a controlled before/after benchmark or a promised saving.
    implemented locally; hosted measurement pending.** Benchmark
    bounded worker/heap settings, build/emulator contention and clean API-30 AVD
    caching. Preserve all task selections and measure net wall time and cost.
-3. **Split device work between two runners — pending.** Candidate suite times
+3. **Split device work between two runners — implementation in progress.** Candidate suite times
    suggest app alone (~135s) versus data + design-system + catalog (~124s).
    The ideal reduction is about two minutes of serial suite execution, before
    extra provisioning/build overhead. First require per-module reports and
@@ -48,6 +48,8 @@ own revisions, not a controlled before/after benchmark or a promised saving.
    ticket's prerequisites and required gate, execute the shared gate once on
    an immutable candidate, and bind each ticket's acceptance evidence to it.
    This helps multi-ticket candidates only; the baseline candidate has one.
+   The CI part collector below shares candidate-wide execution after validating
+   every selected ticket; optimizing the local batch command remains pending.
 6. **Remove redundant tests — pending, maintenance priority.** The arithmetic
    template, duplicate catalog-list assertion, standalone floating-point
    fixture check and synthetic missing-binding check total about 0.14s.
@@ -307,3 +309,64 @@ same app/test code and gate. Retain image metadata, runner/emulator versions,
 archive bytes, cache restore/save time, SDK/package setup, boot time, complete job
 time, test counts/freshness and warnings. Resource tuning remains a separate
 experiment; do not change CPU, RAM and Gradle workers together with image caching.
+
+## Option 3: parallel device execution
+
+Owned scope: the Quality workflow, quality runner/CLI and regression checks,
+this plan, the setup guide and quality-flow documentation. Keep the local full
+G2 command and all host/device tasks. CI runs host checks, app device tests and
+data/design-system/catalog device tests as separate parts; each device group
+gets a fresh API-30 emulator. A final required `quality` job must reject failed,
+cancelled, missing, stale or mismatched parts and missing module results before
+writing full gate reports. Partial execution is not completion evidence.
+
+Use the existing event policy and prerequisite checks. Keep trusted-main cache
+writes, read-only PR caches, dependency/toolchain pins and all assertions. Record
+per-module results and bind parts to the same commit, input fingerprint, event,
+base and workflow run/attempt. No app/test behavior, ticket status, permissions,
+financial storage or unrelated DataStore test fixes are in scope.
+
+Each CI part runs once for the immutable candidate after all selected tickets'
+prerequisites and gate requirements are validated. Collection binds that complete
+execution to each selected ticket's acceptance fingerprint. Local ticket and batch
+commands retain their existing behavior. This is a consequence of candidate-wide
+CI execution; it does not complete the separate local batch optimization.
+
+Execution decision: each successful trusted-main part publishes its own Gradle
+cache. Only the support device group may publish the vendor SDK image, after
+its device checks and completion-evidence validation. This moves cache publication
+from whole-job success to part success; it does not change gate success. Caches
+remain reusable inputs, and the required collector still needs every part. PRs
+and non-main refs cannot publish either cache.
+
+Use official MIT-licensed `actions/download-artifact` v8.0.2, commit
+`9000827ccba6bdab643e8b6fd33ac0654aef8333`, to retrieve parts from the current
+workflow run with separate artifact directories and digest errors enabled. Its
+Node 24 runtime fits the existing hosted runner/actions and supports the pinned
+upload-artifact v7.0.2 format. Same-run downloads need no additional token or
+permission. No dependency, JDK, SDK or emulator upgrade is included.
+
+The last matched full runs at `61b7792` passed 526 host results and 564 fresh
+device tests with 33 lint warnings. Warm jobs took 9m08s/8m24s, with device phases
+of 330s/335s. SDK-image reuse saved 5.9–10.9s in image setup including restore,
+but total provisioning was 99.1s/80.3s versus an 80.4s seed. These observations
+do not establish an overall provisioning gain; larger whole-job reductions also
+included greater Gradle reuse. Raw evidence is under ignored
+`build/reports/ci-performance/system-image/hosted/` and
+[the hosted attempts](https://github.com/Okabe94/Sello/actions/runs/39499071614).
+
+Verification must first prove rejection of incomplete execution, then exercise
+both real device groups and collect their fresh results with the host part.
+Hosted performance remains unmeasured until the new topology runs on GitHub;
+compare complete workflow wall time and runner minutes, including the planning,
+artifact-transfer and final validation jobs. The 1–2 minute saving is an estimate.
+
+Focused verification first showed that the old G2 runner passed when one module
+had no fresh results, and that the workflow had no independent device groups.
+Both guards pass after implementation. A transport probe also exposed the pinned
+download action's single-artifact flattening: G1 collection now accepts that
+host-only layout, while G2 still requires all named parts. Negative coverage
+includes failed/cancelled/skipped/missing jobs, omitted XML or freshness checks,
+wrong revisions/attempts, changed commands, malformed metadata and incomplete
+module partitions. Full local execution is reported separately so its final
+input fingerprint remains exact; it does not establish hosted runtime savings.

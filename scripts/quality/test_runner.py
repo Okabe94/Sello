@@ -24,6 +24,7 @@ class Harness:
         self.host_tests = 1
         self.host_failures = 0
         self.write_device_results = True
+        self.missing_device_modules = set()
         self.during = None
 
     def execute(self, argv, root, log_path):
@@ -35,9 +36,11 @@ class Harness:
                 write(self.root, "app/build/test-results/testDebugUnitTest/TEST-a.xml",
                       SUITE.format(tests=self.host_tests, failures=self.host_failures))
             write(self.root, "app/build/reports/lint-results-debug.xml", LINT)
-        if name == "gradle-device" and self.write_device_results:
-            write(self.root, "app/build/outputs/androidTest-results/connected/debug/TEST-d.xml",
-                  SUITE.format(tests=1, failures=0))
+        if name.startswith("gradle-device") and self.write_device_results:
+            for module in ("data", "design-system", "app", "catalog"):
+                if f":{module}:connectedDebugAndroidTest" in argv and module not in self.missing_device_modules:
+                    write(self.root, f"{module}/build/outputs/androidTest-results/connected/debug/TEST-d.xml",
+                          SUITE.format(tests=1, failures=0))
         if self.during:
             self.during(name)
         return self.exit_codes.get(name, 0)
@@ -188,6 +191,14 @@ class RunnerTests(unittest.TestCase):
         code, path = self.run_ticket(gate="G2")
         self.assertNotEqual(0, code)
         self.assertIn("gradle-device produced no test results", self.report(path)["failures"])
+
+    def test_device_gate_fails_when_one_module_produces_no_fresh_results(self):
+        self.devices = [DEVICE]
+        self.harness.missing_device_modules = {"data"}
+        code, path = self.run_ticket(gate="G2")
+        self.assertGreater(self.report(path)["checks"][-1]["results"]["tests"], 0)
+        self.assertNotEqual(0, code)
+        self.assertIn("gradle-device: data produced no fresh test results", self.report(path)["failures"])
 
     def test_inputs_changed_during_the_run_fail(self):
         def edit(name):

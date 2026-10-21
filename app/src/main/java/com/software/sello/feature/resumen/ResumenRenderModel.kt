@@ -34,8 +34,6 @@ class ResumenRenderModel(private val money: MoneyFormatter) {
             netFlow = money.format(snapshot.netFlow),
             allocated = money.format(snapshot.allocated),
             unallocated = money.format(snapshot.unallocated),
-            actualVerdict = snapshot.actualVerdict,
-            forecast = snapshot.history.lastOrNull()?.forecast?.rounded?.let(money::format),
             daily = snapshot.daily.map { day ->
                 val label = day.date.format(dayFormat)
                 val amount = money.format(day.cumulative)
@@ -55,6 +53,9 @@ class ResumenRenderModel(private val money: MoneyFormatter) {
                 val label = entry.month.format(monthFormat)
                 val amount = money.format(entry.spent)
                 val limit = entry.limit
+                // The month in progress is always drawn as such, over its limit or not:
+                // it is never a whole month.
+                val current = entry.month == YearMonth.from(budget.asOf)
                 ResumenPoint(
                     ChartPoint(
                         entry.month.toString(),
@@ -62,32 +63,31 @@ class ResumenRenderModel(private val money: MoneyFormatter) {
                         entry.spent.minorUnits,
                         "$label, ${amount.spoken}",
                         when {
+                            current -> ChartPeriod.Current
+
                             limit != null && entry.spent.minorUnits > limit.minorUnits ->
                                 ChartPeriod.Over
-
-                            entry.month == YearMonth.from(budget.asOf) -> ChartPeriod.Current
 
                             else -> ChartPeriod.Past
                         }
                     ),
                     label,
                     amount,
-                    entry.limit?.let(money::format)
+                    entry.limit?.let(money::format),
+                    current
                 )
+            },
+            monthLimit = snapshot.history.lastOrNull { it.month == budget.month }?.limit?.let {
+                ResumenLimit(it.minorUnits, money.format(it))
             },
             categories = budget.categories.filter { it.expenseCount > 0 }
                 .sortedByDescending { it.spent.minorUnits }.map { category ->
-                    val name = category.category.name.value
-                    val amount = money.format(category.spent)
-                    ResumenPoint(
-                        ChartPoint(
-                            category.category.id.value,
-                            name,
-                            category.spent.minorUnits,
-                            "$name, ${amount.spoken}"
-                        ),
-                        name,
-                        amount
+                    ResumenCategory(
+                        category.category.id.value,
+                        category.category.name.value,
+                        category.category.icon.value,
+                        money.format(category.spent),
+                        share(category.spent.minorUnits, budget.spent.minorUnits)
                     )
                 },
             empty = history.isEmpty(),
@@ -95,6 +95,13 @@ class ResumenRenderModel(private val money: MoneyFormatter) {
             stale = stale,
             asOf = budget.asOf.toString()
         )
+    }
+
+    /** How much of a bar to fill: geometry only, never shown or turned back into money. */
+    private fun share(part: Long, whole: Long): Float = when {
+        whole <= 0 || part <= 0 -> 0f
+        part >= whole -> 1f
+        else -> (part.toDouble() / whole.toDouble()).toFloat()
     }
 
     private companion object {

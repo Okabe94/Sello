@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -24,7 +25,6 @@ import com.software.sello.designsystem.theme.SelloInk
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.Money
-import com.software.sello.domain.model.PastVerdict
 import com.software.sello.presentation.money.MoneyFormatter
 import com.software.sello.presentation.money.MoneyLabels
 import org.junit.Assert.assertEquals
@@ -85,13 +85,16 @@ class ResumenScreenTest {
 
     private fun figures(ink: SelloInk, dark: Boolean) {
         show(ink, dark)
+        // Income first, as receipt lines with exact amounts.
+        rule.onNodeWithText("Ingresos anotados").assertIsDisplayed()
+        rule.onNodeWithContentDescription("150.000 pesos").assertIsDisplayed()
         rule.onNodeWithText("Ingresos menos gastos").assertIsDisplayed()
         rule.onNodeWithContentDescription("120.000 pesos").assertIsDisplayed()
-        rule.onNodeWithText("Por asignar al presupuesto").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithContentDescription("50.000 pesos").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("Gasto real").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithContentDescription("Bajo el límite").assertIsDisplayed()
-        rule.onNodeWithText("Proyección de gasto (estimada)").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Sin asignar a categorías").assertIsDisplayed()
+        rule.onNodeWithContentDescription("50.000 pesos").assertIsDisplayed()
+        // Nothing projected, and the month's status lives on Recibo.
+        rule.onNodeWithText("Proyección de gasto (estimada)").assertDoesNotExist()
+        rule.onNodeWithText("Gasto real").assertDoesNotExist()
     }
 
     @Test
@@ -116,12 +119,13 @@ class ResumenScreenTest {
         rule.onNodeWithTag("resumen.daily.selected").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("Gasto de ese día").assertIsDisplayed()
         rule.onNodeWithTag("resumen.history.chart").performScrollTo()
-        rule.onNodeWithContentDescription("oct, 30.000 pesos").performClick()
+        rule.onNodeWithContentDescription("oct, 30.000 pesos, mes en curso, hasta hoy")
+            .performClick()
         rule.runOnIdle { assertEquals(ResumenAction.SelectHistory("2026-10"), actions.last()) }
         rule.onNodeWithTag("resumen.category.00000000-0000-4000-8000-000000000001")
             .performScrollTo().performClick()
         rule.runOnIdle { assertEquals("00000000-0000-4000-8000-000000000001", category) }
-        rule.onNodeWithText("Ver ingresos").performScrollTo().performClick()
+        rule.onNodeWithText("Ver ingresos y su destino").performScrollTo().performClick()
         rule.runOnIdle { assertEquals(1, incomeClicks) }
     }
 
@@ -155,7 +159,7 @@ class ResumenScreenTest {
         state.value = resumenExample(money).copy(selectedDaily = "2026-10-02")
         show(font = 2f)
         rule.onNodeWithTag("resumen.daily.selected").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("Ver ingresos").performScrollTo().performClick()
+        rule.onNodeWithText("Ver ingresos y su destino").performScrollTo().performClick()
         rule.runOnIdle { assertEquals(1, incomeClicks) }
     }
 
@@ -196,8 +200,6 @@ class ResumenScreenTest {
             spent = huge,
             netFlow = money.format(Money.cop(-9_007_199_254_740_993)),
             unallocated = money.format(Money.cop(-100_000)),
-            actualVerdict = PastVerdict.Over,
-            forecast = null,
             daily = listOf(point),
             selectedDaily = point.chart.id
         )
@@ -210,5 +212,40 @@ class ResumenScreenTest {
         rule.onNodeWithTag("resumen.daily.selected").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("resumen.daily.chart").performScrollTo()
         rule.onNodeWithContentDescription("3 oct, 9.007.199.254.740.993 pesos").assertIsDisplayed()
+    }
+
+    @Test
+    fun theSlipsComeInTheV2Order() {
+        show(width = 360.dp, height = 3000.dp, density = 1f)
+
+        val tops = listOf("resumen.flow", "resumen.history", "resumen.categories", "resumen.daily")
+            .map { rule.onNodeWithTag(it).getUnclippedBoundsInRoot().top }
+
+        assertEquals(tops.sorted(), tops)
+    }
+
+    @Test
+    fun theMonthInProgressIsMarkedAndExplainedAndTheLimitIsOneLine() {
+        show()
+
+        rule.onNodeWithTag("resumen.history.chart").performScrollTo()
+        rule.onNodeWithText("oct*", useUnmergedTree = true).assertExists()
+        rule.onNodeWithContentDescription("oct, 30.000 pesos, mes en curso, hasta hoy")
+            .assertExists()
+        rule.onNodeWithText("* Mes en curso: lo gastado hasta hoy.").performScrollTo()
+            .assertIsDisplayed()
+        rule.onNodeWithText("Límite 100.000").assertExists()
+    }
+
+    @Test
+    fun whereTheMoneyGoesIsRankedWithExactAmountsAndATotal() {
+        show()
+
+        rule.onNodeWithText("¿Dónde se va?").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("resumen.category.00000000-0000-4000-8000-000000000001")
+            .performScrollTo().assertTextContains("Comida").performClick()
+        rule.onNodeWithText("Total").performScrollTo().assertIsDisplayed()
+
+        rule.runOnIdle { assertEquals("00000000-0000-4000-8000-000000000001", category) }
     }
 }

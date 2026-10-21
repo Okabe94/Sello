@@ -172,13 +172,20 @@ and chart slips scroll in separate columns.
 
 **Entry:** the income line or button in Resumen.
 
-**Behavior:** a create-income button, the month's total and income rows (source,
-date, amount, optional note) for the shared month. Pressing a row opens income edit.
-Rows load newest first in pages of 50; "Ver más ingresos" requests the next page. A
-failed later page keeps the rows already shown.
+**Behavior:** the v2 **Ingresos de octubre** screen (SELLO-071), titled with the
+shared month and keeping back, the month picker and the past-month ribbon. Its dock is
+**+ Anotar ingreso**. The hero says "Entró en octubre" and the recorded total; under a
+tear line a split bar and two lines, **En presupuestos de categorías** and **Sin
+asignar**, come from the same summary Resumen shows. A negative unassigned amount is
+signed and red, followed by "Tus presupuestos suman …; anotaste …", with no
+suggestion; without that summary only the total is shown. Then **Lo que entró**: each
+income (source, date · note, amount), tap to edit, and a total line. Rows load newest
+first in pages of 50; "Ver más ingresos" requests the next page. A failed later page
+keeps the rows already shown. No expected income, plan box or suggestion exists.
 
-**States:** loading, failed with retry, or ready with a real empty message, exact
-total, rows, pagination busy state and page-error retry.
+**States:** loading, failed with retry ("No pudimos leer tus ingresos", never zero),
+or "Aún no anotas ingresos en octubre / Sello funciona sin ingresos…" with Anotar
+ingreso, or ready with the hero, rows, pagination busy state and page-error retry.
 
 ### 6. Expense entry and edit
 
@@ -208,13 +215,16 @@ independent columns. The system keyboard hides the custom keypad.
 
 ### 7. Income entry and edit
 
-**Entry:** the switch on a new expense form, "Anotar ingreso" in income history, or an
-income row for edit.
+**Entry:** the switch on a new expense form, the **Anotar ingreso** dock in income
+history, or an income row for edit.
 
-**Behavior:** shares the expense form's amount, keypad, button and receipt, with
-source chips (Salario, Freelance, Ingresos pasivos, Transferencia, Otro), an optional
-source name, date, note and a preview of the month's income total, which is
-explicitly not an account balance. Saving, recovery, read-back, edit/delete, discard
+**Behavior:** the v2 entry form in gain green (SELLO-071): "Ingreso en pesos" and a `+`
+amount, source chips without icons (Salario, Freelance, Ingresos pasivos,
+Transferencia, Otro), for **Otro** a "¿De dónde vino?" row whose name is written in the
+same docked composer (24 characters, required only for Otro, kept when the composer
+closes; "Escribe el nombre de la fuente." is said above the button while it is
+missing), the note row and composer, **Anotar ingreso** and the compact pad. There is
+no live preview of the month. Saving, recovery, read-back, edit/delete, discard
 confirmation, past-month notice and adaptive split follow the expense form. Income
 deletion uses the same six-second undo as expenses.
 

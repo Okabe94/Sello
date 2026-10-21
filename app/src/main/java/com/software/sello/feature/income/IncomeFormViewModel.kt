@@ -9,11 +9,11 @@ import com.software.sello.domain.model.IncomeSourceError
 import com.software.sello.domain.model.Note
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.SourceName
 import com.software.sello.domain.model.TextError
 import com.software.sello.domain.model.TransactionAmountError
 import com.software.sello.domain.policy.AmountDraft
 import com.software.sello.domain.policy.AmountDraftError
-import com.software.sello.domain.policy.IncomePreviewPolicy
 import com.software.sello.domain.port.CreateIncome
 import com.software.sello.domain.port.DeleteIncome
 import com.software.sello.domain.port.EditIncome
@@ -24,8 +24,6 @@ import com.software.sello.domain.port.IncomeMonthState
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.IncomeRejection
 import com.software.sello.domain.port.RecordIdSource
-import com.software.sello.domain.port.ResumenSnapshotState
-import com.software.sello.domain.port.ResumenSnapshots
 import com.software.sello.presentation.corrections.CorrectionNotice
 import com.software.sello.presentation.corrections.ExpenseCorrections
 import com.software.sello.presentation.money.MoneyFormatter
@@ -38,7 +36,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -49,7 +46,6 @@ class IncomeFormViewModel(
     private val saved: SavedStateHandle,
     private val commands: IncomeCommands,
     private val reads: IncomeReads,
-    snapshots: ResumenSnapshots,
     private val clock: FinancialClock,
     private val ids: RecordIdSource,
     private val money: MoneyFormatter,
@@ -76,6 +72,7 @@ class IncomeFormViewModel(
         val confirmDiscard: Boolean = false,
         val datePickerOpen: Boolean = false,
         val limitPulse: Int = 0,
+        val atLimit: Boolean = false,
         val attempt: Int = 0
     )
 
@@ -114,34 +111,27 @@ class IncomeFormViewModel(
     ) { month, _ -> month }.flatMapLatest(reads::observeMonth)
         .stateIn(viewModelScope, SharingStarted.Eagerly, IncomeMonthState.Loading)
 
-    private val previewSnapshot = combine(draft, progress, clock.today, month) {
-            draft,
-            progress,
-            today,
-            month
-        ->
-        if (!editing && month is IncomeMonthState.Ready &&
-            draft.amount.toTransactionAmount() is Outcome.Success &&
-            !progress.busy && !progress.generationChanged && progress.recorded == null &&
-            draft.date <= today.date
-        ) {
-            YearMonth.from(draft.date) to progress.attempt
-        } else {
-            null
-        }
-    }.distinctUntilChanged().flatMapLatest { selection ->
-        selection?.let { snapshots.observe(it.first) } ?: flowOf(ResumenSnapshotState.Loading)
-    }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ResumenSnapshotState.Loading)
+    /** What the composer is writing and its text; kept in [saved] so a restart reopens it. */
+    private val composer: StateFlow<Pair<IncomeComposer, String>?> = combine(
+        saved.getStateFlow<String?>(COMPOSER, null),
+        saved.getStateFlow(COMPOSER_TEXT, "")
+    ) { what: String?, text: String -> writing(what, text) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, composerNow())
+
+    private fun composerNow(): Pair<IncomeComposer, String>? =
+        writing(saved[COMPOSER], saved[COMPOSER_TEXT] ?: "")
+
+    private fun writing(what: String?, text: String): Pair<IncomeComposer, String>? =
+        IncomeComposer.entries.firstOrNull { it.name == what }?.let { it to text }
 
     val state: StateFlow<IncomeFormState> = combine(
         draft,
         progress,
         month,
         clock.today,
-        previewSnapshot
-    ) { draft, progress, month, today, preview ->
-        render(draft, progress, month, today.date, preview)
+        composer
+    ) { draft, progress, month, today, writing ->
+        render(draft, progress, month, today.date, writing)
     }
         .stateIn(
             viewModelScope,
@@ -151,7 +141,7 @@ class IncomeFormViewModel(
                 progress.value,
                 month.value,
                 clock.today.value.date,
-                previewSnapshot.value
+                composerNow()
             )
         )
 
@@ -181,6 +171,8 @@ class IncomeFormViewModel(
     }
 
     private fun change(next: Draft) {
+        // Any key that changes the amount takes "Máximo 12 dígitos" away.
+        if (next.amount != draft.value.amount) progress.update { it.copy(atLimit = false) }
         saved[AMOUNT] = when (val amount = next.amount) {
             AmountDraft.Empty -> null
             is AmountDraft.Digits -> amount.digits
@@ -284,12 +276,40 @@ class IncomeFormViewModel(
             }
 
             IncomeFormAction.Delete -> if (now.canDelete) delete()
+
+            is IncomeFormAction.OpenComposer -> if (now.editable) {
+                saved[COMPOSER_TEXT] = when (action.what) {
+                    IncomeComposer.Note -> draft.value.note
+                    IncomeComposer.SourceName -> draft.value.other
+                }
+                saved[COMPOSER] = action.what.name
+            }
+
+            is IncomeFormAction.ComposerChanged ->
+                if (saved.get<String>(COMPOSER) != null) saved[COMPOSER_TEXT] = action.text
+
+            // Over the limit nothing is taken: the composer stays open with the text in it.
+            IncomeFormAction.ComposerDone -> composer.value?.let { (what, text) ->
+                if (now.editable && composerProblem(what, text) == null) {
+                    change(
+                        when (what) {
+                            IncomeComposer.Note -> draft.value.copy(note = text)
+                            IncomeComposer.SourceName -> draft.value.copy(other = text)
+                        }
+                    )
+                    closeComposer()
+                }
+            }
+
+            IncomeFormAction.ComposerCancelled -> closeComposer()
         }
     }
 
     private fun key(change: AmountDraft.Change) {
         change(draft.value.copy(amount = change.draft))
-        if (change.limitReached) progress.update { it.copy(limitPulse = it.limitPulse + 1) }
+        if (change.limitReached) {
+            progress.update { it.copy(limitPulse = it.limitPulse + 1, atLimit = true) }
+        }
     }
 
     private fun source(draft: Draft) = IncomeSource.of(
@@ -482,6 +502,22 @@ class IncomeFormViewModel(
         }
     }
 
+    private fun closeComposer() {
+        saved[COMPOSER] = null
+        saved[COMPOSER_TEXT] = null
+    }
+
+    /** An empty name is allowed here: "Otro" then still says it needs one. */
+    private fun composerProblem(what: IncomeComposer, text: String): IncomeTextProblem? {
+        val error = when (what) {
+            IncomeComposer.Note -> (Note.of(text) as? Outcome.Failure)?.error
+
+            IncomeComposer.SourceName -> (SourceName.of(text) as? Outcome.Failure)?.error
+                ?.takeIf { it != TextError.Required }
+        }
+        return error?.let(::textProblem)
+    }
+
     private fun textProblem(error: TextError): IncomeTextProblem = when (error) {
         is TextError.TooLong -> IncomeTextProblem.TooLong
         else -> IncomeTextProblem.NotAllowed
@@ -492,7 +528,7 @@ class IncomeFormViewModel(
         progress: Progress,
         month: IncomeMonthState,
         today: LocalDate,
-        previewState: ResumenSnapshotState
+        writing: Pair<IncomeComposer, String>?
     ): IncomeFormState {
         val amount = (draft.amount.toTransactionAmount() as? Outcome.Success)?.value
         val source = source(draft)
@@ -503,19 +539,6 @@ class IncomeFormViewModel(
         }
         val noteProblem = (Note.of(draft.note) as? Outcome.Failure)?.error?.let(::textProblem)
         val waiting = editing && progress.original == null && progress.error == null
-        val snapshot = (previewState as? ResumenSnapshotState.Ready)?.snapshot
-        val canPreview = !editing && amount != null && month is IncomeMonthState.Ready &&
-            !progress.busy && !progress.generationChanged && progress.recorded == null &&
-            draft.date <= today
-        val matchingSnapshot = canPreview && snapshot != null &&
-            snapshot.budget.generation == month.month.generation &&
-            snapshot.budget.revision == month.month.revision &&
-            snapshot.budget.asOf == today && YearMonth.from(draft.date) == snapshot.budget.month
-        val preview = if (matchingSnapshot) {
-            IncomePreviewPolicy.preview(snapshot, amount)
-        } else {
-            null
-        }
         return IncomeFormState(
             loading =
                 progress.recorded == null && !progress.loadFailed &&
@@ -539,6 +562,7 @@ class IncomeFormViewModel(
                 null
             },
             limitPulse = progress.limitPulse,
+            atLimit = progress.atLimit,
             sourceKeys = IncomeSource.keys,
             sourceKey = draft.source,
             otherName = draft.other,
@@ -548,6 +572,10 @@ class IncomeFormViewModel(
             datePickerOpen = progress.datePickerOpen,
             note = draft.note,
             noteProblem = noteProblem,
+            composer = writing?.first?.takeIf { progress.recorded == null },
+            composerDraft = writing?.second.orEmpty(),
+            composerProblem = writing?.let { (what, text) -> composerProblem(what, text) },
+            composerLength = writing?.second?.trim()?.let { it.codePointCount(0, it.length) } ?: 0,
             missing = when {
                 amount == null -> IncomeMissing.Amount
 
@@ -569,13 +597,6 @@ class IncomeFormViewModel(
             recorded = progress.recorded,
             closed = progress.closed,
             editing = editing,
-            monthPreview = (preview as? Outcome.Success)?.value?.let(money::format),
-            previewLoading = canPreview && (
-                previewState is ResumenSnapshotState.Loading ||
-                    (previewState is ResumenSnapshotState.Ready && !matchingSnapshot)
-                ),
-            previewUnavailable = canPreview &&
-                (preview is Outcome.Failure || previewState is ResumenSnapshotState.Failed),
             pastMonths = progress.original?.let {
                 listOf(YearMonth.from(it.draft.date), YearMonth.from(draft.date)).distinct()
                     .filter { month -> month != YearMonth.from(today) }
@@ -591,6 +612,8 @@ class IncomeFormViewModel(
         private const val OTHER = "income.other"
         private const val DATE = "income.date"
         private const val NOTE = "income.note"
+        private const val COMPOSER = "income.composer"
+        private const val COMPOSER_TEXT = "income.composer.text"
         private const val OPERATION = "income.operation"
         private const val DELETING = "income.deleting"
         private const val GENERATION = "income.generation"

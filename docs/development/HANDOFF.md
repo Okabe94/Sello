@@ -4,8 +4,8 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-20 · **Product baseline:** `9bcb195`.
-SELLO-001–023, SELLO-061–070 and epics E01–E05 and E12 are recorded Done in the canonical tickets.
+**Snapshot:** 2026-10-20 · **Product baseline:** `169bea6`.
+SELLO-001–023, SELLO-061–071 and epics E01–E05 and E12 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -63,6 +63,7 @@ forecast remains only as Resumen's estimate, and
 | [SELLO-068](../planning/mvp/epics/E12-v2-recibo.md#sello-068--wire-the-v2-month-bar-and-past-month-ribbon-into-the-app-frame) | Recibo and Resumen use the v2 month bar; the frame has an empty ribbon slot for SELLO-064. Pushed screens keep their titled bar. |
 | [SELLO-069](../planning/mvp/epics/E12-v2-recibo.md#sello-069--wire-the-confirmation-notice-into-the-shell) | The shell can show a confirmed save with the v2 check look above the dock; nothing sends one until SELLO-066. |
 | [SELLO-070](../planning/mvp/epics/E13-v2-current-app.md#sello-070--bring-expense-entry-and-edit-to-v2) | Expense entry and edit use the v2 form: no category chosen at opening, chips ending in **Nueva**, a docked note composer, "Máximo 12 dígitos" and no live preview. Income entry is SELLO-071. |
+| [SELLO-071](../planning/mvp/epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2) | Income entry uses the v2 form in green, with Otro's name in the composer; income history is "Ingresos de octubre" with the hero, split bar and list, and its dock records income. |
 
 ## Remaining work
 
@@ -80,7 +81,7 @@ forecast remains only as Resumen's estimate, and
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
 The [board](../planning/mvp/BOARD.md) currently lists SELLO-024 and SELLO-028 without
-unmet ticket dependencies, plus E13's SELLO-071 and SELLO-072 and E08's SELLO-033. Their other prerequisites remain in
+unmet ticket dependencies, plus E13's SELLO-072 and E08's SELLO-033. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
 ## Detail references

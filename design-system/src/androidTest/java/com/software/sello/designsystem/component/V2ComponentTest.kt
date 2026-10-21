@@ -153,6 +153,22 @@ class V2ComponentTest {
     }
 
     @Test
+    fun anAnswerSlipCanHaveNoStampAndThenShowsOnlyItsLabelAndAmount() {
+        rule.inEveryScheme(content = {
+            AnswerSlip(
+                "Entró en octubre",
+                MoneyTextValue(MoneySign.None, "", "150.000", "150.000 pesos"),
+                stamp = null,
+                ink = StampInk.Neutral
+            )
+        }) {
+            rule.onNodeWithText("Entró en octubre").assertIsDisplayed()
+            rule.onNodeWithContentDescription("150.000 pesos").assertIsDisplayed()
+            rule.onNodeWithText("Al día").assertDoesNotExist()
+        }
+    }
+
+    @Test
     fun pastMonthReturnRemainsReachableAtDoubleFont() {
         var returns = 0
         rule.inEveryScheme(fontScale = 2f, width = 320.dp, content = {

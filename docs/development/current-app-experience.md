@@ -153,11 +153,19 @@ category. Resumen uses a separate routed detail.
 
 **Entry:** second tab.
 
-**Behavior:** slips for net flow (income, spending, budget verdict, optional
-forecast) and allocation (allocated and unallocated income), then a cumulative daily
-line chart, a monthly spending column chart and category spending columns with exact
-lines. The income line and "Ver ingresos" open income history; category bars and
-lines open category detail. An empty history offers "Anotar gasto". Selecting a chart
+**Behavior:** the v2 order for today's figures (SELLO-072). **Ingresos** as receipt
+lines (Ingresos anotados, Ingresos menos gastos, Sin asignar a categorías), the
+"Movimientos anotados hasta …" line and **Ver ingresos y su destino ›**; **Mes a mes**
+columns with past months in `pastBar`, the month in progress striped and marked `*`
+(read "mes en curso, hasta hoy", with a note under the chart), values printed on the
+highest and current columns and one dashed line for the month's limit; **¿Dónde se
+va?** ranks categories by spending with share bars, exact amounts and a Total that is
+the month's spending; then the cumulative daily line chart, kept by owner decision
+until a v2 comparison replaces it. Nothing is projected: there is no forecast, and the
+"Gasto real" stamp is gone (Recibo shows the month's status). The income lines and
+the link open income history; each ranked category opens its detail. The v2 hero
+comparison, "¿Qué días gastas más?", "Un mes normal" and the suggestion need new
+calculations and are not built. An empty history offers "Anotar gasto". Selecting a chart
 mark shows its exact value; the selection is saved for recreation and expires after
 three seconds. Chart geometry may be approximate; selected and spoken amounts are exact.
 

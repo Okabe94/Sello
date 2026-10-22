@@ -1,5 +1,6 @@
 package com.software.sello.feature.resumen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,21 +11,28 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.software.sello.R
 import com.software.sello.designsystem.component.ButtonKind
+import com.software.sello.designsystem.component.ChartReference
 import com.software.sello.designsystem.component.ColumnsChart
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
@@ -35,12 +43,13 @@ import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
-import com.software.sello.designsystem.component.Stamp
-import com.software.sello.designsystem.component.StampInk
-import com.software.sello.designsystem.component.StampSize
+import com.software.sello.designsystem.component.TotalLine
 import com.software.sello.designsystem.component.selloWindowLayout
+import com.software.sello.designsystem.component.v2.SpendingRankRow
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
-import com.software.sello.domain.model.PastVerdict
+import com.software.sello.presentation.category.CategoryIcons
 
 @Composable
 fun ResumenScreen(
@@ -100,6 +109,10 @@ private fun ResumenPane(modifier: Modifier, content: @Composable ColumnScope.() 
     )
 }
 
+/**
+ * Income first, as receipt lines: what came in, what is left after spending and what no
+ * category budget takes, then the way to income history. Nothing is projected.
+ */
 @Composable
 private fun SummarySlips(
     state: ResumenState.Ready,
@@ -114,45 +127,46 @@ private fun SummarySlips(
         )
     }
     Slip(Modifier.fillMaxWidth().testTag("resumen.flow")) {
-        ResumenHeading(stringResource(R.string.resumen_net_flow))
-        MoneyText(state.netFlow, style = MoneyStyle.Hero)
-        Text(stringResource(R.string.resumen_flow_explanation))
+        ResumenHeading(stringResource(R.string.resumen_income_title))
         LeaderLine(
-            stringResource(R.string.resumen_income),
+            stringResource(R.string.resumen_income_recorded),
             onClick = onIncome,
             modifier = Modifier.testTag("resumen.income")
         ) { MoneyText(state.income) }
-        LeaderLine(stringResource(R.string.resumen_spent)) { MoneyText(state.spent) }
-        Text(stringResource(R.string.resumen_actual_through, state.asOf))
-        Text(stringResource(R.string.resumen_actual_label))
-        Stamp(
-            text = stringResource(
-                when (state.actualVerdict) {
-                    PastVerdict.WithinLimit -> R.string.resumen_actual_within
-                    PastVerdict.Over -> R.string.resumen_actual_over
-                    null -> R.string.resumen_actual_no_limit
-                }
-            ),
-            ink = when (state.actualVerdict) {
-                PastVerdict.WithinLimit -> StampInk.Good
-                PastVerdict.Over -> StampInk.Over
-                null -> StampInk.Neutral
-            },
-            size = StampSize.Large
+        LeaderLine(stringResource(R.string.resumen_net_flow)) { MoneyText(state.netFlow) }
+        LeaderLine(
+            stringResource(R.string.resumen_unallocated_line),
+            modifier = Modifier.testTag("resumen.unallocated")
+        ) { MoneyText(state.unallocated) }
+        Text(
+            stringResource(R.string.resumen_actual_through, state.asOf),
+            style = MaterialTheme.typography.bodySmall,
+            color = SelloTheme.colors.inkSoft
         )
-        state.forecast?.let { estimate ->
-            LeaderLine(stringResource(R.string.resumen_forecast)) { MoneyText(estimate) }
-        }
-        SelloButton(stringResource(R.string.resumen_open_income), onIncome, kind = ButtonKind.Text)
-    }
-    Slip(Modifier.fillMaxWidth().testTag("resumen.allocation")) {
-        ResumenHeading(stringResource(R.string.resumen_unallocated))
-        MoneyText(state.unallocated, style = MoneyStyle.Title)
-        LeaderLine(stringResource(R.string.resumen_allocated)) { MoneyText(state.allocated) }
-        Text(stringResource(R.string.resumen_allocation_explanation))
+        ResumenLink(stringResource(R.string.resumen_open_income_destination), onIncome)
     }
 }
 
+/** A brand text link with a chevron, at least 48dp tall. */
+@Composable
+private fun ResumenLink(label: String, onClick: () -> Unit) {
+    val ink = SelloTheme.colors.brand
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .heightIn(min = SelloTheme.spacing.minTouchTarget)
+            .clickable(role = Role.Button, onClick = onClick)
+            .testTag("resumen.openIncome")
+    ) {
+        Text(label, fontWeight = FontWeight.W800, color = ink)
+        Icon(SelloIcon.ChevronRight.painter(), null, Modifier.size(20.dp), tint = ink)
+    }
+}
+
+/**
+ * Month by month, where the money goes, and how this month built up. The month in
+ * progress is striped, marked and said to be up to today, never drawn as a whole month.
+ */
 @Composable
 private fun ChartSlips(
     state: ResumenState.Ready,
@@ -170,6 +184,79 @@ private fun ChartSlips(
         )
         return
     }
+    Slip(Modifier.fillMaxWidth().testTag("resumen.history")) {
+        ResumenHeading(stringResource(R.string.resumen_month_by_month))
+        val selected = state.history.firstOrNull { it.chart.id == state.selectedHistory }
+        selected?.let { point ->
+            Text(point.label)
+            MoneyText(
+                point.amount,
+                style = MoneyStyle.Title,
+                modifier = Modifier.testTag("resumen.history.selected")
+            )
+            point.detail?.let { limit ->
+                LeaderLine(stringResource(R.string.resumen_month_limit)) { MoneyText(limit) }
+            }
+        }
+        val inProgress = stringResource(R.string.resumen_month_in_progress)
+        val highest = state.history.maxOfOrNull { it.chart.value }
+        val limitLabel = state.monthLimit?.let {
+            stringResource(R.string.resumen_limit_line, it.amount.digits)
+        }
+        ChartWidth(state.history.size, "resumen.history.chart") { modifier ->
+            ColumnsChart(
+                state.history.map { point ->
+                    point.chart.copy(
+                        axisLabel = point.chart.axisLabel + if (point.current) "*" else "",
+                        spoken = if (point.current) {
+                            point.chart.spoken + ", " + inProgress
+                        } else {
+                            point.chart.spoken
+                        },
+                        // Values are printed only on the highest and the current columns.
+                        valueLabel = point.amount.digits.takeIf {
+                            point.current || point.chart.value == highest
+                        }
+                    )
+                },
+                stringResource(R.string.resumen_month_by_month),
+                modifier,
+                state.selectedHistory,
+                { onAction(ResumenAction.SelectHistory(it)) },
+                reference = state.monthLimit?.let {
+                    ChartReference(it.value, limitLabel.orEmpty())
+                },
+                stripedCurrent = true
+            )
+        }
+        if (state.history.any { it.current }) {
+            Text(
+                stringResource(R.string.resumen_in_progress_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = SelloTheme.colors.inkSoft
+            )
+        }
+        if (state.insufficientHistory) Text(stringResource(R.string.resumen_insufficient_history))
+    }
+    if (state.categories.isNotEmpty()) {
+        Slip(Modifier.fillMaxWidth().testTag("resumen.categories")) {
+            ResumenHeading(stringResource(R.string.resumen_where_it_goes))
+            state.categories.forEach { category ->
+                SpendingRankRow(
+                    name = category.name,
+                    icon = CategoryIcons.iconFor(category.iconKey),
+                    amount = category.amount,
+                    share = category.share,
+                    onClick = { onCategory(category.id) },
+                    modifier = Modifier.testTag("resumen.category.${category.id}")
+                )
+            }
+            TotalLine(stringResource(R.string.income_list_total)) {
+                MoneyText(state.spent, style = MoneyStyle.Title)
+            }
+        }
+    }
+    // How this month built up, day by day (kept until the v2 comparison replaces it).
     Slip(Modifier.fillMaxWidth().testTag("resumen.daily")) {
         val selected = state.daily.firstOrNull { it.chart.id == state.selectedDaily }
         ResumenHeading(stringResource(R.string.resumen_cumulative))
@@ -194,55 +281,6 @@ private fun ChartSlips(
                 state.selectedDaily,
                 { onAction(ResumenAction.SelectDaily(it)) }
             )
-        }
-    }
-    Slip(Modifier.fillMaxWidth().testTag("resumen.history")) {
-        ResumenHeading(stringResource(R.string.resumen_monthly_spending))
-        val selected = state.history.firstOrNull { it.chart.id == state.selectedHistory }
-        selected?.let { point ->
-            Text(point.label)
-            MoneyText(
-                point.amount,
-                style = MoneyStyle.Title,
-                modifier = Modifier.testTag("resumen.history.selected")
-            )
-            point.detail?.let { limit ->
-                LeaderLine(stringResource(R.string.resumen_month_limit)) { MoneyText(limit) }
-            }
-        }
-        ChartWidth(state.history.size, "resumen.history.chart") { modifier ->
-            ColumnsChart(
-                state.history.map { it.chart },
-                stringResource(R.string.resumen_monthly_spending),
-                modifier,
-                state.selectedHistory,
-                { onAction(ResumenAction.SelectHistory(it)) }
-            )
-        }
-        if (state.insufficientHistory) Text(stringResource(R.string.resumen_insufficient_history))
-    }
-    if (state.categories.isNotEmpty()) {
-        Slip(Modifier.fillMaxWidth().testTag("resumen.categories")) {
-            ResumenHeading(stringResource(R.string.resumen_categories))
-            ChartWidth(state.categories.size, "resumen.categories.chart") { modifier ->
-                ColumnsChart(
-                    state.categories.mapIndexed { index, point ->
-                        point.chart.copy(axisLabel = (index + 1).toString())
-                    },
-                    stringResource(R.string.resumen_categories),
-                    modifier,
-                    onSelect = onCategory
-                )
-            }
-            state.categories.forEach { category ->
-                LeaderLine(
-                    category.label,
-                    onClick = { onCategory(category.chart.id) },
-                    modifier = Modifier.testTag("resumen.category.${category.chart.id}")
-                ) {
-                    MoneyText(category.amount)
-                }
-            }
         }
     }
 }

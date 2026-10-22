@@ -3,7 +3,6 @@ package com.software.sello.feature.resumen
 import androidx.compose.runtime.Immutable
 import com.software.sello.designsystem.component.ChartPoint
 import com.software.sello.designsystem.component.MoneyTextValue
-import com.software.sello.domain.model.PastVerdict
 
 sealed interface ResumenState {
     data object Loading : ResumenState
@@ -18,11 +17,12 @@ sealed interface ResumenState {
         val netFlow: MoneyTextValue,
         val allocated: MoneyTextValue,
         val unallocated: MoneyTextValue,
-        val actualVerdict: PastVerdict?,
-        val forecast: MoneyTextValue?,
         val daily: List<ResumenPoint>,
         val history: List<ResumenPoint>,
-        val categories: List<ResumenPoint>,
+        /** The selected month's limit, drawn once as a dashed line over the columns. */
+        val monthLimit: ResumenLimit?,
+        /** Ranked by what was spent, most first; their amounts add up to [spent]. */
+        val categories: List<ResumenCategory>,
         val empty: Boolean,
         val insufficientHistory: Boolean,
         val stale: Boolean,
@@ -37,7 +37,25 @@ data class ResumenPoint(
     val chart: ChartPoint,
     val label: String,
     val amount: MoneyTextValue,
-    val detail: MoneyTextValue? = null
+    val detail: MoneyTextValue? = null,
+    /** The month in progress: drawn striped and said to be up to today, never as a whole month. */
+    val current: Boolean = false
+)
+
+@Immutable
+data class ResumenLimit(val value: Long, val amount: MoneyTextValue)
+
+/**
+ * A category in "¿Dónde se va?". [share] is how much of the bar to fill: geometry only,
+ * never shown as a number or turned back into money.
+ */
+@Immutable
+data class ResumenCategory(
+    val id: String,
+    val name: String,
+    val iconKey: String,
+    val amount: MoneyTextValue,
+    val share: Float
 )
 
 sealed interface ResumenAction {

@@ -77,7 +77,7 @@ class ResumenJourneyTest {
         rule.awaitText("Resumen")
         rule.onNodeWithText("Resumen").performClick()
         rule.awaitTag("resumen.flow")
-        rule.onNodeWithText("Ver ingresos").performScrollTo().performClick()
+        rule.onNodeWithText("Ver ingresos y su destino").performScrollTo().performClick()
         rule.awaitTag("income.history")
         rule.onNodeWithContentDescription("Anotar un ingreso").performClick()
         rule.awaitTag("income.keypad")

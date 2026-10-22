@@ -1,0 +1,227 @@
+package com.software.sello.data.backup
+
+import com.software.sello.domain.model.AutomaticBudget
+import com.software.sello.domain.model.BudgetLimit
+import com.software.sello.domain.model.Currency
+import com.software.sello.domain.model.DefaultLimit
+import com.software.sello.domain.model.ExactTotal
+import com.software.sello.domain.model.IncomeSource
+import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.MonthLimit
+import com.software.sello.domain.model.SourceName
+import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneId
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+class BackupRoundTripTest {
+    private val codec = BackupCodec()
+
+    private fun roundTrip(contents: BackupContents): BackupContents =
+        codec.read(codec.encode(contents).value()).value().contents
+
+    @Test
+    fun `the hand-written G01 file reads as exactly the G01 history`() {
+        val plan = codec.read(resource("valid-g01.json")).value()
+
+        assertEquals(g01(), plan.contents)
+        assertEquals(
+            BackupCounts(
+                categories = 2,
+                archivedCategories = 1,
+                defaultLimits = 3,
+                monthLimits = 1,
+                expenses = 3,
+                incomes = 1
+            ),
+            plan.counts
+        )
+    }
+
+    @Test
+    fun `G01 is written byte for byte as the documented file`() {
+        assertEquals(
+            String(resource("valid-g01.json")),
+            String(codec.encode(g01()).value())
+        )
+    }
+
+    @Test
+    fun `the same data always makes the same file, whatever order it was read in`() {
+        val g01 = g01()
+        val shuffled = g01.copy(
+            financial = g01.financial.copy(
+                categories = g01.financial.categories.reversed(),
+                defaultLimits = g01.financial.defaultLimits.reversed(),
+                monthLimits = g01.financial.monthLimits.reversed(),
+                expenses = g01.financial.expenses.reversed(),
+                incomes = g01.financial.incomes.reversed()
+            )
+        )
+
+        assertArrayEquals(codec.encode(g01).value(), codec.encode(shuffled).value())
+    }
+
+    @Test
+    fun `H01 limits, an archived category and its pause come back unchanged`() {
+        val h01 = g01().copy(
+            financial = g01().financial.copy(
+                categories = listOf(category(1, "Mercado"), category(2, "Café", archived = true)),
+                defaultLimits = listOf(
+                    DefaultLimit(
+                        categoryId(1),
+                        YearMonth.of(2026, 9),
+                        AutomaticBudget.Limit(finite(100_000))
+                    ),
+                    DefaultLimit(
+                        categoryId(1),
+                        YearMonth.of(2026, 10),
+                        AutomaticBudget.Limit(finite(120_000))
+                    ),
+                    DefaultLimit(
+                        categoryId(2),
+                        YearMonth.of(2026, 9),
+                        AutomaticBudget.Limit(finite(0))
+                    ),
+                    DefaultLimit(categoryId(2), YearMonth.of(2026, 10), AutomaticBudget.Paused)
+                ),
+                monthLimits = listOf(
+                    MonthLimit(categoryId(1), YearMonth.of(2026, 8), BudgetLimit.Unlimited)
+                ),
+                expenses = listOf(expense(101, 1, "2026-09-15", 1, 20_000)),
+                incomes = emptyList()
+            )
+        )
+
+        assertEquals(h01, roundTrip(h01))
+    }
+
+    @Test
+    fun `the largest amount survives exactly and two may total more than one record`() {
+        val largest = g01().let {
+            it.copy(
+                financial = it.financial.copy(
+                    expenses = listOf(
+                        expense(101, 1, "2026-10-01", 1, 999_999_999_999),
+                        expense(102, 1, "2026-10-01", 2, 999_999_999_999)
+                    ),
+                    incomes = listOf(income(201, "2026-10-01", 1, 999_999_999_999))
+                )
+            )
+        }
+
+        val restored = roundTrip(largest)
+
+        assertEquals(largest, restored)
+        assertEquals(
+            Money(1_999_999_999_998, Currency.COP),
+            ExactTotal.of(Currency.COP, restored.financial.expenses.map { it.amount.money })
+                .toMoney().value()
+        )
+    }
+
+    @Test
+    fun `sequences, zone, other-income names and notes come back as they were`() {
+        val other = IncomeSource.Other(SourceName.of("Venta de bicicleta").value())
+        val contents = g01().let {
+            it.copy(
+                financial = it.financial.copy(
+                    zone = ZoneId.of("Asia/Kathmandu"),
+                    expenses = listOf(
+                        expense(101, 1, "2026-10-01", 7, 10_000, note = "Ñame y ají"),
+                        expense(102, 1, "2026-10-01", 30, 1),
+                        expense(103, 1, "2026-10-02", 12, 5_000)
+                    ),
+                    incomes = listOf(income(201, "2026-10-01", 4, 80_000, source = other))
+                )
+            )
+        }
+
+        val restored = roundTrip(contents)
+
+        assertEquals(contents, restored)
+        assertEquals(listOf(7L, 30L, 12L), restored.financial.expenses.map { it.sequence })
+    }
+
+    @Test
+    fun `a backup made without preferences says so and still reads`() {
+        val contents = g01().copy(preferences = null)
+        val bytes = codec.encode(contents).value()
+
+        assertNull(codec.read(bytes).value().contents.preferences)
+        assertEquals(
+            "null",
+            Json.parseToJsonElement(String(bytes)).jsonObject["preferences"].toString()
+        )
+    }
+
+    @Test
+    fun `a record carries only its portable fields, never versions, generations or receipts`() {
+        val file = Json.parseToJsonElement(String(codec.encode(g01()).value())).jsonObject
+        val financial = file.getValue("financial").jsonObject
+
+        fun keysOf(list: String) = (financial.getValue(list) as JsonArray).first().jsonObject.keys
+
+        assertEquals(
+            setOf("format", "version", "exportedAt", "financial", "preferences"),
+            file.keys
+        )
+        assertEquals(
+            setOf(
+                "sourceRevision",
+                "zone",
+                "categories",
+                "defaultLimits",
+                "monthLimits",
+                "expenses",
+                "incomes"
+            ),
+            financial.keys
+        )
+        assertEquals(
+            setOf("id", "name", "icon", "archived", "createdAt", "updatedAt"),
+            keysOf("categories")
+        )
+        assertEquals(
+            setOf(
+                "id",
+                "categoryId",
+                "date",
+                "sequence",
+                "amount",
+                "currency",
+                "note",
+                "createdAt",
+                "updatedAt"
+            ),
+            keysOf("expenses")
+        )
+        assertEquals(
+            setOf("categoryId", "from", "kind", "amount", "currency"),
+            keysOf("defaultLimits")
+        )
+        assertEquals(
+            setOf("theme", "ink", "categoryOrder", "categoryDirection"),
+            (file.getValue("preferences") as JsonObject).keys
+        )
+    }
+
+    @Test
+    fun `the file name carries the moment in the backup's financial zone`() {
+        // 03:05 UTC on the 23rd is still 22:05 on the 22nd in Bogotá.
+        assertEquals(
+            "sello-respaldo-2026-10-22-2205.json",
+            BackupFormat.fileName(
+                Instant.parse("2026-10-23T03:05:59Z"),
+                ZoneId.of("America/Bogota")
+            )
+        )
+    }
+}

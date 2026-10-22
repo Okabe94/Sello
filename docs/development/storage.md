@@ -100,8 +100,10 @@ undone and reported ([ADR 0008](../decisions/0008-unreadable-storage-start-over.
 
 `allowBackup` is false and both rule files exclude every storage domain from cloud
 backup and device transfer, so the database and the preferences never leave the
-device through Android. The intended backup is a file the person saves themselves;
-it does not exist yet.
+device through Android. The intended backup is a file the person saves themselves.
+Its [format](../data/backup-format.md) is independent of this schema: a schema
+change needs no new backup version unless what a backup carries changes. Saving
+the file from the app is SELLO-029.
 
 ## Changing the schema
 

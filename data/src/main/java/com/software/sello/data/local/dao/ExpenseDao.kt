@@ -91,4 +91,12 @@ interface ExpenseDao {
         afterSequence: Long,
         limit: Int
     ): List<ExpenseEntity>
+
+    /** Every expense after ([afterDate], [afterSequence]) in date order, for a backup. */
+    @Query(
+        "SELECT * FROM expense WHERE effective_date > :afterDate " +
+            "OR (effective_date = :afterDate AND sequence > :afterSequence) " +
+            "ORDER BY effective_date, sequence LIMIT :limit"
+    )
+    suspend fun all(afterDate: String, afterSequence: Long, limit: Int): List<ExpenseEntity>
 }

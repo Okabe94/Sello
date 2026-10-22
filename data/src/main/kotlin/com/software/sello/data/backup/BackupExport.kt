@@ -1,0 +1,129 @@
+package com.software.sello.data.backup
+
+import androidx.room.withTransaction
+import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.entity.CategoryEntity
+import com.software.sello.data.local.entity.DefaultLimitEntity
+import com.software.sello.data.local.entity.ExpenseEntity
+import com.software.sello.data.local.entity.IncomeEntity
+import com.software.sello.data.local.entity.MonthLimitEntity
+import com.software.sello.data.mapper.decodeAll
+import com.software.sello.data.mapper.profileFrom
+import com.software.sello.data.mapper.toDomain
+import com.software.sello.data.repository.PAGE
+import com.software.sello.data.repository.pages
+import com.software.sello.data.repository.reading
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.port.AppearancePreferences
+import com.software.sello.domain.port.AuditClock
+import com.software.sello.domain.port.CategoryOrderingPreferences
+import com.software.sello.domain.port.DispatcherProvider
+import com.software.sello.domain.port.PreferenceRead
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+
+/** Every financial row, read in one transaction so all of it belongs to one revision. */
+class RoomBackupSnapshots(private val database: SelloDatabase) {
+    suspend fun read(): Outcome<FinancialSnapshot, StorageFailure> =
+        reading { database.withTransaction { database.snapshot() } }
+}
+
+private suspend fun SelloDatabase.snapshot(): Outcome<FinancialSnapshot, StorageFailure> {
+    val profile = when (val stored = profileFrom(profileDao().rows())) {
+        is Outcome.Success -> stored.value
+        is Outcome.Failure -> return stored
+    }
+    val categories = pages<CategoryEntity> { categoryDao().page(it?.id.orEmpty(), PAGE) }
+        .decodeAll { it.toDomain() }
+    val defaults = pages<DefaultLimitEntity> {
+        limitDao().allDefaults(it?.categoryId.orEmpty(), it?.effectiveMonth.orEmpty(), PAGE)
+    }.decodeAll { it.toDomain() }
+    val monthLimits = pages<MonthLimitEntity> {
+        limitDao().allMonthLimits(it?.categoryId.orEmpty(), it?.month.orEmpty(), PAGE)
+    }.decodeAll { it.toDomain() }
+    val expenses = pages<ExpenseEntity> {
+        expenseDao().all(it?.effectiveDate.orEmpty(), it?.sequence ?: 0, PAGE)
+    }.decodeAll { it.toDomain() }
+    val incomes = pages<IncomeEntity> {
+        incomeDao().all(it?.effectiveDate.orEmpty(), it?.sequence ?: 0, PAGE)
+    }.decodeAll { it.toDomain() }
+    return Outcome.Success(
+        FinancialSnapshot(
+            zone = profile.zone,
+            revision = profile.revision,
+            categories = categories.orReturn { return it },
+            defaultLimits = defaults.orReturn { return it },
+            monthLimits = monthLimits.orReturn { return it },
+            expenses = expenses.orReturn { return it },
+            incomes = incomes.orReturn { return it }
+        )
+    )
+}
+
+private inline fun <T, E> Outcome<T, E>.orReturn(failed: (Outcome.Failure<E>) -> Nothing): T =
+    when (this) {
+        is Outcome.Success -> value
+        is Outcome.Failure -> failed(this)
+    }
+
+/** A backup ready to be written to a document the person chose. */
+class BackupFile(
+    val name: String,
+    val bytes: ByteArray,
+    val counts: BackupCounts,
+    val preferencesIncluded: Boolean
+)
+
+sealed interface BackupExportFailure {
+    /** The financial data could not be read; nothing was produced. */
+    data class Storage(val failure: StorageFailure) : BackupExportFailure
+
+    /** The data read would make a file the app itself refuses, such as one too large. */
+    data class Unrestorable(val rejection: BackupRejection) : BackupExportFailure
+}
+
+/**
+ * Makes a backup without changing anything. The financial rows come from one
+ * revision; preferences are read separately afterwards and do not pretend to share
+ * that moment. If they cannot be read, the backup is made without them.
+ */
+class BackupExport(
+    private val snapshots: RoomBackupSnapshots,
+    private val appearance: AppearancePreferences,
+    private val ordering: CategoryOrderingPreferences,
+    private val auditClock: AuditClock,
+    private val dispatchers: DispatcherProvider,
+    private val codec: BackupCodec = BackupCodec()
+) {
+    suspend fun create(): Outcome<BackupFile, BackupExportFailure> {
+        val financial = when (val read = snapshots.read()) {
+            is Outcome.Success -> read.value
+            is Outcome.Failure -> return Outcome.Failure(BackupExportFailure.Storage(read.error))
+        }
+        val preferences = portablePreferences()
+        val contents = BackupContents(auditClock.now(), financial, preferences)
+        return withContext(dispatchers.default) {
+            when (val encoded = codec.encode(contents)) {
+                is Outcome.Success -> Outcome.Success(
+                    BackupFile(
+                        name = BackupFormat.fileName(contents.exportedAt, financial.zone),
+                        bytes = encoded.value,
+                        counts = financial.counts,
+                        preferencesIncluded = preferences != null
+                    )
+                )
+
+                is Outcome.Failure ->
+                    Outcome.Failure(BackupExportFailure.Unrestorable(encoded.error))
+            }
+        }
+    }
+
+    private suspend fun portablePreferences(): PortablePreferences? {
+        val appearance = appearance.observeAppearance().first()
+        val ordering = ordering.observeCategoryOrdering().first()
+        if (appearance !is PreferenceRead.Ready || ordering !is PreferenceRead.Ready) return null
+        return PortablePreferences(appearance.value, ordering.value)
+    }
+}

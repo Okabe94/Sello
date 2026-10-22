@@ -69,7 +69,7 @@ Formatting and drawing have different owners:
   `toTransactionAmount()` yields something a command may receive, which the command
   validates again.
 - The controls in `:design-system` hold no rules. `AmountKeypad` reports presses,
-  `AmountField` shows the amount, an empty draft or refused text, and `FormField` returns
+  `EntryAmountSlip` shows the amount, an empty draft or refused text, and `FormField` returns
   exactly what was typed. A feature maps its typed error to a `FieldMessage`; the
   control shows it and never changes the value instead.
 - `DigitGrouping` is a display-only transformation for `FormField`: plain ASCII digits

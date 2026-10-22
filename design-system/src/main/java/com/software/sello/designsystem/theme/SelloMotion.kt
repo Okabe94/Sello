@@ -24,7 +24,7 @@ object SelloMotion {
     const val FEED_MILLIS = 150
 
     const val STAMP_INITIAL_SCALE = 1.6f
-    const val STAMP_V2_INITIAL_SCALE = 2.4f
+    const val STAMP_RING_INITIAL_SCALE = 2.4f
     const val STAMP_SETTLE_DEGREES = 2f
     val FeedOffset: Dp = 2.dp
 

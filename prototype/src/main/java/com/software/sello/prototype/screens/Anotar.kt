@@ -25,11 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import com.software.sello.designsystem.component.AmountField
 import com.software.sello.designsystem.component.ButtonKind
+import com.software.sello.designsystem.component.ButtonTone
 import com.software.sello.designsystem.component.CategoryCircle
 import com.software.sello.designsystem.component.ChipFlow
 import com.software.sello.designsystem.component.ConfirmSlip
+import com.software.sello.designsystem.component.EntryAmountSlip
 import com.software.sello.designsystem.component.FieldPill
 import com.software.sello.designsystem.component.FormField
 import com.software.sello.designsystem.component.LeaderLine
@@ -124,28 +125,13 @@ fun AnotarScreen(route: AnotarRoute) {
                             it == 1
                     })
                 }
+                EntryAmountSlip(
+                    label = if (income) "mié 14 oct, renglón nuevo · ${sources[source]}" else "jue 22 oct, renglón nuevo · ${category.name}",
+                    amount = draft.digits.toLongOrNull()?.let { cop(it, signed = income) },
+                    icon = if (income) null else category.icon,
+                    tone = if (income) ButtonTone.Gain else ButtonTone.Brand
+                )
                 Slip {
-                    Soft(
-                        if (income) "mié 14 oct, renglón nuevo · ${sources[source]}" else "jue 22 oct, renglón nuevo · ${category.name}"
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        if (!income) {
-                            CategoryCircle(
-                                category.icon,
-                                category.fraction,
-                                size = 40.dp,
-                                animate = false
-                            )
-                        }
-                        AmountField(
-                            amount = draft.digits.toLongOrNull()?.let { cop(it, signed = income) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    TearLine()
                     if (income) {
                         LeaderLine("Octubre sumará") { MoneyText(cop(5_200_000 + draft.amount)) }
                         LeaderLine("Sin destino todavía") { MoneyText(cop(draft.amount - 358_750)) }
@@ -556,10 +542,11 @@ fun MovementScreen(id: String) {
         EntryLayout(
             padding = padding,
             draft = {
+                EntryAmountSlip(
+                    label = "jue 22 oct, renglón nuevo · ${movementTypes[type]}",
+                    amount = draft.digits.toLongOrNull()?.let { cop(it) }
+                )
                 Slip {
-                    Soft("jue 22 oct, renglón nuevo · ${movementTypes[type]}")
-                    AmountField(amount = draft.digits.toLongOrNull()?.let { cop(it) })
-                    TearLine()
                     when (type) {
                         0 -> {
                             LeaderLine("Habrás aportado") {

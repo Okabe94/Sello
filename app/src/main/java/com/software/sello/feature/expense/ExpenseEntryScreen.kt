@@ -54,11 +54,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.software.sello.R
 import com.software.sello.designsystem.component.AddChip
-import com.software.sello.designsystem.component.AmountField
 import com.software.sello.designsystem.component.AmountKeypad
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ChipFlow
+import com.software.sello.designsystem.component.ChipRows
 import com.software.sello.designsystem.component.ConfirmSlip
+import com.software.sello.designsystem.component.EntryAmountSlip
+import com.software.sello.designsystem.component.EntryLayout
+import com.software.sello.designsystem.component.EntryLine
 import com.software.sello.designsystem.component.ErrorSlip
 import com.software.sello.designsystem.component.FieldMessage
 import com.software.sello.designsystem.component.FieldMessageText
@@ -67,6 +70,7 @@ import com.software.sello.designsystem.component.FormField
 import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.NoteComposer
 import com.software.sello.designsystem.component.SegmentedSwitch
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
@@ -80,11 +84,6 @@ import com.software.sello.designsystem.component.StampSize
 import com.software.sello.designsystem.component.TearLine
 import com.software.sello.designsystem.component.TotalLine
 import com.software.sello.designsystem.component.selloWindowLayout
-import com.software.sello.designsystem.component.v2.EntryAmountSlip
-import com.software.sello.designsystem.component.v2.EntryLine
-import com.software.sello.designsystem.component.v2.NoteComposer
-import com.software.sello.designsystem.component.v2.V2ChipRows
-import com.software.sello.designsystem.component.v2.V2EntryLayout
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -210,7 +209,7 @@ fun ExpenseEntryScreen(
 
             // The amount, the action and the pad hold still; only the choices scroll.
             // A wide or short window puts the action and pad beside the rest.
-            else -> V2EntryLayout(
+            else -> EntryLayout(
                 modifier = Modifier.padding(padding),
                 header = {
                     if (!state.editing && onIncome != null) {
@@ -359,7 +358,7 @@ private fun Choices(
 ) {
     val addNew = onCreateCategory.takeIf { !state.editing }
     val count = state.categories.size + if (addNew != null) 1 else 0
-    V2ChipRows(count, Modifier.testTag(ENTRY_CATEGORIES_TAG)) { index ->
+    ChipRows(count, Modifier.testTag(ENTRY_CATEGORIES_TAG)) { index ->
         val category = state.categories.getOrNull(index)
         if (category == null) {
             AddChip(

@@ -19,6 +19,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import com.software.sello.designsystem.component.ButtonKind
+import com.software.sello.designsystem.component.ButtonTone
 import com.software.sello.designsystem.component.ConfirmSlip
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
@@ -154,6 +155,16 @@ fun ButtonExample() {
                 onClick = { presses++ },
                 kind = kind,
                 modifier = Modifier.fillMaxWidth().testTag("button:${kind.name}")
+            )
+        }
+        ButtonTone.entries.forEach { tone ->
+            SelloButton(tone.name, { presses++ }, Modifier.fillMaxWidth(), tone = tone)
+            SelloButton(
+                tone.name,
+                { presses++ },
+                Modifier.fillMaxWidth(),
+                kind = ButtonKind.Outlined,
+                tone = tone
             )
         }
         SelloButton("Con icono", { presses++ }, Modifier.fillMaxWidth(), icon = SelloIcon.Add)

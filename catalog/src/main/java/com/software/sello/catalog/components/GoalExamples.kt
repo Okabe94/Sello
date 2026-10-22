@@ -1,4 +1,4 @@
-package com.software.sello.catalog.v2
+package com.software.sello.catalog.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -18,39 +18,37 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.software.sello.catalog.R
-import com.software.sello.catalog.components.copFixture
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ButtonTone
 import com.software.sello.designsystem.component.ChartPeriod
 import com.software.sello.designsystem.component.ChartPoint
 import com.software.sello.designsystem.component.ChartReference
 import com.software.sello.designsystem.component.ColumnsChart
+import com.software.sello.designsystem.component.CompletedGoalRow
+import com.software.sello.designsystem.component.EntryAmountSlip
+import com.software.sello.designsystem.component.FactLine
+import com.software.sello.designsystem.component.GoalCard
+import com.software.sello.designsystem.component.GoalPill
+import com.software.sello.designsystem.component.GoalPinPill
 import com.software.sello.designsystem.component.IconChoice
+import com.software.sello.designsystem.component.IconChoiceStrip
+import com.software.sello.designsystem.component.InvestmentRow
 import com.software.sello.designsystem.component.LeaderLine
+import com.software.sello.designsystem.component.MilestoneRow
+import com.software.sello.designsystem.component.MilestoneSpec
+import com.software.sello.designsystem.component.MilestoneState
 import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.MovementRow
+import com.software.sello.designsystem.component.PerformanceLine
+import com.software.sello.designsystem.component.ReachedRow
+import com.software.sello.designsystem.component.RecordedMark
+import com.software.sello.designsystem.component.RecordedValuesChart
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
 import com.software.sello.designsystem.component.Slip
-import com.software.sello.designsystem.component.TearLine
-import com.software.sello.designsystem.component.v2.CompletedGoalRow
-import com.software.sello.designsystem.component.v2.EntryAmountSlip
-import com.software.sello.designsystem.component.v2.FactLine
-import com.software.sello.designsystem.component.v2.GoalCard
-import com.software.sello.designsystem.component.v2.GoalPill
-import com.software.sello.designsystem.component.v2.GoalPinPill
-import com.software.sello.designsystem.component.v2.IconChoiceStrip
-import com.software.sello.designsystem.component.v2.InvestmentRow
-import com.software.sello.designsystem.component.v2.MilestoneRow
-import com.software.sello.designsystem.component.v2.MilestoneSpec
-import com.software.sello.designsystem.component.v2.MilestoneState
-import com.software.sello.designsystem.component.v2.MovementRow
-import com.software.sello.designsystem.component.v2.PerformanceLine
-import com.software.sello.designsystem.component.v2.ReachedRow
-import com.software.sello.designsystem.component.v2.RecordedMark
-import com.software.sello.designsystem.component.v2.RecordedValuesChart
-import com.software.sello.designsystem.component.v2.SplitBar
-import com.software.sello.designsystem.component.v2.SplitSegment
-import com.software.sello.designsystem.component.v2.investmentShade
+import com.software.sello.designsystem.component.SplitBar
+import com.software.sello.designsystem.component.SplitSegment
+import com.software.sello.designsystem.component.investmentShade
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
 
@@ -62,12 +60,14 @@ internal val GoalPlaces = listOf(
 )
 
 @Composable
-fun V2MilestonesExample() {
+fun MilestonesExample() {
     val strings = LocalResources.current
     var replay by rememberSaveable { mutableIntStateOf(0) }
-    V2Stack {
-        Caption(
-            strings.getString(R.string.v2_demo_vacio_logrado_conservado_100_pendiente_de_marcar)
+    ExampleStack {
+        ExampleCaption(
+            strings.getString(
+                R.string.catalog_demo_vacio_logrado_conservado_100_pendiente_de_marcar
+            )
         )
         MilestoneRow(
             listOf(
@@ -75,113 +75,119 @@ fun V2MilestonesExample() {
                 GoalPlaces[1].copy(
                     state = MilestoneState.Kept,
                     description = strings.getString(
-                        R.string.v2_demo_50_por_ciento_sello_conservado_tras_un
+                        R.string.catalog_demo_50_por_ciento_sello_conservado_tras_un
                     )
                 ),
                 GoalPlaces[2],
                 GoalPlaces[3].copy(
                     state = MilestoneState.Ready,
                     description = strings.getString(
-                        R.string.v2_demo_100_por_ciento_pendiente_de_marcar_como
+                        R.string.catalog_demo_100_por_ciento_pendiente_de_marcar_como
                     )
                 )
             )
         )
         FactLine(
-            AnnotatedString(strings.getString(R.string.v2_demo_el_sello_del_50_sigue_siendo_tuyo))
+            AnnotatedString(
+                strings.getString(R.string.catalog_demo_el_sello_del_50_sigue_siendo_tuyo)
+            )
         )
-        Caption(strings.getString(R.string.v2_demo_proyecciones_solo_al_crear_o_editar_con))
-        Text(strings.getString(R.string.v2_demo_si_aportas_769_231_cada_mes))
+        ExampleCaption(
+            strings.getString(R.string.catalog_demo_proyecciones_solo_al_crear_o_editar_con)
+        )
+        Text(strings.getString(R.string.catalog_demo_si_aportas_769_231_cada_mes))
         MilestoneRow(
             GoalPlaces.mapIndexed { index, place ->
                 place.copy(
                     caption = listOf(
                         "logrado",
                         "logrado",
-                        strings.getString(R.string.v2_demo_jun_28),
-                        strings.getString(R.string.v2_demo_dic_28)
+                        strings.getString(R.string.catalog_demo_jun_28),
+                        strings.getString(R.string.catalog_demo_dic_28)
                     )[index]
                 )
             }
         )
         key(replay) { MilestoneRow(GoalPlaces, landingIndex = if (replay > 0) 1 else null) }
-        SelloButton(strings.getString(R.string.v2_demo_repetir_aterrizaje), {
+        SelloButton(strings.getString(R.string.catalog_demo_repetir_aterrizaje), {
             replay++
         }, kind = ButtonKind.Outlined)
-        Caption(strings.getString(R.string.v2_demo_con_movimiento_reducido_se_muestra_el_mismo))
+        ExampleCaption(
+            strings.getString(R.string.catalog_demo_con_movimiento_reducido_se_muestra_el_mismo)
+        )
     }
 }
 
 @Composable
-fun V2GoalPillExample() {
+fun GoalPillExample() {
     val strings = LocalResources.current
     var result by rememberSaveable { mutableStateOf("") }
-    V2Stack {
+    ExampleStack {
         GoalPill(
             strings.getString(
-                R.string.v2_demo_viaje_a_la_costa
+                R.string.catalog_demo_viaje_a_la_costa
             ),
             strings.getString(
-                R.string.v2_demo_57
+                R.string.catalog_demo_57
             ),
             0.57f,
             SelloIcon.Flight,
             strings.getString(
-                R.string.v2_demo_aportar_a_viaje_a_la_costa
+                R.string.catalog_demo_aportar_a_viaje_a_la_costa
             ),
             {
                 result =
-                    strings.getString(R.string.v2_demo_abrir_meta)
+                    strings.getString(R.string.catalog_demo_abrir_meta)
             },
             { result = "Aportar" }
         )
         GoalPill(
             strings.getString(
-                R.string.v2_demo_una_meta_de_nombre_largo_para_probar
+                R.string.catalog_demo_una_meta_de_nombre_largo_para_probar
             ),
-            strings.getString(R.string.v2_demo_100),
+            strings.getString(R.string.catalog_demo_100),
             1f,
             SelloIcon.Home,
             "Aportar",
             {
                 result =
-                    strings.getString(R.string.v2_demo_abrir_meta)
+                    strings.getString(R.string.catalog_demo_abrir_meta)
             },
             { result = "Aportar" }
         )
         ReachedRow(
             strings.getString(
-                R.string.v2_demo_celular_nuevo
+                R.string.catalog_demo_celular_nuevo
             ),
             strings.getString(
-                R.string.v2_demo_llego_al_100
+                R.string.catalog_demo_llego_al_100
             ),
-            strings.getString(R.string.v2_demo_marcar_como_lograda),
+            strings.getString(R.string.catalog_demo_marcar_como_lograda),
             {
                 result =
-                    strings.getString(R.string.v2_demo_completar_meta)
+                    strings.getString(R.string.catalog_demo_completar_meta)
             }
         )
-        Caption(result)
+        ExampleCaption(result)
     }
 }
 
 @Composable
-fun V2GoalCardsExample() {
+fun GoalCardsExample() {
     val strings = LocalResources.current
     var result by rememberSaveable { mutableStateOf("") }
     // The reference's goals, highest completion first.
-    V2Stack {
+    ExampleStack {
         GoalCard(
-            strings.getString(R.string.v2_demo_viaje_a_la_costa),
+            strings.getString(R.string.catalog_demo_viaje_a_la_costa),
             SelloIcon.Flight,
-            strings.getString(R.string.v2_demo_57),
+            strings.getString(R.string.catalog_demo_57),
             copFixture(1_710_000),
-            strings.getString(R.string.v2_demo_de_3_000_000),
+            strings.getString(R.string.catalog_demo_de_3_000_000),
             "dic 2026",
             0.57f,
             GoalPlaces,
-            { result = strings.getString(R.string.v2_demo_abrir_viaje_a_la_costa) }
+            { result = strings.getString(R.string.catalog_demo_abrir_viaje_a_la_costa) }
         )
         GoalCard(
             "Celular nuevo",
@@ -189,7 +195,7 @@ fun V2GoalCardsExample() {
             "37 %",
             copFixture(450_000),
             "de 1.200.000",
-            strings.getString(R.string.v2_demo_sin_fecha),
+            strings.getString(R.string.catalog_demo_sin_fecha),
             0.37f,
             placesUpTo(1),
             { result = "Abrir Celular nuevo" },
@@ -207,13 +213,13 @@ fun V2GoalCardsExample() {
             { result = "Abrir Curso de inglés" }
         )
         CompletedGoalRow(
-            strings.getString(R.string.v2_demo_vacunas_de_luna),
-            strings.getString(R.string.v2_demo_400_000_30_sep),
+            strings.getString(R.string.catalog_demo_vacunas_de_luna),
+            strings.getString(R.string.catalog_demo_400_000_30_sep),
             SelloIcon.Pets,
             "Lograda",
-            { result = strings.getString(R.string.v2_demo_abrir_meta_lograda_solo_lectura) }
+            { result = strings.getString(R.string.catalog_demo_abrir_meta_lograda_solo_lectura) }
         )
-        Caption(result)
+        ExampleCaption(result)
     }
 }
 
@@ -227,21 +233,21 @@ private fun placesUpTo(earned: Int) = GoalPlaces.mapIndexed { index, place ->
 }
 
 @Composable
-fun V2MovementsExample() {
+fun MovementsExample() {
     val strings = LocalResources.current
     var withdrawal by rememberSaveable { mutableStateOf(false) }
-    V2Stack {
+    ExampleStack {
         Slip(Modifier.fillMaxWidth(), pinked = false) {
             MovementRow(
                 "Aporte",
-                strings.getString(R.string.v2_demo_vie_2_oct),
+                strings.getString(R.string.catalog_demo_vie_2_oct),
                 copFixture(350_000, signed = true),
                 milestone = GoalPlaces[1],
-                annotation = strings.getString(R.string.v2_demo_ganaste_el_sello_del_50)
+                annotation = strings.getString(R.string.catalog_demo_ganaste_el_sello_del_50)
             )
             MovementRow(
                 "Retiro",
-                strings.getString(R.string.v2_demo_lun_20_oct_arreglo_del_carro),
+                strings.getString(R.string.catalog_demo_lun_20_oct_arreglo_del_carro),
                 copFixture(-400_000),
                 icon = SelloIcon.ArrowBack
             )
@@ -250,43 +256,45 @@ fun V2MovementsExample() {
         EntryAmountSlip(
             if (withdrawal) {
                 strings.getString(
-                    R.string.v2_demo_retiro_en_pesos
+                    R.string.catalog_demo_retiro_en_pesos
                 )
             } else {
-                strings.getString(R.string.v2_demo_aporte_en_pesos)
+                strings.getString(R.string.catalog_demo_aporte_en_pesos)
             },
             copFixture(if (withdrawal) -500_000 else 500_000, signed = true),
             icon = SelloIcon.Flight,
             tone = if (withdrawal) ButtonTone.Ink else ButtonTone.Gain
         )
         FactLine(
-            AnnotatedString(strings.getString(R.string.v2_demo_llevas_1_710_000_guardados_en_esta))
+            AnnotatedString(
+                strings.getString(R.string.catalog_demo_llevas_1_710_000_guardados_en_esta)
+            )
         )
         EntryAmountSlip(
-            strings.getString(R.string.v2_demo_retiro_en_pesos),
+            strings.getString(R.string.catalog_demo_retiro_en_pesos),
             copFixture(-2_000_000),
-            error = strings.getString(R.string.v2_demo_mas_de_lo_guardado_1_710_000)
+            error = strings.getString(R.string.catalog_demo_mas_de_lo_guardado_1_710_000)
         )
-        SelloButton(strings.getString(R.string.v2_demo_registrar_retiro), {
+        SelloButton(strings.getString(R.string.catalog_demo_registrar_retiro), {
         }, enabled = false, tone = ButtonTone.Ink)
     }
 }
 
 @Composable
-fun V2InvestmentsExample() {
+fun InvestmentsExample() {
     val strings = LocalResources.current
     var result by rememberSaveable { mutableStateOf("") }
     val colors = SelloTheme.colors
-    V2Stack {
+    ExampleStack {
         Slip(Modifier.fillMaxWidth()) {
             PerformanceLine(
-                strings.getString(R.string.v2_demo_5_6),
-                strings.getString(R.string.v2_demo_2_066_000_de_ganancia),
+                strings.getString(R.string.catalog_demo_5_6),
+                strings.getString(R.string.catalog_demo_2_066_000_de_ganancia),
                 false
             )
             PerformanceLine(
-                strings.getString(R.string.v2_demo_4_3),
-                strings.getString(R.string.v2_demo_258_000_de_perdida),
+                strings.getString(R.string.catalog_demo_4_3),
+                strings.getString(R.string.catalog_demo_258_000_de_perdida),
                 true
             )
         }
@@ -295,26 +303,26 @@ fun V2InvestmentsExample() {
                 listOf(
                     SplitSegment(
                         0.7f,
-                        strings.getString(R.string.v2_demo_parqueadero_19_000_000_pesos),
+                        strings.getString(R.string.catalog_demo_parqueadero_19_000_000_pesos),
                         investmentShade(0)
                     ),
                     SplitSegment(
                         0.3f,
-                        strings.getString(R.string.v2_demo_fondo_8_000_000_pesos),
+                        strings.getString(R.string.catalog_demo_fondo_8_000_000_pesos),
                         investmentShade(1)
                     )
                 )
             )
             InvestmentRow(
                 "Parqueadero",
-                strings.getString(R.string.v2_demo_finca_raiz_valor_del_12_jun),
+                strings.getString(R.string.catalog_demo_finca_raiz_valor_del_12_jun),
                 SelloIcon.Home,
                 investmentShade(0),
                 copFixture(
                     19_000_000
                 ),
-                strings.getString(R.string.v2_demo_sin_valor),
-                strings.getString(R.string.v2_demo_7_5),
+                strings.getString(R.string.catalog_demo_sin_valor),
+                strings.getString(R.string.catalog_demo_7_5),
                 {
                     result =
                         "Parqueadero"
@@ -323,15 +331,15 @@ fun V2InvestmentsExample() {
             InvestmentRow(
                 "Cripto",
                 strings.getString(
-                    R.string.v2_demo_criptomoneda_sin_valor_anotado
+                    R.string.catalog_demo_criptomoneda_sin_valor_anotado
                 ),
                 SelloIcon.Insights,
                 colors.inkSoft,
                 null,
                 strings.getString(
-                    R.string.v2_demo_sin_valor
+                    R.string.catalog_demo_sin_valor
                 ),
-                strings.getString(R.string.v2_demo_aportaste_2_000_000),
+                strings.getString(R.string.catalog_demo_aportaste_2_000_000),
                 {
                     result =
                         "Cripto"
@@ -339,13 +347,13 @@ fun V2InvestmentsExample() {
                 divider = false
             )
         }
-        Caption(strings.getString(R.string.v2_demo_sin_valor_se_omite_de_la_barra))
-        Caption(result)
+        ExampleCaption(strings.getString(R.string.catalog_demo_sin_valor_se_omite_de_la_barra))
+        ExampleCaption(result)
     }
 }
 
 @Composable
-fun V2IconChoiceExample() {
+fun IconStripExample() {
     val strings = LocalResources.current
     var picked by rememberSaveable { mutableStateOf("flight") }
     var pinned by rememberSaveable { mutableStateOf(false) }
@@ -353,26 +361,30 @@ fun V2IconChoiceExample() {
         listOf(
             IconChoice("flight", SelloIcon.Flight, "Viaje"),
             IconChoice("home", SelloIcon.Home, "Casa"),
-            IconChoice("school", SelloIcon.School, strings.getString(R.string.v2_demo_educacion)),
+            IconChoice(
+                "school",
+                SelloIcon.School,
+                strings.getString(R.string.catalog_demo_educacion)
+            ),
             IconChoice("pets", SelloIcon.Pets, "Mascotas"),
             IconChoice("phone", SelloIcon.PhoneIphone, "Celular"),
             IconChoice(
                 "bank",
                 SelloIcon.AccountBalance,
-                strings.getString(R.string.v2_demo_inversion)
+                strings.getString(R.string.catalog_demo_inversion)
             )
         )
-    V2Stack {
+    ExampleStack {
         IconChoiceStrip(choices, picked, { picked = it })
         IconChoiceStrip(choices, picked, { picked = it }, tone = ButtonTone.Ink)
         Column(Modifier.fillMaxWidth().background(SelloTheme.colors.band).padding(12.dp)) {
             GoalPinPill(
                 if (pinned) {
                     strings.getString(
-                        R.string.v2_demo_en_tu_recibo
+                        R.string.catalog_demo_en_tu_recibo
                     )
                 } else {
-                    strings.getString(R.string.v2_demo_mostrar_en_recibo)
+                    strings.getString(R.string.catalog_demo_mostrar_en_recibo)
                 },
                 pinned,
                 {
@@ -381,65 +393,70 @@ fun V2IconChoiceExample() {
                 }
             )
         }
-        Caption("Elegido: $picked")
+        ExampleCaption("Elegido: $picked")
     }
 }
 
 @Composable
-fun V2ChartsExample() {
+fun SplitChartsExample() {
     val strings = LocalResources.current
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
     var recorded by rememberSaveable { mutableStateOf<String?>(null) }
     val colors = SelloTheme.colors
     val months = listOf(
-        ChartPoint("ago", "ago", 750_000, strings.getString(R.string.v2_demo_agosto_750_000_pesos)),
+        ChartPoint(
+            "ago",
+            "ago",
+            750_000,
+            strings.getString(R.string.catalog_demo_agosto_750_000_pesos)
+        ),
         ChartPoint(
             "sep",
             "sep",
             920_000,
-            strings.getString(R.string.v2_demo_septiembre_920_000_pesos),
-            valueLabel = strings.getString(R.string.v2_demo_920_mil)
+            strings.getString(R.string.catalog_demo_septiembre_920_000_pesos),
+            valueLabel = strings.getString(R.string.catalog_demo_920_mil)
         ),
         ChartPoint(
             "oct",
             "oct*",
             400_000,
-            strings.getString(R.string.v2_demo_octubre_400_000_pesos_mes_en_curso),
+            strings.getString(R.string.catalog_demo_octubre_400_000_pesos_mes_en_curso),
             ChartPeriod.Current,
-            strings.getString(R.string.v2_demo_400_mil)
+            strings.getString(R.string.catalog_demo_400_mil)
         )
     )
-    V2Stack {
+    ExampleStack {
         Slip(Modifier.fillMaxWidth(), pinked = false) {
-            Text(strings.getString(R.string.v2_demo_entro_en_octubre))
+            Text(strings.getString(R.string.catalog_demo_entro_en_octubre))
             SplitBar(
                 listOf(
                     SplitSegment(
                         0.75f,
-                        strings.getString(R.string.v2_demo_en_presupuestos_1_500_000_pesos),
+                        strings.getString(R.string.catalog_demo_en_presupuestos_1_500_000_pesos),
                         colors.brand
                     ),
                     SplitSegment(
                         0.25f,
-                        strings.getString(R.string.v2_demo_sin_asignar_500_000_pesos),
+                        strings.getString(R.string.catalog_demo_sin_asignar_500_000_pesos),
                         colors.brand,
                         striped = true
                     )
                 )
             )
-            LeaderLine(strings.getString(R.string.v2_demo_en_presupuestos_de_categorias)) {
+            LeaderLine(strings.getString(R.string.catalog_demo_en_presupuestos_de_categorias)) {
                 MoneyText(copFixture(1_500_000))
             }
-            LeaderLine(strings.getString(R.string.v2_demo_sin_asignar)) {
+            LeaderLine(strings.getString(R.string.catalog_demo_sin_asignar)) {
                 MoneyText(copFixture(500_000))
             }
         }
         Slip(Modifier.fillMaxWidth(), pinked = false) {
-            Text(strings.getString(R.string.v2_demo_mes_a_mes_un_mes_normal_835))
+            Text(strings.getString(R.string.catalog_demo_mes_a_mes_un_mes_normal_835))
             ColumnsChart(
                 months,
                 strings.getString(
-                    R.string.v2_demo_gastos_mensuales_octubre_esta_en_curso
+                    R.string.catalog_demo_gastos_mensuales_octubre_esta_en_curso
                 ),
                 selectedId = picked,
                 onSelect = {
@@ -448,59 +465,61 @@ fun V2ChartsExample() {
                 },
                 reference = ChartReference(
                     1_000_000,
-                    strings.getString(R.string.v2_demo_limite_1_m)
+                    strings.getString(R.string.catalog_demo_limite_1_m)
                 ),
                 stripedCurrent = true
             )
             picked?.let { id ->
-                Text(months.first { it.id == id }.spoken, Modifier.testTag("v2:chart:selected"))
+                Text(months.first { it.id == id }.spoken, Modifier.testTag("chart:selected"))
             }
-            Caption(strings.getString(R.string.v2_demo_octubre_va_hasta_el_22_no_se))
+            ExampleCaption(strings.getString(R.string.catalog_demo_octubre_va_hasta_el_22_no_se))
         }
         Slip(Modifier.fillMaxWidth(), pinked = false) {
-            Text(strings.getString(R.string.v2_demo_que_dias_gastas_mas_los_sabados))
-            Caption(strings.getString(R.string.v2_demo_42_700_en_promedio_ultimos_4_meses))
+            Text(strings.getString(R.string.catalog_demo_que_dias_gastas_mas_los_sabados))
+            ExampleCaption(
+                strings.getString(R.string.catalog_demo_42_700_en_promedio_ultimos_4_meses)
+            )
             ColumnsChart(
                 listOf(
                     ChartPoint(
                         "vie",
                         "vie",
                         20_000,
-                        strings.getString(R.string.v2_demo_viernes_20_000_pesos_en_promedio)
+                        strings.getString(R.string.catalog_demo_viernes_20_000_pesos_en_promedio)
                     ),
                     ChartPoint(
                         "sab",
-                        strings.getString(R.string.v2_demo_sab),
+                        strings.getString(R.string.catalog_demo_sab),
                         42_700,
-                        strings.getString(R.string.v2_demo_sabado_42_700_pesos_en_promedio),
+                        strings.getString(R.string.catalog_demo_sabado_42_700_pesos_en_promedio),
                         ChartPeriod.Current,
-                        strings.getString(R.string.v2_demo_42_7_mil)
+                        strings.getString(R.string.catalog_demo_42_7_mil)
                     )
                 ),
-                strings.getString(R.string.v2_demo_gasto_medio_por_dia_de_la_semana)
+                strings.getString(R.string.catalog_demo_gasto_medio_por_dia_de_la_semana)
             )
         }
         Slip(Modifier.fillMaxWidth(), pinked = false) {
-            Text(strings.getString(R.string.v2_demo_valores_anotados))
+            Text(strings.getString(R.string.catalog_demo_valores_anotados))
             RecordedValuesChart(
                 listOf(
                     RecordedMark(
                         "jun",
                         0f,
                         0.45f,
-                        strings.getString(R.string.v2_demo_12_jun_4_000_000_pesos)
+                        strings.getString(R.string.catalog_demo_12_jun_4_000_000_pesos)
                     ),
                     RecordedMark(
                         "sep",
                         0.65f,
                         0.72f,
-                        strings.getString(R.string.v2_demo_9_sep_5_242_000_pesos)
+                        strings.getString(R.string.catalog_demo_9_sep_5_242_000_pesos)
                     ),
                     RecordedMark(
                         "oct",
                         1f,
                         0.68f,
-                        strings.getString(R.string.v2_demo_14_oct_5_000_000_pesos)
+                        strings.getString(R.string.catalog_demo_14_oct_5_000_000_pesos)
                     )
                 ),
                 listOf(
@@ -508,7 +527,9 @@ fun V2ChartsExample() {
                     RecordedMark("b", 0.4f, 0.6f, ""),
                     RecordedMark("c", 1f, 0.6f, "")
                 ),
-                strings.getString(R.string.v2_demo_valores_registrados_y_aportes_menos_retiros_en),
+                strings.getString(
+                    R.string.catalog_demo_valores_registrados_y_aportes_menos_retiros_en
+                ),
                 recorded,
                 {
                     recorded =

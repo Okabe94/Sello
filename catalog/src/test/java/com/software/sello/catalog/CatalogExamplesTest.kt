@@ -22,34 +22,52 @@ class CatalogExamplesTest {
                 "paper.action-line",
                 "paper.total-line",
                 "paper.key-value",
+                "paper.answer-slip",
+                "paper.footnotes",
+                "paper.suggestion",
                 "stamps.stamp",
                 "money.money-text",
                 "money.counting",
                 "categories.category-circle",
                 "categories.category-cell",
                 "inputs.button",
-                "inputs.amount-keypad",
                 "inputs.chip",
+                "inputs.chip-rows",
                 "inputs.field-pill",
                 "inputs.form-field",
                 "inputs.switch",
                 "inputs.settings-controls",
                 "inputs.icon-choice",
-                "inputs.expense-entry",
-                "inputs.income-entry",
+                "inputs.icon-strip",
+                "inputs.amount",
+                "inputs.keypad",
+                "inputs.note-composer",
+                "inputs.entry",
                 "navigation.scaffold",
                 "navigation.entry-dock",
                 "navigation.navigation-bar",
+                "navigation.month-bar",
                 "navigation.month-switcher",
+                "navigation.past-month-ribbon",
                 "charts.columns",
                 "charts.line",
+                "charts.split",
+                "charts.comparison",
+                "charts.ranking",
                 "feedback.confirm-slip",
                 "feedback.empty-slip",
                 "feedback.error-slip",
                 "feedback.notice",
-                "feedback.slip-skeleton"
+                "feedback.slip-skeleton",
+                "feedback.danger-and-ticket",
+                "feedback.celebration",
+                "goals.milestones",
+                "goals.goal-pill",
+                "goals.goal-cards",
+                "goals.movements",
+                "goals.investments"
             ),
-            catalogExamples.filter { !it.group.id.startsWith("v2") }.map { it.id }
+            catalogExamples.map { it.id }
         )
     }
 
@@ -57,17 +75,20 @@ class CatalogExamplesTest {
     fun everyIdIsUniqueAndNamedAfterItsGroup() {
         val ids = catalogExamples.map { it.id }
         assertEquals(ids.size, ids.toSet().size)
+        // One entry per component: no two examples share a title either.
+        val titles = catalogExamples.map { it.title }
+        assertEquals(titles.size, titles.toSet().size)
         catalogExamples.forEach {
             assertTrue(it.id, Regex("${it.group.id}\\.[a-z]+(-[a-z]+)*").matches(it.id))
         }
     }
 
     @Test
-    fun groupsCoverTheNineComponentTypesInOrder() {
+    fun groupsCoverTheTenComponentTypesInOrder() {
         assertEquals(
             listOf(
                 "foundations", "paper", "stamps", "money", "categories",
-                "inputs", "navigation", "charts", "feedback", "v2", "v2-screens"
+                "inputs", "navigation", "charts", "feedback", "goals"
             ),
             CatalogGroup.entries.map { it.id }
         )

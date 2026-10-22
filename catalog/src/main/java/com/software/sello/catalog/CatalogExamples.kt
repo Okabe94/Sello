@@ -3,34 +3,52 @@ package com.software.sello.catalog
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import com.software.sello.catalog.components.ActionLineExample
-import com.software.sello.catalog.components.AmountKeypadExample
+import com.software.sello.catalog.components.AmountExample
+import com.software.sello.catalog.components.AnswerSlipExample
 import com.software.sello.catalog.components.ButtonExample
 import com.software.sello.catalog.components.CategoryCellExample
 import com.software.sello.catalog.components.CategoryCircleExample
+import com.software.sello.catalog.components.CelebrationExample
 import com.software.sello.catalog.components.ChipExample
+import com.software.sello.catalog.components.ChipRowsExample
 import com.software.sello.catalog.components.ColumnsChartExample
+import com.software.sello.catalog.components.ComparisonExample
 import com.software.sello.catalog.components.ConfirmSlipExample
 import com.software.sello.catalog.components.CountingExample
+import com.software.sello.catalog.components.DangerAndTicketExample
 import com.software.sello.catalog.components.EmptySlipExample
 import com.software.sello.catalog.components.EntryDockExample
+import com.software.sello.catalog.components.EntryExample
 import com.software.sello.catalog.components.ErrorSlipExample
-import com.software.sello.catalog.components.ExpenseEntryExample
 import com.software.sello.catalog.components.FieldPillExample
+import com.software.sello.catalog.components.FootnotesExample
 import com.software.sello.catalog.components.FormFieldExample
+import com.software.sello.catalog.components.GoalCardsExample
+import com.software.sello.catalog.components.GoalPillExample
 import com.software.sello.catalog.components.IconChoiceExample
-import com.software.sello.catalog.components.IncomeEntryExample
+import com.software.sello.catalog.components.IconStripExample
+import com.software.sello.catalog.components.InvestmentsExample
 import com.software.sello.catalog.components.KeyValueExample
+import com.software.sello.catalog.components.KeypadExample
 import com.software.sello.catalog.components.LeaderLineExample
 import com.software.sello.catalog.components.LineChartExample
+import com.software.sello.catalog.components.MilestonesExample
 import com.software.sello.catalog.components.MoneyTextExample
+import com.software.sello.catalog.components.MonthBarExample
 import com.software.sello.catalog.components.MonthSwitcherExample
+import com.software.sello.catalog.components.MovementsExample
 import com.software.sello.catalog.components.NavigationBarExample
+import com.software.sello.catalog.components.NoteComposerExample
 import com.software.sello.catalog.components.NoticeExample
+import com.software.sello.catalog.components.PastMonthRibbonExample
+import com.software.sello.catalog.components.RankingExample
 import com.software.sello.catalog.components.ScaffoldExample
 import com.software.sello.catalog.components.SettingsControlsExample
 import com.software.sello.catalog.components.SlipExample
 import com.software.sello.catalog.components.SlipSkeletonExample
+import com.software.sello.catalog.components.SplitChartsExample
 import com.software.sello.catalog.components.StampExample
+import com.software.sello.catalog.components.SuggestionExample
 import com.software.sello.catalog.components.SwitchExample
 import com.software.sello.catalog.components.TearLineExample
 import com.software.sello.catalog.components.TotalLineExample
@@ -40,8 +58,6 @@ import com.software.sello.catalog.foundations.MoneyTextExample as LongMoneyTextE
 import com.software.sello.catalog.foundations.MotionExample
 import com.software.sello.catalog.foundations.ShapeSpacingExample
 import com.software.sello.catalog.foundations.TypographyExample
-import com.software.sello.catalog.v2.v2CatalogExamples
-import com.software.sello.catalog.v2.v2ScreenExamples
 
 /** Component types, in the order the catalog home lists them. */
 enum class CatalogGroup(val id: String, @StringRes val title: Int) {
@@ -54,8 +70,7 @@ enum class CatalogGroup(val id: String, @StringRes val title: Int) {
     Navigation("navigation", R.string.catalog_group_navigation),
     Charts("charts", R.string.catalog_group_charts),
     Feedback("feedback", R.string.catalog_group_feedback),
-    V2("v2", R.string.catalog_group_v2),
-    V2Screens("v2-screens", R.string.catalog_group_v2_screens)
+    Goals("goals", R.string.catalog_group_goals)
 }
 
 /**
@@ -133,6 +148,21 @@ val catalogExamples: List<CatalogExample> = listOf(
         R.string.catalog_example_key_value
     ) { KeyValueExample() },
     CatalogExample(
+        "paper.answer-slip",
+        CatalogGroup.Paper,
+        R.string.catalog_example_answer_slip
+    ) { AnswerSlipExample() },
+    CatalogExample(
+        "paper.footnotes",
+        CatalogGroup.Paper,
+        R.string.catalog_example_footnotes
+    ) { FootnotesExample() },
+    CatalogExample(
+        "paper.suggestion",
+        CatalogGroup.Paper,
+        R.string.catalog_example_suggestion
+    ) { SuggestionExample() },
+    CatalogExample(
         "stamps.stamp",
         CatalogGroup.Stamps,
         R.string.catalog_example_stamp
@@ -163,15 +193,15 @@ val catalogExamples: List<CatalogExample> = listOf(
         R.string.catalog_example_button
     ) { ButtonExample() },
     CatalogExample(
-        "inputs.amount-keypad",
-        CatalogGroup.Inputs,
-        R.string.catalog_example_amount_keypad
-    ) { AmountKeypadExample() },
-    CatalogExample(
         "inputs.chip",
         CatalogGroup.Inputs,
         R.string.catalog_example_chip
     ) { ChipExample() },
+    CatalogExample(
+        "inputs.chip-rows",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_chip_rows
+    ) { ChipRowsExample() },
     CatalogExample(
         "inputs.field-pill",
         CatalogGroup.Inputs,
@@ -198,15 +228,31 @@ val catalogExamples: List<CatalogExample> = listOf(
         R.string.catalog_example_icon_choice
     ) { IconChoiceExample() },
     CatalogExample(
-        "inputs.expense-entry",
+        "inputs.icon-strip",
         CatalogGroup.Inputs,
-        R.string.catalog_example_expense_entry
-    ) { ExpenseEntryExample() },
+        R.string.catalog_example_icon_strip
+    ) { IconStripExample() },
     CatalogExample(
-        "inputs.income-entry",
+        "inputs.amount",
         CatalogGroup.Inputs,
-        R.string.catalog_example_income_entry
-    ) { IncomeEntryExample() },
+        R.string.catalog_example_amount
+    ) { AmountExample() },
+    CatalogExample(
+        "inputs.keypad",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_keypad
+    ) { KeypadExample() },
+    CatalogExample(
+        "inputs.note-composer",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_note_composer
+    ) { NoteComposerExample() },
+    CatalogExample(
+        "inputs.entry",
+        CatalogGroup.Inputs,
+        R.string.catalog_example_entry,
+        fullBleed = true
+    ) { EntryExample() },
     CatalogExample(
         "navigation.scaffold",
         CatalogGroup.Navigation,
@@ -224,10 +270,20 @@ val catalogExamples: List<CatalogExample> = listOf(
         R.string.catalog_example_navigation_bar
     ) { NavigationBarExample() },
     CatalogExample(
+        "navigation.month-bar",
+        CatalogGroup.Navigation,
+        R.string.catalog_example_month_bar
+    ) { MonthBarExample() },
+    CatalogExample(
         "navigation.month-switcher",
         CatalogGroup.Navigation,
         R.string.catalog_example_month_switcher
     ) { MonthSwitcherExample() },
+    CatalogExample(
+        "navigation.past-month-ribbon",
+        CatalogGroup.Navigation,
+        R.string.catalog_example_past_month_ribbon
+    ) { PastMonthRibbonExample() },
     CatalogExample(
         "charts.columns",
         CatalogGroup.Charts,
@@ -238,6 +294,21 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Charts,
         R.string.catalog_example_line_chart
     ) { LineChartExample() },
+    CatalogExample(
+        "charts.split",
+        CatalogGroup.Charts,
+        R.string.catalog_example_split_charts
+    ) { SplitChartsExample() },
+    CatalogExample(
+        "charts.comparison",
+        CatalogGroup.Charts,
+        R.string.catalog_example_comparison
+    ) { ComparisonExample() },
+    CatalogExample(
+        "charts.ranking",
+        CatalogGroup.Charts,
+        R.string.catalog_example_ranking
+    ) { RankingExample() },
     CatalogExample(
         "feedback.confirm-slip",
         CatalogGroup.Feedback,
@@ -262,5 +333,40 @@ val catalogExamples: List<CatalogExample> = listOf(
         "feedback.slip-skeleton",
         CatalogGroup.Feedback,
         R.string.catalog_example_slip_skeleton
-    ) { SlipSkeletonExample() }
-) + v2CatalogExamples + v2ScreenExamples
+    ) { SlipSkeletonExample() },
+    CatalogExample(
+        "feedback.danger-and-ticket",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_danger_ticket
+    ) { DangerAndTicketExample() },
+    CatalogExample(
+        "feedback.celebration",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_celebration
+    ) { CelebrationExample() },
+    CatalogExample(
+        "goals.milestones",
+        CatalogGroup.Goals,
+        R.string.catalog_example_milestones
+    ) { MilestonesExample() },
+    CatalogExample(
+        "goals.goal-pill",
+        CatalogGroup.Goals,
+        R.string.catalog_example_goal_pill
+    ) { GoalPillExample() },
+    CatalogExample(
+        "goals.goal-cards",
+        CatalogGroup.Goals,
+        R.string.catalog_example_goal_cards
+    ) { GoalCardsExample() },
+    CatalogExample(
+        "goals.movements",
+        CatalogGroup.Goals,
+        R.string.catalog_example_movements
+    ) { MovementsExample() },
+    CatalogExample(
+        "goals.investments",
+        CatalogGroup.Goals,
+        R.string.catalog_example_investments
+    ) { InvestmentsExample() }
+)

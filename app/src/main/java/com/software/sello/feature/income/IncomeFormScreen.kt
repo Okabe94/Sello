@@ -40,12 +40,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.software.sello.R
-import com.software.sello.designsystem.component.AmountField
 import com.software.sello.designsystem.component.AmountKeypad
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ButtonTone
 import com.software.sello.designsystem.component.ChipFlow
+import com.software.sello.designsystem.component.ChipRows
 import com.software.sello.designsystem.component.ConfirmSlip
+import com.software.sello.designsystem.component.EntryAmountSlip
+import com.software.sello.designsystem.component.EntryLayout
+import com.software.sello.designsystem.component.EntryLine
 import com.software.sello.designsystem.component.ErrorSlip
 import com.software.sello.designsystem.component.FieldMessage
 import com.software.sello.designsystem.component.FieldMessageText
@@ -54,6 +57,7 @@ import com.software.sello.designsystem.component.FormField
 import com.software.sello.designsystem.component.MoneySign
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.NoteComposer
 import com.software.sello.designsystem.component.SegmentedSwitch
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
@@ -64,11 +68,6 @@ import com.software.sello.designsystem.component.Stamp
 import com.software.sello.designsystem.component.StampInk
 import com.software.sello.designsystem.component.StampSize
 import com.software.sello.designsystem.component.selloWindowLayout
-import com.software.sello.designsystem.component.v2.EntryAmountSlip
-import com.software.sello.designsystem.component.v2.EntryLine
-import com.software.sello.designsystem.component.v2.NoteComposer
-import com.software.sello.designsystem.component.v2.V2ChipRows
-import com.software.sello.designsystem.component.v2.V2EntryLayout
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -148,7 +147,7 @@ fun IncomeFormScreen(
             }
 
             // The expense form's layout, in green: the amount, action and pad hold still.
-            else -> V2EntryLayout(
+            else -> EntryLayout(
                 modifier = Modifier.padding(padding),
                 header = {
                     if (!state.editing && onExpense != null) {
@@ -241,7 +240,7 @@ private fun IncomeAmount(state: IncomeFormState, onAction: (IncomeFormAction) ->
 /** Source chips (words only), Otro's name, the note, and what a correction changes. */
 @Composable
 private fun IncomeChoices(state: IncomeFormState, onAction: (IncomeFormAction) -> Unit) {
-    V2ChipRows(state.sourceKeys.size, Modifier.testTag("income.sources")) { index ->
+    ChipRows(state.sourceKeys.size, Modifier.testTag("income.sources")) { index ->
         val key = state.sourceKeys[index]
         SelloChip(
             incomeSourceLabel(key),

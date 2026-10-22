@@ -289,11 +289,7 @@ fun Shell(
     val dock = SelloDock(
         label = "Anotar un gasto",
         actionLabel = "Anotar",
-        onClick = { nav.anotar(proto, dockCategoryId) },
-        onLongClick = {
-            if (!proto.firstRun) nav.navigate(VariosRoute(categoryId = dockCategoryId))
-        },
-        longClickLabel = "Anotar varios"
+        onClick = { nav.anotar(proto, dockCategoryId) }
     )
     SelloScaffold(
         title = title,

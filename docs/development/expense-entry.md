@@ -111,7 +111,7 @@ titled "Editar gasto", its button is "Guardar cambios" and the top bar has "Borr
 
 ## Layout
 
-`V2EntryLayout`, top to bottom: ✕ and the Gasto/Ingreso switch (not when correcting),
+`EntryLayout`, top to bottom: ✕ and the Gasto/Ingreso switch (not when correcting),
 the amount slip (label, date pill, the chosen category's icon, the figure), the chips
 with Nueva and the note row, then **Anotar gasto** and the compact pad. Only the chips
 and note scroll; in a window too short to keep two chip rows with the amount pinned,

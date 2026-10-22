@@ -10,9 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.software.sello.designsystem.component.AmountField
 import com.software.sello.designsystem.component.ButtonKind
+import com.software.sello.designsystem.component.ButtonTone
 import com.software.sello.designsystem.component.ChipFlow
+import com.software.sello.designsystem.component.EntryAmountSlip
 import com.software.sello.designsystem.component.FieldPill
 import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.MoneyStyle
@@ -61,10 +62,12 @@ fun AportarScreen(route: AportarRoute) {
         EntryLayout(
             padding = padding,
             draft = {
+                EntryAmountSlip(
+                    label = "vie 2 oct, comprobante · ${goal.percent} % hoy",
+                    amount = draft.digits.toLongOrNull()?.let { cop(it) },
+                    tone = ButtonTone.Gain
+                )
                 Slip {
-                    Soft("vie 2 oct, comprobante · ${goal.percent} % hoy")
-                    AmountField(amount = draft.digits.toLongOrNull()?.let { cop(it) })
-                    TearLine()
                     LeaderLine("Tendrás") { MoneyText(cop(goal.saved + draft.amount)) }
                     LeaderLine("Próximo sello, 75 %") {
                         MoneyText(

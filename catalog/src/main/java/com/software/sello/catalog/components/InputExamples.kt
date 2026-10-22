@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -18,8 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
-import com.software.sello.designsystem.component.AmountField
-import com.software.sello.designsystem.component.AmountKeypad
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ChipFlow
 import com.software.sello.designsystem.component.DigitGrouping
@@ -36,7 +33,6 @@ import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SwitchRow
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
-import kotlinx.coroutines.delay
 
 @Composable
 private fun Stack(content: @Composable () -> Unit) {
@@ -46,58 +42,6 @@ private fun Stack(content: @Composable () -> Unit) {
 @Composable
 private fun Caption(text: String) {
     Text(text, style = MaterialTheme.typography.labelMedium, color = SelloTheme.colors.inkSoft)
-}
-
-private fun draftMessage(draft: DraftFixture, limitShown: Boolean): FieldMessage? = when {
-    draft.rejected != null -> FieldMessage("Eso no es un monto. Escribe solo números, como 1.234.")
-    limitShown -> FieldMessage("Máximo 12 dígitos", isError = false)
-    else -> null
-}
-
-/** The amount display and keypad wired to a catalog-local draft. */
-@Composable
-private fun AmountEntry(
-    draft: DraftFixture,
-    onDraft: (DraftFixture) -> Unit,
-    enabled: Boolean = true
-) {
-    val limitShown = draft.limitPulse > 0 && draft.digits.length >= DraftFixture.MAX_DIGITS - 2
-    AmountField(
-        amount = draft.amount,
-        rejectedText = draft.rejected,
-        message = draftMessage(draft, limitShown),
-        limitPulse = draft.limitPulse,
-        onPaste = { onDraft(draft.paste(it)) },
-        modifier = Modifier.fillMaxWidth().testTag("amount:field")
-    )
-    AmountKeypad(
-        onDigit = { onDraft(draft.type(it.toString())) },
-        onTripleZero = { onDraft(draft.type("000")) },
-        onBackspace = { onDraft(draft.backspace()) },
-        onClearAll = { onDraft(DraftFixture()) },
-        enabled = enabled,
-        modifier = Modifier.testTag("amount:keypad")
-    )
-}
-
-@Composable
-fun AmountKeypadExample() {
-    var draft by remember { mutableStateOf(DraftFixture()) }
-    Stack {
-        AmountEntry(draft, { draft = it })
-        Caption("Sin portapapeles a mano: simula lo que alguien pegaría")
-        Row(horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm)) {
-            for (sample in listOf("1e3", "-100", "12.34", "1.234")) {
-                SelloButton(
-                    text = sample,
-                    onClick = { draft = draft.paste(sample) },
-                    kind = ButtonKind.Text,
-                    modifier = Modifier.testTag("amount:paste:$sample")
-                )
-            }
-        }
-        SelloButton("Reiniciar", { draft = DraftFixture() }, kind = ButtonKind.Outlined)
-    }
 }
 
 private val CategoryFixtures = listOf(
@@ -299,116 +243,5 @@ fun IconChoiceExample() {
         Slip(modifier = Modifier.fillMaxWidth(), pinked = false) {
             IconChoiceGrid(choices.take(4), "home", { picked = it }, enabled = false)
         }
-    }
-}
-
-/** Everything an entry sheet needs, together, with nothing behind it. */
-@Composable
-fun ExpenseEntryExample() {
-    var draft by remember { mutableStateOf(DraftFixture()) }
-    var category by rememberSaveable { mutableIntStateOf(-1) }
-    var note by rememberSaveable { mutableStateOf("") }
-    var busy by rememberSaveable { mutableStateOf(false) }
-    var result by rememberSaveable { mutableStateOf("") }
-    val ready = draft.amount != null && category >= 0 && count(note) <= NOTE_LIMIT
-    LaunchedEffect(busy) {
-        if (busy) {
-            delay(ENTRY_BUSY_MILLIS)
-            result = "El catálogo no guarda nada: esto solo muestra el estado ocupado."
-            busy = false
-        }
-    }
-    Stack {
-        AmountEntry(draft, { draft = it }, enabled = !busy)
-        ChipFlow {
-            CategoryFixtures.forEachIndexed { index, (name, icon) ->
-                SelloChip(name, category == index, {
-                    category = index
-                }, icon = icon, enabled = !busy)
-            }
-        }
-        FormField(
-            label = "Nota (opcional)",
-            value = note,
-            onValueChange = { note = it },
-            enabled = !busy,
-            message = if (count(note) >
-                NOTE_LIMIT
-            ) {
-                FieldMessage("Máximo $NOTE_LIMIT caracteres")
-            } else {
-                null
-            },
-            counter = "${count(note)}/$NOTE_LIMIT",
-            modifier = Modifier.testTag("entry:note")
-        )
-        if (!ready && !busy) {
-            Caption(
-                when {
-                    draft.amount == null -> "Escribe un monto"
-                    category < 0 -> "Elige una categoría"
-                    else -> "Acorta la nota"
-                }
-            )
-        }
-        SelloButton(
-            text = "Anotar",
-            onClick = { busy = true },
-            enabled = ready,
-            loading = busy,
-            modifier = Modifier.fillMaxWidth().testTag("entry:save")
-        )
-        if (result.isNotEmpty()) Caption(result)
-    }
-}
-
-private const val ENTRY_BUSY_MILLIS = 1_200L
-
-@Composable
-fun IncomeEntryExample() {
-    var draft by remember { mutableStateOf(DraftFixture()) }
-    var source by rememberSaveable { mutableIntStateOf(0) }
-    var other by rememberSaveable { mutableStateOf("") }
-    var busy by rememberSaveable { mutableStateOf(false) }
-    Stack {
-        Caption("Estado visual sintético: el catálogo no guarda ingresos.")
-        SegmentedSwitch(listOf("Listo", "Ocupado"), if (busy) 1 else 0, { busy = it == 1 })
-        AmountEntry(draft, { draft = it }, enabled = !busy)
-        ChipFlow {
-            listOf(
-                "Salario",
-                "Freelance",
-                "Ingresos pasivos",
-                "Transferencia",
-                "Otro"
-            ).forEachIndexed {
-                    index,
-                    label
-                ->
-                SelloChip(label, source == index, { source = index }, enabled = !busy)
-            }
-        }
-        if (source == 4) {
-            FormField(
-                "¿De dónde vino?",
-                other,
-                { other = it },
-                enabled = !busy,
-                counter = "${count(other)}/24",
-                message = if (count(other) !in
-                    1..24
-                ) {
-                    FieldMessage("Escribe de 1 a 24 caracteres")
-                } else {
-                    null
-                }
-            )
-        }
-        SelloButton(
-            "Anotar ingreso",
-            {},
-            enabled = draft.amount != null && (source != 4 || count(other) in 1..24),
-            loading = busy
-        )
     }
 }

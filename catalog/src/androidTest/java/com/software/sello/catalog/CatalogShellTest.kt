@@ -72,13 +72,13 @@ class CatalogShellTest {
 
     @Test
     fun backReturnsToTheSameSpotInTheList() {
-        val link = rule.onNodeWithTag(exampleLinkTag("v2.entry")).performScrollTo()
+        val link = rule.onNodeWithTag(exampleLinkTag("inputs.entry")).performScrollTo()
         val before = link.getUnclippedBoundsInRoot().top
         link.performClick()
         rule.onNodeWithTag(BACK_TAG).performClick()
         assertEquals(
             before,
-            rule.onNodeWithTag(exampleLinkTag("v2.entry")).getUnclippedBoundsInRoot().top
+            rule.onNodeWithTag(exampleLinkTag("inputs.entry")).getUnclippedBoundsInRoot().top
         )
     }
 

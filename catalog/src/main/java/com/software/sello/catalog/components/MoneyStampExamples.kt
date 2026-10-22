@@ -127,6 +127,10 @@ fun StampExample() {
                     kind = ButtonKind.Outlined,
                     modifier = Modifier.testTag("stamp:land")
                 )
+                key(landings) {
+                    Stamp("Lograda", StampInk.Good, land = landings > 0, inkRing = true)
+                }
+                Caption("Con anillo de tinta, como al lograr una meta")
             }
         }
     }

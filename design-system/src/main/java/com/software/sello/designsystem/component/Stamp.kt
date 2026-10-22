@@ -49,7 +49,7 @@ fun Stamp(
     size: StampSize = StampSize.Small,
     angle: Float = StampDefaults.angle(size),
     land: Boolean = false,
-    v2Motion: Boolean = false
+    inkRing: Boolean = false
 ) {
     val colors = SelloTheme.colors
     val color = when (ink) {
@@ -89,7 +89,7 @@ fun Stamp(
         if (land) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
         if (animate) {
             progress.animateTo(1f, SelloMotion.stamp())
-            if (v2Motion) ring.animateTo(1f, SelloMotion.emphasized())
+            if (inkRing) ring.animateTo(1f, SelloMotion.emphasized())
         }
     }
     Text(
@@ -100,8 +100,8 @@ fun Stamp(
         modifier = modifier
             .graphicsLayer {
                 val p = progress.value
-                val initialScale = if (v2Motion) {
-                    SelloMotion.STAMP_V2_INITIAL_SCALE
+                val initialScale = if (inkRing) {
+                    SelloMotion.STAMP_RING_INITIAL_SCALE
                 } else {
                     SelloMotion.STAMP_INITIAL_SCALE
                 }
@@ -112,7 +112,7 @@ fun Stamp(
                 rotationZ = angle + SelloMotion.STAMP_SETTLE_DEGREES * (1f - p)
             }
             .drawBehind {
-                if (v2Motion && ring.value > 0f && ring.value < 1f) {
+                if (inkRing && ring.value > 0f && ring.value < 1f) {
                     drawCircle(
                         color.copy(alpha = 1f - ring.value),
                         radius =

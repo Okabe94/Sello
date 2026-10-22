@@ -1,16 +1,13 @@
 package com.software.sello.designsystem.component
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -29,9 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -64,54 +58,10 @@ class SelloNavigation(
 /**
  * The action that starts an entry from anywhere: the dock above the tabs, or the "+" on
  * a rail. [label] is also what it is called by a screen reader; the dock shows
- * [actionLabel]. The v2 dock offers no long press, so [onLongClick] is only used by the
- * v1 `EntryDock`, which SELLO-073 retires.
+ * [actionLabel].
  */
 @Immutable
-class SelloDock(
-    val label: String,
-    val actionLabel: String,
-    val onClick: () -> Unit,
-    val onLongClick: (() -> Unit)? = null,
-    val longClickLabel: String? = null
-)
-
-/** The tab bar. Selecting the current tab is reported too, so the app can scroll to top. */
-@Composable
-fun SelloNavigationBar(navigation: SelloNavigation, modifier: Modifier = Modifier) {
-    val colors = SelloTheme.colors
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(colors.paper)
-            .drawBehind {
-                val stroke = 1.5.dp.toPx()
-                drawLine(
-                    color = colors.rule,
-                    start = Offset(0f, stroke / 2),
-                    end = Offset(size.width, stroke / 2),
-                    strokeWidth = stroke,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))
-                )
-            }
-            .selectableGroup()
-            .height(BarHeight)
-    ) {
-        navigation.destinations.forEach { destination ->
-            val selected = destination.id == navigation.selectedId
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .selectable(selected, role = Role.Tab) { navigation.onSelect(destination.id) }
-            ) {
-                SelectionMark(selected, Modifier.width(44.dp).height(3.dp))
-                DestinationContent(destination, selected, Modifier.weight(1f))
-            }
-        }
-    }
-}
+class SelloDock(val label: String, val actionLabel: String, val onClick: () -> Unit)
 
 /**
  * The rail that replaces the tab bar in short and expanded windows. With a [dock] its
@@ -192,59 +142,7 @@ private fun DestinationContent(
     }
 }
 
-internal val BarHeight = 64.dp
 internal val RailWidth = 80.dp
-
-/**
- * The line above the tabs that starts an entry. The whole dock is one button; the
- * coloured part at the end is decoration, not a second control.
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun EntryDock(dock: SelloDock, modifier: Modifier = Modifier) {
-    val colors = SelloTheme.colors
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
-            .clip(SelloTheme.shapes.button)
-            .background(colors.paper)
-            .border(2.dp, colors.ink, SelloTheme.shapes.button)
-            .combinedClickable(
-                role = Role.Button,
-                onLongClickLabel = dock.longClickLabel,
-                onLongClick = dock.onLongClick,
-                onClick = dock.onClick
-            )
-            .clearAndSetSemantics { contentDescription = dock.label }
-            .padding(start = 16.dp, end = 7.dp)
-    ) {
-        Text(
-            text = dock.label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = colors.inkSoft,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .heightIn(min = 42.dp)
-                .background(colors.brand, SelloTheme.shapes.control)
-                .padding(start = 10.dp, end = 14.dp)
-        ) {
-            Icon(SelloIcon.Add.painter(), null, Modifier.size(20.dp), colors.onBrand)
-            Text(
-                text = dock.actionLabel,
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp),
-                color = colors.onBrand
-            )
-        }
-    }
-}
 
 /** The month as a screen title that opens a month picker. It takes its ink from the bar. */
 @Composable

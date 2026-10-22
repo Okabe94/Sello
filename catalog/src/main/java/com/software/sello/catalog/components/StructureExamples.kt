@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,27 +38,24 @@ import com.software.sello.designsystem.component.ChartPeriod
 import com.software.sello.designsystem.component.ChartPoint
 import com.software.sello.designsystem.component.ChartReference
 import com.software.sello.designsystem.component.ColumnsChart
-import com.software.sello.designsystem.component.EntryDock
 import com.software.sello.designsystem.component.LineAction
 import com.software.sello.designsystem.component.LineChart
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.MonthBar
 import com.software.sello.designsystem.component.MonthCell
 import com.software.sello.designsystem.component.MonthGrid
 import com.software.sello.designsystem.component.MonthSwitcher
+import com.software.sello.designsystem.component.PastMonthRibbon
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloDestination
 import com.software.sello.designsystem.component.SelloDock
 import com.software.sello.designsystem.component.SelloNavigation
-import com.software.sello.designsystem.component.SelloNavigationBar
-import com.software.sello.designsystem.component.SelloNavigationRail
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipHeading
 import com.software.sello.designsystem.component.Stamp
 import com.software.sello.designsystem.component.StampInk
-import com.software.sello.designsystem.component.v2.PastMonthRibbon
-import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -180,48 +176,10 @@ private val TwoTabs = listOf(
     SelloDestination("resumen", "Resumen", SelloIcon.Insights)
 )
 
-private val ThreeTabs =
-    TwoTabs + SelloDestination("patrimonio", "Patrimonio", SelloIcon.AccountBalance)
-
 @Composable
 private fun rememberTabs(tabs: List<SelloDestination>): SelloNavigation {
     var selected by rememberSaveable { mutableStateOf(tabs.first().id) }
     return SelloNavigation(tabs, selected) { selected = it }
-}
-
-@Composable
-fun NavigationBarExample() {
-    var added by rememberSaveable { mutableIntStateOf(0) }
-    Stack {
-        Caption("Dos destinos en el MVP")
-        SelloNavigationBar(rememberTabs(TwoTabs))
-        Caption("El mismo componente con tres")
-        SelloNavigationBar(rememberTabs(ThreeTabs))
-        Caption("Riel para ventanas bajas o anchas; su + reemplaza el dock ($added)")
-        SelloNavigationRail(
-            navigation = rememberTabs(TwoTabs),
-            dock = SelloDock("Anotar un gasto", "Anotar", { added++ }),
-            modifier = Modifier.height(240.dp)
-        )
-    }
-}
-
-@Composable
-fun EntryDockExample() {
-    var presses by rememberSaveable { mutableIntStateOf(0) }
-    var long by rememberSaveable { mutableIntStateOf(0) }
-    Stack {
-        EntryDock(
-            SelloDock(
-                label = "Anotar un gasto",
-                actionLabel = "Anotar",
-                onClick = { presses++ },
-                onLongClick = { long++ },
-                longClickLabel = "Anotar varios"
-            )
-        )
-        Caption("Pulsaciones: $presses · largas: $long")
-    }
 }
 
 private val MonthNames = listOf(
@@ -285,7 +243,7 @@ fun ScaffoldExample() {
     SelloScaffold(
         title = "Octubre 2026",
         topBar = {
-            V2MonthBar(
+            MonthBar(
                 month = if (past) "Septiembre" else "Octubre",
                 year = "2026",
                 onClick = { past = true },

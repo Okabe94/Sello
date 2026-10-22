@@ -54,4 +54,28 @@ interface LimitDao {
             "ORDER BY category_id LIMIT :limit"
     )
     suspend fun forMonth(month: String, afterCategoryId: String, limit: Int): List<MonthLimitEntity>
+
+    /** Every default-limit entry after ([afterCategoryId], [afterMonth]), for a backup. */
+    @Query(
+        "SELECT * FROM default_limit WHERE category_id > :afterCategoryId " +
+            "OR (category_id = :afterCategoryId AND effective_month > :afterMonth) " +
+            "ORDER BY category_id, effective_month LIMIT :limit"
+    )
+    suspend fun allDefaults(
+        afterCategoryId: String,
+        afterMonth: String,
+        limit: Int
+    ): List<DefaultLimitEntity>
+
+    /** Every month limit after ([afterCategoryId], [afterMonth]), for a backup. */
+    @Query(
+        "SELECT * FROM month_limit WHERE category_id > :afterCategoryId " +
+            "OR (category_id = :afterCategoryId AND month > :afterMonth) " +
+            "ORDER BY category_id, month LIMIT :limit"
+    )
+    suspend fun allMonthLimits(
+        afterCategoryId: String,
+        afterMonth: String,
+        limit: Int
+    ): List<MonthLimitEntity>
 }

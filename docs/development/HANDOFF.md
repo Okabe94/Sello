@@ -5,7 +5,7 @@
 > subject to the user's current instructions.
 
 **Snapshot:** 2026-10-22 · **Product baseline:** `def067f`.
-SELLO-001–027, SELLO-061–073 and epics E01–E06 and E12 are recorded Done in the canonical tickets.
+SELLO-001–028, SELLO-061–073 and epics E01–E06 and E12 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -57,6 +57,7 @@ forecast remains only as Resumen's estimate, and
 | [SELLO-025](../planning/mvp/epics/E06-live-testing.md#sello-025--implement-seeded-histories-replay-and-live-graph-growth-scenarios) | The sandbox replays versioned scenarios (G01, month and year ends, six months) through the real commands, step by step or playing, with derived operation IDs so a resumed step never writes twice; Recibo and Resumen grow live. |
 | [SELLO-026](../planning/mvp/epics/E06-live-testing.md#sello-026--add-truthful-failure-receipt-and-recovery-diagnostics) | Sandbox-only simulated faults (failed read, lost answer or interruption after a real save, failure before storage), an operation inspector that reads real receipts, an edge-case scenario and a redacted diagnostic shared on request. |
 | [SELLO-027](../planning/mvp/epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite) | Nine sandbox scenarios with checks taken from the approved examples (G01, H01–H05, I01–I02, AR01–AR02) or derived by hand and labelled; `TemporalScenarioCorpusTest` runs each fresh and resumed; [corpus](../testing/sandbox-scenarios.md) with replay steps and the recurrence obligation. E06 is done. |
+| [SELLO-028](../planning/mvp/epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation) | A versioned plaintext JSON [backup format](../data/backup-format.md), independent of Room: one-revision snapshot, preferences captured separately (left out if unreadable), and a strict reader that rejects a whole bad file with where it is and writes nothing. No screen yet: saving is SELLO-029, restoring SELLO-030. |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-062](../planning/mvp/epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Recibo's answer slip reads "Restante del presupuesto" with a signed remainder, the per-day figure under a tear line and a closing line for past months. The Ajustar presupuesto link is SELLO-067. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
@@ -75,14 +76,15 @@ forecast remains only as Resumen's estimate, and
 
 - SELLO-074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the last E13
   ticket, a recorded manual TalkBack and Switch Access pass over the v2 screens.
-- SELLO-028–032: backup, restore, reset and their privacy verification. Restore
-  from startup failure and reset erasure of the kept unreadable copy remain open.
+- SELLO-029–032: saving a backup through the document picker, restore, reset and
+  their privacy verification. Restore from startup failure and reset erasure of the
+  kept unreadable copy remain open.
 - SELLO-033–036: integrated accessibility, restoration, performance and signed
   release acceptance. The current app is not a completed MVP release.
 - Goal/investment features, recurrence and other deferred capabilities remain
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
-The [board](../planning/mvp/BOARD.md) currently lists SELLO-028 without
+The [board](../planning/mvp/BOARD.md) currently lists SELLO-029 without
 unmet ticket dependencies, plus E13's SELLO-074 (deferred) and E08's SELLO-033. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
@@ -90,6 +92,6 @@ the ticket briefs; no statuses are changed by this handoff.
 
 - [Current app inventory](current-app-experience.md) and [navigation graph](navigation-graph.md).
 - [Architecture](../../ARCHITECTURE.md), [current decisions](../decisions/0001-mvp-contract.md) and [design guide](../design/README.md).
-- [Storage](storage.md), [command recovery](commands.md) and [monthly snapshots](monthly-snapshot.md).
+- [Storage](storage.md), [backup format](../data/backup-format.md), [command recovery](commands.md) and [monthly snapshots](monthly-snapshot.md).
 - [Setup](setup.md), [device-test notes](../planning/mvp/EXECUTION_GUIDE.md#device-test-notes) and [quality flow](../planning/mvp/QUALITY_FLOW.md).
 - [Post-MVP roadmap](../planning/mvp/ROADMAP.md).

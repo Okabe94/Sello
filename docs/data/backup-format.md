@@ -1,0 +1,124 @@
+# Backup file format, version 1
+
+Rules: [architecture](../../ARCHITECTURE.md) §7, [D05, D08 and D09](../decisions/0001-mvp-contract.md#d08--privacy-and-portable-files),
+[ADR 0003](../decisions/0003-mvp-transaction-amount-range.md). Code: `data/.../backup`.
+
+A Sello backup is one **plaintext UTF-8 JSON** file. Anyone who opens it can read
+every amount, name and note in it: it has no password, encryption or checksum, and
+the app must say so before a person saves one. Its version is the file's own and
+changes independently of the Room schema; nothing in it is a Room entity, a table or
+column name, a Kotlin class name or an enum position.
+
+File name: `sello-respaldo-AAAA-MM-DD-HHmm.json`, the moment the backup was made in
+its financial zone (`BackupFormat.fileName`). MIME type: `application/json`.
+
+## Shape
+
+```json
+{
+  "format": "sello-backup",
+  "version": 1,
+  "exportedAt": "2026-10-22T14:30:00Z",
+  "financial": {
+    "sourceRevision": 9,
+    "zone": "America/Bogota",
+    "categories": [ … ],
+    "defaultLimits": [ … ],
+    "monthLimits": [ … ],
+    "expenses": [ … ],
+    "incomes": [ … ]
+  },
+  "preferences": { … } | null
+}
+```
+
+[`valid-g01.json`](../../data/src/test/resources/backup/valid-g01.json) is a complete
+synthetic example: G01's three expenses and one income, plus an archived category.
+The `invalid-*.json` files beside it each break one rule.
+
+| Key | Value |
+| --- | --- |
+| `format` | Always `"sello-backup"`. |
+| `version` | `1`. Any other number is refused as a version this app cannot read. |
+| `exportedAt` | When the backup was made, UTC. |
+| `financial.sourceRevision` | The revision all financial rows were read at: one transaction, one revision. Informative; a restore does not reuse it. |
+| `financial.zone` | The financial zone, an IANA identifier such as `America/Bogota`. |
+| `preferences` | Read separately from the financial rows, after them; they never shared a transaction. `null` when they could not be read: the money is backed up regardless. |
+
+### Records
+
+| List | Keys |
+| --- | --- |
+| `categories` | `id`, `name`, `icon`, `archived`, `createdAt`, `updatedAt` |
+| `defaultLimits` | `categoryId`, `from` (month), `kind`, `amount`, `currency` |
+| `monthLimits` | `categoryId`, `month`, `kind`, `amount`, `currency` |
+| `expenses` | `id`, `categoryId`, `date`, `sequence`, `amount`, `currency`, `note`, `createdAt`, `updatedAt` |
+| `incomes` | `id`, `date`, `sequence`, `amount`, `currency`, `source`, `sourceName`, `note`, `createdAt`, `updatedAt` |
+
+`preferences` has `theme` (`system`, `light`, `dark`), `ink` (`cobalto`, `violeta`),
+`categoryOrder` (`most_used`, `alphabetical`, `amount_spent`, `limit`,
+`latest_expense_added`) and `categoryDirection` (`descending`, `ascending`).
+
+Every key is required, even when its value is `null`, and no other key is allowed.
+
+### Values
+
+- **Identifiers:** the original lower-case hyphenated UUIDs. They identify records
+  inside the file; a restore gives commands fresh runtime identities and a backup
+  ID never authorizes replaying an operation.
+- **Amounts:** whole COP pesos as a bare JSON integer, `125000`. Not `"125000"`,
+  `1.25e5`, `125000.0` or `0125000`. Each expense or income is 1 to 999.999.999.999;
+  a single one outside that range rejects the whole file. Limits may be 0 and are
+  not bound by that maximum. Totals across records may exceed it.
+- **Currency:** `"COP"` beside every amount; any other code rejects the file.
+- **Limit kind:** `finite` (with `amount` and `currency`), `unlimited` (both `null`),
+  or, for a default only, `paused` (both `null`), which means no automatic budget
+  from that month, as after archiving.
+- **Dates and months:** `yyyy-MM-dd` and `yyyy-MM`, real calendar values.
+- **Moments:** UTC as `Instant.toString` writes them: `2026-10-22T14:30:00Z`, or
+  with milliseconds `…:30.250Z`. Finer precision or an offset is refused.
+- **Text:** stored form only: names 1–24 code points and unique ignoring case and
+  accents, notes up to 60, other-income names up to 24, no surrounding spaces or
+  control characters. A note is either text or `null`, never empty.
+- **Order:** `sequence` is kept as written, so history keeps its order. Files are
+  written categories by creation then ID, limits by category then month, records
+  by date then sequence; the same data always makes the same bytes.
+
+## Not in a backup
+
+Record and category versions, the profile generation, operation receipts, the
+copies kept for undo (`deleted_expense`, `deleted_income`), jobs, sandbox or debug
+state, one-time notice dismissals, permissions, URIs, paths and credentials.
+
+## Reading a file
+
+`BackupCodec.read` writes nothing. It checks in this order and stops at the first
+problem, rejecting the whole file with a `BackupRejection` that names where it is
+(`financial.expenses[3].amount`), never what the file says there:
+
+1. **Size:** at most 10 MiB; a stream is read only one byte past that.
+2. **Structure, before parsing:** UTF-8; nesting at most 8 deep; at most 100,000
+   array elements in all; at most 10,000 characters in any string (an escape counts
+   as one); no key twice in one object; not cut short.
+3. **Header:** `format` and `version`, so a newer file is named as such even when
+   the rest of it has changed shape.
+4. **Shape:** the version 1 keys exactly.
+5. **Values and links:** every rule above, then duplicate IDs, category names,
+   sequences and category/month entries; every `categoryId` must be a category in
+   the file; at most 1,200 default-limit entries per category.
+
+The result is a `BackupPlan`: the validated contents and their counts, with every
+record at version 1. Restoring it is SELLO-030.
+
+## Making a file
+
+`BackupExport.create` reads every financial row in one Room transaction, then the
+preferences, encodes, and reads its own output back with the same rules, so the app
+never hands out a file it would refuse. It returns the name, bytes and counts;
+writing them to a document the person chose is SELLO-029.
+
+## Changing the format
+
+Any change to keys, meanings or rules is a new `version`. Version 1 stays readable
+for as long as the app supports restoring it; nothing translates older Sello
+databases or other apps' files.

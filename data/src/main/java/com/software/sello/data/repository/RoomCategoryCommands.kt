@@ -196,8 +196,8 @@ class RoomCategoryCommands(
 
     /** One category's whole default history. It grows by at most one entry per month. */
     private suspend fun history(id: CategoryId): Outcome<List<DefaultLimit>, StorageFailure> {
-        val rows = database.limitDao().defaults(id.value, MAX_HISTORY + 1)
-        if (rows.size > MAX_HISTORY) {
+        val rows = database.limitDao().defaults(id.value, MAX_DEFAULT_HISTORY + 1)
+        if (rows.size > MAX_DEFAULT_HISTORY) {
             return Outcome.Failure(
                 StorageFailure.Integrity(DefaultLimitEntity.TABLE, id.value, "effective_month")
             )
@@ -217,9 +217,7 @@ class RoomCategoryCommands(
                 Outcome.Success(receipt.value.categoryId?.let { receipt.value.change() })
         }
     }
-
-    private companion object {
-        /** A century of monthly changes; more than that is not a real history. */
-        const val MAX_HISTORY = 1_200
-    }
 }
+
+/** A century of monthly changes; more than that is not a real history. */
+internal const val MAX_DEFAULT_HISTORY = 1_200

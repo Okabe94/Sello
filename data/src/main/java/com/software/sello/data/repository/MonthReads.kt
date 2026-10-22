@@ -24,10 +24,10 @@ import java.time.YearMonth
  * fetched a page at a time and one damaged row fails the whole read.
  */
 
-private const val PAGE = 500
+internal const val PAGE = 500
 
 /** Reads every row in key order, [PAGE] at a time, continuing after the last row seen. */
-private suspend fun <E> pages(page: suspend (after: E?) -> List<E>): List<E> {
+internal suspend fun <E> pages(page: suspend (after: E?) -> List<E>): List<E> {
     val all = mutableListOf<E>()
     while (true) {
         val rows = page(all.lastOrNull())

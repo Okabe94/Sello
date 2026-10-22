@@ -35,6 +35,21 @@ class SandboxProfiles(
      */
     suspend fun reset() = move { SandboxSession(active = true, wipe = true) }
 
+    /**
+     * Erases the sandbox like [reset] and opens it again at [scenario]'s start, in its
+     * zone, ready to replay its first step. Loading the same scenario again replays it
+     * from the beginning onto a new sandbox.
+     */
+    suspend fun load(scenario: Scenario) = move {
+        SandboxSession(
+            active = true,
+            wipe = true,
+            date = scenario.start,
+            zone = scenario.zone,
+            scenario = scenario.key
+        )
+    }
+
     private suspend fun move(change: (SandboxSession) -> SandboxSession) {
         fence?.close()
         store.write(change(store.read()))

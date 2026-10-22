@@ -82,6 +82,7 @@ fun ToolsScreen(tools: SandboxTools) {
                 move { enter() }
             }, onLeave = { move { leave() } })
             tools.time?.let { TimeSlip(it) }
+            ScenarioSlip(tools.scenarios, enabled = !moving, onLoad = { move { load(it) } })
             if (tools.profiles.inSandbox) {
                 ResetSlip(enabled = !moving, onReset = {
                     move { reset() }
@@ -212,6 +213,99 @@ private fun TimeSlip(time: SandboxTime) {
 }
 
 @Composable
+private fun ScenarioSlip(runner: ScenarioRunner?, enabled: Boolean, onLoad: (Scenario) -> Unit) {
+    var loading by rememberSaveable { mutableStateOf<String?>(null) }
+    Slip(Modifier.fillMaxWidth()) {
+        Heading(stringResource(R.string.tools_scenarios_heading))
+        runner?.let { ScenarioProgress(it) }
+        Note(stringResource(R.string.tools_scenarios_note))
+        Scenarios.all.forEach { scenario ->
+            Text(scenario.title, style = MaterialTheme.typography.titleSmall)
+            Note(
+                "${scenario.summary} ${scenario.steps.size} pasos · ${scenario.key} · semilla ${scenario.seed}"
+            )
+            if (loading == scenario.key) {
+                SelloButton(
+                    stringResource(R.string.tools_scenario_load_confirm),
+                    { onLoad(scenario) },
+                    Modifier.fillMaxWidth().testTag(scenarioTag(scenario, "confirm")),
+                    tone = ButtonTone.Loss,
+                    enabled = enabled
+                )
+                SelloButton(
+                    stringResource(R.string.tools_reset_cancel),
+                    { loading = null },
+                    Modifier.fillMaxWidth(),
+                    kind = ButtonKind.Text
+                )
+            } else {
+                SelloButton(
+                    stringResource(R.string.tools_scenario_load),
+                    { loading = scenario.key },
+                    Modifier.fillMaxWidth().testTag(scenarioTag(scenario, "load")),
+                    kind = ButtonKind.Outlined,
+                    enabled = enabled
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScenarioProgress(runner: ScenarioRunner) {
+    val state by runner.state.collectAsState()
+    val scenario = state.scenario ?: return
+    val scope = rememberCoroutineScope()
+    Text(scenario.title, style = MaterialTheme.typography.titleSmall)
+    Text(
+        if (state.finished) {
+            pluralStringResource(R.plurals.tools_scenario_finished, state.total, state.total)
+        } else {
+            stringResource(R.string.tools_scenario_progress, state.next + 1, state.total)
+        },
+        modifier = Modifier
+            .testTag(TOOLS_SCENARIO_PROGRESS_TAG)
+            .semantics { liveRegion = LiveRegionMode.Polite }
+    )
+    state.problem?.let {
+        Text(
+            it,
+            color = SelloTheme.colors.semantic.loss,
+            modifier = Modifier.testTag(TOOLS_SCENARIO_PROBLEM_TAG)
+        )
+    }
+    state.log.takeLast(LOG_LINES).forEach { record ->
+        Note(
+            "${record.index + 1}. ${record.action} · ${record.result}" +
+                (record.revision?.let { " · rev $it" } ?: "") +
+                (record.operation?.let { " · $it" } ?: "")
+        )
+    }
+    if (!state.finished) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm)) {
+            SelloButton(
+                stringResource(R.string.tools_scenario_step),
+                { scope.launch { runner.step() } },
+                Modifier.testTag(TOOLS_SCENARIO_STEP_TAG),
+                kind = ButtonKind.Outlined,
+                enabled = !state.playing && !state.running
+            )
+            SelloButton(
+                stringResource(
+                    if (state.playing) R.string.tools_pause else R.string.tools_scenario_play
+                ),
+                { if (state.playing) runner.pause() else runner.play() },
+                Modifier.testTag(TOOLS_SCENARIO_PLAY_TAG)
+            )
+        }
+    }
+}
+
+private const val LOG_LINES = 6
+
+fun scenarioTag(scenario: Scenario, action: String) = "tools:scenario:${scenario.id}:$action"
+
+@Composable
 private fun ResetSlip(enabled: Boolean, onReset: () -> Unit) {
     var confirming by rememberSaveable { mutableStateOf(false) }
     Slip(Modifier.fillMaxWidth()) {
@@ -253,3 +347,7 @@ const val TOOLS_JUMP_TAG = "tools:jump"
 const val TOOLS_PLAY_TAG = "tools:play"
 const val TOOLS_RESET_TAG = "tools:reset"
 const val TOOLS_RESET_CONFIRM_TAG = "tools:reset-confirm"
+const val TOOLS_SCENARIO_PROGRESS_TAG = "tools:scenario-progress"
+const val TOOLS_SCENARIO_PROBLEM_TAG = "tools:scenario-problem"
+const val TOOLS_SCENARIO_STEP_TAG = "tools:scenario-step"
+const val TOOLS_SCENARIO_PLAY_TAG = "tools:scenario-play"

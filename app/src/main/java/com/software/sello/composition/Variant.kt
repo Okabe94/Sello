@@ -2,6 +2,7 @@ package com.software.sello.composition
 
 import com.software.sello.data.StorageNames
 import com.software.sello.domain.model.FinancialProfile
+import java.time.ZoneId
 import org.koin.core.module.Module
 
 /**
@@ -14,6 +15,12 @@ interface VariantComposition {
     val names: StorageNames
 
     /**
+     * The financial zone to create new data in instead of the device's. It only matters
+     * the first time the data opens; afterwards the stored zone always wins.
+     */
+    val newDataZone: ZoneId?
+
+    /**
      * Bindings loaded after the production modules for the profile that opened. They
      * may replace the financial clock and wrap commands, and nothing else.
      */
@@ -23,6 +30,8 @@ interface VariantComposition {
 /** The app as customers get it: its own data and real financial time. */
 object ProductionComposition : VariantComposition {
     override val names: StorageNames = StorageNames.Normal
+
+    override val newDataZone: ZoneId? = null
 
     override fun modules(profile: FinancialProfile): List<Module> = emptyList()
 }

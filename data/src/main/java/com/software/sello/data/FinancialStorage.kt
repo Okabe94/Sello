@@ -1,6 +1,8 @@
 package com.software.sello.data
 
 import android.content.Context
+import com.software.sello.data.backup.BackupExport
+import com.software.sello.data.backup.RoomBackupSnapshots
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.local.setAside
@@ -19,9 +21,13 @@ import com.software.sello.data.repository.discardKeptCopies
 import com.software.sello.data.repository.reading
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.port.AppearancePreferences
 import com.software.sello.domain.port.AuditClock
+import com.software.sello.domain.port.BackupExports
 import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CategoryOrderingPreferences
 import com.software.sello.domain.port.CategoryReads
+import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialClock
@@ -83,6 +89,15 @@ class FinancialStorage internal constructor(
     val categoryReads: CategoryReads = RoomCategoryReads(database)
 
     val expenseReads: ExpenseReads = RoomExpenseReads(database)
+
+    /** Backup files of this storage, with the portable preferences beside it. */
+    fun backupExports(
+        appearance: AppearancePreferences,
+        ordering: CategoryOrderingPreferences,
+        audit: AuditClock,
+        dispatchers: DispatcherProvider
+    ): BackupExports =
+        BackupExport(RoomBackupSnapshots(database), appearance, ordering, audit, dispatchers)
 
     /**
      * Takes the financial clock for the same reason the commands do. [computation] must

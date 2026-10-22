@@ -58,6 +58,8 @@ class CatalogExamplesTest {
                 "feedback.empty-slip",
                 "feedback.error-slip",
                 "feedback.notice",
+                "feedback.bullet-list",
+                "feedback.backup-states",
                 "feedback.slip-skeleton",
                 "feedback.danger-and-ticket",
                 "feedback.celebration",

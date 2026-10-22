@@ -9,13 +9,18 @@ import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.InkPreference
 import com.software.sello.domain.model.ThemePreference
 import com.software.sello.domain.port.AppearancePreferences
+import com.software.sello.domain.port.BackupRecords
 import com.software.sello.domain.port.CategoryOrderingPreferences
+import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.PreferenceFailure
 import com.software.sello.domain.port.PreferenceRead
 import com.software.sello.domain.port.PreferenceWrite
+import java.time.Instant
+import java.time.ZoneId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -24,11 +29,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Coordinates just the appearance and Recibo-order controls shown on Settings. */
+/** Coordinates the appearance and Recibo-order controls, and the last backup's date. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class SettingsViewModel(
     private val appearancePreferences: AppearancePreferences,
-    private val orderingPreferences: CategoryOrderingPreferences
+    private val orderingPreferences: CategoryOrderingPreferences,
+    backupRecords: BackupRecords,
+    clock: FinancialClock
 ) : ViewModel() {
     private val retry = MutableStateFlow(0)
     private val busy = MutableStateFlow(false)
@@ -73,12 +80,23 @@ class SettingsViewModel(
         }.let { it.copy(loading = !it.appearanceLoaded || !it.orderingLoaded) }
     }
 
+    private val backup = combine(
+        retry.flatMapLatest { backupRecords.observeBackups() },
+        clock.today
+    ) { read, today ->
+        when (read) {
+            is PreferenceRead.Ready -> BackupLine.Read(read.value.last?.at, today.zone)
+            is PreferenceRead.Failed -> BackupLine.Unreadable
+        }
+    }
+
     val state = merge(
         readState.map { read ->
             { old: SettingsState ->
-                read.copy(busy = old.busy, writeFailure = old.writeFailure)
+                read.copy(busy = old.busy, writeFailure = old.writeFailure, backup = old.backup)
             }
         },
+        backup.map { value -> { old: SettingsState -> old.copy(backup = value) } },
         busy.map { value -> { old: SettingsState -> old.copy(busy = value) } },
         writeFailure.map { value -> { old: SettingsState -> old.copy(writeFailure = value) } }
     ).runningFold(SettingsState(loading = true)) { old, change -> change(old) }
@@ -129,9 +147,19 @@ data class SettingsState(
     val appearanceFailure: PreferenceFailure? = null,
     val orderingFailure: PreferenceFailure? = null,
     val writeFailure: PreferenceFailure? = null,
-    val busy: Boolean = false
+    val busy: Boolean = false,
+    val backup: BackupLine = BackupLine.Loading
 ) {
     val failure: PreferenceFailure? get() = writeFailure ?: appearanceFailure ?: orderingFailure
+}
+
+/** The Respaldo row: when the last backup was made, if one was and that can be read. */
+sealed interface BackupLine {
+    data object Loading : BackupLine
+
+    data object Unreadable : BackupLine
+
+    data class Read(val lastAt: Instant?, val zone: ZoneId) : BackupLine
 }
 
 private sealed interface SettingsRead {

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Test-only documents, so a save can be checked against a real provider. -->
+        <provider
+            android:name="com.software.sello.platform.TestDocumentsProvider"
+            android:authorities="com.software.sello.test.documents"
+            android:exported="true"
+            tools:ignore="ExportedContentProvider"
+            xmlns:tools="http://schemas.android.com/tools" />
+    </application>
+</manifest>

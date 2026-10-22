@@ -5,7 +5,11 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import com.software.sello.R
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * How a day is written on a slip: "Hoy, vie 9 oct", "jue 8 oct", and with the year
@@ -26,6 +30,18 @@ class DateLabels(
             "$weekday ${date.dayOfMonth} $month ${date.year}"
         }
         return if (date == today) todayFormat.format(plain) else plain
+    }
+
+    /** A real moment in [zone], always with its year: "22 oct 2026, 2:30 p. m.". */
+    fun moment(at: Instant, zone: ZoneId, format: String): String {
+        val local = at.atZone(zone)
+        val day = "${local.dayOfMonth} ${months[local.monthValue - 1]} ${local.year}"
+        return format.format(day, clock.format(local))
+    }
+
+    private companion object {
+        val clock: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("h:mm a", Locale.forLanguageTag("es-CO"))
     }
 }
 

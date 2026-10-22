@@ -27,6 +27,7 @@ flowchart LR
 
     recibo <-->|Recibo / Resumen tabs| resumen[ResumenRoute<br/>ResumenRoot → ResumenScreen]
     recibo -->|gear| settings[SettingsRoute<br/>SettingsRoot → SettingsScreen]
+    settings -->|Respaldo| backup[BackupRoute<br/>BackupRoot → BackupScreen]
     recibo -->|add category| categoryCreate[CategoryEditorRoute<br/>CategoryEditorRoot → CategoryEditorScreen]
     recibo -.->|open category| reciboDetail[Recibo category detail<br/>ShellState.detailCategoryId<br/>CategoryDetailScreen]
 
@@ -64,7 +65,7 @@ flowchart LR
     classDef route fill:#eef2ff,stroke:#3346a8,stroke-width:2px,color:#111;
     classDef local fill:#fffaf0,stroke:#9a6700,stroke-width:2px,stroke-dasharray:5 5,color:#111;
     classDef outside fill:#f6f8fa,stroke:#57606a,stroke-width:2px,color:#111;
-    class recibo,resumen,settings,categoryCreate,categoryEdit,expenseEdit,incomeHistory,resumenDetail,incomeEntry,incomeEdit,prerequisite,expenseEntry route;
+    class recibo,resumen,settings,backup,categoryCreate,categoryEdit,expenseEdit,incomeHistory,resumenDetail,incomeEntry,incomeEdit,prerequisite,expenseEntry route;
     class reciboDetail,entryRequest,active,expenseMode,incomeMode local;
     class launch,failure,deepLink outside;
 ```
@@ -98,7 +99,8 @@ layout primitives are intentionally omitted.
 | Edit income | `IncomeEditRoute(incomeId)` → `IncomeFormRoot` → `IncomeFormScreen` | Same income composables; the kind switch is omitted | Same income shared composables as above |
 | Create category | `CategoryEditorRoute(forEntry)` → `CategoryEditorRoot` → `CategoryEditorScreen` | `Form`, `LimitFields`, `SectionLabel`; `ArchiveConfirmation` is edit-only | `SelloScaffold`, `FormField`, `IconChoiceGrid`, `ChipFlow`, `SelloChip`, `SwitchRow`, `DigitGrouping`, `Slip`, `ConfirmSlip`, `SlipSkeleton`, `ErrorSlip`, `SelloButton` |
 | Edit category | `CategoryEditRoute(categoryId, month)` → `CategoryManagementRoot` → `CategoryEditorScreen` | `Form`, `LimitFields`, `SectionLabel`, `ArchiveConfirmation` | Same category shared composables as above |
-| Configuración | `SettingsRoute` → `ShellScreen` → `SettingsRoot` → `SettingsScreen` | `AppearanceControls`, `CategoryOrderingControls`, `SectionTitle`, `ControlLabel` | `Slip`, `ChipFlow`, `SelloChip`, `SegmentedSwitch`, `SlipSkeleton`, `ErrorSlip` |
+| Configuración | `SettingsRoute` → `ShellScreen` → `SettingsRoot` → `SettingsScreen` | `AppearanceControls`, `CategoryOrderingControls`, `DataControls`, `SectionTitle`, `ControlLabel` | `Slip`, `ChipFlow`, `SelloChip`, `SegmentedSwitch`, `LeaderLine`, `SlipSkeleton`, `ErrorSlip` |
+| Respaldo | `BackupRoute` → `ShellScreen` (no dock) → `BackupRoot` → `BackupScreen` | `LastBackupSlip`, `Disclosure`; system `CreateDocument` picker | `Slip`, `LeaderLine`, `Stamp`, `BulletList`, `SelloButton`, `ErrorSlip`, `SlipSkeleton` |
 | Shared shell | `SelloAppRoot` → `ShellScreen` | `MonthPicker`, `CorrectionNoticeBar`; `ReciboDestination`, `EntryDestination` are private navigation hosts | `SelloScaffold`, `SelloNavigationBar` / `SelloNavigationRail`, `SelloDock`, `MonthSwitcher`, `MonthGrid`, `SelloNotice` |
 
 ## Navigation test coverage
@@ -112,6 +114,7 @@ contract without a real `NavHost`.
 | Healthy first launch starts on Recibo | `ShellOnDeviceTest.aNewInstallationOpensOnAnHonestEmptyReciboForTheCurrentMonth` | Device |
 | Recibo ↔ Resumen, shared month, recreation and Back to Recibo | `ShellOnDeviceTest.resumenKeepsTheSharedMonthThroughRecreationAndBackReturnsToRecibo`; `NavigationStateTest.backClosesAPanelThenADetailThenReturnsToReciboThenLeaves` | Device + unit/state |
 | Recibo → Configuración → Back, without losing selected month or Recibo state | `SettingsJourneyTest.settingsPreserveTheSelectedMonthFinancialRowsAndTheReciboBackStack` | Journey |
+| Recibo → Configuración → Respaldo → save a document | `BackupFileJourneyTest` | Journey |
 | Recibo category detail on compact and wide windows | `ShellScreenLayoutTest`; `ReciboListDetailWideTest`; `NavigationStateTest.aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth` | Device + unit/state |
 | Restoring the open Recibo category and keeping its identity while loading | `NavigationStateTest.anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed`; `DetailIdentityTest` | Unit/state |
 | Resumen → income history → new income → Back, and Resumen → routed category detail → Back | `ResumenJourneyTest.realEntrySummarySourceLinksAndRecreationReconcileWithStorage` | Journey |

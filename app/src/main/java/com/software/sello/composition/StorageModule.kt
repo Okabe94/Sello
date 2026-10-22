@@ -9,6 +9,7 @@ import com.software.sello.domain.model.FinancialProfile
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AuditClock
+import com.software.sello.domain.port.BackupExports
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.DispatcherProvider
@@ -81,4 +82,5 @@ fun storageModule(storage: FinancialStorage): Module = module {
     single<ExpenseReads> { storage.expenseReads }
     single<IncomeCommands> { storage.incomeCommands(get(), get(), get(), get()) }
     single<IncomeReads> { storage.incomeReads }
+    single<BackupExports> { storage.backupExports(get(), get(), get(), get()) }
 }

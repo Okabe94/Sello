@@ -103,7 +103,8 @@ backup and device transfer, so the database and the preferences never leave the
 device through Android. The intended backup is a file the person saves themselves.
 Its [format](../data/backup-format.md) is independent of this schema: a schema
 change needs no new backup version unless what a backup carries changes. Saving
-the file from the app is SELLO-029.
+the file from Configuración → Respaldo writes it through the system document picker;
+the last successful backup is remembered in DataStore, never in Room.
 
 ## Changing the schema
 

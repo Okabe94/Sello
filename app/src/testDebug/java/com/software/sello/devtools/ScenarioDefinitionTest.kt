@@ -31,7 +31,7 @@ class ScenarioDefinitionTest {
         Scenarios.all.forEach { scenario ->
             var today = scenario.start
             val categories = mutableSetOf<String>()
-            scenario.steps.forEach { step ->
+            scenario.steps.forEachIndexed { index, step ->
                 when (step) {
                     is AdvanceTo -> {
                         assertTrue("${scenario.key} $step", step.date > today)
@@ -43,6 +43,24 @@ class ScenarioDefinitionTest {
                     is Expense -> assertTrue("${scenario.key} $step", step.category in categories)
 
                     is Income -> Unit
+
+                    // A step that names another names an earlier one of the right kind.
+                    is ScenarioStep.Repeat -> assertTrue(
+                        scenario.steps[step.of] !is AdvanceTo && step.of < index
+                    )
+
+                    is ScenarioStep.EditExpense -> assertTrue(
+                        scenario.steps[step.of] is Expense && step.of < index
+                    )
+
+                    is ScenarioStep.DeleteExpense -> assertTrue(
+                        scenario.steps[step.of] is Expense && step.of < index
+                    )
+
+                    is ScenarioStep.UndoDelete ->
+                        assertTrue(
+                            scenario.steps[step.of] is ScenarioStep.DeleteExpense && step.of < index
+                        )
                 }
             }
         }

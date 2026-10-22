@@ -1,5 +1,6 @@
 package com.software.sello.devtools
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -55,14 +56,22 @@ class ToolsActivity : ComponentActivity() {
         val tools = SandboxRegistry.tools
         setContent {
             SelloTheme {
-                if (tools != null) ToolsScreen(tools)
+                if (tools != null) ToolsScreen(tools, onShare = ::share)
             }
         }
+    }
+
+    /** The diagnostic leaves only through the share sheet the developer opens. */
+    private fun share(text: String) {
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, text)
+        startActivity(Intent.createChooser(send, getString(R.string.tools_export)))
     }
 }
 
 @Composable
-fun ToolsScreen(tools: SandboxTools) {
+fun ToolsScreen(tools: SandboxTools, onShare: (String) -> Unit = {}) {
     val scope = rememberCoroutineScope()
     var moving by remember { mutableStateOf(false) }
     fun move(action: suspend SandboxProfiles.() -> Unit) {
@@ -83,6 +92,10 @@ fun ToolsScreen(tools: SandboxTools) {
             }, onLeave = { move { leave() } })
             tools.time?.let { TimeSlip(it) }
             ScenarioSlip(tools.scenarios, enabled = !moving, onLoad = { move { load(it) } })
+            tools.diagnostics?.let {
+                FaultSlip(it.faults)
+                OperationsSlip(it, onShare)
+            }
             if (tools.profiles.inSandbox) {
                 ResetSlip(enabled = !moving, onReset = {
                     move { reset() }
@@ -306,6 +319,86 @@ private const val LOG_LINES = 6
 fun scenarioTag(scenario: Scenario, action: String) = "tools:scenario:${scenario.id}:$action"
 
 @Composable
+private fun FaultSlip(faults: DebugFaults) {
+    val armed by faults.state.collectAsState()
+    Slip(Modifier.fillMaxWidth()) {
+        Heading(stringResource(R.string.tools_faults_heading))
+        Note(stringResource(R.string.tools_faults_note))
+        Fault.entries.forEach { fault ->
+            val left = armed[fault] ?: 0
+            SelloButton(
+                if (left > 0) "${fault.label} · $left" else fault.label,
+                { faults.arm(fault) },
+                Modifier.fillMaxWidth().testTag(faultTag(fault)),
+                kind = ButtonKind.Outlined
+            )
+        }
+        SelloButton(
+            stringResource(R.string.tools_faults_clear),
+            faults::clear,
+            Modifier.fillMaxWidth().testTag(TOOLS_FAULTS_CLEAR_TAG),
+            kind = ButtonKind.Text,
+            enabled = armed.isNotEmpty()
+        )
+    }
+}
+
+@Composable
+private fun OperationsSlip(diagnostics: SandboxDiagnostics, onShare: (String) -> Unit) {
+    val logged by diagnostics.log.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    var stored by remember { mutableStateOf<Map<LoggedOperation, StoredOutcome>>(emptyMap()) }
+    suspend fun check() = logged.associateWith { diagnostics.inspector.stored(it) }
+    Slip(Modifier.fillMaxWidth()) {
+        Heading(stringResource(R.string.tools_operations_heading))
+        if (logged.isEmpty()) Note(stringResource(R.string.tools_operations_none))
+        logged.takeLast(LOG_LINES).forEach { entry ->
+            val inStorage = when (val found = stored[entry]) {
+                null -> "sin comprobar"
+                is StoredOutcome.Saved -> "guardado, rev ${found.revision}"
+                StoredOutcome.Nothing -> "nada escrito"
+                StoredOutcome.Unreadable -> "no se pudo leer"
+            }
+            Note(
+                "${entry.kind} · se le dijo: ${entry.told}" +
+                    (entry.fault?.let { " (simulado: ${it.label})" } ?: "") +
+                    " · almacenamiento: $inStorage · ${entry.operation.value}",
+                Modifier.testTag(TOOLS_OPERATION_TAG)
+            )
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm)) {
+            SelloButton(
+                stringResource(R.string.tools_operations_check),
+                { scope.launch { stored = check() } },
+                Modifier.testTag(TOOLS_OPERATIONS_CHECK_TAG),
+                kind = ButtonKind.Outlined,
+                enabled = logged.isNotEmpty()
+            )
+            SelloButton(
+                stringResource(R.string.tools_export),
+                {
+                    scope.launch {
+                        val checked = check()
+                        stored = checked
+                        onShare(
+                            diagnosticText(
+                                diagnostics.session(),
+                                diagnostics.faults.state.value,
+                                logged.map { it to checked.getValue(it) }
+                            )
+                        )
+                    }
+                },
+                Modifier.testTag(TOOLS_EXPORT_TAG),
+                kind = ButtonKind.Outlined
+            )
+        }
+    }
+}
+
+fun faultTag(fault: Fault) = "tools:fault:${fault.name}"
+
+@Composable
 private fun ResetSlip(enabled: Boolean, onReset: () -> Unit) {
     var confirming by rememberSaveable { mutableStateOf(false) }
     Slip(Modifier.fillMaxWidth()) {
@@ -351,3 +444,7 @@ const val TOOLS_SCENARIO_PROGRESS_TAG = "tools:scenario-progress"
 const val TOOLS_SCENARIO_PROBLEM_TAG = "tools:scenario-problem"
 const val TOOLS_SCENARIO_STEP_TAG = "tools:scenario-step"
 const val TOOLS_SCENARIO_PLAY_TAG = "tools:scenario-play"
+const val TOOLS_FAULTS_CLEAR_TAG = "tools:faults-clear"
+const val TOOLS_OPERATION_TAG = "tools:operation"
+const val TOOLS_OPERATIONS_CHECK_TAG = "tools:operations-check"
+const val TOOLS_EXPORT_TAG = "tools:export"

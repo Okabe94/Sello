@@ -32,6 +32,9 @@ commands, so Recibo and Resumen grow exactly as they would by hand.
 | `g01@1` · G01 | 7 | 1–3 Oct 2026: cumulative 10.000/25.000/30.000, 70.000 left of 100.000; income 200.000, so 170.000 net and 100.000 unassigned |
 | `fin-de-mes@1` · Fin de mes y de año | 12 | Comida over its 50.000 on 31 Oct, a new month on 1 Nov, Ocio with no limit, 31 Dec → 1 Jan |
 | `seis-meses@1` · Seis meses | 67 | May–Oct 2026, a salary and six seeded expenses a month: the month-by-month columns grow |
+| `bordes@1` · Bordes | 10 | A double submit writes once; an edit of an old version is refused (`VersionConflict`); a deletion replaced by a later one cannot be undone (`UndoExpired`); an amount past the maximum never reaches a command (`AboveMaximum`) |
+
+A step may expect a rejection (`Expect`); meeting it is a pass, anything else stops.
 
 - **Cargar** (load), after a confirmation, erases the sandbox and restarts it at the
   scenario's start date and zone. Loading it again replays it from the beginning.
@@ -49,6 +52,26 @@ commands, so Recibo and Resumen grow exactly as they would by hand.
   financial data cannot contain it.
 - A scenario is Kotlin in `devtools/Scenarios.kt`. Changing its steps or seed means
   a new `version`.
+
+## Faults, operations and the diagnostic
+
+Only in the sandbox, the tools' **Fallos** section arms a fault for the next time it can
+fire; each tap adds one, **Quitar fallos** clears them, and a restart or profile switch
+drops them because they live only in memory.
+
+| Fault | What happens | What it shows |
+| --- | --- | --- |
+| Lectura fallida | Recibo and Resumen get one failed read with the last good snapshot | The error with the last good figures, never zero; retry reads again |
+| Respuesta perdida tras guardar | The write commits; its caller is told "unknown" | The screen looks the operation up and finds its receipt; nothing is written twice |
+| Interrupción tras guardar | The write commits; its caller's work is cancelled | Recovery by the saved operation when the screen opens again |
+| Falla antes de guardar | Nothing is written; the caller is told "unknown" | The lookup finds no receipt. This is a simulated boundary failure: it proves nothing about how a transaction rolls back, which the real-Room command tests in `:data` cover |
+
+**Operaciones** lists this process's writes as their callers were told about them, the
+simulated fault if any, and, after **Comprobar en almacenamiento**, what storage holds
+through the same receipt lookups the screens use. Nothing here writes or changes a
+receipt. **Exportar diagnóstico** opens the share sheet with plain text: the session
+(date, zone, scenario, step), the faults armed and each operation's ID, kind, what it
+was told and what storage holds. It carries no category name, note or amount.
 
 ## Rules it keeps
 
@@ -73,7 +96,9 @@ commands, so Recibo and Resumen grow exactly as they would by hand.
   `Fenced*Commands`, and in the sandbox binds a `ControlledFinancialClock`.
 - `devtools/` (debug only): `SandboxSession` and its store, `WriteFence`,
   `SandboxTime`, `SandboxProfiles` (enter, leave, reset, load, restart),
-  `Scenario`/`Scenarios`, `ScenarioRunner`, `SandboxBadges` and `ToolsActivity`.
+  `Scenario`/`Scenarios`, `ScenarioRunner`, `DebugFaults`, `Faulty*` wrappers,
+  `OperationLog`, `OperationInspector`, `SandboxBadges` and `ToolsActivity`. In the
+  sandbox each write meets its fault first, then the fence.
 - `VariantComposition.newDataZone` lets a loaded scenario create the sandbox in its own
   zone; release returns none.
 - `:app:assembleRelease` is finalized by `verifyReleaseHasNoDeveloperTools`, which reads

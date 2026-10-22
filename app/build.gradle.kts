@@ -93,7 +93,10 @@ val verifyReleaseHasNoDeveloperTools by tasks.registering {
             "ToolsActivity",
             "sandbox_badge",
             "tools_reset",
-            "Sello Herramientas"
+            "Sello Herramientas",
+            "SimulatedFault",
+            "tools_faults_heading",
+            "Sello sandbox diagnostic"
         )
         val apks = apkDirectory.get().walkTopDown().filter { it.extension == "apk" }.toList()
         check(apks.isNotEmpty()) { "no APK in ${apkDirectory.get()}" }

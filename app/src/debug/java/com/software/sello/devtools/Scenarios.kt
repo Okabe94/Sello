@@ -2,8 +2,12 @@ package com.software.sello.devtools
 
 import com.software.sello.devtools.ScenarioStep.AdvanceTo
 import com.software.sello.devtools.ScenarioStep.Category
+import com.software.sello.devtools.ScenarioStep.DeleteExpense
+import com.software.sello.devtools.ScenarioStep.EditExpense
 import com.software.sello.devtools.ScenarioStep.Expense
 import com.software.sello.devtools.ScenarioStep.Income
+import com.software.sello.devtools.ScenarioStep.Repeat
+import com.software.sello.devtools.ScenarioStep.UndoDelete
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -101,7 +105,35 @@ object Scenarios {
         )
     }
 
-    val all: List<Scenario> = listOf(G01, MonthAndYearEnds, SixMonths)
+    /**
+     * Edges, each through the real commands: a double submit writes once, an edit of an
+     * old version is refused, a deletion replaced by a later one can no longer be
+     * undone, and an amount past the entry maximum never reaches a command.
+     */
+    val Edges = Scenario(
+        id = "bordes",
+        version = 1,
+        seed = 1,
+        zone = Bogota,
+        start = LocalDate.of(2026, 10, 10),
+        title = "Bordes",
+        summary = "Doble envío, edición de una versión vieja, deshacer reemplazado y un " +
+            "monto fuera de rango.",
+        steps = listOf(
+            Category("comida", "Comida", "restaurant", 100_000),
+            Expense("comida", 10_000),
+            Repeat(of = 1),
+            EditExpense(of = 1, pesos = 12_000, version = 0, Expect.Rejected("VersionConflict")),
+            EditExpense(of = 1, pesos = 12_000, version = 1),
+            Expense("comida", 5_000),
+            DeleteExpense(of = 1, version = 2),
+            DeleteExpense(of = 5, version = 1),
+            UndoDelete(of = 6, Expect.Rejected("UndoExpired")),
+            Expense("comida", 1_000_000_000_000L, expect = Expect.InvalidInput)
+        )
+    )
+
+    val all: List<Scenario> = listOf(G01, MonthAndYearEnds, SixMonths, Edges)
 
     fun find(key: String?): Scenario? = all.firstOrNull { it.key == key }
 }

@@ -4695,7 +4695,7 @@ names expected new test behavior, not pretend pre-existing test classes.
 1006,Epic,SELLO-E06 — Debug live-testing sandbox,"Local ID: SELLO-E06
 Increment: MVP
 Goal: Explore time-sensitive financial behavior safely through the actual app pipeline.
-Exit: Isolated controllable dates, reproducible histories/graphs, inspectable receipts and restart/failure scenarios; no tooling in customer release.",,Highest,In Progress,sello-e06
+Exit: Isolated controllable dates, reproducible histories/graphs, inspectable receipts and restart/failure scenarios; no tooling in customer release.",,Highest,Done,sello-e06
 24,Task,SELLO-024 — Create isolated sandbox sessions and financial time controls,"Local ID: SELLO-024
 Epic: SELLO-E06
 Increment: MVP
@@ -5255,7 +5255,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-020, SELLO-021, SELLO-023, SELLO-026, SELLO-004
 - **Gate:** G2
 
@@ -5315,6 +5315,49 @@ MVP financial workflows. Read the example corpus, architecture §9 and guide's
 Create/run the named TemporalScenarioCorpusTest and scenario host tests, then G2.
 Follow published replay instructions from a fresh debug sandbox and from saved
 checkpoint. Evidence lists every scenario result and expected/actual values, not one green summary.
+
+### Delivery evidence
+
+- **Revision:** tested snapshot is the `sello-027-temporal-corpus` working tree on `main`
+  at `def067f`, uncommitted; it is identified exactly by the retained input fingerprint
+  below. The commit and pull request follow this evidence; no claim is made that the
+  gate tested a clean commit. With this ticket the E06 epic is proposed Done.
+- **Decisions:** the owner chose, on 2026-10-22, that a finished live run compares its
+  expected figures with the real snapshots and shows each one, and that the leap-year
+  scenario is included with hand-derived figures labelled as not approved.
+- **Requirement mapping:** `docs/testing/sandbox-scenarios.md` lists nine scenarios
+  (ID, version, seed, steps, start and zone, expected figures with sources, replay from
+  fresh and from a checkpoint, owning test), the extension process and the recurrence
+  obligation (production run-due/catch-up use case with created/skipped/failed/pending
+  results and separate WorkManager tests; no scheduling dependency added). New steps
+  `SetDefaultLimit`, `SetMonthLimit`, `Archive`, backdated `Expense` and `Verify`
+  (reads the real `MonthlySnapshots`/`ResumenSnapshots`). New scenarios: leap year
+  (by hand), skipped months (H03/H04), past limits (H05, H01, H02), archived category
+  (AR01/AR02) and income allocation (I01/I02); G01 and month/year ends gained checks
+  (versions 2). Restart and monotonic undo under time stepping stay covered by
+  `TimeControlsJourneyTest`.
+- **Red / Green:** `TemporalScenarioCorpusTest` passed all 37 figures across nine
+  scenarios, fresh and resumed, with identical receipts, expenses, incomes, categories
+  and limits; setting I02's expected unassigned value to 0 (a clamped result) turned
+  it red with `✗ sin asignar 2026-11: esperado 0, real -50.000 (I02)`. Host tests check
+  every scenario is in the corpus document, ends with a sourced check and scripts the
+  right category versions.
+- **Gate results:** `./scripts/verify-ticket SELLO-027 --retain` passed all six checks.
+  Host: 570 tests (3 new); device: 617 tests (1 new); zero failures, errors or skips.
+  Lint had zero errors and the same 33 warnings as before, none in changed code; the
+  release check still finds no developer tools in the release APK.
+- **Quality run:** run 20261022T142158Z-e862852d; SELLO-027 G2 passed; HEAD def067f, inputs sha256 d30317bed5f7; report docs/planning/mvp/quality-reports/SELLO-027.json sha256 71cbce24fa3461093ca295d7c3331ecc26bbdf644e09e9f7d6aceee9be63e3f9
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
+  (320 × 640dp), serial `emulator-5582`. Every check line of the corpus run is in
+  [corpus-run.txt](../../../testing/evidence/SELLO-027/corpus-run.txt); a live G01 run in
+  the tools showed ""4 de 4 cifras coinciden""
+  ([screenshot](../../../testing/evidence/SELLO-027/g01-live.png)). No physical device or
+  personal data was used; no hosted CI run is claimed.
+- **Review:** executor self-review covered independent expected values, fresh-versus-
+  resumed equality, the recurrence boundary and release exclusion. Done is proposed by
+  this ticket's pull request, together with the E06 epic; its merge is the designated
+  owner acceptance under `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass
+  is claimed.
 
 Shared definition of done and gates:
 
@@ -5377,7 +5420,7 @@ Use the environment from [setup](../../development/setup.md).
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1006,High,Backlog,sello-027
+",1006,High,Done,sello-027
 1007,Epic,"SELLO-E07 — Backup, restore, reset and privacy","Local ID: SELLO-E07
 Increment: MVP
 Goal: Ship a local financial app whose data can be recovered and deliberately removed.

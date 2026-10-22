@@ -202,11 +202,11 @@ class ScenarioReplayTest {
         load(Scenarios.G01)
         rule.setContent { SelloTheme(reducedMotion = true) { ToolsScreen(checkNotNull(tools)) } }
         val progress = rule.onNodeWithTag(TOOLS_SCENARIO_PROGRESS_TAG)
-        progress.performScrollTo().assertTextEquals("Paso 1 de 7")
+        progress.performScrollTo().assertTextEquals("Paso 1 de 8")
 
         rule.onNodeWithTag(TOOLS_SCENARIO_STEP_TAG).performScrollTo().performClick()
         rule.waitUntil(5_000) { runner.state.value.next == 1 }
-        progress.assertTextEquals("Paso 2 de 7")
+        progress.assertTextEquals("Paso 2 de 8")
 
         rule.onNodeWithTag(TOOLS_SCENARIO_PLAY_TAG).performScrollTo().performClick()
         rule.waitUntil(10_000) { runner.state.value.next >= 3 }

@@ -22,7 +22,7 @@ class ScenarioDefinitionTest {
             }
         }
         // A new version of a scenario is a new set of operations.
-        val other = Scenarios.G01.copy(version = 2)
+        val other = Scenarios.G01.copy(version = Scenarios.G01.version + 1)
         assertTrue(Scenarios.G01.operation(1) != other.operation(1))
     }
 
@@ -61,6 +61,14 @@ class ScenarioDefinitionTest {
                         assertTrue(
                             scenario.steps[step.of] is ScenarioStep.DeleteExpense && step.of < index
                         )
+
+                    is ScenarioStep.SetDefaultLimit -> assertTrue(step.category in categories)
+
+                    is ScenarioStep.SetMonthLimit -> assertTrue(step.category in categories)
+
+                    is ScenarioStep.Archive -> assertTrue(step.category in categories)
+
+                    is ScenarioStep.Verify -> assertTrue(step.checks.isNotEmpty())
                 }
             }
         }
@@ -92,5 +100,43 @@ class ScenarioDefinitionTest {
             YearMonth.from(it.date)
         }.toSet()
         assertEquals((5..10).map { YearMonth.of(2026, it) }.toSet(), months + YearMonth.of(2026, 5))
+    }
+
+    @Test
+    fun scriptedCategoryVersionsFollowTheChangesBeforeThem() {
+        // A category starts at version 1 and each limit change or archive adds one.
+        Scenarios.all.forEach { scenario ->
+            val versions = mutableMapOf<String, Long>()
+            fun changed(category: String, version: Long, step: ScenarioStep) {
+                assertEquals("${scenario.key} $step", versions[category], version)
+                versions[category] = version + 1
+            }
+            scenario.steps.forEach { step ->
+                when (step) {
+                    is Category -> versions[step.key] = 1
+                    is ScenarioStep.SetDefaultLimit -> changed(step.category, step.version, step)
+                    is ScenarioStep.SetMonthLimit -> changed(step.category, step.version, step)
+                    is ScenarioStep.Archive -> changed(step.category, step.version, step)
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+    @Test
+    fun everyScenarioEndsByCheckingItsFiguresAndEachFigureNamesItsSource() {
+        val unchecked = setOf("seis-meses", "bordes")
+        Scenarios.all.filter { it.id !in unchecked }.forEach { scenario ->
+            assertTrue(scenario.key, scenario.steps.last() is ScenarioStep.Verify)
+        }
+        Scenarios.all.flatMap { it.steps }.filterIsInstance<ScenarioStep.Verify>()
+            .flatMap { it.checks }
+            .forEach { assertTrue("$it", it.source.isNotBlank()) }
+    }
+
+    @Test
+    fun theCorpusDocumentListsEveryScenarioAndItsVersion() {
+        val corpus = java.io.File("../docs/testing/sandbox-scenarios.md").readText()
+        Scenarios.all.forEach { assertTrue(it.key, "`${it.key}`" in corpus) }
     }
 }

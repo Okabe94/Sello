@@ -32,8 +32,28 @@ data class Scenario(
             .toString()
 }
 
+/**
+ * What a step must lead to for the scenario to go on. A rejection the step expects is
+ * a pass, so edge cases can be scripted; anything else stops the run and says why.
+ */
+sealed interface Expect {
+    /** Committed, now or by an earlier try of the same operation. */
+    data object Saved : Expect
+
+    /** Committed by an earlier submission of the same operation; nothing new written. */
+    data object AlreadySaved : Expect
+
+    /** Refused by the command with this reason, such as `VersionConflict`. */
+    data class Rejected(val reason: String) : Expect
+
+    /** Refused by input validation, so no command was sent at all. */
+    data object InvalidInput : Expect
+}
+
 /** One action of a scenario. Amounts are whole pesos; entries are dated on the sandbox's day. */
 sealed interface ScenarioStep {
+    val expect: Expect get() = Expect.Saved
+
     /** Moves the sandbox's date forward to [date]. */
     data class AdvanceTo(val date: LocalDate) : ScenarioStep
 
@@ -41,9 +61,36 @@ sealed interface ScenarioStep {
     data class Category(val key: String, val name: String, val icon: String, val limit: Long?) :
         ScenarioStep
 
-    data class Expense(val category: String, val pesos: Long, val note: String? = null) :
-        ScenarioStep
+    /** [pesos] may be beyond what an entry allows, to script [Expect.InvalidInput]. */
+    data class Expense(
+        val category: String,
+        val pesos: Long,
+        val note: String? = null,
+        override val expect: Expect = Expect.Saved
+    ) : ScenarioStep
 
     /** [source] is a stored income source key, such as `salary`. */
     data class Income(val pesos: Long, val source: String) : ScenarioStep
+
+    /** Submits step [of] again: the same operation and input, as a double tap would. */
+    data class Repeat(val of: Int, override val expect: Expect = Expect.AlreadySaved) :
+        ScenarioStep
+
+    /** Changes the expense step [of] recorded to [pesos], as read at [version]. */
+    data class EditExpense(
+        val of: Int,
+        val pesos: Long,
+        val version: Long,
+        override val expect: Expect = Expect.Saved
+    ) : ScenarioStep
+
+    /** Deletes the expense step [of] recorded, as read at [version]. */
+    data class DeleteExpense(
+        val of: Int,
+        val version: Long,
+        override val expect: Expect = Expect.Saved
+    ) : ScenarioStep
+
+    /** Undoes the deletion made by step [of]. */
+    data class UndoDelete(val of: Int, override val expect: Expect = Expect.Saved) : ScenarioStep
 }

@@ -9,7 +9,16 @@ package com.software.sello.devtools
 class SandboxTools(
     val profiles: SandboxProfiles,
     val time: SandboxTime?,
-    val scenarios: ScenarioRunner? = null
+    val scenarios: ScenarioRunner? = null,
+    val diagnostics: SandboxDiagnostics? = null
+)
+
+/** The sandbox's faults, the writes it has seen, and how to check them in storage. */
+class SandboxDiagnostics(
+    val faults: DebugFaults,
+    val log: OperationLog,
+    val inspector: OperationInspector,
+    val session: () -> SandboxSession
 )
 
 object SandboxRegistry {

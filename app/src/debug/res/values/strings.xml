@@ -34,6 +34,13 @@
     <string name="tools_reset">Reiniciar sandbox</string>
     <string name="tools_reset_confirm">Sí, borrar el sandbox</string>
     <string name="tools_reset_cancel">Cancelar</string>
+    <string name="tools_faults_heading">Fallos</string>
+    <string name="tools_faults_note">Cada toque arma el fallo una vez más. Solo cambian lo que se le dice a la pantalla o si se intenta escribir; nunca una cifra ni un comprobante. Un fallo antes de guardar no prueba nada sobre cómo se deshace una transacción. Se borran al reiniciar la app.</string>
+    <string name="tools_faults_clear">Quitar fallos</string>
+    <string name="tools_operations_heading">Operaciones</string>
+    <string name="tools_operations_none">Aún no hay operaciones en esta sesión.</string>
+    <string name="tools_operations_check">Comprobar en almacenamiento</string>
+    <string name="tools_export">Exportar diagnóstico</string>
     <string name="tools_scenarios_heading">Escenarios</string>
     <string name="tools_scenarios_note">Historias sintéticas que se anotan paso a paso por los mismos caminos que usa la app. Cargar uno borra el sandbox y empieza en su fecha y zona.</string>
     <string name="tools_scenario_load">Cargar</string>

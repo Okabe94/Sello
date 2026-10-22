@@ -5,10 +5,19 @@ import android.content.Context
 import com.software.sello.data.FinancialStorage
 import com.software.sello.data.StorageNames
 import com.software.sello.devtools.ControlledFinancialClock
+import com.software.sello.devtools.DebugFaults
+import com.software.sello.devtools.FaultyCategoryCommands
+import com.software.sello.devtools.FaultyExpenseCommands
+import com.software.sello.devtools.FaultyIncomeCommands
+import com.software.sello.devtools.FaultyMonthlySnapshots
+import com.software.sello.devtools.FaultyResumenSnapshots
 import com.software.sello.devtools.FencedCategoryCommands
 import com.software.sello.devtools.FencedExpenseCommands
 import com.software.sello.devtools.FencedIncomeCommands
+import com.software.sello.devtools.OperationInspector
+import com.software.sello.devtools.OperationLog
 import com.software.sello.devtools.SandboxBadges
+import com.software.sello.devtools.SandboxDiagnostics
 import com.software.sello.devtools.SandboxProfiles
 import com.software.sello.devtools.SandboxRegistry
 import com.software.sello.devtools.SandboxSession
@@ -22,10 +31,13 @@ import com.software.sello.devtools.WriteFence
 import com.software.sello.devtools.restartApp
 import com.software.sello.domain.model.FinancialProfile
 import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialDay
 import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.ResumenSnapshots
 import com.software.sello.platform.SystemAuditClock
 import com.software.sello.platform.SystemDispatcherProvider
 import java.io.File
@@ -104,12 +116,64 @@ class DebugComposition(
         val saved: () -> Unit = { time?.markChanged() }
         val profiles = SandboxProfiles(store, fence, restart)
         publish(SandboxTools(profiles, time))
+        val faults = DebugFaults()
+        val log = OperationLog()
+        val sandbox = time != null
         return listOf(
             module {
+                // In the sandbox each write meets its fault first, then the fence.
+                single<ExpenseCommands> {
+                    val real = get<FinancialStorage>().expenseCommands(get(), get(), get(), get())
+                    FencedExpenseCommands(
+                        if (sandbox) FaultyExpenseCommands(real, faults, log) else real,
+                        fence,
+                        saved
+                    )
+                }
+                single<IncomeCommands> {
+                    val real = get<FinancialStorage>().incomeCommands(get(), get(), get(), get())
+                    FencedIncomeCommands(
+                        if (sandbox) FaultyIncomeCommands(real, faults, log) else real,
+                        fence,
+                        saved
+                    )
+                }
+                single<CategoryCommands> {
+                    val real = get<FinancialStorage>().categoryCommands(get(), get(), get())
+                    FencedCategoryCommands(
+                        if (sandbox) FaultyCategoryCommands(real, faults, log) else real,
+                        fence,
+                        saved
+                    )
+                }
                 if (time != null) {
                     single<FinancialClock> { time.clock }
+                    single<MonthlySnapshots> {
+                        FaultyMonthlySnapshots(
+                            get<FinancialStorage>().monthlySnapshots(
+                                get(),
+                                get<DispatcherProvider>().default
+                            ),
+                            faults
+                        )
+                    }
+                    single<ResumenSnapshots> {
+                        FaultyResumenSnapshots(
+                            get<FinancialStorage>().resumenSnapshots(
+                                get(),
+                                get<DispatcherProvider>().default
+                            ),
+                            faults
+                        )
+                    }
                     // Built with the graph, on the same fenced commands the screens use.
                     single(createdAtStart = true) {
+                        val diagnostics = SandboxDiagnostics(
+                            faults,
+                            log,
+                            OperationInspector(get(), get(), get()),
+                            store::read
+                        )
                         ScenarioRunner(
                             Scenarios.find(session.scenario),
                             profile.generation,
@@ -121,30 +185,9 @@ class DebugComposition(
                             scope
                         ).also {
                             it.recover()
-                            publish(SandboxTools(profiles, time, it))
+                            publish(SandboxTools(profiles, time, it, diagnostics))
                         }
                     }
-                }
-                single<ExpenseCommands> {
-                    FencedExpenseCommands(
-                        get<FinancialStorage>().expenseCommands(get(), get(), get(), get()),
-                        fence,
-                        saved
-                    )
-                }
-                single<IncomeCommands> {
-                    FencedIncomeCommands(
-                        get<FinancialStorage>().incomeCommands(get(), get(), get(), get()),
-                        fence,
-                        saved
-                    )
-                }
-                single<CategoryCommands> {
-                    FencedCategoryCommands(
-                        get<FinancialStorage>().categoryCommands(get(), get(), get()),
-                        fence,
-                        saved
-                    )
                 }
             }
         )

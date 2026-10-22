@@ -2,11 +2,16 @@ package com.software.sello.devtools
 
 import com.software.sello.devtools.ScenarioStep.AdvanceTo
 import com.software.sello.devtools.ScenarioStep.Category
+import com.software.sello.devtools.ScenarioStep.DeleteExpense
+import com.software.sello.devtools.ScenarioStep.EditExpense
 import com.software.sello.devtools.ScenarioStep.Expense
 import com.software.sello.devtools.ScenarioStep.Income
+import com.software.sello.devtools.ScenarioStep.Repeat
+import com.software.sello.devtools.ScenarioStep.UndoDelete
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryName
+import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.IconKey
 import com.software.sello.domain.model.IncomeSource
 import com.software.sello.domain.model.Money
@@ -20,10 +25,13 @@ import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CreateCategory
 import com.software.sello.domain.port.CreateExpense
 import com.software.sello.domain.port.CreateIncome
+import com.software.sello.domain.port.DeleteExpense as DeleteExpenseCommand
+import com.software.sello.domain.port.EditExpense as EditExpenseCommand
 import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.IncomeCommandOutcome
 import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.RestoreExpense
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -102,7 +110,11 @@ class ScenarioRunner(
                     describe(step),
                     loaded.operation(index).takeIf { step !is AdvanceTo },
                     receipt?.revision,
-                    if (step is AdvanceTo) DATE_SET else "Guardado"
+                    when {
+                        step is AdvanceTo -> DATE_SET
+                        receipt != null -> "Guardado"
+                        else -> "Sin escritura, como se esperaba"
+                    }
                 )
             }
             mutable.update { it.copy(log = records) }
@@ -118,6 +130,12 @@ class ScenarioRunner(
         val step = loaded.steps[index]
         val done = try {
             run(loaded, index, step)
+        } catch (interrupted: SimulatedInterruption) {
+            Result(
+                null,
+                "Interrumpido tras guardar (simulado); el siguiente paso lo intenta con la misma operación",
+                moved = false
+            )
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
@@ -165,106 +183,221 @@ class ScenarioRunner(
 
     private class Result(val revision: Long?, val text: String, val moved: Boolean)
 
-    private suspend fun run(loaded: Scenario, index: Int, step: ScenarioStep): Result {
+    /** What a step met, before it is judged against what it expects. */
+    private sealed interface Observed {
+        data class Committed(val receipt: OperationReceipt, val replayed: Boolean) : Observed
+
+        data class Rejected(val reason: String) : Observed
+
+        data object Unknown : Observed
+
+        data class Invalid(val reason: String) : Observed
+
+        data object DateSet : Observed
+
+        data class Stop(val why: String) : Observed
+    }
+
+    private fun judge(expect: Expect, seen: Observed): Result = when (seen) {
+        is Observed.Committed -> when {
+            expect == Expect.Saved || (expect == Expect.AlreadySaved && seen.replayed) ->
+                Result(
+                    seen.receipt.revision,
+                    if (seen.replayed) "Ya estaba guardado" else "Guardado",
+                    true
+                )
+
+            else -> Result(
+                seen.receipt.revision,
+                "Se esperaba ${expected(expect)} y se guardó",
+                false
+            )
+        }
+
+        is Observed.Rejected ->
+            if (expect is Expect.Rejected && expect.reason == seen.reason) {
+                Result(null, "Rechazado, como se esperaba: ${seen.reason}", true)
+            } else {
+                Result(null, "Rechazado: ${seen.reason}", false)
+            }
+
+        is Observed.Invalid ->
+            if (expect == Expect.InvalidInput) {
+                Result(null, "No se envió, como se esperaba: ${seen.reason}", true)
+            } else {
+                Result(null, "Dato no válido: ${seen.reason}", false)
+            }
+
+        Observed.Unknown -> Result(
+            null,
+            "No se sabe si se guardó; el siguiente paso lo intenta con la misma operación",
+            false
+        )
+
+        Observed.DateSet -> Result(null, DATE_SET, true)
+
+        is Observed.Stop -> Result(null, seen.why, false)
+    }
+
+    private fun expected(expect: Expect) = when (expect) {
+        Expect.Saved -> "guardar"
+        Expect.AlreadySaved -> "que ya estuviera guardado"
+        is Expect.Rejected -> "rechazo ${expect.reason}"
+        Expect.InvalidInput -> "un dato no válido"
+    }
+
+    private suspend fun run(loaded: Scenario, index: Int, step: ScenarioStep): Result =
+        judge(step.expect, observe(loaded, index, step))
+
+    private suspend fun observe(loaded: Scenario, index: Int, step: ScenarioStep): Observed {
         val operation = OperationId.of(loaded.operation(index)).value()
         val today = time.clock.today.value.date
         return when (step) {
             is AdvanceTo -> when {
-                step.date < today -> Result(null, "La fecha del escenario va hacia atrás", false)
+                step.date < today -> Observed.Stop("La fecha del escenario va hacia atrás")
 
-                step.date == today -> Result(null, DATE_SET, true)
+                step.date == today -> Observed.DateSet
 
                 else -> when (time.jumpTo(step.date)) {
-                    DateChange.Moved -> Result(null, DATE_SET, true)
+                    DateChange.Moved -> Observed.DateSet
 
                     DateChange.RefusedBeforeSavedHistory ->
-                        Result(null, "La fecha no puede volver atrás", false)
+                        Observed.Stop("La fecha no puede volver atrás")
                 }
             }
 
-            is Category -> categories.submit(
-                CreateCategory(
-                    operation,
-                    generation,
-                    CategoryName.of(step.name).value(),
-                    IconKey.of(step.icon).value(),
-                    step.limit?.let { BudgetLimit.finite(Money.cop(it)).value() }
-                        ?: BudgetLimit.Unlimited
-                )
-            ).let { outcome ->
-                when (outcome) {
-                    is CategoryCommandOutcome.Committed -> {
-                        categoryIds[step.key] = outcome.change.categoryId
-                        saved(outcome.change.receipt, outcome.replayed)
-                    }
-
-                    is CategoryCommandOutcome.Rejected -> refused(outcome.reason)
-
-                    is CategoryCommandOutcome.OutcomeUnknown -> unknown()
-                }
-            }
+            is Category -> category(operation, step)
 
             is Expense -> {
                 val category = categoryId(loaded, step.category)
-                    ?: return Result(null, "No existe la categoría «${step.category}»", false)
-                expenses.create(
-                    CreateExpense(
+                    ?: return Observed.Stop("No existe la categoría «${step.category}»")
+                val amount = when (val checked = TransactionAmount.of(Money.cop(step.pesos))) {
+                    is Outcome.Success -> checked.value
+                    is Outcome.Failure -> return Observed.Invalid(name(checked.error))
+                }
+                expense(
+                    expenses.create(
+                        CreateExpense(
+                            operation,
+                            generation,
+                            category,
+                            amount,
+                            today,
+                            Note.of(step.note).value()
+                        )
+                    )
+                )
+            }
+
+            is Income -> when (
+                val outcome = incomes.create(
+                    CreateIncome(
                         operation,
                         generation,
-                        category,
                         TransactionAmount.of(Money.cop(step.pesos)).value(),
+                        IncomeSource.of(step.source, null).value(),
                         today,
-                        Note.of(step.note).value()
+                        null
                     )
-                ).let { outcome ->
-                    when (outcome) {
-                        is ExpenseCommandOutcome.Committed ->
-                            saved(outcome.expense.receipt, outcome.replayed)
-
-                        is ExpenseCommandOutcome.Rejected -> refused(outcome.reason)
-
-                        is ExpenseCommandOutcome.OutcomeUnknown -> unknown()
-                    }
-                }
-            }
-
-            is Income -> incomes.create(
-                CreateIncome(
-                    operation,
-                    generation,
-                    TransactionAmount.of(Money.cop(step.pesos)).value(),
-                    IncomeSource.of(step.source, null).value(),
-                    today,
-                    null
                 )
-            ).let { outcome ->
-                when (outcome) {
-                    is IncomeCommandOutcome.Committed -> saved(
-                        outcome.income.receipt,
-                        outcome.replayed
-                    )
+            ) {
+                is IncomeCommandOutcome.Committed ->
+                    Observed.Committed(outcome.income.receipt, outcome.replayed)
 
-                    is IncomeCommandOutcome.Rejected -> refused(outcome.reason)
+                is IncomeCommandOutcome.Rejected -> Observed.Rejected(name(outcome.reason))
 
-                    is IncomeCommandOutcome.OutcomeUnknown -> unknown()
-                }
+                is IncomeCommandOutcome.OutcomeUnknown -> Observed.Unknown
             }
+
+            // The same operation and the same input as the step it names.
+            is Repeat -> when (val target = loaded.steps[step.of]) {
+                is Repeat, is AdvanceTo -> Observed.Stop("Solo se repite un paso que escribe")
+                else -> observe(loaded, step.of, target)
+            }
+
+            is EditExpense -> {
+                val recorded = recordedExpense(loaded, step.of)
+                    ?: return Observed.Stop("El paso ${step.of + 1} no registró un gasto")
+                val original = loaded.steps[step.of] as Expense
+                expense(
+                    expenses.edit(
+                        EditExpenseCommand(
+                            operation,
+                            generation,
+                            recorded,
+                            step.version,
+                            checkNotNull(categoryId(loaded, original.category)),
+                            TransactionAmount.of(Money.cop(step.pesos)).value(),
+                            today,
+                            Note.of(original.note).value()
+                        )
+                    )
+                )
+            }
+
+            is DeleteExpense -> {
+                val recorded = recordedExpense(loaded, step.of)
+                    ?: return Observed.Stop("El paso ${step.of + 1} no registró un gasto")
+                expense(
+                    expenses.delete(
+                        DeleteExpenseCommand(operation, generation, recorded, step.version)
+                    )
+                )
+            }
+
+            is UndoDelete -> expense(
+                expenses.restore(
+                    RestoreExpense(
+                        operation,
+                        generation,
+                        OperationId.of(loaded.operation(step.of)).value()
+                    )
+                )
+            )
         }
     }
 
-    private fun saved(receipt: OperationReceipt, replayed: Boolean) = Result(
-        receipt.revision,
-        if (replayed) "Ya estaba guardado" else "Guardado",
-        moved = true
-    )
+    private suspend fun category(operation: OperationId, step: Category): Observed = when (
+        val outcome = categories.submit(
+            CreateCategory(
+                operation,
+                generation,
+                CategoryName.of(step.name).value(),
+                IconKey.of(step.icon).value(),
+                step.limit?.let { BudgetLimit.finite(Money.cop(it)).value() }
+                    ?: BudgetLimit.Unlimited
+            )
+        )
+    ) {
+        is CategoryCommandOutcome.Committed -> {
+            categoryIds[step.key] = outcome.change.categoryId
+            Observed.Committed(outcome.change.receipt, outcome.replayed)
+        }
 
-    private fun refused(reason: Any) = Result(null, "Rechazado: $reason", moved = false)
+        is CategoryCommandOutcome.Rejected -> Observed.Rejected(name(outcome.reason))
 
-    private fun unknown() = Result(
-        null,
-        "No se sabe si se guardó; el siguiente paso lo intenta con la misma operación",
-        moved = false
-    )
+        is CategoryCommandOutcome.OutcomeUnknown -> Observed.Unknown
+    }
+
+    private fun expense(outcome: ExpenseCommandOutcome): Observed = when (outcome) {
+        is ExpenseCommandOutcome.Committed -> Observed.Committed(
+            outcome.expense.receipt,
+            outcome.replayed
+        )
+
+        is ExpenseCommandOutcome.Rejected -> Observed.Rejected(name(outcome.reason))
+
+        is ExpenseCommandOutcome.OutcomeUnknown -> Observed.Unknown
+    }
+
+    private fun name(reason: Any): String = reason::class.simpleName ?: reason.toString()
+
+    /** The expense the expense step [of] recorded, read back from its receipt. */
+    private suspend fun recordedExpense(loaded: Scenario, of: Int): ExpenseId? {
+        if (loaded.steps.getOrNull(of) !is Expense) return null
+        val found = expenses.find(OperationId.of(loaded.operation(of)).value())
+        return (found as? Outcome.Success)?.value?.expenseId
+    }
 
     /** The identity the category step named [key] received, read back from its receipt. */
     private suspend fun categoryId(loaded: Scenario, key: String): CategoryId? {
@@ -284,9 +417,17 @@ class ScenarioRunner(
         val operation = OperationId.of(loaded.operation(index)).value()
         return when (step) {
             is AdvanceTo -> null
+
             is Category -> (categories.find(operation) as? Outcome.Success)?.value?.receipt
+
             is Expense -> (expenses.find(operation) as? Outcome.Success)?.value?.receipt
+
             is Income -> (incomes.find(operation) as? Outcome.Success)?.value?.receipt
+
+            is Repeat -> receiptOf(loaded, step.of, loaded.steps[step.of])
+
+            is EditExpense, is DeleteExpense, is UndoDelete ->
+                (expenses.find(operation) as? Outcome.Success)?.value?.receipt
         }
     }
 
@@ -308,6 +449,17 @@ class ScenarioRunner(
             is Expense -> "Gasto ${pesos(step.pesos)} en ${step.category}"
 
             is Income -> "Ingreso ${pesos(step.pesos)} (${step.source})"
+
+            is Repeat -> "Repetir el paso ${step.of + 1}"
+
+            is EditExpense ->
+                "Editar el gasto del paso ${step.of + 1} a ${pesos(
+                    step.pesos
+                )} (versión ${step.version})"
+
+            is DeleteExpense -> "Borrar el gasto del paso ${step.of + 1} (versión ${step.version})"
+
+            is UndoDelete -> "Deshacer el borrado del paso ${step.of + 1}"
         }
 
         private fun pesos(amount: Long): String =

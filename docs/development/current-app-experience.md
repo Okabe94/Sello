@@ -325,8 +325,8 @@ reduced motion.
 
 The catalog uses real design-system components but no production screens or graph.
 Debug-only Compose previews cover income and Resumen screen states in `:app`. There
-is no live sandbox screen yet; the debug source set has only a controllable financial
-clock and previews.
+is a debug-only sandbox with its own data and financial time controls, opened from the
+**Sello Herramientas** launcher ([sandbox](sandbox.md)); seeded histories come later.
 
 ## Where to make different kinds of UI changes
 
@@ -354,7 +354,8 @@ beside each feature.
 - Category and transaction forms are full-screen flows, not sheets or side panels.
 - The month and date pickers are Material 3 dialogs and sheets with Sello colors, not
   custom calendar components.
-- Backup/restore/reset and a real debug sandbox are planned but not routed.
+- Backup/restore/reset are planned but not routed. The debug sandbox is a separate
+  debug-only activity, not a route in the app.
 - There is no production network permission, account, sync, notification or cloud UI.
 
 Changing these may be desirable, but the change must be explicit because tests and

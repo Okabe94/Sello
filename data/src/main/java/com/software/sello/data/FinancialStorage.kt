@@ -4,6 +4,7 @@ import android.content.Context
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.local.setAside
+import com.software.sello.data.preferences.PREFERENCES_FILE
 import com.software.sello.data.repository.RoomCategoryCommands
 import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
@@ -108,26 +109,48 @@ class FinancialStorage internal constructor(
 }
 
 /**
- * Prepares the app's financial database without touching the file yet; the first
- * read or write opens it, creating it on first use. [queries] must carry the
+ * The private files one set of data lives in: its database and its preferences. The
+ * app uses [Normal]; a debug sandbox keeps its own set beside it, never sharing a file.
+ */
+data class StorageNames(val database: String, val preferences: String) {
+    init {
+        require(database.endsWith(".db")) { "a database file name ends in .db" }
+    }
+
+    /** Where [database] is kept when it cannot be opened and the person starts again. */
+    val setAsideDatabase: String get() = database.removeSuffix(".db") + "-unreadable.db"
+
+    companion object {
+        val Normal = StorageNames(SelloDatabase.FILE_NAME, PREFERENCES_FILE)
+    }
+}
+
+/**
+ * Prepares the financial database named in [names] without touching the file yet; the
+ * first read or write opens it, creating it on first use. [queries] must carry the
  * dispatcher database work runs on.
  */
 fun openFinancialStorage(
     context: Context,
     queries: CoroutineContext,
-    audit: AuditClock
+    audit: AuditClock,
+    names: StorageNames = StorageNames.Normal
 ): FinancialStorage {
-    val database = openSelloDatabase(context, queries)
+    val database = openSelloDatabase(context, queries, names.database)
     return FinancialStorage(database, RoomFinancialProfileStore(database, audit))
 }
 
 /**
  * For a database file that cannot be opened, once its storage is closed: moves it to
- * `sello-unreadable.db` in the same private folder so the next open starts an empty
- * one. The file is kept, not deleted, because a file this build cannot read may be
- * intact: one written by a newer version reads again once the app is updated.
+ * its set-aside name (`sello-unreadable.db` for the app's own) in the same private
+ * folder so the next open starts an empty one. The file is kept, not deleted, because
+ * a file this build cannot read may be intact: one written by a newer version reads
+ * again once the app is updated.
  */
-fun setAsideFinancialStorage(context: Context): Outcome<Unit, StorageFailure> = setAside(
-    context.getDatabasePath(SelloDatabase.FILE_NAME),
-    context.getDatabasePath(SelloDatabase.SET_ASIDE_FILE_NAME)
+fun setAsideFinancialStorage(
+    context: Context,
+    names: StorageNames = StorageNames.Normal
+): Outcome<Unit, StorageFailure> = setAside(
+    context.getDatabasePath(names.database),
+    context.getDatabasePath(names.setAsideDatabase)
 )

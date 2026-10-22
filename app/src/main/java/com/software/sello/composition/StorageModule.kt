@@ -2,6 +2,7 @@ package com.software.sello.composition
 
 import android.content.Context
 import com.software.sello.data.FinancialStorage
+import com.software.sello.data.StorageNames
 import com.software.sello.data.openFinancialStorage
 import com.software.sello.data.setAsideFinancialStorage
 import com.software.sello.domain.model.FinancialProfile
@@ -39,9 +40,10 @@ fun openStorage(
     context: Context,
     deviceZone: ZoneId,
     dispatchers: DispatcherProvider,
-    audit: AuditClock
+    audit: AuditClock,
+    names: StorageNames = StorageNames.Normal
 ): Outcome<OpenedStorage, StorageFailure> {
-    val storage = openFinancialStorage(context, dispatchers.io, audit)
+    val storage = openFinancialStorage(context, dispatchers.io, audit, names)
     val opened = runBlocking {
         when (val profile = storage.profiles.establish(deviceZone)) {
             is Outcome.Failure -> profile
@@ -58,8 +60,10 @@ fun openStorage(
 }
 
 /** Keeps the file that could not be opened under another name; see `:data`. */
-fun setAsideStorage(context: Context): Outcome<Unit, StorageFailure> =
-    setAsideFinancialStorage(context)
+fun setAsideStorage(
+    context: Context,
+    names: StorageNames = StorageNames.Normal
+): Outcome<Unit, StorageFailure> = setAsideFinancialStorage(context, names)
 
 /** Ports backed by the database. Closing the graph closes the database. */
 fun storageModule(storage: FinancialStorage): Module = module {

@@ -50,7 +50,7 @@ The app currently implements Recibo and Resumen tabs, expense and income
 entry/history, category and limit management, corrections with guarded undo,
 persisted appearance/order settings, adaptive navigation and unreadable-storage
 startup recovery. The component catalog is populated. Backup/restore/reset and the
-live-testing sandbox are not yet customer-facing capabilities; see the current app
+live-testing sandbox (debug only) are not customer-facing capabilities; see the current app
 baseline and board for the exact boundary.
 
 ## Local host verification (G1)

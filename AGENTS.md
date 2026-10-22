@@ -82,8 +82,13 @@ even where its text says otherwise. MUST/SHOULD/COULD have the meanings defined 
   changes. Follow [QUALITY_FLOW](docs/planning/mvp/QUALITY_FLOW.md) for profiles,
   evidence and bootstrap exceptions. For ticket completion, run
   `./scripts/verify-ticket <ticket> --retain` and record fresh Quality run evidence
-  before Review/Done. Never downgrade gates, weaken tests, disable checks, apply a
-  blanket warning baseline or claim skipped checks passed.
+  before Review/Done. Default ticket commands run the full assigned gate. For
+  dependency-aware device selection, use `--affected <PR base>` and retain the
+  explicit affected scope; `--gate G2` always forces full device coverage. Pure
+  documentation advancing no ticket uses `--merge-candidate <base>` (G0), never
+  a fabricated ticket or a ticket downgrade. Follow ADR 0014 and QUALITY_FLOW for
+  the selection rules. Never weaken tests, disable checks, apply a blanket warning
+  baseline or describe unselected suites as executed/passed.
 - **MUST** distinguish configured, compiled, executed and passed. Assembly is not a
   device test; rotation is not process-death restoration; CI signing is not upload
   signing. Missing SDK, device or credentials means an incomplete required gate.

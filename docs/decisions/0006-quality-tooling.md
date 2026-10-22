@@ -36,9 +36,13 @@ for report freshness, retention and completion evidence.
 
 ## Hosted checks and verification
 
-[ADR 0009](0009-hosted-gate-scope.md) owns hosted gate selection: G2 for PRs, with
-G1 allowed for documentation-only candidates advancing no ticket; G1 on pushes to
-`main`; G2 nightly or on request. Completion evidence is checked on every run.
+[ADR 0009](0009-hosted-gate-scope.md), amended by
+[ADR 0014](0014-change-aware-quality-gates.md), owns gate selection: G0 for
+eligible documentation, G2 with explicit affected device scope for PR code,
+G1 for code pushes to main, and full G2 nightly/on request. Default local ticket
+runs remain full; `--affected BASE` opts into dependency-aware device selection.
+New report schema v2 records that scope; historical v1 reports stay readable.
+Completion evidence is checked on every run.
 PR and merge permissions are defined in [AGENTS.md](../../AGENTS.md).
 Runner, evidence-validator, architecture and workflow tests live in
 `scripts/quality/`. Commands and failure recovery are in the

@@ -13,7 +13,10 @@ Unticketed work still runs the gates; do not invent a ticket ID to run checks.
 2. Implement within owned boundaries; run meaningful focused red→green tests.
 3. Run `./scripts/verify-ticket SELLO-017`. It MUST derive the minimum G1/G2/G3 profile
    from the canonical ticket, execute required checks and retain a structured report.
-   No downgrade/skip-as-success flag is allowed. Higher verification is permitted.
+   Default ticket commands execute full coverage. `--affected BASE` opts into
+   dependency-aware G2 device scope; `--gate G2` always forces full coverage.
+   The ticket minimum remains mandatory. No manual module selector or
+   skip-as-success flag is allowed. Higher verification is permitted.
 4. Record `Quality run` in the canonical ticket's Delivery evidence: run ID,
    ticket/profile, tested snapshot, outcome and retained artifact reference.
    Validate evidence and regenerate/check the board before opening the pull request.
@@ -89,15 +92,21 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
   bypasses and gate-policy edits in review. Never expose signing secrets to untrusted PRs.
 - **MUST** treat distributed CI parts as incomplete execution, not full-gate or
   retained ticket evidence. The final collector requires all checks/modules for
-  the selected gate, matching commit/inputs/base/event/run/attempt, compatible
+  the selected gate and device scope, matching commit/inputs/base/event/run/attempt, compatible
   toolchains, successful job outcomes and fresh device results without skips.
-  Missing, failed, cancelled, stale or inconsistent parts fail `quality`. Keep
+  Schema-v2 reports must identify full/affected/documents plus base, paths and
+  exact device modules. Unselected suites are not executed/passed; selected suites
+  require fresh results without skips. Historical full schema-v1 reports remain
+  readable. Missing, failed, cancelled, stale or inconsistent parts fail `quality`. Keep
   the underlying part reports, logs and raw results with the full report.
   Validate every selected ticket's prerequisites and gate before executing a
   candidate-wide part; bind the collected report separately to each ticket's
-  current acceptance fingerprint. Normal local ticket/batch execution is unchanged.
-- **SHOULD** offer an affected-area focused command, but it never substitutes for
-  the integrated ticket gate. Additional enforcement plugins/hooks **COULD** improve
+  current acceptance fingerprint. Individual local ticket commands remain full by
+  default; local candidate batches execute each ticket at its minimum gate with
+  derived scope. CI executes the shared candidate gate once.
+- **SHOULD** offer focused task commands for quick feedback; they never substitute
+  for the integrated ticket gate. The approved `--affected BASE` mode is an
+  integrated host gate plus dependency-aware device scope, not an arbitrary test filter. Additional enforcement plugins/hooks **COULD** improve
   feedback; they cannot replace trusted CI or designated review.
 
 ## What is enforced, and by what
@@ -111,16 +120,17 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
   request's own inputs, exactly as one entering Review was.
 - **CI:** the `quality` check runs the same entrypoint and then validates completion
   evidence against the base, on every run. What it executes depends on the event
-  ([ADR 0009](../../decisions/0009-hosted-gate-scope.md)): a pull request's merge
-  commit gets the device gate (G2), or the host gate (G1) when it advances no ticket
-  and changes only documents; a push to `main` gets the host gate, because the
-  candidate passed its own gate before it could merge; `main` gets the device gate
-  every night. `main` requires the check to pass and the pull request to be up to
-  date. There is no path filter, so the check always reports.
-  Host checks execute once; G2 device work runs on independent app and support
-  (data/design-system/catalog) runners. The final `quality` job checks upstream
-  outcomes and collects the same complete gate through `verify-ticket` before
-  validating completion evidence. See the [parallel CI commands](../../development/setup.md#parallel-hosted-g2).
+  ([ADR 0009](../../decisions/0009-hosted-gate-scope.md), amended by
+  [ADR 0014](../../decisions/0014-change-aware-quality-gates.md)): eligible pure
+  documentation advancing no ticket gets G0. Other PRs get G2 with dependency-aware
+  device scope; shared/unknown changes get full devices. Code pushes to main keep
+  G1 for trusted cache publication; eligible documentation pushes get G0. Nightly
+  and manual runs execute full G2. Main still requires an up-to-date passing PR;
+  there is no path filter and the check always reports.
+  Host checks execute once. Only selected app/support device groups start; support
+  runs only its selected data/design-system/catalog suites. The final quality job
+  validates every required part and completion evidence. See the [local and CI
+  commands](../../development/setup.md#parallel-hosted-g2).
 
 These tools prove that checks ran on a known snapshot. They do not judge whether
 acceptance is met; the designated review still does. Agent instructions are policy,

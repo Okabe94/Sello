@@ -33,7 +33,7 @@ own revisions, not a controlled before/after benchmark or a promised saving.
    implemented locally; hosted measurement pending.** Benchmark
    bounded worker/heap settings, build/emulator contention and clean API-30 AVD
    caching. Preserve all task selections and measure net wall time and cost.
-3. **Split device work between two runners — implementation in progress.** Candidate suite times
+3. **Split device work between two runners — merged in PR #69; hosted execution passed.** Candidate suite times
    suggest app alone (~135s) versus data + design-system + catalog (~124s).
    The ideal reduction is about two minutes of serial suite execution, before
    extra provisioning/build overhead. First require per-module reports and
@@ -370,3 +370,18 @@ includes failed/cancelled/skipped/missing jobs, omitted XML or freshness checks,
 wrong revisions/attempts, changed commands, malformed metadata and incomplete
 module partitions. Full local execution is reported separately so its final
 input fingerprint remains exact; it does not establish hosted runtime savings.
+
+## Follow-up: change-aware gate scope (ADR 0014)
+
+Owned scope and evidence contract are recorded in
+[ADR 0014](../decisions/0014-change-aware-quality-gates.md). G0 avoids Android work
+for documentation advancing no ticket; G2 selects affected module consumers while
+keeping the complete host gate. Local ticket commands stay full unless --affected
+BASE is requested; --gate G2 and hosted nightly/manual runs force full devices.
+Schema-v2 reports distinguish the scope; old v1 evidence remains readable.
+
+Documentation pushes also use G0. Code pushes keep G1 because trusted main builds
+publish the cache outputs read-only PRs need. We did not eliminate code-merge G1 or
+introduce PR-cache promotion. Expect savings mainly on documentation/narrow module
+changes and runner usage, not a measured speedup on every app PR. Existing
+longitudinal measurements remain under ignored build/reports/ci-performance/.

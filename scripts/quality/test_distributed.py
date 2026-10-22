@@ -59,6 +59,39 @@ class DistributedGateTests(unittest.TestCase):
         edit(report)
         path.write_text(json.dumps(report))
 
+    def test_app_only_candidate_does_not_require_unaffected_support_suites(self):
+        write(self.root, 'app/src/Main.kt', 'fun main() = println(42)\n')
+        self.assertEqual(0, self.part('host', event='pull_request')[0])
+        self.assertEqual(0, self.part('app', event='pull_request')[0])
+        code, report = self.collect(event='pull_request', jobs={'plan':'success','host':'success','device':'success'})
+        self.assertEqual(0, code, self.stream.getvalue())
+        self.assertEqual(['host','app'], [p['part'] for p in report['execution']['parts']])
+        self.assertEqual('affected', report['coverage']['mode'])
+        self.assertEqual(['app'], report['coverage']['device_modules'])
+
+    def test_catalog_only_support_part_executes_no_data_or_design_system_tests(self):
+        write(self.root, 'catalog/src/main/Screen.kt', 'class Screen\n')
+        self.assertEqual(0, self.part('host', event='pull_request')[0])
+        self.assertEqual(0, self.part('support', event='pull_request')[0])
+        code, report = self.collect(event='pull_request', jobs={'plan':'success','host':'success','device':'success'})
+        self.assertEqual(0, code, self.stream.getvalue())
+        self.assertEqual(['catalog'], report['coverage']['device_modules'])
+        self.assertEqual({'catalog'}, set(report['checks'][-1]['modules']))
+        self.assertEqual(2, self.part('app', event='pull_request')[0])
+
+    def test_device_selected_by_scope_cannot_be_replaced_with_an_unselected_part(self):
+        write(self.root, 'data/src/main/Store.kt', 'class Store\n')
+        self.part('host',event='pull_request'); self.part('app',event='pull_request')
+        self.assertNotEqual(0,self.collect(event='pull_request')[0])
+
+    def test_main_documentation_push_has_no_gradle_part_and_no_device(self):
+        write(self.root,'docs/note.md','A note.\n')
+        self.assertEqual(0,self.part('host',event='push')[0])
+        code,report=self.collect(event='push',jobs={'plan':'success','host':'success','device':'skipped'})
+        self.assertEqual(0,code)
+        self.assertEqual('G0',report['gate']['executed'])
+        self.assertNotIn('gradle-host',self.harness.executed)
+
     def test_complete_parts_produce_standard_g2_evidence_with_every_module(self):
         self.all_parts()
         code, report = self.collect(jobs={'plan': 'success', 'host': 'success', 'device': 'success'})
@@ -188,7 +221,7 @@ class DistributedGateTests(unittest.TestCase):
         self.assertEqual(0, self.part('host', event='pull_request')[0])
         code, report = self.collect(event='pull_request', jobs={'plan': 'success', 'host': 'success', 'device': 'skipped'})
         self.assertEqual(0, code)
-        self.assertEqual('G1', report['gate']['executed'])
+        self.assertEqual('G0', report['gate']['executed'])
         self.assertEqual(2, self.part('app', event='pull_request')[0])
 
     def test_single_artifact_download_at_root_is_valid_only_for_g1_host(self):
@@ -198,7 +231,7 @@ class DistributedGateTests(unittest.TestCase):
         self.parts = flattened
         code, report = self.collect(event='push', jobs={'plan': 'success', 'host': 'success', 'device': 'skipped'})
         self.assertEqual(0, code, self.stream.getvalue())
-        self.assertEqual('G1', report['gate']['executed'])
+        self.assertEqual('G0', report['gate']['executed'])
 
     def test_one_flat_artifact_cannot_stand_for_the_full_device_gate(self):
         self.assertEqual(0, self.part('host')[0])

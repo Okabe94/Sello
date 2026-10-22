@@ -1,41 +1,74 @@
 # 0009 — What the hosted check runs, and when
 
-**Owner:** project owner (user) · **Updated:** 2026-10-16
-**Status:** approved hosted gate policy.
+**Owner:** project owner (user) · **Updated:** 2026-10-22
+**Status:** approved hosted gate policy, amended by [ADR 0014](0014-change-aware-quality-gates.md).
 
 The required `quality` check always reports; the workflow has no path filter.
-`scripts/verify-ticket` chooses what runs:
+`scripts/verify-ticket` owns selection, execution and evidence:
 
 | Event | Gate |
 | --- | --- |
-| Pull request | G2; G1 only when every changed path is a document and no ticket advances |
-| Push to `main` | G1 through `--landed` |
-| Nightly or manually requested run | G2 on `main` |
+| Pull request advancing no ticket, documentation only | G0, Python/Git only |
+| Other pull requests | G2, with dependency-aware device scope; uncertain/shared inputs use full G2 |
+| Documentation-only push to main advancing no ticket | G0 |
+| Code/other push to main | G1, including builds that publish trusted main caches |
+| Nightly or manually requested hosted run | Full G2 on main |
 
-G1 covers board/tool tests, architecture rules, formatting, host tests, lint and
-assembly. G2 adds API-30 emulator tests. Ticket minimum gates still apply.
-Completion evidence is validated with `board.py --check --base` on every run.
+G0 covers board structure/tests, quality-tool tests and architecture. It does not
+execute Android/Gradle checks and cannot be ticket completion evidence. G1 retains
+formatting, all host tests, lint and debug/release assembly. G2 retains all of G1
+and runs the selected API-30 module suites. G3 is still unavailable until its
+release checks exist; no lower profile can replace it. Completion evidence is
+validated with `board.py --check --base` on every hosted run.
 
-## Documentation-only candidates
+## Documentation and module selection
 
-A document is a path under `docs/` except Python files, or a top-level Markdown
-file. Workflow files, scripts, build files and module contents do not qualify.
-Count deleted paths, both ends of moves and uncommitted files. Uncertainty means G2.
+Documentation is recognized non-executable content under docs (Markdown, text,
+HTML/CSS, images, CSV/JSON), or top-level Markdown. Python, shell, workflows,
+build/lock files, module contents and unknown paths do not qualify for G0. Count
+deletions, uncommitted/untracked paths and both ends of moves. Ticket advancement
+(In Progress/Review/newly Done) prevents the documentation exception.
 
-Candidates advance tickets that are In Progress or Review, or became Done since
-the base revision. They must run those tickets' required gates even if only
-documents changed. Documentation alone cannot bypass required device verification.
+Known module source paths and data schemas select device consumers:
 
-## Conditions and evidence
+| Changed module | Device suites required |
+| --- | --- |
+| app | app |
+| catalog | catalog |
+| data or domain | data, app |
+| design-system | design-system, app, catalog |
 
-The lighter push check relies on `main` requiring up-to-date PRs and a passing
-`quality` check, enforced for administrators too, with squash merges of the checked
-candidate. If those conditions change, restore device checks on pushes to `main`.
-Device-only failures may otherwise be detected by the nightly run up to a day later.
+Union the scopes for mixed changes. Shared/build/toolchain/workflow/tooling or
+unknown paths select all four suites. The graph has an automated check against
+Gradle's modules/dependencies; new graph edges require review. Documentation-only
+ticket advancement selects full devices. Host tasks remain complete in every G1/G2.
 
-Changed tested inputs, including merging `main` into a branch, need fresh completion
-evidence. Local ticket gates and retained-report rules follow
-[QUALITY_FLOW](../planning/mvp/QUALITY_FLOW.md).
-Verification is covered by `scripts/quality/test_candidate_gate.py` and
-`scripts/quality/test_workflow.py`: gate selection, workflow coverage, completion
-evidence and failures that must not be ignored.
+## Local parity and evidence
+
+`verify-ticket <ticket>` still runs the full ticket gate. Add `--affected BASE`
+for dependency-aware device selection; choose/fetch the real PR base, not a later
+commit hiding changed inputs. `--gate G2` always forces all four device suites.
+The candidate command `--merge-candidate BASE` derives G0/G2 automatically; a
+higher explicit gate is allowed. Individual ticket G1/G2/G3 minima still apply.
+
+New schema-v2 reports name full/affected/documents, base, changed paths and exact
+selected modules. Each CI part is bound to the same selection, revision, inputs,
+event and run/attempt. Only selected groups are scheduled; every selected module
+must produce fresh passing results without skips. Unselected modules are not
+reported as executed. Historical schema-v1 full reports remain valid evidence.
+
+## Conditions and post-merge duplication
+
+The lighter push check relies on main requiring up-to-date PRs and a passing
+quality check, enforced for administrators too, with squash merges of the checked
+candidate. If those conditions change, restore device checks on main pushes.
+Nightly runs cover the full device graph even when PRs use a narrower scope.
+
+Code pushes deliberately keep G1: PR caches are read-only, so trusted main builds
+must publish new outputs. We do not import untrusted PR caches or pretend a prior
+PR report is fresh execution on main. The post-merge reduction applies to eligible
+documentation only. Changed tested inputs require fresh completion evidence.
+
+Regression coverage lives in `scripts/quality/test_selection.py`,
+`test_candidate_gate.py`, `test_distributed.py`, `test_workflow.py` and evidence
+validation tests. PR/merge permissions remain owned by AGENTS.md.

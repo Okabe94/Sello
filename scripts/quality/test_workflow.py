@@ -52,17 +52,18 @@ class HostedWorkflowTests(unittest.TestCase):
 
     def test_a_pull_request_asks_the_runner_which_gate_it_needs(self):
         plan = steps(self.jobs['plan'])['Decide what this run verifies']
-        self.assertIn('pull_request) mode=candidate; gate=$(./scripts/verify-ticket --candidate-gate "$BASE")', plan)
-        self.assertIn('push)         mode=landed;    gate=G1', plan)
-        self.assertIn('*)            mode=full;      gate=G2', plan)
+        self.assertIn('--ci-plan "$BASE" --ci-event "$EVENT"', plan)
+        self.assertIn("plan['gate']", plan)
+        self.assertIn("plan['groups']", plan)
         self.assertIn('gate: ${{ steps.plan.outputs.gate }}', self.jobs['plan'])
+        self.assertIn('groups: ${{ steps.plan.outputs.groups }}', self.jobs['plan'])
 
     def test_device_groups_run_in_parallel_and_never_cancel_the_sibling(self):
         device = self.jobs['device']
         self.assertIn('needs: plan', device)
         self.assertNotIn('needs: host', device)
         self.assertIn("if: needs.plan.outputs.gate == 'G2'", device)
-        self.assertIn('group: [app, support]', device)
+        self.assertIn('group: ${{ fromJSON(needs.plan.outputs.groups) }}', device)
         self.assertIn('fail-fast: false', device)
         self.assertIn('DEVICE_GROUP: ${{ matrix.group }}', device)
         self.assertIn('--ci-part "$DEVICE_GROUP" --ci-event "$EVENT"', self.device['Verify device part on API 30'])
@@ -74,6 +75,11 @@ class HostedWorkflowTests(unittest.TestCase):
         self.assertNotIn('needs: device', host)
         self.assertIn('--ci-part host --ci-event "$EVENT"', self.host['Verify host part'])
         self.assertNotIn('--gate', self.host['Verify host part'])
+
+    def test_documentation_host_part_does_not_set_up_android_or_gradle(self):
+        for name in ('Set up Gradle caching', 'Accept Android SDK licences'):
+            self.assertIn("if: needs.plan.outputs.gate != 'G0'", self.host[name])
+        self.assertIn("if: needs.plan.outputs.gate != 'G0'", self.jobs['host'].split('uses: actions/setup-java@',1)[0])
 
     def test_collector_checks_dependency_results_and_cannot_ignore_a_download_failure(self):
         collect = self.collector['Collect full gate evidence']

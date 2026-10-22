@@ -15,6 +15,7 @@ import fingerprint
 import gates
 import runner
 import evidence
+import selection
 
 PARTS = ("host", *gates.DEVICE_GROUPS)
 EVENTS = ("pull_request", "push", "schedule", "workflow_dispatch")
@@ -31,7 +32,7 @@ PART_SCHEMA = {
             "properties": evidence.SCHEMA["properties"]["snapshot"]["properties"],
         },
         "environment": {
-            "type": "object", "required": ["java", "gradle", "agp", "kotlin"],
+            "type": "object",
             "properties": {key: {"type": "string", "pattern": r"\S"} for key in ("java", "gradle", "agp", "kotlin")},
         },
         **{key: evidence.SCHEMA["properties"][key] for key in
@@ -65,22 +66,37 @@ def context(root, base, event):
     if resolved.returncode:
         raise runner.Refusal(f"Unknown base revision {base}")
     gates.validate_device_groups()
-    gate = "G1" if event == "push" else runner.candidate_gate(root, base) if event == "pull_request" else "G2"
+    candidate = runner.candidate_plan(root, base)
+    if event == "push":
+        gate = "G0" if candidate["gate"] == "G0" else "G1"
+    elif event == "pull_request":
+        gate = candidate["gate"]
+    else:
+        gate = "G2"
+    scope = selection.coverage(resolved.stdout.strip(), candidate["coverage"]["changed_paths"], gate,
+                               full=event in ("schedule", "workflow_dispatch"))
     selected = [runner.UNTICKETED] if event == "push" else runner.merge_candidate_tickets(root, base) or [runner.UNTICKETED]
     tickets = runner.load_tickets(root)
     required = {}
     for identifier in selected:
-        required[identifier] = runner.resolve_gate(tickets, identifier, gate)[0]
+        if gate == "G0" and identifier == runner.UNTICKETED:
+            required[identifier] = "G0"
+        else:
+            required[identifier] = runner.resolve_gate(tickets, identifier, gate)[0]
     gates.plan(gate)  # unavailable gates cannot be executed in parts either
-    return {"base": resolved.stdout.strip(), "event": event, "gate": gate, "tickets": required, "session": session()}
+    return {"base": resolved.stdout.strip(), "event": event, "gate": gate, "tickets": required,
+            "session": session(), "coverage": scope, "groups": selection.groups(scope)}
 
 
-def checks_for(part):
+def checks_for(part, plan=None):
     if part == "host":
-        return gates.plan("G1")
+        return gates.plan("G0" if plan and plan["gate"] == "G0" else "G1")
     if part not in gates.DEVICE_GROUPS:
         raise runner.Refusal(f"Unknown CI part {part}")
-    return [gates.device_check(f"gradle-device-{part}", gates.DEVICE_GROUPS[part])]
+    tasks = gates.DEVICE_GROUPS[part]
+    if plan:
+        tasks = tuple(task for task in tasks if task.split(":")[1] in plan["coverage"]["device_modules"])
+    return [gates.device_check(f"gradle-device-{part}", tasks)]
 
 
 def raw_patterns(checks):
@@ -110,10 +126,10 @@ def run_part(root, base, event, part, output=PART_DIRECTORY, execute=runner.defa
     root = Path(root)
     try:
         plan = context(root, base, event)
-        if part not in PARTS or (part != "host" and plan["gate"] != "G2"):
+        if part not in PARTS or (part != "host" and part not in plan["groups"]):
             raise runner.Refusal(f"CI part {part} is not required for {plan['gate']}")
-        checks = checks_for(part)
-        tools = environment(root)
+        checks = checks_for(part, plan)
+        tools = runner.documentation_environment(root) if plan["gate"] == "G0" else environment(root)
         attached = devices() if part != "host" else []
         if part != "host":
             serial = os.environ.get("ANDROID_SERIAL")
@@ -180,7 +196,9 @@ def load_part(directory, part, plan, before):
         raise ValueError("stale commit or input fingerprint")
     if report["outcome"] != "passed" or report["failures"]:
         raise ValueError("part did not pass: " + "; ".join(report["failures"]))
-    expected = checks_for(part)
+    expected = checks_for(part, plan)
+    if plan["gate"] != "G0" and any(not report["environment"].get(key) for key in ("java", "gradle", "agp", "kotlin")):
+        raise ValueError("missing toolchain evidence")
     records = report["checks"]
     if [record["name"] for record in records] != [check.name for check in expected]:
         raise ValueError("missing, duplicate or unexpected checks")
@@ -225,11 +243,11 @@ def collect(root, base, event, inputs, stream=sys.stderr, job_results=None):
         job_results = {name: os.environ.get(f"QUALITY_{name.upper()}_RESULT", "missing") for name in ("plan", "host", "device")}
     if job_results is not None:
         failures.extend(job_failures(plan["gate"], job_results))
-    expected_parts = PARTS if plan["gate"] == "G2" else ("host",)
+    expected_parts = ("host", *plan["groups"])
     actual_parts = {p.name for p in inputs.glob("quality-part-*")}
     # download-artifact v8 extracts a single matched artifact directly into path,
-    # even with merge-multiple:false. Only G1 can consist of one host artifact.
-    flat_host = plan["gate"] == "G1" and not actual_parts and (inputs / "part.json").is_file()
+    # even with merge-multiple:false. G0/G1 consist of one host artifact.
+    flat_host = not plan["groups"] and not actual_parts and (inputs / "part.json").is_file()
     if not flat_host and actual_parts != {artifact_name(part, plan) for part in expected_parts}:
         failures.append("missing, duplicate or unexpected part artifacts")
     for part in expected_parts:
@@ -264,6 +282,7 @@ def collect(root, base, event, inputs, stream=sys.stderr, job_results=None):
             root, identifier, required, plan["gate"], snapshot, baseline, attached, records,
             list(failures), list(warnings), min((r["started_at"] for _, _, r in parts), default=runner.now()),
             run_id, directory, stream, execution={"mode": "distributed", "context": plan, "parts": sources},
+            coverage=plan["coverage"],
         )
         paths.append(path)
         worst = max(worst, code)

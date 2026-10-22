@@ -33,7 +33,7 @@ class SelloApplication : Application() {
         // use and never read again, so a later trip does not move recorded days.
         val opened = openStorage(
             applicationContext,
-            deviceZone(),
+            variant.newDataZone ?: deviceZone(),
             SystemDispatcherProvider(),
             SystemAuditClock(),
             variant.names

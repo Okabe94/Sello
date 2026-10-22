@@ -15,6 +15,8 @@ import com.software.sello.devtools.SandboxSession
 import com.software.sello.devtools.SandboxSessionStore
 import com.software.sello.devtools.SandboxTime
 import com.software.sello.devtools.SandboxTools
+import com.software.sello.devtools.ScenarioRunner
+import com.software.sello.devtools.Scenarios
 import com.software.sello.devtools.SharedPreferencesSessionStore
 import com.software.sello.devtools.WriteFence
 import com.software.sello.devtools.restartApp
@@ -27,6 +29,7 @@ import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.platform.SystemAuditClock
 import com.software.sello.platform.SystemDispatcherProvider
 import java.io.File
+import java.time.ZoneId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.Module
@@ -58,9 +61,11 @@ fun eraseFinancialStorage(context: Context, names: StorageNames) {
  */
 fun variantComposition(application: Application): VariantComposition {
     val store = SharedPreferencesSessionStore(application)
-    if (store.read().wipe) {
+    val pending = store.read()
+    if (pending.wipe) {
         eraseFinancialStorage(application, SandboxNames)
-        store.write(SandboxSession(active = true))
+        // A loaded scenario keeps its start, zone and name; a plain reset has none.
+        store.write(pending.copy(wipe = false, changed = false, nextStep = 0))
     }
     val restart = { restartApp(application) }
     val composition = DebugComposition(store, restart) { SandboxRegistry.tools = it }
@@ -85,6 +90,8 @@ class DebugComposition(
 
     override val names: StorageNames = if (session.active) SandboxNames else StorageNames.Normal
 
+    override val newDataZone: ZoneId? = session.zone.takeIf { session.active }
+
     init {
         // Until the data opens there is nothing to fence and no date to show.
         publish(SandboxTools(SandboxProfiles(store, null, restart), null))
@@ -92,12 +99,32 @@ class DebugComposition(
 
     override fun modules(profile: FinancialProfile): List<Module> {
         val fence = WriteFence()
-        val time = if (session.active) sandboxTime(profile) else null
+        val scope = CoroutineScope(SupervisorJob() + SystemDispatcherProvider().main)
+        val time = if (session.active) sandboxTime(profile, scope) else null
         val saved: () -> Unit = { time?.markChanged() }
-        publish(SandboxTools(SandboxProfiles(store, fence, restart), time))
+        val profiles = SandboxProfiles(store, fence, restart)
+        publish(SandboxTools(profiles, time))
         return listOf(
             module {
-                if (time != null) single<FinancialClock> { time.clock }
+                if (time != null) {
+                    single<FinancialClock> { time.clock }
+                    // Built with the graph, on the same fenced commands the screens use.
+                    single(createdAtStart = true) {
+                        ScenarioRunner(
+                            Scenarios.find(session.scenario),
+                            profile.generation,
+                            time,
+                            get(),
+                            get(),
+                            get(),
+                            store,
+                            scope
+                        ).also {
+                            it.recover()
+                            publish(SandboxTools(profiles, time, it))
+                        }
+                    }
+                }
                 single<ExpenseCommands> {
                     FencedExpenseCommands(
                         get<FinancialStorage>().expenseCommands(get(), get(), get(), get()),
@@ -123,10 +150,9 @@ class DebugComposition(
         )
     }
 
-    private fun sandboxTime(profile: FinancialProfile): SandboxTime {
+    private fun sandboxTime(profile: FinancialProfile, scope: CoroutineScope): SandboxTime {
         val today = SystemAuditClock().now().atZone(profile.zone).toLocalDate()
         val clock = ControlledFinancialClock(FinancialDay(session.date ?: today, profile.zone))
-        val scope = CoroutineScope(SupervisorJob() + SystemDispatcherProvider().main)
         return SandboxTime(clock, store, scope)
     }
 }

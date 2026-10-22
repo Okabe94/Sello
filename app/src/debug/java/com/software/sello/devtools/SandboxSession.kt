@@ -3,6 +3,7 @@ package com.software.sello.devtools
 import android.content.Context
 import androidx.core.content.edit
 import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * What the debug build remembers about its sandbox from one process to the next.
@@ -12,12 +13,19 @@ import java.time.LocalDate
  * - [changed]: a financial change was saved in this sandbox, so its date may no
  *   longer move back without a reset.
  * - [wipe]: the sandbox's data is erased at the next start, before anything opens it.
+ * - [zone]: the financial zone a new sandbox is created in; the device's when absent.
+ * - [scenario]: the loaded scenario as `id@version`, and [nextStep] the first of its
+ *   steps not yet confirmed. A step at [nextStep] may already have committed; running
+ *   it again uses the same operation and returns that result.
  */
 data class SandboxSession(
     val active: Boolean = false,
     val date: LocalDate? = null,
     val changed: Boolean = false,
-    val wipe: Boolean = false
+    val wipe: Boolean = false,
+    val zone: ZoneId? = null,
+    val scenario: String? = null,
+    val nextStep: Int = 0
 )
 
 /** Where [SandboxSession] is kept. Writes finish before they return. */
@@ -36,7 +44,10 @@ class SharedPreferencesSessionStore(context: Context) : SandboxSessionStore {
         active = preferences.getBoolean(ACTIVE, false),
         date = preferences.getString(DATE, null)?.let(LocalDate::parse),
         changed = preferences.getBoolean(CHANGED, false),
-        wipe = preferences.getBoolean(WIPE, false)
+        wipe = preferences.getBoolean(WIPE, false),
+        zone = preferences.getString(ZONE, null)?.let(ZoneId::of),
+        scenario = preferences.getString(SCENARIO, null),
+        nextStep = preferences.getInt(NEXT_STEP, 0)
     )
 
     override fun write(session: SandboxSession) {
@@ -46,6 +57,9 @@ class SharedPreferencesSessionStore(context: Context) : SandboxSessionStore {
             putString(DATE, session.date?.toString())
             putBoolean(CHANGED, session.changed)
             putBoolean(WIPE, session.wipe)
+            putString(ZONE, session.zone?.id)
+            putString(SCENARIO, session.scenario)
+            putInt(NEXT_STEP, session.nextStep)
         }
     }
 
@@ -55,5 +69,8 @@ class SharedPreferencesSessionStore(context: Context) : SandboxSessionStore {
         const val DATE = "date"
         const val CHANGED = "changed"
         const val WIPE = "wipe"
+        const val ZONE = "zone"
+        const val SCENARIO = "scenario"
+        const val NEXT_STEP = "next_step"
     }
 }

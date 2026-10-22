@@ -1,8 +1,7 @@
-package com.software.sello.catalog.v2
+package com.software.sello.catalog.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,40 +24,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.software.sello.catalog.R
-import com.software.sello.catalog.components.DraftFixture
-import com.software.sello.catalog.components.copFixture
 import com.software.sello.designsystem.component.AddChip
 import com.software.sello.designsystem.component.AmountKeypad
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ButtonTone
+import com.software.sello.designsystem.component.ChipRows
+import com.software.sello.designsystem.component.EntryAmountSlip
+import com.software.sello.designsystem.component.EntryDock
+import com.software.sello.designsystem.component.EntryLayout
+import com.software.sello.designsystem.component.EntryLine
+import com.software.sello.designsystem.component.FactLine
 import com.software.sello.designsystem.component.FieldPill
+import com.software.sello.designsystem.component.NoteComposer
 import com.software.sello.designsystem.component.SegmentedSwitch
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
 import com.software.sello.designsystem.component.SelloNotice
-import com.software.sello.designsystem.component.Slip
-import com.software.sello.designsystem.component.v2.EntryAmountSlip
-import com.software.sello.designsystem.component.v2.EntryLine
-import com.software.sello.designsystem.component.v2.FactLine
-import com.software.sello.designsystem.component.v2.NoteComposer
-import com.software.sello.designsystem.component.v2.V2ChipRows
-import com.software.sello.designsystem.component.v2.V2Dock
-import com.software.sello.designsystem.component.v2.V2EntryLayout
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
 
 @Composable
-internal fun V2Stack(content: @Composable () -> Unit) {
+internal fun ExampleStack(content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) { content() }
 }
 
 @Composable
-internal fun Caption(text: String) {
+internal fun ExampleCaption(text: String) {
     Text(text, color = SelloTheme.colors.inkSoft, style = MaterialTheme.typography.bodySmall)
 }
 
 /** The reference's expense categories, each known by its icon and name. */
-internal val Categories =
+internal val CategoryChoices =
     listOf(
         "Hogar" to SelloIcon.Home,
         "Comida" to SelloIcon.Restaurant,
@@ -72,11 +68,11 @@ internal val Categories =
         "Gimnasio" to SelloIcon.FitnessCenter,
         "Una categoría con nombre largo" to SelloIcon.ReceiptLong
     )
-private val CategoryNames = Categories.map { it.first }
+private val CategoryNames = CategoryChoices.map { it.first }
 private val Sources = listOf("Salario", "Freelance", "Ingresos pasivos", "Transferencia", "Otro")
 
 @Composable
-fun V2EntryExample() {
+fun EntryExample() {
     val strings = LocalResources.current
     var income by rememberSaveable { mutableStateOf(false) }
     var digits by rememberSaveable { mutableStateOf("") }
@@ -104,22 +100,22 @@ fun V2EntryExample() {
             Modifier.fillMaxSize().padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Caption(strings.getString(R.string.v2_caller_preview))
+            ExampleCaption(strings.getString(R.string.catalog_caller_preview))
             amount?.let {
                 EntryAmountSlip(
                     if (income) {
                         strings.getString(
-                            R.string.v2_demo_ingreso_en_pesos
+                            R.string.catalog_demo_ingreso_en_pesos
                         )
                     } else {
-                        strings.getString(R.string.v2_demo_gasto_en_pesos)
+                        strings.getString(R.string.catalog_demo_gasto_en_pesos)
                     },
                     it
                 )
             }
             Spacer(Modifier.weight(1f))
             SelloNotice(confirmed, confirmation = true)
-            V2Dock(strings.getString(R.string.v2_demo_anotar_gasto), {
+            EntryDock(strings.getString(R.string.catalog_demo_anotar_gasto), {
                 scenario = 0
                 digits = ""
                 choice =
@@ -129,7 +125,7 @@ fun V2EntryExample() {
         }
         return
     }
-    V2EntryLayout(
+    EntryLayout(
         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
         header = {
             SegmentedSwitch(listOf("Gasto", "Ingreso"), if (income) 1 else 0, {
@@ -142,24 +138,37 @@ fun V2EntryExample() {
             EntryAmountSlip(
                 if (income) {
                     strings.getString(
-                        R.string.v2_demo_ingreso_en_pesos
+                        R.string.catalog_demo_ingreso_en_pesos
                     )
                 } else {
-                    strings.getString(R.string.v2_demo_gasto_en_pesos)
+                    strings.getString(R.string.catalog_demo_gasto_en_pesos)
                 },
                 amount,
-                Modifier.testTag("v2:entry:amount"),
-                error = if (limit) strings.getString(R.string.v2_demo_maximo_12_digitos) else null,
+                Modifier.testTag("entry:amount"),
+                error = if (limit) {
+                    strings.getString(
+                        R.string.catalog_demo_maximo_12_digitos
+                    )
+                } else {
+                    null
+                },
                 date = {
-                    FieldPill(strings.getString(R.string.v2_demo_hoy_vie_16), SelloIcon.Event, {
-                    }, enabled = !locked)
+                    FieldPill(
+                        strings.getString(
+                            R.string.catalog_demo_hoy_vie_16
+                        ),
+                        SelloIcon.Event,
+                        {
+                        },
+                        enabled = !locked
+                    )
                 },
                 icon = if (income) {
                     SelloIcon.AccountBalance
                 } else if (choice >=
                     0
                 ) {
-                    Categories[choice].second
+                    CategoryChoices[choice].second
                 } else {
                     null
                 },
@@ -170,7 +179,7 @@ fun V2EntryExample() {
         choices = {
             // Expense categories end with Nueva, which would open the category editor.
             val count = if (income) names.size else names.size + 1
-            V2ChipRows(count, Modifier.testTag("v2:entry:choices")) { index ->
+            ChipRows(count, Modifier.testTag("entry:choices")) { index ->
                 if (index == names.size) {
                     AddChip("Nueva", {}, enabled = !locked)
                 } else {
@@ -179,16 +188,16 @@ fun V2EntryExample() {
                         choice == index,
                         { choice = index },
                         enabled = !locked,
-                        modifier = Modifier.testTag("v2:entry:choice:$index"),
+                        modifier = Modifier.testTag("entry:choice:$index"),
                         // Income sources are words only; expense categories carry their icon.
-                        icon = if (income) null else Categories[index].second
+                        icon = if (income) null else CategoryChoices[index].second
                     )
                 }
             }
             if (income && choice == 4) {
                 EntryLine(
                     sourceName.ifEmpty {
-                        strings.getString(R.string.v2_demo_nombre_de_la_fuente)
+                        strings.getString(R.string.catalog_demo_nombre_de_la_fuente)
                     },
                     SelloIcon.AccountBalance,
                     {
@@ -198,14 +207,14 @@ fun V2EntryExample() {
                             editingNote = true
                         }
                     },
-                    Modifier.testTag("v2:entry:source"),
-                    action = strings.getString(R.string.v2_demo_cambiar),
+                    Modifier.testTag("entry:source"),
+                    action = strings.getString(R.string.catalog_demo_cambiar),
                     placeholder = sourceName.isEmpty(),
                     enabled = !locked
                 )
             }
             EntryLine(
-                note.ifEmpty { strings.getString(R.string.v2_demo_agregar_nota) },
+                note.ifEmpty { strings.getString(R.string.catalog_demo_agregar_nota) },
                 SelloIcon.EditNote,
                 {
                     if (!locked) {
@@ -214,18 +223,18 @@ fun V2EntryExample() {
                         editingNote = true
                     }
                 },
-                Modifier.testTag("v2:entry:note"),
-                action = strings.getString(R.string.v2_demo_editar),
+                Modifier.testTag("entry:note"),
+                action = strings.getString(R.string.catalog_demo_editar),
                 placeholder = note.isEmpty(),
                 enabled = !locked
             )
-            V2ChipRows(5, modifier = Modifier.testTag("v2:entry:states"), rows = 1) { index ->
+            ChipRows(5, modifier = Modifier.testTag("entry:states"), rows = 1) { index ->
                 SelloChip(
                     listOf(
                         "Listo",
                         "Guardando",
-                        strings.getString(R.string.v2_demo_no_guardado),
-                        strings.getString(R.string.v2_demo_por_comprobar),
+                        strings.getString(R.string.catalog_demo_no_guardado),
+                        strings.getString(R.string.catalog_demo_por_comprobar),
                         "Restaurado"
                     )[index],
                     scenario == index,
@@ -237,42 +246,44 @@ fun V2EntryExample() {
                             note = "Almuerzo"
                         }
                     },
-                    modifier = Modifier.testTag("v2:entry:state:$index")
+                    modifier = Modifier.testTag("entry:state:$index")
                 )
             }
             when (scenario) {
                 2 -> Text(
-                    strings.getString(R.string.v2_demo_no_se_guardo_tu_borrador_sigue_aqui),
+                    strings.getString(R.string.catalog_demo_no_se_guardo_tu_borrador_sigue_aqui),
                     color = SelloTheme.colors.semantic.loss
                 )
 
                 3 -> Text(
-                    strings.getString(R.string.v2_demo_aun_no_sabemos_si_se_guardo_compruebalo)
+                    strings.getString(R.string.catalog_demo_aun_no_sabemos_si_se_guardo_compruebalo)
                 )
 
-                4 -> Caption(
-                    strings.getString(R.string.v2_demo_borrador_sintetico_restaurado_no_se_envia_al)
+                4 -> ExampleCaption(
+                    strings.getString(
+                        R.string.catalog_demo_borrador_sintetico_restaurado_no_se_envia_al
+                    )
                 )
             }
-            Caption(
+            ExampleCaption(
                 strings.getString(
-                    R.string.v2_demo_catalogo_datos_sinteticos_sin_almacenamiento_financiero
+                    R.string.catalog_demo_catalogo_datos_sinteticos_sin_almacenamiento_financiero
                 )
             )
         },
         action = {
             SelloButton(
                 when (scenario) {
-                    1 -> strings.getString(R.string.v2_demo_guardando)
+                    1 -> strings.getString(R.string.catalog_demo_guardando)
 
-                    3 -> strings.getString(R.string.v2_demo_comprobar_si_se_guardo)
+                    3 -> strings.getString(R.string.catalog_demo_comprobar_si_se_guardo)
 
                     else -> if (income) {
                         strings.getString(
-                            R.string.v2_demo_anotar_ingreso
+                            R.string.catalog_demo_anotar_ingreso
                         )
                     } else {
-                        strings.getString(R.string.v2_demo_anotar_gasto)
+                        strings.getString(R.string.catalog_demo_anotar_gasto)
                     }
                 },
                 {
@@ -282,9 +293,9 @@ fun V2EntryExample() {
                         confirmed =
                             strings.getString(
                                 if (income) {
-                                    R.string.v2_income_confirmation
+                                    R.string.catalog_income_confirmation
                                 } else {
-                                    R.string.v2_expense_confirmation
+                                    R.string.catalog_expense_confirmation
                                 },
                                 amount?.digits.orEmpty(),
                                 if (income &&
@@ -298,7 +309,7 @@ fun V2EntryExample() {
                         scenario = 5
                     }
                 },
-                Modifier.fillMaxWidth().testTag("v2:entry:submit"),
+                Modifier.fillMaxWidth().testTag("entry:submit"),
                 enabled =
                     scenario == 3 ||
                         (
@@ -328,7 +339,7 @@ fun V2EntryExample() {
         val facts = SpanStyle(color = SelloTheme.colors.ink, fontWeight = FontWeight.Bold)
         val context = buildAnnotatedString {
             if (editingSource) {
-                append(strings.getString(R.string.v2_demo_nombre_de_la_fuente))
+                append(strings.getString(R.string.catalog_demo_nombre_de_la_fuente))
             } else {
                 append(kind)
                 category?.let {
@@ -356,9 +367,9 @@ fun V2EntryExample() {
             { noteDraft = it },
             "$length/$maximum",
             hint = if (editingSource) {
-                strings.getString(R.string.v2_demo_escribe_el_nombre_de_la_fuente)
+                strings.getString(R.string.catalog_demo_escribe_el_nombre_de_la_fuente)
             } else {
-                strings.getString(R.string.v2_demo_opcional)
+                strings.getString(R.string.catalog_demo_opcional)
             },
             error = if (over) "Máximo $maximum caracteres. Tu texto sigue aquí." else null,
             doneLabel = "Listo",
@@ -370,7 +381,7 @@ fun V2EntryExample() {
             onCancel = { editingNote = false },
             contextIcon = when {
                 editingSource || income -> SelloIcon.AccountBalance
-                choice >= 0 -> Categories[choice].second
+                choice >= 0 -> CategoryChoices[choice].second
                 else -> SelloIcon.ReceiptLong
             },
             contextDescription = spoken,
@@ -380,28 +391,31 @@ fun V2EntryExample() {
 }
 
 @Composable
-fun V2AmountExample() {
+fun AmountExample() {
     val strings = LocalResources.current
-    V2Stack {
+    ExampleStack {
         listOf(999_999L, 12_345_678L, 999_999_999_999L).forEach { amount ->
-            EntryAmountSlip(strings.getString(R.string.v2_demo_gasto_en_pesos), copFixture(amount))
+            EntryAmountSlip(
+                strings.getString(R.string.catalog_demo_gasto_en_pesos),
+                copFixture(amount)
+            )
         }
         EntryAmountSlip(
-            strings.getString(R.string.v2_demo_ingreso_en_pesos),
+            strings.getString(R.string.catalog_demo_ingreso_en_pesos),
             copFixture(48_700, signed = true),
             tone = ButtonTone.Gain
         )
         EntryAmountSlip(
-            strings.getString(R.string.v2_demo_gasto_en_pesos),
+            strings.getString(R.string.catalog_demo_gasto_en_pesos),
             copFixture(999_999_999_999),
-            error = strings.getString(R.string.v2_demo_maximo_12_digitos)
+            error = strings.getString(R.string.catalog_demo_maximo_12_digitos)
         )
-        EntryAmountSlip(strings.getString(R.string.v2_demo_gasto_en_pesos), null)
+        EntryAmountSlip(strings.getString(R.string.catalog_demo_gasto_en_pesos), null)
     }
 }
 
 @Composable
-fun V2KeypadExample() {
+fun KeypadExample() {
     val strings = LocalResources.current
     var digits by rememberSaveable { mutableStateOf("") }
     var limit by rememberSaveable { mutableStateOf(false) }
@@ -412,13 +426,13 @@ fun V2KeypadExample() {
         if (limit) pulse++
         digits = next.digits
     }
-    V2Stack {
+    ExampleStack {
         EntryAmountSlip(
-            strings.getString(R.string.v2_demo_gasto_en_pesos),
+            strings.getString(R.string.catalog_demo_gasto_en_pesos),
             digits.toLongOrNull()?.let {
                 copFixture(it)
             },
-            error = if (limit) strings.getString(R.string.v2_demo_maximo_12_digitos) else null,
+            error = if (limit) strings.getString(R.string.catalog_demo_maximo_12_digitos) else null,
             limitPulse = pulse
         )
         AmountKeypad({ type(it.toString()) }, { type("000") }, {
@@ -429,89 +443,97 @@ fun V2KeypadExample() {
             digits = ""
             limit = false
         }, compact = true)
-        Caption(strings.getString(R.string.v2_demo_manten_borrar_para_vaciar_el_monto_una))
+        ExampleCaption(
+            strings.getString(R.string.catalog_demo_manten_borrar_para_vaciar_el_monto_una)
+        )
         AmountKeypad({}, {}, {}, {}, enabled = false, compact = true)
     }
 }
 
 @Composable
-fun V2ChipsExample() {
+fun ChipRowsExample() {
     val strings = LocalResources.current
     var choice by rememberSaveable { mutableIntStateOf(-1) }
-    V2Stack {
-        Caption(strings.getString(R.string.v2_demo_maximo_dos_filas_desplaza_para_ver_mas))
-        V2ChipRows(Categories.size + 1) { index ->
-            if (index == Categories.size) {
+    ExampleStack {
+        ExampleCaption(
+            strings.getString(R.string.catalog_demo_maximo_dos_filas_desplaza_para_ver_mas)
+        )
+        ChipRows(CategoryChoices.size + 1) { index ->
+            if (index == CategoryChoices.size) {
                 AddChip("Nueva", {})
             } else {
-                SelloChip(Categories[index].first, choice == index, {
+                SelloChip(CategoryChoices[index].first, choice == index, {
                     choice =
                         index
-                }, icon = Categories[index].second)
+                }, icon = CategoryChoices[index].second)
             }
         }
-        Caption(strings.getString(R.string.v2_demo_dos_grupos_comparten_el_espacio_una_fila))
-        V2ChipRows(4, rows = 1) { index ->
+        ExampleCaption(
+            strings.getString(R.string.catalog_demo_dos_grupos_comparten_el_espacio_una_fila)
+        )
+        ChipRows(4, rows = 1) { index ->
             SelloChip(
                 listOf(
                     "Aporte",
-                    strings.getString(R.string.v2_demo_valor_de_hoy),
+                    strings.getString(R.string.catalog_demo_valor_de_hoy),
                     "Retiro",
-                    strings.getString(R.string.v2_demo_dividendo_o_renta)
+                    strings.getString(R.string.catalog_demo_dividendo_o_renta)
                 )[index],
                 choice == index,
                 { choice = index }
             )
         }
-        V2ChipRows(4, rows = 1) { index ->
-            SelloChip(Categories[index].first, choice == index, {
+        ChipRows(4, rows = 1) { index ->
+            SelloChip(CategoryChoices[index].first, choice == index, {
                 choice =
                     index
-            }, icon = Categories[index].second)
+            }, icon = CategoryChoices[index].second)
         }
         SelloChip("Deshabilitado", false, {}, enabled = false)
         FactLine(
-            AnnotatedString(strings.getString(R.string.v2_demo_llevas_1_710_000_guardados_en_esta))
+            AnnotatedString(
+                strings.getString(R.string.catalog_demo_llevas_1_710_000_guardados_en_esta)
+            )
         )
     }
 }
 
 @Composable
-fun V2ComposerExample() {
+fun NoteComposerExample() {
     val strings = LocalResources.current
     var open by rememberSaveable { mutableStateOf(false) }
     var value by rememberSaveable { mutableStateOf("") }
     var draft by rememberSaveable { mutableStateOf("") }
-    V2Stack {
+    ExampleStack {
         EntryLine(
-            value.ifEmpty { strings.getString(R.string.v2_demo_agregar_nota) },
+            value.ifEmpty { strings.getString(R.string.catalog_demo_agregar_nota) },
             SelloIcon.EditNote,
             {
                 draft = value
                 open = true
             },
-            Modifier.testTag("v2:composer:open"),
-            action = strings.getString(R.string.v2_demo_editar),
+            Modifier.testTag("composer:open"),
+            action = strings.getString(R.string.catalog_demo_editar),
             placeholder = value.isEmpty()
         )
-        SelloButton(strings.getString(R.string.v2_demo_probar_nota_larga), {
+        SelloButton(strings.getString(R.string.catalog_demo_probar_nota_larga), {
             draft =
-                strings.getString(R.string.v2_demo_una_nota_sintetica_que_supera_el_limite)
+                strings.getString(R.string.catalog_demo_una_nota_sintetica_que_supera_el_limite)
             open =
                 true
         }, kind = ButtonKind.Outlined)
-        Text(value, Modifier.testTag("v2:composer:saved"))
+        Text(value, Modifier.testTag("composer:saved"))
     }
     if (open) {
         val length = draft.codePointCount(0, draft.length)
         NoteComposer(
-            AnnotatedString(strings.getString(R.string.v2_demo_nota_comida)),
+            AnnotatedString(strings.getString(R.string.catalog_demo_nota_comida)),
             draft,
             { draft = it },
             "$length/60",
-            hint = strings.getString(R.string.v2_demo_opcional),
+            hint = strings.getString(R.string.catalog_demo_opcional),
             error = if (length > 60) {
-                strings.getString(R.string.v2_demo_maximo_60_caracteres_tu_texto_sigue_aqui)
+                strings.getString(R.string.catalog_demo_maximo_60_caracteres_tu_texto_sigue_aqui)
             } else {
                 null
             },
@@ -524,23 +546,5 @@ fun V2ComposerExample() {
             onCancel = { open = false },
             contextIcon = SelloIcon.Restaurant
         )
-    }
-}
-
-@Composable
-fun V2ButtonsExample() {
-    val strings = LocalResources.current
-    var presses by rememberSaveable { mutableIntStateOf(0) }
-    V2Stack {
-        ButtonTone.entries.forEach { tone ->
-            SelloButton(tone.name, { presses++ }, Modifier.fillMaxWidth(), tone = tone)
-            SelloButton(tone.name, {
-                presses++
-            }, Modifier.fillMaxWidth(), kind = ButtonKind.Outlined, tone = tone)
-        }
-        SelloButton(strings.getString(R.string.v2_demo_guardando), {}, loading = true)
-        SelloButton(strings.getString(R.string.v2_demo_elige_una_meta), {
-        }, enabled = false, tone = ButtonTone.Gain)
-        Caption("Pulsaciones: $presses")
     }
 }

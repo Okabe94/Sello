@@ -4,8 +4,8 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-20 · **Product baseline:** `ee3717d`.
-SELLO-001–023, SELLO-061–072 and epics E01–E05 and E12 are recorded Done in the canonical tickets.
+**Snapshot:** 2026-10-21 · **Product baseline:** `e549afa`.
+SELLO-001–023, SELLO-061–073 and epics E01–E05 and E12 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -65,13 +65,12 @@ forecast remains only as Resumen's estimate, and
 | [SELLO-070](../planning/mvp/epics/E13-v2-current-app.md#sello-070--bring-expense-entry-and-edit-to-v2) | Expense entry and edit use the v2 form: no category chosen at opening, chips ending in **Nueva**, a docked note composer, "Máximo 12 dígitos" and no live preview. Income entry is SELLO-071. |
 | [SELLO-071](../planning/mvp/epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2) | Income entry uses the v2 form in green, with Otro's name in the composer; income history is "Ingresos de octubre" with the hero, split bar and list, and its dock records income. |
 | [SELLO-072](../planning/mvp/epics/E13-v2-current-app.md#sello-072--bring-resumen-to-v2-for-todays-figures) | Resumen follows the v2 order: income receipt lines, month-by-month columns with the current month striped, categories ranked with a total, then the kept daily chart. No forecast or "Gasto real" stamp. |
+| [SELLO-073](../planning/mvp/epics/E13-v2-current-app.md#sello-073--retire-the-v1-components-v2-replaced) | One component set: `AmountField` and the v1 dock and tab bar are deleted, the v2 components lost their `V2` prefix and package, and the catalog lists each component once in ten groups. The prototype uses `EntryAmountSlip`. |
 
 ## Remaining work
 
-- SELLO-070–074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the current
-  focus now that E12 is done. Brings expense and income entry, income history and
-  Resumen to v2, retires the v1 components v2 replaced and records a manual TalkBack
-  and Switch Access pass.
+- SELLO-074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the last E13
+  ticket, a recorded manual TalkBack and Switch Access pass over the v2 screens.
 - SELLO-024–027: sandbox sessions, seeded scenarios and recovery diagnostics.
   A controlled debug financial clock exists; the full sandbox tools do not.
 - SELLO-028–032: backup, restore, reset and their privacy verification. Restore
@@ -82,7 +81,7 @@ forecast remains only as Resumen's estimate, and
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
 The [board](../planning/mvp/BOARD.md) currently lists SELLO-024 and SELLO-028 without
-unmet ticket dependencies, plus E13's SELLO-073 and E08's SELLO-033. Their other prerequisites remain in
+unmet ticket dependencies, plus E13's SELLO-074 and E08's SELLO-033. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
 ## Detail references

@@ -1,4 +1,4 @@
-package com.software.sello.designsystem.component.v2
+package com.software.sello.designsystem.component
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
@@ -54,18 +54,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.software.sello.designsystem.R
-import com.software.sello.designsystem.component.ButtonKind
-import com.software.sello.designsystem.component.ButtonTone
-import com.software.sello.designsystem.component.MoneySign
-import com.software.sello.designsystem.component.MoneyStyle
-import com.software.sello.designsystem.component.MoneyText
-import com.software.sello.designsystem.component.MoneyTextValue
-import com.software.sello.designsystem.component.SelloButton
-import com.software.sello.designsystem.component.Slip
-import com.software.sello.designsystem.component.Stamp
-import com.software.sello.designsystem.component.StampInk
-import com.software.sello.designsystem.component.TearLine
-import com.software.sello.designsystem.component.moneyAnnotatedString
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloMotion
@@ -270,7 +258,7 @@ fun EntryAmountSlip(
  * height it had without it.
  */
 @Composable
-fun V2EntryLayout(
+fun EntryLayout(
     modifier: Modifier = Modifier,
     header: @Composable () -> Unit,
     amount: @Composable () -> Unit,

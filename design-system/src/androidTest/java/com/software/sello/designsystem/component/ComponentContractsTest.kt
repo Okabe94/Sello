@@ -32,24 +32,6 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
-import com.software.sello.designsystem.component.v2.AnswerSlip
-import com.software.sello.designsystem.component.v2.CompletedGoalRow
-import com.software.sello.designsystem.component.v2.EntryAmountSlip
-import com.software.sello.designsystem.component.v2.FittedMoneyText
-import com.software.sello.designsystem.component.v2.GoalCard
-import com.software.sello.designsystem.component.v2.GoalsBandTotal
-import com.software.sello.designsystem.component.v2.InvestmentRow
-import com.software.sello.designsystem.component.v2.MilestonePlace
-import com.software.sello.designsystem.component.v2.MilestoneSpec
-import com.software.sello.designsystem.component.v2.MilestoneState
-import com.software.sello.designsystem.component.v2.NoteComposer
-import com.software.sello.designsystem.component.v2.PastMonthRibbon
-import com.software.sello.designsystem.component.v2.PerformanceLine
-import com.software.sello.designsystem.component.v2.V2ChipRows
-import com.software.sello.designsystem.component.v2.V2EntryLayout
-import com.software.sello.designsystem.component.v2.V2MonthBar
-import com.software.sello.designsystem.component.v2.V2NavigationBar
-import com.software.sello.designsystem.component.v2.V2TitleBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -58,7 +40,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-class V2ComponentTest {
+class ComponentContractsTest {
     @get:Rule
     val rule = createComposeRule()
 
@@ -231,7 +213,7 @@ class V2ComponentTest {
     @Test
     fun monthBarButtonHugsTheMonthAndLeavesRoomForActions() {
         rule.inEveryScheme(content = {
-            V2MonthBar("Octubre", "2026", {}, Modifier.testTag("bar"))
+            MonthBar("Octubre", "2026", {}, Modifier.testTag("bar"))
         }) {
             val bar = rule.onNodeWithTag("bar").getUnclippedBoundsInRoot()
             val button = rule.onNodeWithContentDescription(
@@ -246,7 +228,7 @@ class V2ComponentTest {
     fun allFourDestinationsExposeSelectionAndLabelsAtDoubleFont() {
         var selected by mutableStateOf("recibo")
         rule.inEveryScheme(fontScale = 2f, width = 320.dp, content = {
-            V2NavigationBar(
+            SelloNavigationBar(
                 SelloNavigation(
                     listOf(
                         SelloDestination("recibo", "Recibo", SelloIcon.ReceiptLong),
@@ -316,7 +298,7 @@ class V2ComponentTest {
     @Test
     fun twoChipRowsAreVisiblyApartAndKeep48dpTargets() {
         rule.inEveryScheme(content = {
-            V2ChipRows(4) { SelloChip("Categoría $it", false, {}) }
+            ChipRows(4) { SelloChip("Categoría $it", false, {}) }
         }) {
             // A horizontal grid fills down first: 0 and 1 share the first column.
             val upper = rule.onNodeWithText("Categoría 0").getUnclippedBoundsInRoot()
@@ -332,7 +314,7 @@ class V2ComponentTest {
     fun chipsInAColumnTakeTheWidestChipsWidth() {
         val names = listOf("Ocio", "Una categoría larga", "Café", "Ropa")
         rule.inEveryScheme(content = {
-            V2ChipRows(names.size) { SelloChip(names[it], false, {}) }
+            ChipRows(names.size) { SelloChip(names[it], false, {}) }
         }) {
             val short = rule.onNodeWithText("Ocio").getUnclippedBoundsInRoot()
             val long = rule.onNodeWithText("Una categoría larga").getUnclippedBoundsInRoot()
@@ -344,7 +326,7 @@ class V2ComponentTest {
     @Test
     fun aFewChipsStartAtTheLeadingEdge() {
         rule.inEveryScheme(content = {
-            V2ChipRows(2, Modifier.testTag("rows")) {
+            ChipRows(2, Modifier.testTag("rows")) {
                 SelloChip(listOf("Salario", "Otro")[it], false, {})
             }
         }) {
@@ -357,7 +339,7 @@ class V2ComponentTest {
     fun landscapeEntryKeepsAmountActionAndPadFixedWhileChoicesScroll() {
         rule.inEveryScheme(fontScale = 2f, width = 760.dp, densityScale = 0.4f, content = {
             Box(Modifier.height(400.dp)) {
-                V2EntryLayout(
+                EntryLayout(
                     header = { Text("Gasto / Ingreso") },
                     amount = { Text("48.700", Modifier.testTag("amount")) },
                     choices = {
@@ -478,7 +460,7 @@ class V2ComponentTest {
     fun titleBarNamesTheTabAsAHeadingAndKeepsActionsReachable() {
         var added = 0
         rule.inEveryScheme(fontScale = 2f, width = 320.dp, content = {
-            V2TitleBar("Inversiones") {
+            TitleBar("Inversiones") {
                 IconButton({ added++ }) { Icon(SelloIcon.Add.painter(), "Agregar inversión") }
             }
         }) {

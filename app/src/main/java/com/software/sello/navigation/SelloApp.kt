@@ -46,7 +46,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.software.sello.R
 import com.software.sello.designsystem.component.Blotter
+import com.software.sello.designsystem.component.MonthBar
 import com.software.sello.designsystem.component.MonthSwitcher
+import com.software.sello.designsystem.component.PastMonthRibbon
 import com.software.sello.designsystem.component.SelloDestination
 import com.software.sello.designsystem.component.SelloDock
 import com.software.sello.designsystem.component.SelloNavigation
@@ -54,8 +56,6 @@ import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.selloWindowLayout
-import com.software.sello.designsystem.component.v2.PastMonthRibbon
-import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
@@ -584,7 +584,7 @@ fun ShellScreen(
                 title = screenTitle ?: title,
                 topBar = if (tab) {
                     {
-                        V2MonthBar(
+                        MonthBar(
                             month = bar.month,
                             year = bar.year,
                             onClick = { onAction(ShellAction.OpenMonthPicker) },

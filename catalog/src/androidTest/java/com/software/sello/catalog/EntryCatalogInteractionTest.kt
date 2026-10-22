@@ -21,7 +21,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
-class V2CatalogInteractionTest {
+class EntryCatalogInteractionTest {
     @get:Rule
     val rule = createAndroidComposeRule<CatalogActivity>()
 
@@ -33,14 +33,14 @@ class V2CatalogInteractionTest {
     }
 
     @Test
-    fun v2EntryOpensFromItsOwnSection() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        rule.onNodeWithTag("example:v2.entry").assertIsDisplayed()
-        rule.onNodeWithTag("v2:entry:amount").assertIsDisplayed()
+    fun theEntryOpensFromTheInputsGroup() {
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
+        rule.onNodeWithTag("example:inputs.entry").assertIsDisplayed()
+        rule.onNodeWithTag("entry:amount").assertIsDisplayed()
     }
 
     @Test
-    fun theScaffoldShowsTheV2MonthBarWithItsRibbonSlotFilledAndEmptied() {
+    fun theScaffoldShowsTheMonthBarWithItsRibbonSlotFilledAndEmptied() {
         rule.onNodeWithTag("link:navigation.scaffold").performScrollTo().performClick()
         rule.onNodeWithTag("scaffold:ribbon").assertIsDisplayed()
         rule.onNodeWithContentDescription("Cambiar de mes. Mes seleccionado: Septiembre 2026")
@@ -57,20 +57,20 @@ class V2CatalogInteractionTest {
 
     @Test
     fun noteComposerCountsUnicodeCharactersAndSavesThem() {
-        rule.onNodeWithTag("link:v2.note-composer").performScrollTo().performClick()
-        rule.onNodeWithTag("v2:composer:open").performClick()
+        rule.onNodeWithTag("link:inputs.note-composer").performScrollTo().performClick()
+        rule.onNodeWithTag("composer:open").performClick()
         val note = "🙂".repeat(31)
         rule.onNode(hasSetTextAction()).performTextInput(note)
         rule.onNodeWithText("31/60").assertExists()
         rule.onNodeWithContentDescription("Listo").assertIsEnabled().performClick()
-        rule.onNodeWithTag("v2:composer:saved").assertTextContains(note)
+        rule.onNodeWithTag("composer:saved").assertTextContains(note)
     }
 
     @Test
     fun expenseNoteSheetNamesItsEntryAndMarksTheNoteOptional() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        tapChip("v2:entry:choices", "v2:entry:choice:1")
-        rule.onNodeWithTag("v2:entry:note").performScrollTo().performClick()
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
+        tapChip("entry:choices", "entry:choice:1")
+        rule.onNodeWithTag("entry:note").performScrollTo().performClick()
         rule.onNodeWithText("Gasto en Comida", substring = true).assertExists()
         rule.onNodeWithText("Opcional").assertExists()
         rule.onNodeWithContentDescription("Listo").assertIsEnabled()
@@ -78,14 +78,14 @@ class V2CatalogInteractionTest {
 
     @Test
     fun otherSourceIsAFullWidthLineWithAChangeAction() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
         rule.onNodeWithText("Ingreso").performClick()
-        tapChip("v2:entry:choices", "v2:entry:choice:4")
-        rule.onNodeWithTag("v2:entry:source").performScrollTo().performClick()
+        tapChip("entry:choices", "entry:choice:4")
+        rule.onNodeWithTag("entry:source").performScrollTo().performClick()
         rule.onNode(hasSetTextAction()).performTextInput("Venta de la bicicleta")
         rule.onNodeWithContentDescription("Listo").performClick()
-        val line = rule.onNodeWithTag("v2:entry:source").getUnclippedBoundsInRoot()
-        val amount = rule.onNodeWithTag("v2:entry:amount").getUnclippedBoundsInRoot()
+        val line = rule.onNodeWithTag("entry:source").getUnclippedBoundsInRoot()
+        val amount = rule.onNodeWithTag("entry:amount").getUnclippedBoundsInRoot()
         assertEquals(amount.left, line.left)
         assertEquals(amount.right, line.right)
         rule.onNodeWithText("Cambiar").assertExists()
@@ -93,8 +93,8 @@ class V2CatalogInteractionTest {
 
     @Test
     fun expenseCategoriesEndWithANuevaButtonThatIsNotAChoice() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        rule.onNodeWithTag("v2:entry:choices").performScrollTo()
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
+        rule.onNodeWithTag("entry:choices").performScrollTo()
         rule.onNodeWithText("Nueva").performScrollTo()
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
             .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Selected))
@@ -104,20 +104,20 @@ class V2CatalogInteractionTest {
 
     @Test
     fun unknownOutcomeOffersCheckingAndLocksTheKeypad() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        tapChip("v2:entry:states", "v2:entry:state:3")
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
+        tapChip("entry:states", "entry:state:3")
         rule.onNodeWithTag(
-            "v2:entry:submit"
+            "entry:submit"
         ).assertTextContains("Comprobar si se guardó").assertIsEnabled()
         rule.onNodeWithText("1").assertIsNotEnabled()
     }
 
     @Test
     fun restoredDraftSurvivesRecreationWithoutSubmitting() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        tapChip("v2:entry:states", "v2:entry:state:4")
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
+        tapChip("entry:states", "entry:state:4")
         rule.activityRule.scenario.recreate()
         rule.onNodeWithText("Almuerzo").assertExists()
-        rule.onNodeWithTag("v2:entry:submit").assertIsEnabled()
+        rule.onNodeWithTag("entry:submit").assertIsEnabled()
     }
 }

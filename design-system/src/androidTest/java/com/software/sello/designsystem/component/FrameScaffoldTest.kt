@@ -22,7 +22,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.software.sello.designsystem.component.v2.V2MonthBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
 import kotlin.math.abs
@@ -39,7 +38,7 @@ import org.junit.runner.RunWith
  * a ribbon may sit under either.
  */
 @RunWith(AndroidJUnit4::class)
-class V2FrameScaffoldTest {
+class FrameScaffoldTest {
     @get:Rule
     val rule = createComposeRule()
 
@@ -86,7 +85,7 @@ class V2FrameScaffoldTest {
 
     @Composable
     private fun Bar() {
-        V2MonthBar(
+        MonthBar(
             "Octubre",
             "2026",
             { opened++ },
@@ -106,7 +105,7 @@ class V2FrameScaffoldTest {
         assertTrue("expected about $expected, was $actual", abs(expected - actual) <= 1.5f)
 
     @Test
-    fun withoutAV2BarTheTitleRowAndBandAreAsBefore() {
+    fun withoutAMonthBarTheTitleRowAndBandAreAsBefore() {
         show(withTopBar = false, withRibbon = false)
 
         rule.onNodeWithText("Octubre 2026").assertExists()
@@ -117,7 +116,7 @@ class V2FrameScaffoldTest {
     }
 
     @Test
-    fun aV2BarTakesThePlaceOfTheTitleRowBelowTheStatusBar() {
+    fun aMonthBarTakesThePlaceOfTheTitleRowBelowTheStatusBar() {
         show(withTopBar = true, withRibbon = false)
 
         rule.onNodeWithText("Octubre 2026").assertDoesNotExist()
@@ -127,7 +126,7 @@ class V2FrameScaffoldTest {
     }
 
     @Test
-    fun underAV2BarTheContentStillStartsFiftyDpOnTheBand() {
+    fun underAMonthBarTheContentStillStartsFiftyDpOnTheBand() {
         show(withTopBar = true, withRibbon = false)
 
         near(bounds("content").top + 50f, bounds(SCAFFOLD_BAND_TAG).bottom)

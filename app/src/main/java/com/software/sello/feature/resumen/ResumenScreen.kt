@@ -43,9 +43,9 @@ import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
+import com.software.sello.designsystem.component.SpendingRankRow
 import com.software.sello.designsystem.component.TotalLine
 import com.software.sello.designsystem.component.selloWindowLayout
-import com.software.sello.designsystem.component.v2.SpendingRankRow
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme

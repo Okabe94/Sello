@@ -1,9 +1,7 @@
-package com.software.sello.catalog.v2
+package com.software.sello.catalog.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,7 +10,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -27,64 +24,61 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.software.sello.catalog.R
-import com.software.sello.catalog.components.copFixture
+import com.software.sello.designsystem.component.AnswerSlip
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ButtonTone
 import com.software.sello.designsystem.component.CategoryCell
 import com.software.sello.designsystem.component.CategoryGrid
+import com.software.sello.designsystem.component.ChipRows
+import com.software.sello.designsystem.component.ComparisonBar
+import com.software.sello.designsystem.component.ComparisonSlip
+import com.software.sello.designsystem.component.EntryDock
+import com.software.sello.designsystem.component.FactLine
+import com.software.sello.designsystem.component.Footnote
 import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
+import com.software.sello.designsystem.component.MonthBar
+import com.software.sello.designsystem.component.PastMonthRibbon
+import com.software.sello.designsystem.component.ReviewInvitation
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloChip
 import com.software.sello.designsystem.component.SelloDestination
 import com.software.sello.designsystem.component.SelloDock
 import com.software.sello.designsystem.component.SelloNavigation
+import com.software.sello.designsystem.component.SelloNavigationBar
 import com.software.sello.designsystem.component.SelloNavigationRail
 import com.software.sello.designsystem.component.Slip
-import com.software.sello.designsystem.component.Stamp
+import com.software.sello.designsystem.component.SpendingRankRow
 import com.software.sello.designsystem.component.StampInk
+import com.software.sello.designsystem.component.SuggestionNote
 import com.software.sello.designsystem.component.TearLine
+import com.software.sello.designsystem.component.TitleBar
 import com.software.sello.designsystem.component.TotalLine
-import com.software.sello.designsystem.component.v2.AnswerSlip
-import com.software.sello.designsystem.component.v2.ComparisonBar
-import com.software.sello.designsystem.component.v2.ComparisonSlip
-import com.software.sello.designsystem.component.v2.FactLine
-import com.software.sello.designsystem.component.v2.Footnote
-import com.software.sello.designsystem.component.v2.PastMonthRibbon
-import com.software.sello.designsystem.component.v2.ReviewInvitation
-import com.software.sello.designsystem.component.v2.SpendingRankRow
-import com.software.sello.designsystem.component.v2.SplitBar
-import com.software.sello.designsystem.component.v2.SplitSegment
-import com.software.sello.designsystem.component.v2.SuggestionNote
-import com.software.sello.designsystem.component.v2.V2ChipRows
-import com.software.sello.designsystem.component.v2.V2Dock
-import com.software.sello.designsystem.component.v2.V2MonthBar
-import com.software.sello.designsystem.component.v2.V2NavigationBar
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 
 @Composable
-fun V2DockExample() {
+fun EntryDockExample() {
     val strings = LocalResources.current
     var taps by rememberSaveable { mutableIntStateOf(0) }
-    V2Stack {
-        V2Dock("Anotar", { taps++ })
-        V2Dock(strings.getString(R.string.v2_demo_anotar_ingreso), { taps++ })
-        V2Dock(strings.getString(R.string.v2_demo_aportar_a_una_meta), {
+    ExampleStack {
+        EntryDock("Anotar", { taps++ })
+        EntryDock(strings.getString(R.string.catalog_demo_anotar_ingreso), { taps++ })
+        EntryDock(strings.getString(R.string.catalog_demo_aportar_a_una_meta), {
             taps++
         }, tone = ButtonTone.Gain, icon = SelloIcon.Flag)
-        V2Dock(strings.getString(R.string.v2_demo_anotar_movimiento), {
+        EntryDock(strings.getString(R.string.catalog_demo_anotar_movimiento), {
             taps++
         }, tone = ButtonTone.Ink)
-        V2Dock(strings.getString(R.string.v2_demo_crear_una_meta), {
+        EntryDock(strings.getString(R.string.catalog_demo_crear_una_meta), {
             taps++
         }, tone = ButtonTone.Gain, icon = SelloIcon.Flag)
-        V2Dock(strings.getString(R.string.v2_demo_elige_una_meta), {
+        EntryDock(strings.getString(R.string.catalog_demo_elige_una_meta), {
         }, tone = ButtonTone.Gain, enabled = false)
-        V2Dock(strings.getString(R.string.v2_demo_guardando), {}, busy = true)
-        Caption("Acciones: $taps")
+        EntryDock(strings.getString(R.string.catalog_demo_guardando), {}, busy = true)
+        ExampleCaption("Acciones: $taps")
     }
 }
 
@@ -96,13 +90,13 @@ private val Tabs = listOf(
 )
 
 @Composable
-fun V2NavigationExample() {
+fun NavigationBarExample() {
     val strings = LocalResources.current
     var selected by rememberSaveable { mutableStateOf("recibo") }
-    V2Stack {
+    ExampleStack {
         for (count in 2..4) {
-            Caption("$count destinos · ${Tabs.firstOrNull { it.id == selected }?.label}")
-            V2NavigationBar(
+            ExampleCaption("$count destinos · ${Tabs.firstOrNull { it.id == selected }?.label}")
+            SelloNavigationBar(
                 SelloNavigation(
                     Tabs.take(count),
                     if (Tabs.take(count).any {
@@ -116,11 +110,13 @@ fun V2NavigationExample() {
                     },
                     { selected = it }
                 ),
-                Modifier.testTag("v2:navigation:$count")
+                Modifier.testTag("navigation:$count")
             )
         }
-        Caption(
-            strings.getString(R.string.v2_demo_riel_existente_para_ventanas_amplias_la_integracion)
+        ExampleCaption(
+            strings.getString(
+                R.string.catalog_demo_riel_existente_para_ventanas_amplias_la_integracion
+            )
         )
         SelloNavigationRail(
             SelloNavigation(Tabs, selected, {
@@ -133,19 +129,24 @@ fun V2NavigationExample() {
 }
 
 @Composable
-fun V2MonthExample() {
+fun MonthBarExample() {
     val strings = LocalResources.current
     var taps by rememberSaveable { mutableIntStateOf(0) }
-    V2Stack {
-        V2MonthBar("Octubre", "2026", { taps++ }, description = "Cambiar mes, octubre 2026") {
+    ExampleStack {
+        MonthBar("Octubre", "2026", { taps++ }, description = "Cambiar mes, octubre 2026") {
             SettingsAction()
         }
-        Caption(strings.getString(R.string.v2_demo_metas_suma_crear_meta))
-        V2MonthBar("Octubre", "2026", { taps++ }, description = "Cambiar mes, octubre 2026") {
+        ExampleCaption(strings.getString(R.string.catalog_demo_metas_suma_crear_meta))
+        MonthBar("Octubre", "2026", { taps++ }, description = "Cambiar mes, octubre 2026") {
             IconButton({}) { Icon(SelloIcon.Add.painter(), "Crear meta") }
             SettingsAction()
         }
-        Caption("Abrir selector: $taps")
+        ExampleCaption("Abrir selector: $taps")
+        ExampleCaption("Una pestaña con título en vez de mes, como Metas")
+        TitleBar("Metas") {
+            IconButton({}) { Icon(SelloIcon.Add.painter(), "Crear meta") }
+            SettingsAction()
+        }
     }
 }
 
@@ -155,13 +156,13 @@ private fun SettingsAction() {
 }
 
 @Composable
-fun V2RibbonExample() {
+fun PastMonthRibbonExample() {
     val strings = LocalResources.current
     var past by rememberSaveable { mutableStateOf(true) }
-    V2Stack {
+    ExampleStack {
         // The ribbon lives on the band under the month bar, as on Recibo and Resumen.
         Column(Modifier.background(SelloTheme.colors.band).padding(bottom = 10.dp)) {
-            V2MonthBar(
+            MonthBar(
                 if (past) "Septiembre" else "Octubre",
                 "2026",
                 {},
@@ -173,106 +174,82 @@ fun V2RibbonExample() {
                         append("Estás viendo ")
                         withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("septiembre") }
                     },
-                    strings.getString(R.string.v2_demo_volver_a_octubre),
+                    strings.getString(R.string.catalog_demo_volver_a_octubre),
                     { past = false },
-                    Modifier.padding(horizontal = 12.dp).testTag("v2:ribbon")
+                    Modifier.padding(horizontal = 12.dp).testTag("ribbon")
                 )
             }
         }
-        if (!past) Caption(strings.getString(R.string.v2_demo_octubre_mes_actual))
-        SelloButton(strings.getString(R.string.v2_demo_ver_septiembre), {
+        if (!past) ExampleCaption(strings.getString(R.string.catalog_demo_octubre_mes_actual))
+        SelloButton(strings.getString(R.string.catalog_demo_ver_septiembre), {
             past = true
         }, kind = ButtonKind.Outlined)
     }
 }
 
 @Composable
-fun V2StampsExample() {
-    val strings = LocalResources.current
-    var replay by rememberSaveable { mutableIntStateOf(0) }
-    V2Stack {
-        key(replay) { Stamp("Lograda", StampInk.Good, land = replay > 0, v2Motion = true) }
-        SelloButton(strings.getString(R.string.v2_demo_repetir_aterrizaje), {
-            replay++
-        }, kind = ButtonKind.Outlined)
-        listOf(
-            strings.getString(R.string.v2_demo_al_dia) to StampInk.Good,
-            strings.getString(R.string.v2_demo_al_limite) to StampInk.Neutral,
-            "Excedido" to StampInk.Over,
-            strings.getString(R.string.v2_demo_sin_margen) to StampInk.Neutral,
-            "Revisar" to StampInk.Warn,
-            strings.getString(R.string.v2_demo_sin_limite) to StampInk.Neutral,
-            "Cumplido" to StampInk.Good, "Gana" to StampInk.Good,
-            "Pierde" to StampInk.Over, "Lograda" to StampInk.Good
-        ).forEach { (label, ink) ->
-            Slip(Modifier.fillMaxWidth(), pinked = false) {
-                Stamp(label, ink, Modifier.padding(8.dp), angle = -5f)
-            }
-        }
-    }
-}
-
-@Composable
-fun V2FootnotesExample() {
+fun FootnotesExample() {
     val strings = LocalResources.current
     var opened by rememberSaveable { mutableStateOf("") }
-    V2Stack {
+    ExampleStack {
         Slip(Modifier.fillMaxWidth()) {
             Footnote(
                 AnnotatedString(
-                    strings.getString(R.string.v2_demo_incluye_200_000_separado_para_1_pago)
+                    strings.getString(R.string.catalog_demo_incluye_200_000_separado_para_1_pago)
                 ),
                 {
                     opened =
-                        strings.getString(R.string.v2_demo_pagos_previstos)
+                        strings.getString(R.string.catalog_demo_pagos_previstos)
                 }
             )
             Footnote(
                 AnnotatedString(
-                    strings.getString(R.string.v2_demo_valores_anotados_entre_el_12_jun_y)
+                    strings.getString(R.string.catalog_demo_valores_anotados_entre_el_12_jun_y)
                 ),
                 {
                     opened =
-                        strings.getString(R.string.v2_demo_fechas_de_valoracion)
+                        strings.getString(R.string.catalog_demo_fechas_de_valoracion)
                 }
             )
         }
         FactLine(
-            AnnotatedString(strings.getString(R.string.v2_demo_llevas_1_710_000_guardados_en_esta))
+            AnnotatedString(
+                strings.getString(R.string.catalog_demo_llevas_1_710_000_guardados_en_esta)
+            )
         )
-        ReviewInvitation(strings.getString(R.string.v2_demo_ver_como_cerraste_octubre), {
+        ReviewInvitation(strings.getString(R.string.catalog_demo_ver_como_cerraste_octubre), {
             opened =
-                strings.getString(R.string.v2_demo_resumen_de_octubre)
+                strings.getString(R.string.catalog_demo_resumen_de_octubre)
         })
-        Caption(opened)
+        ExampleCaption(opened)
     }
 }
 
 @Composable
-fun V2SummaryExample() {
+fun AnswerSlipExample() {
     val strings = LocalResources.current
     var state by rememberSaveable { mutableIntStateOf(0) }
     val labels =
         listOf(
             "Actual",
-            strings.getString(R.string.v2_demo_al_limite),
+            strings.getString(R.string.catalog_demo_al_limite),
             "Excedido",
-            strings.getString(R.string.v2_demo_sin_margen),
+            strings.getString(R.string.catalog_demo_sin_margen),
             "Revisar",
-            strings.getString(R.string.v2_demo_sin_limite),
+            strings.getString(R.string.catalog_demo_sin_limite),
             "Cerrado"
         )
-    V2Stack {
-        V2ChipRows(labels.size) { index ->
+    ExampleStack {
+        ChipRows(labels.size) { index ->
             SelloChip(labels[index], state == index, { state = index })
         }
         val stamp = listOf(
-            strings.getString(R.string.v2_demo_al_dia),
-            strings.getString(R.string.v2_demo_al_limite),
+            strings.getString(R.string.catalog_demo_al_dia),
+            strings.getString(R.string.catalog_demo_al_limite),
             "Excedido",
-            strings.getString(R.string.v2_demo_sin_margen),
+            strings.getString(R.string.catalog_demo_sin_margen),
             "Revisar",
-            strings.getString(R.string.v2_demo_sin_limite),
+            strings.getString(R.string.catalog_demo_sin_limite),
             "Cumplido"
         )[state]
         val ink = when (state) {
@@ -286,13 +263,13 @@ fun V2SummaryExample() {
             if (state ==
                 5
             ) {
-                strings.getString(R.string.v2_demo_has_gastado_este_mes)
+                strings.getString(R.string.catalog_demo_has_gastado_este_mes)
             } else if (state ==
                 4
             ) {
-                strings.getString(R.string.v2_demo_falta_para_tus_pagos)
+                strings.getString(R.string.catalog_demo_falta_para_tus_pagos)
             } else {
-                strings.getString(R.string.v2_demo_restante_del_presupuesto)
+                strings.getString(R.string.catalog_demo_restante_del_presupuesto)
             },
             copFixture(value),
             stamp,
@@ -301,10 +278,14 @@ fun V2SummaryExample() {
             if (state != 5) {
                 TearLine()
                 when (state) {
-                    6 -> Text(strings.getString(R.string.v2_demo_mes_cerrado_gastaste_920_000_de_1))
+                    6 -> Text(
+                        strings.getString(R.string.catalog_demo_mes_cerrado_gastaste_920_000_de_1)
+                    )
 
                     4 -> Text(
-                        strings.getString(R.string.v2_demo_quedan_100_000_y_tus_pagos_previstos)
+                        strings.getString(
+                            R.string.catalog_demo_quedan_100_000_y_tus_pagos_previstos
+                        )
                     )
 
                     else -> {
@@ -320,15 +301,17 @@ fun V2SummaryExample() {
                             ),
                             style = MoneyStyle.Card
                         )
-                        Text(strings.getString(R.string.v2_demo_por_dia))
-                        Caption(strings.getString(R.string.v2_demo_10_dias_incluido_hoy))
+                        Text(strings.getString(R.string.catalog_demo_por_dia))
+                        ExampleCaption(
+                            strings.getString(R.string.catalog_demo_10_dias_incluido_hoy)
+                        )
                     }
                 }
             }
             if (state == 2 ||
                 state == 4
             ) {
-                SelloButton(strings.getString(R.string.v2_demo_ajustar_presupuesto), {
+                SelloButton(strings.getString(R.string.catalog_demo_ajustar_presupuesto), {
                 }, kind = ButtonKind.Text)
             }
             if (state ==
@@ -336,7 +319,9 @@ fun V2SummaryExample() {
             ) {
                 Footnote(
                     AnnotatedString(
-                        strings.getString(R.string.v2_demo_incluye_200_000_separado_para_1_pago)
+                        strings.getString(
+                            R.string.catalog_demo_incluye_200_000_separado_para_1_pago
+                        )
                     ),
                     {
                     }
@@ -344,8 +329,8 @@ fun V2SummaryExample() {
             }
         }
         Slip(Modifier.fillMaxWidth(), pinked = false) {
-            Text(strings.getString(R.string.v2_demo_tus_categorias))
-            CategoryGrid(listOf("Comida", strings.getString(R.string.v2_demo_cafe))) {
+            Text(strings.getString(R.string.catalog_demo_tus_categorias))
+            CategoryGrid(listOf("Comida", strings.getString(R.string.catalog_demo_cafe))) {
                     index,
                     name
                 ->
@@ -392,16 +377,16 @@ fun V2SummaryExample() {
 }
 
 @Composable
-fun V2ComparisonExample() {
+fun ComparisonExample() {
     val strings = LocalResources.current
     var mode by rememberSaveable { mutableIntStateOf(0) }
-    V2Stack {
-        V2ChipRows(3, rows = 1) { index ->
+    ExampleStack {
+        ChipRows(3, rows = 1) { index ->
             SelloChip(
                 listOf(
                     "Menos",
-                    strings.getString(R.string.v2_demo_mas),
-                    strings.getString(R.string.v2_demo_mes_cerrado)
+                    strings.getString(R.string.catalog_demo_mas),
+                    strings.getString(R.string.catalog_demo_mes_cerrado)
                 )[index],
                 mode == index,
                 { mode = index }
@@ -412,35 +397,35 @@ fun V2ComparisonExample() {
                 if (mode ==
                     2
                 ) {
-                    R.string.v2_demo_como_cerro_septiembre
+                    R.string.catalog_demo_como_cerro_septiembre
                 } else {
-                    R.string.v2_demo_como_va_este_mes
+                    R.string.catalog_demo_como_va_este_mes
                 }
             ),
             copFixture(if (mode == 0) 50_000 else 160_000),
             strings.getString(
                 when (mode) {
-                    0 -> R.string.v2_demo_menos_que_en_septiembre
-                    1 -> R.string.v2_demo_more_than_september
-                    else -> R.string.v2_demo_mas_que_en_agosto
+                    0 -> R.string.catalog_demo_menos_que_en_septiembre
+                    1 -> R.string.catalog_demo_more_than_september
+                    else -> R.string.catalog_demo_mas_que_en_agosto
                 }
             ),
             strings.getString(
                 if (mode ==
                     0
                 ) {
-                    R.string.v2_demo_11_1_al_mismo_dia_del_mes
+                    R.string.catalog_demo_11_1_al_mismo_dia_del_mes
                 } else {
-                    R.string.v2_demo_21_1_respecto_al_mes_anterior
+                    R.string.catalog_demo_21_1_respecto_al_mes_anterior
                 }
             ),
             strings.getString(
                 if (mode ==
                     2
                 ) {
-                    R.string.v2_demo_meses_completos
+                    R.string.catalog_demo_meses_completos
                 } else {
-                    R.string.v2_demo_del_1_al_22_de_cada_mes
+                    R.string.catalog_demo_del_1_al_22_de_cada_mes
                 }
             ),
             when (mode) {
@@ -473,73 +458,73 @@ private fun IncomeSlipExample(mode: Int) {
                 if (mode ==
                     2
                 ) {
-                    R.string.v2_september_income
+                    R.string.catalog_september_income
                 } else {
-                    R.string.v2_demo_ingresos_de_octubre
+                    R.string.catalog_demo_ingresos_de_octubre
                 }
             )
         )
-        LeaderLine(strings.getString(R.string.v2_demo_ingresos_anotados)) {
+        LeaderLine(strings.getString(R.string.catalog_demo_ingresos_anotados)) {
             MoneyText(copFixture(2_000_000))
         }
-        LeaderLine(strings.getString(R.string.v2_demo_ingresos_menos_gastos)) {
+        LeaderLine(strings.getString(R.string.catalog_demo_ingresos_menos_gastos)) {
             MoneyText(copFixture(if (mode == 0) 1_600_000 else 1_080_000))
         }
-        LeaderLine(strings.getString(R.string.v2_demo_sin_asignar_a_categorias)) {
+        LeaderLine(strings.getString(R.string.catalog_demo_sin_asignar_a_categorias)) {
             MoneyText(copFixture(1_000_000))
         }
-        SelloButton(strings.getString(R.string.v2_demo_ver_ingresos_y_su_destino), {
+        SelloButton(strings.getString(R.string.catalog_demo_ver_ingresos_y_su_destino), {
         }, kind = ButtonKind.Text)
     }
 }
 
 @Composable
-fun V2RankingExample() {
+fun RankingExample() {
     val strings = LocalResources.current
     var opened by rememberSaveable { mutableStateOf("") }
     Slip(Modifier.fillMaxWidth(), pinked = false) {
-        Text(strings.getString(R.string.v2_demo_donde_se_va))
+        Text(strings.getString(R.string.catalog_demo_donde_se_va))
         SpendingRankRow("Comida", SelloIcon.Restaurant, copFixture(300_000), 0.75f, {
             opened =
                 "Comida"
         })
         SpendingRankRow(
             strings.getString(
-                R.string.v2_demo_cafe
+                R.string.catalog_demo_cafe
             ),
             SelloIcon.LocalCafe,
             copFixture(100_000),
             0.25f,
             {
-                opened = strings.getString(R.string.v2_demo_cafe)
+                opened = strings.getString(R.string.catalog_demo_cafe)
             }
         )
         TotalLine("Total") { MoneyText(copFixture(400_000)) }
-        Caption(opened)
+        ExampleCaption(opened)
     }
 }
 
 @Composable
-fun V2SuggestionExample() {
+fun SuggestionExample() {
     val strings = LocalResources.current
     var dismissed by rememberSaveable { mutableStateOf(false) }
     var action by rememberSaveable { mutableStateOf(false) }
-    V2Stack {
+    ExampleStack {
         if (!dismissed) {
             SuggestionNote(
                 strings.getString(
-                    R.string.v2_demo_una_sugerencia
+                    R.string.catalog_demo_una_sugerencia
                 ),
                 strings.getString(
-                    R.string.v2_demo_cafe_supero_su_limite_dos_meses_seguidos
+                    R.string.catalog_demo_cafe_supero_su_limite_dos_meses_seguidos
                 ),
                 strings.getString(
-                    R.string.v2_demo_podrias_ajustar_su_limite_para_que_refleje
+                    R.string.catalog_demo_podrias_ajustar_su_limite_para_que_refleje
                 ),
                 strings.getString(
-                    R.string.v2_demo_ajustar_el_presupuesto_de_cafe
+                    R.string.catalog_demo_ajustar_el_presupuesto_de_cafe
                 ),
-                strings.getString(R.string.v2_demo_descartar_sugerencia),
+                strings.getString(R.string.catalog_demo_descartar_sugerencia),
                 {
                     action =
                         true
@@ -547,13 +532,19 @@ fun V2SuggestionExample() {
                 { dismissed = true }
             )
         }
-        if (action) Caption(strings.getString(R.string.v2_demo_accion_sintetica_ajustar_cafe))
-        SelloButton(strings.getString(R.string.v2_demo_mostrar_sugerencia), {
+        if (action) {
+            ExampleCaption(
+                strings.getString(R.string.catalog_demo_accion_sintetica_ajustar_cafe)
+            )
+        }
+        SelloButton(strings.getString(R.string.catalog_demo_mostrar_sugerencia), {
             dismissed = false
             action = false
         }, kind = ButtonKind.Text)
-        Caption(
-            strings.getString(R.string.v2_demo_la_elegibilidad_y_el_descarte_mensual_pertenecen)
+        ExampleCaption(
+            strings.getString(
+                R.string.catalog_demo_la_elegibilidad_y_el_descarte_mensual_pertenecen
+            )
         )
     }
 }

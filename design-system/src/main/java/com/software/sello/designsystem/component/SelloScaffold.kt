@@ -42,8 +42,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.software.sello.designsystem.component.v2.V2Dock
-import com.software.sello.designsystem.component.v2.V2NavigationBar
 import com.software.sello.designsystem.theme.SelloTheme
 
 /** How far the band colour reaches below the status bar: 0, 100dp or 132dp. */
@@ -242,7 +240,7 @@ fun SelloScaffold(
                 }
                 if (showDock) {
                     // One full-width "+ Anotar", read as what it records: "Anotar un gasto".
-                    V2Dock(
+                    EntryDock(
                         label = dock.actionLabel,
                         onClick = dock.onClick,
                         modifier = Modifier
@@ -266,7 +264,7 @@ fun SelloScaffold(
                             .testTag(SCAFFOLD_BAR_TAG)
                             .background(colors.paper)
                             .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Bottom))
-                    ) { V2NavigationBar(navigation) }
+                    ) { SelloNavigationBar(navigation) }
                 }
             }
         }

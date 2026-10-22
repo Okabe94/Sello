@@ -19,7 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /** The note sheet's keyboard belongs to the sheet; the entry behind it must not move. */
-class V2EntryKeyboardTest {
+class EntryKeyboardTest {
     @get:Rule
     val rule = createAndroidComposeRule<CatalogActivity>()
 
@@ -55,28 +55,28 @@ class V2EntryKeyboardTest {
     private fun assertEntryStaysPutWhileTyping(line: String) {
         rule.onNodeWithTag(line).performScrollTo()
         rule.waitForIdle()
-        val amount = bounds("v2:entry:amount")
-        val submit = bounds("v2:entry:submit")
+        val amount = bounds("entry:amount")
+        val submit = bounds("entry:submit")
         rule.onNodeWithTag(line).performClick()
         rule.onNode(hasSetTextAction()).performClick()
         rule.waitUntil(5_000) { keyboardShown() }
         rule.waitForIdle()
-        assertEquals(amount, bounds("v2:entry:amount"))
-        assertEquals(submit, bounds("v2:entry:submit"))
+        assertEquals(amount, bounds("entry:amount"))
+        assertEquals(submit, bounds("entry:submit"))
     }
 
     @Test
     fun theExpenseNoteKeyboardLeavesTheEntryInPlace() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
-        assertEntryStaysPutWhileTyping("v2:entry:note")
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
+        assertEntryStaysPutWhileTyping("entry:note")
     }
 
     @Test
     fun theIncomeSourceKeyboardLeavesTheEntryInPlace() {
-        rule.onNodeWithTag("link:v2.entry").performScrollTo().performClick()
+        rule.onNodeWithTag("link:inputs.entry").performScrollTo().performClick()
         rule.onNodeWithText("Ingreso").performClick()
-        rule.onNodeWithTag("v2:entry:choices").performScrollTo()
-        rule.onNodeWithTag("v2:entry:choice:4").performScrollTo().performClick()
-        assertEntryStaysPutWhileTyping("v2:entry:source")
+        rule.onNodeWithTag("entry:choices").performScrollTo()
+        rule.onNodeWithTag("entry:choice:4").performScrollTo().performClick()
+        assertEntryStaysPutWhileTyping("entry:source")
     }
 }

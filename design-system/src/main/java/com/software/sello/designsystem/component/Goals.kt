@@ -1,4 +1,4 @@
-package com.software.sello.designsystem.component.v2
+package com.software.sello.designsystem.component
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
@@ -50,14 +50,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.software.sello.designsystem.component.ButtonKind
-import com.software.sello.designsystem.component.ButtonTone
-import com.software.sello.designsystem.component.MoneyText
-import com.software.sello.designsystem.component.MoneyTextValue
-import com.software.sello.designsystem.component.SelloButton
-import com.software.sello.designsystem.component.Slip
-import com.software.sello.designsystem.component.Stamp
-import com.software.sello.designsystem.component.StampInk
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloMotion
@@ -125,8 +117,8 @@ fun MilestonePlace(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(diameter).graphicsLayer {
                 scaleX =
-                    SelloMotion.STAMP_V2_INITIAL_SCALE +
-                    (1f - SelloMotion.STAMP_V2_INITIAL_SCALE) * progress.value
+                    SelloMotion.STAMP_RING_INITIAL_SCALE +
+                    (1f - SelloMotion.STAMP_RING_INITIAL_SCALE) * progress.value
                 scaleY = scaleX
                 alpha = progress.value.coerceIn(0f, 1f)
                 rotationZ = if (earned) -8f else 0f

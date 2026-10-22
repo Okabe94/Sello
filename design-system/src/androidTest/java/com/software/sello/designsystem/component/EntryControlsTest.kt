@@ -187,9 +187,13 @@ class EntryControlsTest {
 
     @Test
     fun anEmptyDraftIsAnnouncedAsNoAmountNotAsZero() {
-        rule.inEveryScheme(content = { AmountField(null, Modifier.testTag("field")) }) {
-            rule.onNodeWithContentDescription("Sin monto").assertIsDisplayed()
-            rule.onNodeWithText("0").assertDoesNotExist()
+        rule.inEveryScheme(content = {
+            EntryAmountSlip("Gasto en pesos", null, Modifier.testTag("field"))
+        }) {
+            // The faint placeholder figure is drawn, but it is only ever spoken as no amount.
+            rule.onNodeWithText("0").assertContentDescriptionEquals("Sin monto")
+            rule.onNodeWithContentDescription("0", substring = true).assertDoesNotExist()
+            rule.onNodeWithContentDescription("pesos", substring = true).assertDoesNotExist()
         }
     }
 
@@ -197,10 +201,11 @@ class EntryControlsTest {
     fun aRefusedPasteIsShownExactlyAsReceivedWithItsReason() {
         rule.inEveryScheme(
             content = {
-                AmountField(
+                EntryAmountSlip(
+                    "Gasto en pesos",
                     amount = null,
                     rejectedText = "1e3",
-                    message = FieldMessage("Eso no es un monto")
+                    error = "Eso no es un monto"
                 )
             }
         ) {
@@ -217,7 +222,7 @@ class EntryControlsTest {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val pasted = mutableListOf<String>()
         rule.setContent {
-            SelloTheme { AmountField(null, onPaste = { pasted += it }) }
+            SelloTheme { EntryAmountSlip("Gasto en pesos", null, onPaste = { pasted += it }) }
         }
         for (text in listOf(" 1e3 ", "-100", "$1.234,50")) {
             rule.runOnUiThread { clipboard.setPrimaryClip(ClipData.newPlainText("test", text)) }
@@ -232,9 +237,10 @@ class EntryControlsTest {
         val amount = MoneyTextValue(MoneySign.None, "", "999.999.999.999", "999.999.999.999 pesos")
         rule.inEveryScheme(
             content = {
-                AmountField(
+                EntryAmountSlip(
+                    "Gasto en pesos",
                     amount,
-                    message = FieldMessage("Máximo 12 dígitos", isError = false),
+                    error = "Máximo 12 dígitos",
                     limitPulse = 1
                 )
             }

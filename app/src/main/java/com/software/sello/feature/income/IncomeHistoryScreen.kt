@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.software.sello.R
+import com.software.sello.designsystem.component.AnswerSlip
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
@@ -26,12 +27,11 @@ import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
+import com.software.sello.designsystem.component.SplitBar
+import com.software.sello.designsystem.component.SplitSegment
 import com.software.sello.designsystem.component.StampInk
 import com.software.sello.designsystem.component.TearLine
 import com.software.sello.designsystem.component.TotalLine
-import com.software.sello.designsystem.component.v2.AnswerSlip
-import com.software.sello.designsystem.component.v2.SplitBar
-import com.software.sello.designsystem.component.v2.SplitSegment
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.date.dateLabels

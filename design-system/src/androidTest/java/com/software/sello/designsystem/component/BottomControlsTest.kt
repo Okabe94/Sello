@@ -41,7 +41,7 @@ import org.junit.runner.RunWith
  * selected, whole at twice the font size on the narrowest phone.
  */
 @RunWith(AndroidJUnit4::class)
-class V2BottomControlsTest {
+class BottomControlsTest {
     @get:Rule
     val rule = createComposeRule()
 

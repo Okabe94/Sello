@@ -1,4 +1,4 @@
-package com.software.sello.designsystem.component.v2
+package com.software.sello.designsystem.component
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -33,11 +33,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.software.sello.designsystem.component.CategoryCircle
-import com.software.sello.designsystem.component.MoneyText
-import com.software.sello.designsystem.component.MoneyTextValue
-import com.software.sello.designsystem.component.Slip
-import com.software.sello.designsystem.component.TearLine
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme

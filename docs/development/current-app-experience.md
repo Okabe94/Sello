@@ -18,7 +18,7 @@ categories and monthly budgets.
 - A healthy start opens **Recibo**. The two top-level destinations are **Recibo** and
   **Resumen**.
 - The global expense action is **Anotar un gasto**: on ordinary phone layouts a
-  full-width **+ Anotar** button (`V2Dock`, read as "Anotar un gasto") above the v2 tab
+  full-width **+ Anotar** button (`EntryDock`, read as "Anotar un gasto") above the v2 tab
   bar, whose selected tab has a soft pill behind its icon; a `+` in the navigation rail
   where a rail is present.
 - Recibo, Resumen, category detail and income history share one selected month.
@@ -281,10 +281,10 @@ Reusable components live under
 
 | Family | Components normally composed together | Main consumers and coupling |
 | --- | --- | --- |
-| App frame | `SelloTheme` + `SelloScaffold` + `V2NavigationBar`/`SelloNavigationRail` + `V2Dock` + `V2MonthBar` (tabs) or `MonthSwitcher` (pushed screens) + `MonthGrid` + `selloWindowLayout` | Every shell screen; frame changes affect navigation, keyboard/insets, month picking and responsive behavior together. |
+| App frame | `SelloTheme` + `SelloScaffold` + `SelloNavigationBar`/`SelloNavigationRail` + `EntryDock` + `MonthBar` (tabs) or `MonthSwitcher` (pushed screens) + `MonthGrid` + `selloWindowLayout` | Every shell screen; frame changes affect navigation, keyboard/insets, month picking and responsive behavior together. |
 | Paper and exact answers | `Slip` + `TearLine` + `LeaderLine`/`KeyValue`/`TotalLine` + `MoneyText` + `Stamp` | Recibo, Resumen, entry previews/receipts and detail. These establish the answer-first paper language. |
-| Money entry | `AmountField` + `AmountKeypad` + `FieldMessage` + `SelloButton`; `DigitGrouping` for typed limits | Expense/income forms and category limit editing. Key positions, validation space and submit placement are intentionally coordinated. |
-| Choices and forms | `ChipFlow` + `SelloChip`; `SegmentedSwitch`/`SwitchRow`; `FormField`; `IconChoiceGrid` | Entry source/category choices, settings, category editor and note/name fields. |
+| Money entry | `EntryLayout` + `EntryAmountSlip` + `AmountKeypad` + `SelloButton`; `FormField` + `FieldMessage` + `DigitGrouping` for typed limits | Expense/income forms and category limit editing. Key positions, validation space and submit placement are intentionally coordinated. |
+| Choices and forms | `ChipRows` (entry) or `ChipFlow` (settings, editor) + `SelloChip`; `SegmentedSwitch`/`SwitchRow`; `FormField`; `IconChoiceGrid` | Entry source/category choices, settings, category editor and note/name fields. |
 | Categories | `CategoryCircle` + `CategoryCell` + `CategoryGrid` | Recibo grid and category detail. The app supplies exact amounts, spoken descriptions, selection and icons. |
 | Correctable lists | `ActionLine` + `LineAction` + `SelloNotice` + `ConfirmSlip` | Expense rows, long-press menus, swipe deletion, global undo and discard/archive confirmation. No action relies on gesture alone. |
 | Async feedback | `SlipSkeleton` + `EmptySlip` + `ErrorSlip` | Every read-driven screen. Loading, real empty, failed and stale remain distinct. |
@@ -316,8 +316,9 @@ claim of a completed manual TalkBack/Switch Access audit.
 ## Component catalog and previews
 
 The separately installable `:catalog` app is the safest place to inspect or change a
-shared component before integrating it. It has 38 examples grouped as foundations,
-paper, stamps, money, categories, inputs, navigation, charts and feedback. Its
+shared component before integrating it. It lists each component once in 56 examples
+grouped as foundations, paper, stamps, money, categories, inputs, navigation, charts,
+feedback and goals ([catalog](catalog.md)). Its
 controls switch ink, light/dark, font scale (1.0 / 1.3 / 2.0), window (device /
 360dp compact / 760×400 landscape / 600dp medium / 840dp expanded) and full or
 reduced motion.

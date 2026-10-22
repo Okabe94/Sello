@@ -1,4 +1,4 @@
-package com.software.sello.designsystem.component.v2
+package com.software.sello.designsystem.component
 
 import android.os.Build
 import android.view.View
@@ -68,8 +68,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
-import com.software.sello.designsystem.component.MoneyText
-import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme

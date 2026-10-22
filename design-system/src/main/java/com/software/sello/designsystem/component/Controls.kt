@@ -1,4 +1,4 @@
-package com.software.sello.designsystem.component.v2
+package com.software.sello.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -73,19 +73,13 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.software.sello.designsystem.component.ButtonKind
-import com.software.sello.designsystem.component.ButtonTone
-import com.software.sello.designsystem.component.IconChoice
-import com.software.sello.designsystem.component.MoneyTextValue
-import com.software.sello.designsystem.component.SelloButton
-import com.software.sello.designsystem.component.SelloNavigation
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 
 /** A full-width tab action. Its purpose, enabled state and busy state belong to the caller. */
 @Composable
-fun V2Dock(
+fun EntryDock(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -106,7 +100,7 @@ fun V2Dock(
 }
 
 @Composable
-fun V2NavigationBar(navigation: SelloNavigation, modifier: Modifier = Modifier) {
+fun SelloNavigationBar(navigation: SelloNavigation, modifier: Modifier = Modifier) {
     val colors = SelloTheme.colors
     require(navigation.destinations.size in 2..4)
     Row(modifier.fillMaxWidth().background(colors.paper).selectableGroup()) {
@@ -153,7 +147,7 @@ fun V2NavigationBar(navigation: SelloNavigation, modifier: Modifier = Modifier) 
  * [description] still says it. [buttonModifier] goes on the month button itself.
  */
 @Composable
-fun V2MonthBar(
+fun MonthBar(
     month: String,
     year: String,
     onClick: () -> Unit,
@@ -214,7 +208,7 @@ fun V2MonthBar(
  * icon buttons at the trailing edge.
  */
 @Composable
-fun V2TitleBar(
+fun TitleBar(
     title: String,
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {}
@@ -290,7 +284,7 @@ fun GoalsBandTotal(
 
 /**
  * Says which past month is shown and goes back in one tap. A translucent pill meant to
- * sit on the band, under the [V2MonthBar]. Bold spans in [message] name the month. Plain
+ * sit on the band, under the [MonthBar]. Bold spans in [message] name the month. Plain
  * presentation data only; no selected-month or clock logic. At large text the return
  * goes under the message, which keeps the width; beside it the message would be
  * squeezed into a column of letters.
@@ -390,7 +384,7 @@ fun GoalPinPill(
  * 48dp touch target tall; a shorter chip sits centred in it, leaving a visible gap.
  */
 @Composable
-fun V2ChipRows(
+fun ChipRows(
     count: Int,
     modifier: Modifier = Modifier,
     rows: Int = 2,

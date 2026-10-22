@@ -14,9 +14,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.window.DialogWindowProvider
-import com.software.sello.designsystem.component.v2.CelebrationOverlay
-import com.software.sello.designsystem.component.v2.MilestoneSpec
-import com.software.sello.designsystem.component.v2.MilestoneState
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
 import org.junit.Assert.assertFalse
@@ -25,7 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /** The big moment follows the reference's timeline and ends on its final screen. */
-class V2CelebrationTest {
+class CelebrationTest {
     @get:Rule
     val rule = createComposeRule()
 

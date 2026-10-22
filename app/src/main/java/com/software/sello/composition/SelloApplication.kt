@@ -15,11 +15,15 @@ class SelloApplication : Application() {
     lateinit var startup: Startup
         private set
 
+    /** Production in a release build; the debug build may choose a sandbox here. */
+    private lateinit var variant: VariantComposition
+
     override fun onCreate() {
         super.onCreate()
+        variant = variantComposition(this)
         startup = Startup(
             start = ::openAndBuildGraph,
-            moveUnreadable = { setAsideStorage(applicationContext) }
+            moveUnreadable = { setAsideStorage(applicationContext, variant.names) }
         )
     }
 
@@ -31,7 +35,8 @@ class SelloApplication : Application() {
             applicationContext,
             deviceZone(),
             SystemDispatcherProvider(),
-            SystemAuditClock()
+            SystemAuditClock(),
+            variant.names
         )
         return when (opened) {
             is Outcome.Failure -> opened
@@ -42,7 +47,12 @@ class SelloApplication : Application() {
                 }
                 val application = startKoin {
                     modules(
-                        productionModules(applicationContext, financialZone, opened.value.storage)
+                        productionModules(
+                            applicationContext,
+                            financialZone,
+                            opened.value.storage,
+                            variant.names
+                        ) + variant.modules(opened.value.profile)
                     )
                 }
                 Outcome.Success(viewModels(application.koin))

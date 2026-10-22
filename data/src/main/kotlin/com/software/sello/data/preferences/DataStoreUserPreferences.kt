@@ -34,6 +34,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 
+/** The app's own preferences file; a sandbox names its own in `StorageNames`. */
+internal const val PREFERENCES_FILE = "sello-preferences"
+
 /**
  * The sole owner of Sello's nonfinancial preferences. Financial values deliberately
  * have no key here: they remain Room data with the command/recovery guarantees it has.
@@ -44,10 +47,15 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
     CorrectionAnnouncementPreferences {
     private val readAttempt = MutableStateFlow(0L)
 
-    constructor(context: Context, scope: CoroutineScope) : this(
+    /** [fileName] is the profile's preferences file; see `StorageNames`. */
+    constructor(
+        context: Context,
+        scope: CoroutineScope,
+        fileName: String = PREFERENCES_FILE
+    ) : this(
         PreferenceDataStoreFactory.create(
             scope = scope,
-            produceFile = { context.preferencesDataStoreFile(FILE_NAME) }
+            produceFile = { context.preferencesDataStoreFile(fileName) }
         )
     )
 
@@ -179,8 +187,6 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
     }
 
     private companion object {
-        const val FILE_NAME = "sello-preferences"
-
         val THEME = stringPreferencesKey("appearance_theme_v1")
         val INK = stringPreferencesKey("appearance_ink_v1")
         val CATEGORY_ORDER = stringPreferencesKey("recibo_category_order_v1")

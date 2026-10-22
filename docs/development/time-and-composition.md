@@ -39,10 +39,10 @@ zone change triggers a recompute but cannot change the financial zone.
   observer, stops the midnight timer and unregisters the receiver and lifecycle
   observer. A closed scope is not reused.
 - Cancellation is rethrown, never turned into a failed or empty result.
-- A sandbox session that replaces financial time builds a graph with
-  `financialTimeOverride(...)` loaded after the production modules. The production
-  clock is then never created, and audit and monotonic time stay real. Switching
-  sessions means closing the old graph, which cancels its observers.
+- The debug sandbox binds a `ControlledFinancialClock` after the production modules,
+  so the production clock is never created, and audit and monotonic time stay real.
+  Switching sessions restarts the process after a write fence closes; see
+  [sandbox](sandbox.md).
 
 ## Composition
 
@@ -54,9 +54,10 @@ parameter and the financial clock is created with the graph, so a missing bindin
 an uninitialized zone fails at startup. New workflows are bound when they exist; do
 not register a placeholder that reports success.
 
-`ControlledFinancialClock` and `financialTimeOverride` live in
-`app/src/debug/.../devtools` and are absent from release builds. The debug app
-still runs on production time; SELLO-024 adds the sandbox entry point.
+`ControlledFinancialClock` and the sandbox tools live in `app/src/debug/.../devtools`
+and are absent from release builds. `VariantComposition` is the one hook: release
+returns `ProductionComposition`, debug a `DebugComposition` that may open the sandbox
+([sandbox](sandbox.md)). The normal debug profile runs on production time.
 
 ## When the data cannot be opened
 

@@ -2,6 +2,7 @@ package com.software.sello.composition
 
 import android.content.Context
 import com.software.sello.data.FinancialStorage
+import com.software.sello.data.StorageNames
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.FinancialClock
@@ -58,11 +59,12 @@ fun androidModule(context: Context): Module = module {
 fun productionModules(
     context: Context,
     financialZone: ProcessFinancialZone,
-    storage: FinancialStorage
+    storage: FinancialStorage,
+    names: StorageNames = StorageNames.Normal
 ): List<Module> = listOf(
     androidModule(context),
     platformModule(financialZone),
     storageModule(storage),
-    preferencesModule(),
+    preferencesModule(names.preferences),
     presentationModule()
 )

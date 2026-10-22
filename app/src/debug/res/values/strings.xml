@@ -1,3 +1,37 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Sello Debug</string>
+    <string name="tools_name">Sello Herramientas</string>
+    <string name="sandbox_badge">SANDBOX · %1$s · %2$s</string>
+    <string name="sandbox_badge_spoken">Sandbox activo, %1$s, zona %2$s. Abrir herramientas</string>
+    <string name="tools_title">Herramientas</string>
+    <string name="tools_profile_heading">Datos en uso</string>
+    <string name="tools_profile_normal">Perfil normal de depuración</string>
+    <string name="tools_profile_sandbox">Sandbox, con sus propios datos</string>
+    <string name="tools_profile_unopened">Los datos no se abrieron: solo puedes cambiar de perfil o reiniciar el sandbox.</string>
+    <string name="tools_enter">Entrar al sandbox</string>
+    <string name="tools_leave">Volver al perfil normal</string>
+    <string name="tools_moving">Esperando a que termine lo que se está guardando…</string>
+    <string name="tools_date_heading">Fecha financiera</string>
+    <string name="tools_date">Fecha</string>
+    <string name="tools_zone">Zona</string>
+    <string name="tools_real_time_note">Solo cambia la fecha de las finanzas. El reloj del teléfono, deshacer y las animaciones siguen en tiempo real.</string>
+    <string name="tools_plus_day">+1 día</string>
+    <string name="tools_plus_month">+1 mes</string>
+    <string name="tools_jump_label">Ir a la fecha (AAAA-MM-DD)</string>
+    <string name="tools_jump">Ir</string>
+    <!-- The format typed is ISO, with plain hyphens. -->
+    <string name="tools_jump_invalid" tools:ignore="TypographyDashes">Escribe la fecha como 2026-10-31.</string>
+    <string name="tools_jump_refused">Ya hay movimientos guardados después de esa fecha. Para volver atrás, reinicia el sandbox.</string>
+    <string name="tools_play">Avanzar solo (un día cada 2 s)</string>
+    <string name="tools_pause">Pausar</string>
+    <plurals name="tools_playing">
+        <item quantity="one">Avanzando: queda %d día</item>
+        <item quantity="other">Avanzando: quedan %d días</item>
+    </plurals>
+    <string name="tools_forward_only">Ya hay movimientos guardados: la fecha solo puede avanzar.</string>
+    <string name="tools_reset_heading">Reiniciar</string>
+    <string name="tools_reset_note">Borra todos los datos del sandbox y lo abre de nuevo en la fecha de hoy. El perfil normal no se toca.</string>
+    <string name="tools_reset">Reiniciar sandbox</string>
+    <string name="tools_reset_confirm">Sí, borrar el sandbox</string>
+    <string name="tools_reset_cancel">Cancelar</string>
 </resources>

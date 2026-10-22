@@ -1,0 +1,120 @@
+package com.software.sello.devtools
+
+import android.util.Log
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * The whole scenario corpus on real Room. Each scenario runs fresh, then again cut
+ * off after a committed step whose checkpoint was lost and resumed in a new process;
+ * both runs must leave the same history and every `Verify` must match. Each check's
+ * line is written to the log under [TAG] as the run's evidence.
+ */
+@RunWith(AndroidJUnit4::class)
+class TemporalScenarioCorpusTest {
+    private var sandbox: SandboxGraph? = null
+
+    @After
+    fun end() {
+        sandbox?.erase()
+    }
+
+    private fun graph(scenario: Scenario): SandboxGraph {
+        sandbox?.erase()
+        val session = SandboxSession(
+            active = true,
+            date = scenario.start,
+            zone = scenario.zone,
+            scenario = scenario.key
+        )
+        return SandboxGraph(session).also {
+            it.erase()
+            sandbox = it
+            it.open()
+        }
+    }
+
+    private val SandboxGraph.runner get() = checkNotNull(tools?.scenarios)
+
+    private fun SandboxGraph.finish() = runBlocking {
+        while (runner.step()) Unit
+        assertTrue(
+            "${runner.state.value.scenario?.key}: ${runner.state.value.problem}",
+            runner.state.value.finished
+        )
+    }
+
+    /** Everything the scenario wrote, without the random record IDs or audit times. */
+    private fun SandboxGraph.history(): List<String> =
+        rows("SELECT operation_id, kind, revision FROM operation_receipt ORDER BY revision") +
+            rows(
+                "SELECT c.name, e.amount_minor, e.effective_date FROM expense e " +
+                    "JOIN category c ON c.id = e.category_id ORDER BY e.effective_date, e.sequence"
+            ) +
+            rows(
+                "SELECT amount_minor, effective_date, source_key FROM income ORDER BY effective_date"
+            ) +
+            rows("SELECT name, archived, version FROM category ORDER BY name") +
+            rows(
+                "SELECT c.name, d.effective_month, d.kind, d.limit_minor FROM default_limit d " +
+                    "JOIN category c ON c.id = d.category_id ORDER BY c.name, d.effective_month"
+            ) +
+            rows(
+                "SELECT c.name, m.month, m.kind, m.limit_minor FROM month_limit m " +
+                    "JOIN category c ON c.id = m.category_id ORDER BY c.name, m.month"
+            )
+
+    private fun checks(scenario: Scenario, graph: SandboxGraph, run: String): List<String> {
+        val lines = graph.runner.state.value.log
+            .filter { scenario.steps[it.index] is ScenarioStep.Verify }
+            .flatMap { it.result.lines() }
+        lines.forEach { Log.i(TAG, "${scenario.key} [$run] $it") }
+        return lines
+    }
+
+    @Test
+    fun everyScenarioMeetsItsFiguresAndResumesToTheSameHistory() {
+        val report = mutableListOf<String>()
+        Scenarios.all.forEach { scenario ->
+            val fresh = graph(scenario)
+            fresh.finish()
+            val freshChecks = checks(scenario, fresh, "fresh")
+            val freshHistory = fresh.history()
+
+            // Cut off after the last write before the middle; its checkpoint is lost.
+            val resumed = graph(scenario)
+            val cut = scenario.steps.indices
+                .last { it < scenario.steps.size / 2 && scenario.steps[it].writes } + 1
+            runBlocking { repeat(cut) { resumed.runner.step() } }
+            resumed.store.session = resumed.store.session.copy(nextStep = cut - 1)
+            resumed.open()
+            resumed.finish()
+            val resumedChecks = checks(scenario, resumed, "resumed")
+
+            assertEquals(scenario.key, freshHistory, resumed.history())
+            assertEquals(scenario.key, freshChecks, resumedChecks)
+            assertTrue(scenario.key, freshChecks.none { it.startsWith("✗") })
+            val verifies = scenario.steps.count { it is ScenarioStep.Verify }
+            val figures = scenario.steps.filterIsInstance<ScenarioStep.Verify>().sumOf {
+                it.checks.size
+            }
+            assertEquals(scenario.key, figures, freshChecks.count { it.startsWith("✓") })
+            report += "${scenario.key}: ${scenario.steps.size} steps, $verifies checks, " +
+                "$figures figures matched, fresh = resumed (cut after step $cut)"
+        }
+        report.forEach { Log.i(TAG, it) }
+        assertEquals(Scenarios.all.size, report.size)
+    }
+
+    private fun ScenarioStep.writes() =
+        this !is ScenarioStep.AdvanceTo && this !is ScenarioStep.Verify
+
+    private companion object {
+        const val TAG = "ScenarioCorpus"
+    }
+}

@@ -24,7 +24,8 @@ tapped with a finger; TalkBack can activate it. Open the tools from their launch
 
 ## Scenarios
 
-The tools' **Escenarios** section replays a synthetic history through the app's own
+The full corpus, with expected values and replay steps, is in
+[sandbox-scenarios.md](../testing/sandbox-scenarios.md). The tools' **Escenarios** section replays a synthetic history through the app's own
 commands, so Recibo and Resumen grow exactly as they would by hand.
 
 | Scenario | Steps | Shows |

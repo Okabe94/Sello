@@ -4,8 +4,8 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-22 · **Product baseline:** `1fcca96`.
-SELLO-001–026, SELLO-061–073 and epics E01–E05 and E12 are recorded Done in the canonical tickets.
+**Snapshot:** 2026-10-22 · **Product baseline:** `def067f`.
+SELLO-001–027, SELLO-061–073 and epics E01–E06 and E12 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -56,6 +56,7 @@ forecast remains only as Resumen's estimate, and
 | [SELLO-024](../planning/mvp/epics/E06-live-testing.md#sello-024--create-isolated-sandbox-sessions-and-financial-time-controls) | The debug app has a sandbox with its own data, opened from **Sello Herramientas**: a badge on every screen, and a financial date to step, jump or play forward while device, audit and elapsed time stay real. Switching restarts the app after writes finish; release builds are checked to contain none of it. A finger can't tap the status-bar badge. |
 | [SELLO-025](../planning/mvp/epics/E06-live-testing.md#sello-025--implement-seeded-histories-replay-and-live-graph-growth-scenarios) | The sandbox replays versioned scenarios (G01, month and year ends, six months) through the real commands, step by step or playing, with derived operation IDs so a resumed step never writes twice; Recibo and Resumen grow live. |
 | [SELLO-026](../planning/mvp/epics/E06-live-testing.md#sello-026--add-truthful-failure-receipt-and-recovery-diagnostics) | Sandbox-only simulated faults (failed read, lost answer or interruption after a real save, failure before storage), an operation inspector that reads real receipts, an edge-case scenario and a redacted diagnostic shared on request. |
+| [SELLO-027](../planning/mvp/epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite) | Nine sandbox scenarios with checks taken from the approved examples (G01, H01–H05, I01–I02, AR01–AR02) or derived by hand and labelled; `TemporalScenarioCorpusTest` runs each fresh and resumed; [corpus](../testing/sandbox-scenarios.md) with replay steps and the recurrence obligation. E06 is done. |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-062](../planning/mvp/epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Recibo's answer slip reads "Restante del presupuesto" with a signed remainder, the per-day figure under a tear line and a closing line for past months. The Ajustar presupuesto link is SELLO-067. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
@@ -74,7 +75,6 @@ forecast remains only as Resumen's estimate, and
 
 - SELLO-074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the last E13
   ticket, a recorded manual TalkBack and Switch Access pass over the v2 screens.
-- SELLO-027: the growing temporal regression scenario suite, the last E06 ticket.
 - SELLO-028–032: backup, restore, reset and their privacy verification. Restore
   from startup failure and reset erasure of the kept unreadable copy remain open.
 - SELLO-033–036: integrated accessibility, restoration, performance and signed
@@ -82,7 +82,7 @@ forecast remains only as Resumen's estimate, and
 - Goal/investment features, recurrence and other deferred capabilities remain
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
-The [board](../planning/mvp/BOARD.md) currently lists SELLO-027 and SELLO-028 without
+The [board](../planning/mvp/BOARD.md) currently lists SELLO-028 without
 unmet ticket dependencies, plus E13's SELLO-074 (deferred) and E08's SELLO-033. Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 

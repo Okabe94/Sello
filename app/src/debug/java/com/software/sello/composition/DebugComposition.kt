@@ -181,6 +181,8 @@ class DebugComposition(
                             get(),
                             get(),
                             get(),
+                            get(),
+                            get(),
                             store,
                             scope
                         ).also {

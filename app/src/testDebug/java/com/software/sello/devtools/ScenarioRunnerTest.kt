@@ -175,7 +175,8 @@ class LedgerIncomes(private val ledger: Ledger) : IncomeCommands {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScenarioRunnerTest {
-    private val scenario = Scenarios.G01
+    // G01's writes without its final check, which reads real snapshots on device.
+    private val scenario = Scenarios.G01.copy(steps = Scenarios.G01.steps.dropLast(1))
     private val ledger = Ledger()
     private val store = InMemorySessionStore(
         SandboxSession(active = true, date = scenario.start, scenario = scenario.key)
@@ -195,6 +196,8 @@ class ScenarioRunnerTest {
             LedgerCategories(ledger),
             LedgerExpenses(ledger),
             LedgerIncomes(ledger),
+            NoSnapshots,
+            NoSnapshots,
             store,
             backgroundScope
         )
@@ -309,4 +312,13 @@ class ScenarioRunnerTest {
         )
         assertEquals(4, second.state.value.next)
     }
+}
+
+/** Snapshot ports the host runner tests never read. */
+object NoSnapshots :
+    com.software.sello.domain.port.MonthlySnapshots,
+    com.software.sello.domain.port.ResumenSnapshots {
+    override suspend fun read(month: java.time.YearMonth): Nothing = error("unused")
+
+    override fun observe(month: java.time.YearMonth): Nothing = error("unused")
 }

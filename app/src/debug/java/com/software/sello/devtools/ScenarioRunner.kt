@@ -1,13 +1,17 @@
 package com.software.sello.devtools
 
 import com.software.sello.devtools.ScenarioStep.AdvanceTo
+import com.software.sello.devtools.ScenarioStep.Archive
 import com.software.sello.devtools.ScenarioStep.Category
 import com.software.sello.devtools.ScenarioStep.DeleteExpense
 import com.software.sello.devtools.ScenarioStep.EditExpense
 import com.software.sello.devtools.ScenarioStep.Expense
 import com.software.sello.devtools.ScenarioStep.Income
 import com.software.sello.devtools.ScenarioStep.Repeat
+import com.software.sello.devtools.ScenarioStep.SetDefaultLimit
+import com.software.sello.devtools.ScenarioStep.SetMonthLimit
 import com.software.sello.devtools.ScenarioStep.UndoDelete
+import com.software.sello.devtools.ScenarioStep.Verify
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryName
@@ -19,7 +23,10 @@ import com.software.sello.domain.model.Note
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.OperationReceipt
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.model.OverallBudget
 import com.software.sello.domain.model.TransactionAmount
+import com.software.sello.domain.port.ArchiveCategory
+import com.software.sello.domain.port.CategoryCommand
 import com.software.sello.domain.port.CategoryCommandOutcome
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CreateCategory
@@ -31,7 +38,12 @@ import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.IncomeCommandOutcome
 import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RestoreExpense
+import com.software.sello.domain.port.ResumenSnapshots
+import com.software.sello.domain.port.SetDefaultLimit as SetDefaultLimitCommand
+import com.software.sello.domain.port.SetMonthLimit as SetMonthLimitCommand
+import java.time.YearMonth
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -87,6 +99,8 @@ class ScenarioRunner(
     private val categories: CategoryCommands,
     private val expenses: ExpenseCommands,
     private val incomes: IncomeCommands,
+    private val months: MonthlySnapshots,
+    private val summaries: ResumenSnapshots,
     private val store: SandboxSessionStore,
     private val scope: CoroutineScope,
     private val stepMillis: Long = SandboxTime.STEP_MILLIS
@@ -108,10 +122,11 @@ class ScenarioRunner(
                 StepRecord(
                     index,
                     describe(step),
-                    loaded.operation(index).takeIf { step !is AdvanceTo },
+                    loaded.operation(index).takeIf { step.writes },
                     receipt?.revision,
                     when {
                         step is AdvanceTo -> DATE_SET
+                        step is Verify -> "Comprobado antes"
                         receipt != null -> "Guardado"
                         else -> "Sin escritura, como se esperaba"
                     }
@@ -146,7 +161,7 @@ class ScenarioRunner(
         val record = StepRecord(
             index,
             describe(step),
-            loaded.operation(index).takeIf { step !is AdvanceTo },
+            loaded.operation(index).takeIf { step.writes },
             done.revision,
             done.text
         )
@@ -196,6 +211,9 @@ class ScenarioRunner(
         data object DateSet : Observed
 
         data class Stop(val why: String) : Observed
+
+        /** Each check's line, and whether all of them matched. */
+        data class Checked(val lines: List<String>, val matched: Boolean) : Observed
     }
 
     private fun judge(expect: Expect, seen: Observed): Result = when (seen) {
@@ -235,6 +253,20 @@ class ScenarioRunner(
         )
 
         Observed.DateSet -> Result(null, DATE_SET, true)
+
+        is Observed.Checked -> Result(
+            null,
+            (
+                listOf(
+                    if (seen.matched) {
+                        "Comprobación: ${seen.lines.size} de ${seen.lines.size} cifras coinciden"
+                    } else {
+                        "Comprobación: no coincide"
+                    }
+                ) + seen.lines
+                ).joinToString("\n"),
+            seen.matched
+        )
 
         is Observed.Stop -> Result(null, seen.why, false)
     }
@@ -282,7 +314,7 @@ class ScenarioRunner(
                             generation,
                             category,
                             amount,
-                            today,
+                            step.on ?: today,
                             Note.of(step.note).value()
                         )
                     )
@@ -345,6 +377,27 @@ class ScenarioRunner(
                 )
             }
 
+            is SetDefaultLimit -> categoryChange(loaded, step.category) { id ->
+                SetDefaultLimitCommand(operation, generation, id, step.version, limit(step.pesos))
+            }
+
+            is SetMonthLimit -> categoryChange(loaded, step.category) { id ->
+                SetMonthLimitCommand(
+                    operation,
+                    generation,
+                    id,
+                    step.version,
+                    step.month,
+                    limit(step.pesos)
+                )
+            }
+
+            is Archive -> categoryChange(loaded, step.category) { id ->
+                ArchiveCategory(operation, generation, id, step.version)
+            }
+
+            is Verify -> verify(step.checks)
+
             is UndoDelete -> expense(
                 expenses.restore(
                     RestoreExpense(
@@ -377,6 +430,64 @@ class ScenarioRunner(
         is CategoryCommandOutcome.Rejected -> Observed.Rejected(name(outcome.reason))
 
         is CategoryCommandOutcome.OutcomeUnknown -> Observed.Unknown
+    }
+
+    private fun limit(pesos: Long?): BudgetLimit =
+        pesos?.let { BudgetLimit.finite(Money.cop(it)).value() } ?: BudgetLimit.Unlimited
+
+    private suspend fun categoryChange(
+        loaded: Scenario,
+        key: String,
+        command: (CategoryId) -> CategoryCommand
+    ): Observed {
+        val id = categoryId(loaded, key) ?: return Observed.Stop("No existe la categoría «$key»")
+        return when (val outcome = categories.submit(command(id))) {
+            is CategoryCommandOutcome.Committed ->
+                Observed.Committed(outcome.change.receipt, outcome.replayed)
+
+            is CategoryCommandOutcome.Rejected -> Observed.Rejected(name(outcome.reason))
+
+            is CategoryCommandOutcome.OutcomeUnknown -> Observed.Unknown
+        }
+    }
+
+    /** Reads each month's real snapshots once and compares every check against them. */
+    private suspend fun verify(checks: List<Check>): Observed {
+        val lines = checks.map { check ->
+            val actual = actual(check.month, check.figure)
+            val expected = if (check.figure == Figure.NoLimit) "sí" else pesos(check.pesos)
+            val ok = actual == expected
+            "${if (ok) "✓" else "✗"} ${check.figure.label} ${check.month}: esperado $expected, " +
+                "real ${actual ?: "no se pudo leer"} (${check.source})"
+        }
+        return Observed.Checked(lines, lines.all { it.startsWith("✓") })
+    }
+
+    private suspend fun actual(month: YearMonth, figure: Figure): String? = when (figure) {
+        Figure.Spent, Figure.Limit, Figure.Remaining, Figure.NoLimit -> {
+            val snapshot = (months.read(month) as? Outcome.Success)?.value
+            val overall = snapshot?.overall
+            when (figure) {
+                Figure.Spent -> snapshot?.spent?.let(::pesos)
+
+                Figure.NoLimit -> overall?.let { if (it is OverallBudget.NoLimit) "sí" else "no" }
+
+                Figure.Limit -> (overall as? OverallBudget.Limited)?.budget?.limit?.let(::pesos)
+                    ?: overall?.let { "sin límite" }
+
+                else -> (overall as? OverallBudget.Limited)?.budget?.remaining?.let(::pesos)
+                    ?: overall?.let { "sin límite" }
+            }
+        }
+
+        Figure.Income, Figure.NetFlow, Figure.Unallocated -> {
+            val summary = (summaries.read(month) as? Outcome.Success)?.value
+            when (figure) {
+                Figure.Income -> summary?.income
+                Figure.NetFlow -> summary?.netFlow
+                else -> summary?.unallocated
+            }?.let(::pesos)
+        }
     }
 
     private fun expense(outcome: ExpenseCommandOutcome): Observed = when (outcome) {
@@ -428,6 +539,11 @@ class ScenarioRunner(
 
             is EditExpense, is DeleteExpense, is UndoDelete ->
                 (expenses.find(operation) as? Outcome.Success)?.value?.receipt
+
+            is SetDefaultLimit, is SetMonthLimit, is Archive ->
+                (categories.find(operation) as? Outcome.Success)?.value?.receipt
+
+            is Verify -> null
         }
     }
 
@@ -446,7 +562,8 @@ class ScenarioRunner(
                 "Categoría ${step.name}" +
                     (step.limit?.let { ", límite ${pesos(it)}" } ?: ", sin límite")
 
-            is Expense -> "Gasto ${pesos(step.pesos)} en ${step.category}"
+            is Expense -> "Gasto ${pesos(step.pesos)} en ${step.category}" +
+                (step.on?.let { " con fecha ${spokenDate(it)}" } ?: "")
 
             is Income -> "Ingreso ${pesos(step.pesos)} (${step.source})"
 
@@ -460,7 +577,20 @@ class ScenarioRunner(
             is DeleteExpense -> "Borrar el gasto del paso ${step.of + 1} (versión ${step.version})"
 
             is UndoDelete -> "Deshacer el borrado del paso ${step.of + 1}"
+
+            is SetDefaultLimit ->
+                "Límite por defecto de ${step.category}: " + (step.pesos?.let(::pesos) ?: "ninguno")
+
+            is SetMonthLimit ->
+                "Límite de ${step.month} en ${step.category}: " +
+                    (step.pesos?.let(::pesos) ?: "ninguno")
+
+            is Archive -> "Archivar ${step.category}"
+
+            is Verify -> "Comprobar ${step.checks.size} cifras"
         }
+
+        private fun pesos(amount: Money): String = pesos(amount.minorUnits)
 
         private fun pesos(amount: Long): String =
             String.format(Locale.ROOT, "%,d", amount).replace(',', '.')

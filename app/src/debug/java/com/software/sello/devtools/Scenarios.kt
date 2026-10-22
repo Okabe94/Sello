@@ -1,19 +1,25 @@
 package com.software.sello.devtools
 
 import com.software.sello.devtools.ScenarioStep.AdvanceTo
+import com.software.sello.devtools.ScenarioStep.Archive
 import com.software.sello.devtools.ScenarioStep.Category
 import com.software.sello.devtools.ScenarioStep.DeleteExpense
 import com.software.sello.devtools.ScenarioStep.EditExpense
 import com.software.sello.devtools.ScenarioStep.Expense
 import com.software.sello.devtools.ScenarioStep.Income
 import com.software.sello.devtools.ScenarioStep.Repeat
+import com.software.sello.devtools.ScenarioStep.SetDefaultLimit
+import com.software.sello.devtools.ScenarioStep.SetMonthLimit
 import com.software.sello.devtools.ScenarioStep.UndoDelete
+import com.software.sello.devtools.ScenarioStep.Verify
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import kotlin.random.Random
 
 private val Bogota = ZoneId.of("America/Bogota")
+private val Sep = YearMonth.of(2026, 9)
+private val Oct = YearMonth.of(2026, 10)
 
 /** The scenarios the tools offer, all synthetic. */
 object Scenarios {
@@ -24,7 +30,7 @@ object Scenarios {
      */
     val G01 = Scenario(
         id = "g01",
-        version = 1,
+        version = 2,
         seed = 1,
         zone = Bogota,
         start = LocalDate.of(2026, 10, 1),
@@ -37,7 +43,15 @@ object Scenarios {
             Expense("comida", 15_000),
             AdvanceTo(LocalDate.of(2026, 10, 3)),
             Expense("comida", 5_000),
-            Income(200_000, "salary")
+            Income(200_000, "salary"),
+            Verify(
+                listOf(
+                    Check(Oct, Figure.Spent, 30_000, "G01"),
+                    Check(Oct, Figure.Remaining, 70_000, "G01"),
+                    Check(Oct, Figure.NetFlow, 170_000, "G01"),
+                    Check(Oct, Figure.Unallocated, 100_000, "G01")
+                )
+            )
         )
     )
 
@@ -47,7 +61,7 @@ object Scenarios {
      */
     val MonthAndYearEnds = Scenario(
         id = "fin-de-mes",
-        version = 1,
+        version = 2,
         seed = 1,
         zone = Bogota,
         start = LocalDate.of(2026, 10, 30),
@@ -66,7 +80,28 @@ object Scenarios {
             AdvanceTo(LocalDate.of(2026, 12, 31)),
             Expense("comida", 12_000),
             AdvanceTo(LocalDate.of(2027, 1, 1)),
-            Expense("comida", 8_000)
+            Expense("comida", 8_000),
+            // Hand-derived from the steps under the B01/B04 rules: unlimited spending counts
+            // in the total, and an overrun is shown negative, never clipped.
+            Verify(
+                listOf(
+                    Check(Oct, Figure.Spent, 85_000, "a mano: 30.000 + 35.000 + 20.000"),
+                    Check(Oct, Figure.Remaining, -35_000, "a mano, B01/B04: 50.000 − 85.000"),
+                    Check(
+                        YearMonth.of(2026, 11),
+                        Figure.Remaining,
+                        40_000,
+                        "a mano, H05: 50.000 − 10.000"
+                    ),
+                    Check(
+                        YearMonth.of(2026, 12),
+                        Figure.Remaining,
+                        38_000,
+                        "a mano: 50.000 − 12.000"
+                    ),
+                    Check(YearMonth.of(2027, 1), Figure.Remaining, 42_000, "a mano: 50.000 − 8.000")
+                )
+            )
         )
     )
 
@@ -133,7 +168,178 @@ object Scenarios {
         )
     )
 
-    val all: List<Scenario> = listOf(G01, MonthAndYearEnds, SixMonths, Edges)
+    /** 28 Feb → 29 Feb → 1 Mar 2028. Not an approved example: the figures are derived by hand. */
+    val LeapYear = Scenario(
+        id = "bisiesto",
+        version = 1,
+        seed = 1,
+        zone = Bogota,
+        start = LocalDate.of(2028, 2, 28),
+        title = "Año bisiesto",
+        summary = "28 feb → 29 feb → 1 mar 2028; cifras calculadas a mano, no un ejemplo aprobado.",
+        steps = listOf(
+            Category("comida", "Comida", "restaurant", 100_000),
+            Expense("comida", 10_000),
+            AdvanceTo(LocalDate.of(2028, 2, 29)),
+            Expense("comida", 20_000),
+            AdvanceTo(LocalDate.of(2028, 3, 1)),
+            Expense("comida", 5_000),
+            Verify(
+                listOf(
+                    Check(YearMonth.of(2028, 2), Figure.Spent, 30_000, "a mano: 10.000 + 20.000"),
+                    Check(YearMonth.of(2028, 2), Figure.Remaining, 70_000, "a mano"),
+                    Check(YearMonth.of(2028, 3), Figure.Spent, 5_000, "a mano"),
+                    Check(YearMonth.of(2028, 3), Figure.Remaining, 95_000, "a mano")
+                )
+            )
+        )
+    )
+
+    /**
+     * H03/H04: a default set in October, November never opened, December's default
+     * changed; November still resolves October's 100.000, and a backdated November
+     * expense of 10.000 leaves 90.000. History across skipped months, not recurrence.
+     */
+    val SkippedMonths = Scenario(
+        id = "meses-saltados",
+        version = 1,
+        seed = 1,
+        zone = Bogota,
+        start = LocalDate.of(2026, 10, 5),
+        title = "Meses saltados",
+        summary = "H03/H04: noviembre sin abrir conserva 100.000; diciembre usa 120.000; " +
+            "un gasto con fecha atrasada en noviembre deja 90.000.",
+        steps = listOf(
+            Category("comida", "Comida", "restaurant", 100_000),
+            AdvanceTo(LocalDate.of(2026, 12, 3)),
+            SetDefaultLimit("comida", 120_000, version = 1),
+            Expense("comida", 10_000, on = LocalDate.of(2026, 11, 15)),
+            Verify(
+                listOf(
+                    Check(YearMonth.of(2026, 11), Figure.Limit, 100_000, "H03"),
+                    Check(YearMonth.of(2026, 12), Figure.Limit, 120_000, "H03"),
+                    Check(YearMonth.of(2026, 11), Figure.Spent, 10_000, "H04"),
+                    Check(YearMonth.of(2026, 11), Figure.Remaining, 90_000, "H04")
+                )
+            )
+        )
+    )
+
+    /**
+     * H05, H01 and H02 in order: an unchanged default carries without adding up; a new
+     * October default leaves September as it was; correcting September changes only it.
+     */
+    val PastLimits = Scenario(
+        id = "limite-pasado",
+        version = 1,
+        seed = 1,
+        zone = Bogota,
+        start = LocalDate.of(2026, 9, 10),
+        title = "Límite pasado",
+        summary = "H05, H01, H02: septiembre conserva su límite cuando cambia octubre; " +
+            "una corrección de septiembre no toca octubre.",
+        steps = listOf(
+            Category("comida", "Comida", "restaurant", 100_000),
+            Expense("comida", 20_000),
+            AdvanceTo(LocalDate.of(2026, 10, 2)),
+            Verify(
+                listOf(
+                    Check(Sep, Figure.Remaining, 80_000, "H05"),
+                    Check(Oct, Figure.Limit, 100_000, "H05")
+                )
+            ),
+            SetDefaultLimit("comida", 120_000, version = 1),
+            Verify(
+                listOf(
+                    Check(Sep, Figure.Remaining, 80_000, "H01"),
+                    Check(Oct, Figure.Limit, 120_000, "H01")
+                )
+            ),
+            SetMonthLimit("comida", Sep, 90_000, version = 2),
+            Verify(
+                listOf(
+                    Check(Sep, Figure.Remaining, 70_000, "H02"),
+                    Check(Oct, Figure.Limit, 120_000, "H02")
+                )
+            )
+        )
+    )
+
+    /** AR01/AR02: archiving keeps October's history and gives November no budget. */
+    val Archived = Scenario(
+        id = "archivada",
+        version = 1,
+        seed = 1,
+        zone = Bogota,
+        start = LocalDate.of(2026, 10, 5),
+        title = "Categoría archivada",
+        summary = "AR01/AR02: octubre conserva 80.000 y su límite; no se anota en ella; " +
+            "noviembre no tiene presupuesto.",
+        steps = listOf(
+            Category("ocio", "Ocio", "theaters", 100_000),
+            Expense("ocio", 20_000),
+            Archive("ocio", version = 1),
+            Expense("ocio", 5_000, expect = Expect.Rejected("CategoryArchived")),
+            Verify(
+                listOf(
+                    Check(Oct, Figure.Remaining, 80_000, "AR01"),
+                    Check(Oct, Figure.Limit, 100_000, "AR01")
+                )
+            ),
+            AdvanceTo(LocalDate.of(2026, 11, 3)),
+            Verify(
+                listOf(
+                    Check(YearMonth.of(2026, 11), Figure.NoLimit, 0, "AR02"),
+                    Check(Oct, Figure.Remaining, 80_000, "AR02")
+                )
+            )
+        )
+    )
+
+    /** I01 in October and I02 in November: income against the budget, never clamped. */
+    val IncomeAllocation = Scenario(
+        id = "ingresos",
+        version = 1,
+        seed = 1,
+        zone = Bogota,
+        start = LocalDate.of(2026, 10, 5),
+        title = "Ingresos y presupuesto",
+        summary = "I01: sin asignar 50.000. I02: sin asignar −50.000, sin recortar a 0.",
+        steps = listOf(
+            Category("comida", "Comida", "restaurant", 100_000),
+            Expense("comida", 30_000),
+            Income(150_000, "salary"),
+            Verify(
+                listOf(
+                    Check(Oct, Figure.NetFlow, 120_000, "I01"),
+                    Check(Oct, Figure.Remaining, 70_000, "I01"),
+                    Check(Oct, Figure.Unallocated, 50_000, "I01")
+                )
+            ),
+            AdvanceTo(LocalDate.of(2026, 11, 3)),
+            Expense("comida", 30_000),
+            Income(50_000, "salary"),
+            Verify(
+                listOf(
+                    Check(YearMonth.of(2026, 11), Figure.NetFlow, 20_000, "I02"),
+                    Check(YearMonth.of(2026, 11), Figure.Remaining, 70_000, "I02"),
+                    Check(YearMonth.of(2026, 11), Figure.Unallocated, -50_000, "I02")
+                )
+            )
+        )
+    )
+
+    val all: List<Scenario> = listOf(
+        G01,
+        MonthAndYearEnds,
+        SixMonths,
+        Edges,
+        LeapYear,
+        SkippedMonths,
+        PastLimits,
+        Archived,
+        IncomeAllocation
+    )
 
     fun find(key: String?): Scenario? = all.firstOrNull { it.key == key }
 }

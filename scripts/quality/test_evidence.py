@@ -1,8 +1,10 @@
 import io
+import os
 import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import evidence
 import runner
@@ -12,6 +14,9 @@ from test_runner import DEVICE, Harness
 
 class EvidenceTests(unittest.TestCase):
     def setUp(self):
+        device_env = patch.dict(os.environ, {"ANDROID_SERIAL": ""})
+        device_env.start()
+        self.addCleanup(device_env.stop)
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = make_repo(directory.name)
@@ -75,7 +80,7 @@ class EvidenceTests(unittest.TestCase):
         self.assert_rejected("malformed report: snapshot.dirty", field=field)
 
     def test_unsupported_schema_version_is_rejected(self):
-        field = self.rewrite(lambda report: report.update(schema_version=2))
+        field = self.rewrite(lambda report: report.update(schema_version=999))
         self.assert_rejected("malformed report: schema_version", field=field)
 
     def test_failed_report_is_rejected(self):

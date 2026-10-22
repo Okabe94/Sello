@@ -58,8 +58,10 @@ The test names specified by tickets are **tests to create**; if compatible prede
 tests already exist, document the actual selector. A no-matching-tests result is
 not a pass. For a no-test configuration/docs change, verify the actual config/links
 and run its gate instead of fabricating behavior red→green.
-G0/G1/G2/G3 commands are in [README.md](README.md#gate-profiles); run the whole
-assigned gate after focused tests, not only the example command shown in a ticket.
+G0/G1/G2/G3 commands are in [README.md](README.md#gate-profiles). Run the assigned
+gate after focused tests. Default ticket commands use full coverage; `--affected
+BASE` opts into the documented dependency-aware device scope. An explicit `--gate
+G2` forces full device coverage. Do not replace gate evidence with a focused task.
 
 ## Device and process restoration
 
@@ -169,13 +171,18 @@ unless the current user request authorizes it.
 
 ## Quality runner
 
-Prerequisites: the environment from [setup](../../development/setup.md) (JDK 25 on
-`PATH`, `ANDROID_HOME` or `sdk.dir`), Python 3, Git, and for G2 a booted device.
+Prerequisites: Python 3 and Git for G0. G1/G2 also need the environment from
+[setup](../../development/setup.md): JDK 25 on PATH and ANDROID_HOME or sdk.dir;
+G2 needs an isolated booted API-30 emulator/device. Fetch the intended PR base
+before selecting affected coverage. Ticket gates cannot be downgraded.
 
 ```bash
 ./scripts/verify-ticket SELLO-017            # run the gate the ticket requires
 ./scripts/verify-ticket SELLO-017 --gate G2  # run a higher gate; lower is refused
-./scripts/verify-ticket SELLO-017 --retain   # passed run -> retained report + field text
+./scripts/verify-ticket SELLO-017 --retain   # full assigned gate -> retained evidence
+./scripts/verify-ticket SELLO-017 --affected origin/main --retain  # affected device scope
+./scripts/verify-ticket --merge-candidate origin/main  # derive candidate G0/G2 and scope
+./scripts/verify-ticket --merge-candidate origin/main --gate G2  # force full G2
 python3 docs/planning/mvp/board.py           # regenerate views after ticket edits
 python3 docs/planning/mvp/board.py --check   # completion validation
 python3 scripts/quality/architecture.py      # architecture rules alone, quick feedback
@@ -196,14 +203,25 @@ Flow for a ticket:
    ticket In Progress and explain what remains. Regenerate the board, run
    `board.py --check`, commit the retained report with the change and open the PR.
    Review is for work waiting on something outside the merge.
-4. CI asks `verify-ticket --candidate-gate <base>` which gate the merge commit needs
-   (G2, or G1 for a candidate that advances no ticket and changes only documents),
-   runs `verify-ticket --merge-candidate <base> --gate <that>` on the merge commit
-   and then `board.py --check --base <base>`. After the merge, the push to `main`
-   runs `verify-ticket --landed <previous main>`, the host gate, and the same
-   evidence check; `main` gets the device gate nightly. Reports are the
-   `quality-reports` artifact of each workflow run, kept 90 days:
+4. CI asks `verify-ticket --ci-plan <base> --ci-event <event>` for the exact gate,
+   device scope and groups. It executes the host and selected device parts, then
+   validates collection and `board.py --check --base <base>`. Documentation-only
+   candidates advancing no ticket use G0 without Java/SDK setup. PR module changes
+   use dependency-aware G2; shared/build/unknown changes use full devices. Main
+   code pushes keep G1 for trusted cache warming; documentation pushes can use G0.
+   Nightly/manual runs remain full G2. Reports are retained for 90 days:
    `gh run download <run id> -n quality-reports`.
+
+For local affected scope, app selects app; catalog selects catalog; data/domain
+select data/app; design-system selects design-system/app/catalog. Mixed changes
+union those sets. Build scripts, lockfiles, tooling, workflows, unrecognized paths
+and documentation-only ticket advancement require full device scope. Base selection
+must include the whole change: do not choose a newer base to hide changed inputs.
+G1 always runs all host tasks. A local candidate batch preserves each selected
+ticket's minimum gate; hosted candidate parts use the common G2 gate. Individual
+ticket commands remain full unless --affected is supplied. Schema-v2 reports and retained Quality run fields
+identify affected coverage explicitly; nightly/manual and `--gate G2` verify every
+device module. Old schema-v1 reports remain historical full evidence.
 
 What makes a report stale: any change to a tracked or untracked-but-not-ignored
 file, including code, tests, build files, guardrail documents and a ticket's own

@@ -51,7 +51,7 @@ class CandidateGateTests(unittest.TestCase):
 
     def test_a_change_to_documents_alone_needs_no_device(self):
         self.commit(**{"docs/development/notes.md": "text\n", "ARCHITECTURE.md": "rules\n"})
-        self.assertEqual("G1", self.gate())
+        self.assertEqual("G0", self.gate())
 
     def test_any_code_change_needs_the_device_gate(self):
         self.commit(**{"app/src/Main.kt": "fun main() = println()\n"})
@@ -82,7 +82,7 @@ class CandidateGateTests(unittest.TestCase):
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="Backlog", dependencies="SELLO-003", gate="G2") + "\nA note.\n",
         )})
-        self.assertEqual("G1", self.gate())
+        self.assertEqual("G0", self.gate())
 
     def test_a_file_deleted_or_moved_out_of_the_code_counts_as_a_code_change(self):
         git(self.root, "mv", "app/src/Main.kt", "docs/Main.md")
@@ -103,7 +103,7 @@ class CandidateGateTests(unittest.TestCase):
 
     def test_nothing_changed_needs_no_device(self):
         self.assertEqual([], runner.changed_paths(self.root, self.base))
-        self.assertEqual("G1", self.gate())
+        self.assertEqual("G0", self.gate())
 
     def test_an_unknown_base_is_treated_as_needing_the_device_gate(self):
         self.assertEqual("G2", runner.candidate_gate(self.root, "0" * 40))

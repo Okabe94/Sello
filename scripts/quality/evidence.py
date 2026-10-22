@@ -13,11 +13,13 @@ import subprocess
 from pathlib import Path
 
 import fingerprint
+import selection
 
 GATES = ("G0", "G1", "G2", "G3")
 MINIMUM_GATE = "G1"
 RETAINED_DIR = fingerprint.RETAINED_REPORT_DIR.rstrip("/")
-SCHEMA = json.loads((Path(__file__).with_name("report-schema-v1.json")).read_text(encoding="utf-8"))
+SCHEMA_V1 = json.loads((Path(__file__).with_name("report-schema-v1.json")).read_text(encoding="utf-8"))
+SCHEMA = json.loads((Path(__file__).with_name("report-schema-v2.json")).read_text(encoding="utf-8"))
 TYPES = {"object": dict, "array": list, "string": str, "integer": int, "boolean": bool}
 
 
@@ -65,9 +67,25 @@ def load(path):
         raise EvidenceError("no retained quality report; run scripts/verify-ticket with --retain") from None
     except ValueError:
         raise EvidenceError("retained report is not valid JSON") from None
-    problem = schema_problem(report, SCHEMA)
+    schema = SCHEMA_V1 if isinstance(report, dict) and report.get("schema_version") == 1 else SCHEMA
+    problem = schema_problem(report, schema)
     if problem:
         raise EvidenceError(f"malformed report: {problem}")
+    if report["schema_version"] == 2:
+        problem = selection.problem(report["coverage"], report["gate"]["executed"], report["ticket"])
+        if problem:
+            raise EvidenceError(f"invalid coverage: {problem}")
+        if report["outcome"] == "passed" and report["gate"]["executed"] == "G2":
+            observed = {}
+            for check in report["checks"]:
+                for module, counts in check.get("modules", {}).items():
+                    if module in observed or not isinstance(counts, dict) or type(counts.get("tests")) is not int or counts["tests"] <= 0:
+                        raise EvidenceError("invalid coverage: missing or duplicate device results")
+                    if any(counts.get(key) != 0 for key in ("failures", "errors", "skipped")) or check.get("fresh_results") is not True:
+                        raise EvidenceError("invalid coverage: device results failed, skipped or lack freshness")
+                    observed[module] = counts
+            if set(observed) != set(report["coverage"]["device_modules"]):
+                raise EvidenceError("invalid coverage: executed modules differ from the selected device coverage")
     return report
 
 
@@ -76,10 +94,12 @@ def quality_run_line(root, ticket_id):
     path = retained_path(root, ticket_id)
     report = load(path)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    scope = report.get("coverage", {"mode": "full", "device_modules": []})
+    label = "" if scope["mode"] == "full" else f"; coverage {scope['mode']} ({','.join(scope['device_modules'])})"
     return (
         f"run {report['run_id']}; {report['ticket']} {report['gate']['executed']} {report['outcome']}; "
         f"HEAD {report['snapshot']['head'][:7]}, inputs sha256 {report['snapshot']['fingerprint']['value'][:12]}; "
-        f"report {RETAINED_DIR}/{ticket_id}.json sha256 {digest}"
+        f"report {RETAINED_DIR}/{ticket_id}.json sha256 {digest}{label}"
     )
 
 

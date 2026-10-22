@@ -66,7 +66,16 @@ ANDROID_HOME=/home/okabe94/Android/Sdk JAVA_HOME=/opt/android-studio/jbr \
 
 Replace `SELLO-0XX` with the ticket being worked on. The command runs that ticket's
 gate (board checks, architecture rules, ktlint, unit tests, lint and assembly for
-G1) and writes a report under `build/reports/quality/`.
+G1) and writes a report under `build/reports/quality/`. Default ticket commands run
+full coverage. For a G2 ticket, `./scripts/verify-ticket SELLO-0XX --affected origin/main --retain` selects device modules and their consumers since the PR base, while
+`--gate G2` forces all device suites. Fetch the intended base first; unrelated or
+unknown inputs select full coverage. See the [local commands and selection map](docs/planning/mvp/EXECUTION_GUIDE.md#quality-runner).
+
+For documentation-only work advancing no ticket, run
+`./scripts/verify-ticket --merge-candidate origin/main`. It derives G0 (board/tool
+tests and architecture, Python/Git only); it cannot replace a ticket's G1/G2/G3.
+Hosted code pushes retain G1 to warm trusted main caches; documentation pushes use
+G0 and nightly/manual runs keep full G2.
 
 Build/dependency/IDE caches, machine-local configuration and signing secrets are
 not tracked. No Git remote or hosted Jira project is configured by this setup.

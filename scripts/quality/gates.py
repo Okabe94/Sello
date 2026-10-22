@@ -1,5 +1,7 @@
 """Gate profiles: which checks each gate runs and what results they must leave behind."""
 import re
+
+import selection
 import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass
 from pathlib import Path
@@ -73,6 +75,8 @@ def plan(gate):
         Check("architecture", ("python3", "scripts/quality/architecture.py")),
         Check("gradle-host", ("./gradlew", *HOST_TASKS, "--continue"), results=HOST_RESULTS, lint=True),
     ]
+    if gate == "G0":
+        return checks[:-1]
     if gate == "G2":
         checks.append(device_check())
     return checks

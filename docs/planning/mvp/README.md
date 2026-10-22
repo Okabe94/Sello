@@ -147,8 +147,10 @@ bootstrap tickets 001–003.
 
 Use the environment from [setup](../../development/setup.md).
 
-- **G0 — scaffold:** applied only to the bootstrap tickets; the runner always runs
-  at least G1.
+- **G0 — documentation:** board structure/tests, quality-tool tests and architecture,
+  using Python/Git only. Selected by `--merge-candidate BASE` only when every
+  changed path qualifies as documentation and no ticket advances. It cannot
+  complete a ticket; bootstrap ticket history remains unchanged.
 - **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
   structure check, board and quality-tool tests, the architecture rules
   (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
@@ -164,8 +166,14 @@ Use the environment from [setup](../../development/setup.md).
 - **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
   emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
   `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
-  and `:catalog:connectedDebugAndroidTest`, and refuses to start without a connected
-  device. Assembling test APKs is not device acceptance.
+  and `:catalog:connectedDebugAndroidTest` by default, and refuses to start without
+  a connected device. `--affected BASE` selects only impacted modules and their
+  consumers; `--gate G2` always forces all four. App → app; catalog → catalog;
+  data/domain → data/app; design-system → design-system/app/catalog. Mixed scopes
+  are unioned; shared/build/tooling/unknown changes require all four. Every selected
+  suite must execute freshly without skips. Reports name full versus affected
+  coverage; a targeted run is not full G2. See [ADR 0014](../../decisions/0014-change-aware-quality-gates.md).
+  Assembling test APKs is not device acceptance.
 - **G3 — release:** G2 across agreed API/window/font configurations, optimized
   production composition/artifact inspection, performance evidence, and signed
   release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.

@@ -110,7 +110,9 @@ task list is in the [board README](../planning/mvp/README.md):
 
 ```bash
 ./scripts/verify-ticket SELLO-0XX             # the ticket's own gate
-./scripts/verify-ticket SELLO-0XX --gate G1   # the host gate alone
+./scripts/verify-ticket SELLO-0XX --gate G1   # G1 only if the ticket minimum permits it
+./scripts/verify-ticket SELLO-0XX --affected origin/main --retain  # affected G2 scope
+./scripts/verify-ticket --merge-candidate origin/main  # G0 for eligible docs, otherwise G2
 ```
 
 Inspect actual compiler versions independently of Gradle's embedded Kotlin:
@@ -215,15 +217,23 @@ time must be included in the comparison.
 
 ## Parallel hosted G2
 
-The planning job keeps the existing event policy: PRs need G2 except for qualifying
-documents-only candidates, main pushes need G1, and scheduled/manual runs need G2.
-Host checks run once. For G2, two independent runners execute whole module suites:
-`app` and `support` (`data`, `design-system`, `catalog`). Each creates a fresh,
-cold-booted API-30 emulator. Sibling groups continue after a failure for diagnostics.
+The shared planner implements [ADR 0014](../decisions/0014-change-aware-quality-gates.md).
+Eligible documentation advancing no ticket uses G0 (Python/Git, board/tool tests
+and architecture), without Java, Gradle or SDK setup. Code PRs use G2 with affected
+modules and consumers; shared/build/tooling/unknown changes select full devices.
+Main code pushes retain G1 to populate trusted caches; eligible documentation
+pushes use G0. Scheduled/manual runs always use full G2.
+
+G1/G2 host checks run once and retain every existing task. Only required device
+groups start: app, or support with the selected data/design-system/catalog suites.
+Each creates a fresh, cold-booted API-30 emulator. Sibling groups continue after a
+failure for diagnostics. The selection map is app → app; catalog → catalog;
+data/domain → data/app; design-system → design-system/app/catalog. Mixed changes
+union those sets. No manual module/task selector can override the dependency graph.
 
 The only required result is the final `quality` job. It runs even if an upstream
 job fails or is cancelled. It requires successful planning and host jobs, plus
-both device groups for G2; G1 requires the device job to be skipped. The collector
+every selected device group/module for G2; G0/G1 require the device job to be skipped. The collector
 checks every module's fresh XML, check commands, outcome, toolchain, commit, input
 fingerprint, base, event and workflow run/attempt. Missing or inconsistent parts
 fail the gate. Device skips fail too. A part cannot be retained as ticket evidence.
@@ -232,14 +242,20 @@ Parts and raw logs/results are retained as `quality-part-<attempt>-<part>` artif
 for 90 days. The collector downloads only the current attempt, verifies artifact
 digests, and writes standard full reports plus the source parts under
 `quality-reports`. The download action's flat single-artifact layout is accepted
-only for G1 host evidence. Re-run the complete workflow for a fresh comparison; retrying
+only when host is the sole selected part (G0/G1). Re-run the complete workflow for a fresh comparison; retrying
 only a failed group cannot reuse successful groups from a previous attempt.
 The pinned `actions/download-artifact` v8.0.2 reads the current run without new
 credentials or GitHub permissions. Normal local `verify-ticket` commands still
-execute the whole gate on one device.
+execute the whole assigned gate on one device. Add `--affected BASE` to a ticket
+command for targeted device coverage; `--gate G2` always forces every device suite.
+Reports use schema v2 with full/affected/documents scope, compared base/paths and
+exact selected modules. Targeted verification is not reported as full G2; historical
+schema-v1 reports remain readable.
 
-To exercise collection locally, choose a fresh output directory and two isolated
-API-30 emulators. Keep inputs unchanged until collection finishes. For example:
+To exercise full collection locally, choose a fresh output directory and two isolated
+API-30 emulators. The workflow_dispatch event below deliberately selects full G2.
+For pull_request event probes, inspect `--ci-plan BASE --ci-event pull_request`
+(with QUALITY_EXECUTION_ID set) and execute only its selected groups. Keep inputs unchanged until collection finishes. For example:
 
 ```bash
 export QUALITY_EXECUTION_ID=local-device-split-001

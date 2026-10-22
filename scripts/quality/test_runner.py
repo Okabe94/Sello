@@ -4,6 +4,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import fingerprint
 import runner
@@ -48,6 +49,9 @@ class Harness:
 
 class RunnerTests(unittest.TestCase):
     def setUp(self):
+        device_env = patch.dict(os.environ, {"ANDROID_SERIAL": ""})
+        device_env.start()
+        self.addCleanup(device_env.stop)
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = make_repo(directory.name)
@@ -81,7 +85,7 @@ class RunnerTests(unittest.TestCase):
         code, path = self.run_ticket()
         report = self.report(path)
         self.assertEqual(0, code)
-        self.assertEqual(1, report["schema_version"])
+        self.assertEqual(2, report["schema_version"])
         self.assertEqual("SELLO-004", report["ticket"])
         self.assertEqual({"required": "G1", "executed": "G1"}, report["gate"])
         self.assertEqual("passed", report["outcome"])

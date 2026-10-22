@@ -1,8 +1,10 @@
 import io
+import os
 import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import evidence
 import runner
@@ -12,6 +14,9 @@ from test_runner import DEVICE, Harness
 
 class MergeCandidateTests(unittest.TestCase):
     def setUp(self):
+        device_env = patch.dict(os.environ, {"ANDROID_SERIAL": ""})
+        device_env.start()
+        self.addCleanup(device_env.stop)
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = make_repo(directory.name, epic(
@@ -92,8 +97,8 @@ class MergeCandidateTests(unittest.TestCase):
         report = self.reports(paths)[0]
         self.assertEqual(0, code)
         self.assertEqual("UNTICKETED", report["ticket"])
-        self.assertEqual({"required": "G1", "executed": "G1"}, report["gate"])
-        self.assertIn("gradle-host", self.harness.executed)
+        self.assertEqual({"required": "G0", "executed": "G0"}, report["gate"])
+        self.assertNotIn("gradle-host", self.harness.executed)
         self.assertIsNone(evidence.schema_problem(report, evidence.SCHEMA))
 
     def test_unticketed_failure_fails_the_candidate(self):

@@ -19,13 +19,14 @@ from pathlib import Path
 import evidence
 import fingerprint
 import gates
+import selection
 import hashlib
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPOSITORY / "docs/planning/mvp"))
 import board  # noqa: E402
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 UNTICKETED = "UNTICKETED"  # a merge candidate that advances no ticket
 REPORT_DIR = "build/reports/quality"
 EPICS = "docs/planning/mvp/epics"
@@ -93,6 +94,11 @@ def sdk_directory(root):
         if match:
             return Path(match.group(1).strip())
     return None
+
+
+def documentation_environment(root):
+    return {"os": f"{platform.system()} {platform.machine()}", "python": platform.python_version(),
+            "git": first_line(["git", "--version"])}
 
 
 def default_environment(root):
@@ -202,23 +208,44 @@ def run_check(check, root, directory, execute):
 
 
 def run(ticket_id, root, requested_gate=None, execute=default_execute,
-        environment=default_environment, devices=default_devices, stream=sys.stderr, retain=False):
+        environment=default_environment, devices=default_devices, stream=sys.stderr, retain=False,
+        affected_base=None, coverage=None):
     """Return (exit code, report path or None)."""
     root = Path(root)
     try:
-        required, executed = resolve_gate(load_tickets(root), ticket_id, requested_gate)
+        if ticket_id == UNTICKETED and requested_gate == "G0" and coverage is not None:
+            required, executed = "G0", "G0"
+        else:
+            required, executed = resolve_gate(load_tickets(root), ticket_id, requested_gate)
+        if coverage is None:
+            base = resolve_base(root, affected_base or "HEAD")
+            coverage = selection.coverage(base, changed_paths(root, base) if affected_base else (),
+                                          gate=executed, full=not affected_base or requested_gate is not None)
+        problem = selection.problem(coverage, executed, ticket_id)
+        if problem:
+            raise Refusal(problem)
         checks = gates.plan(executed)
-        tools = environment(root)
+        if executed == "G2":
+            checks[-1] = gates.device_check(tasks=tuple(task for task in gates.DEVICE_TASKS
+                                                       if task.split(":")[1] in coverage["device_modules"]))
+        tools = documentation_environment(root) if executed == "G0" else environment(root)
         attached = devices() if any(check.needs_device for check in checks) else []
-        if any(check.needs_device for check in checks) and not attached:
-            raise Refusal(
-                f"{executed} needs device tests but there is no connected device; start the pinned "
-                "emulator from docs/development/setup.md. Assembling test APKs is not a substitute"
-            )
+        if any(check.needs_device for check in checks):
+            serial = os.environ.get("ANDROID_SERIAL")
+            if serial:
+                attached = [device for device in attached if device["serial"] == serial]
+            if not attached:
+                raise Refusal(
+                    f"{executed} needs device tests but there is no connected device; start the pinned "
+                    "emulator from docs/development/setup.md. Assembling test APKs is not a substitute"
+                )
+            if len(attached) != 1 or attached[0]["api"] != "30":
+                raise Refusal("G2 needs exactly one selected API-30 device; set ANDROID_SERIAL")
     except (Refusal, gates.Unavailable, ValueError, OSError) as error:
         print(f"REFUSED: {error}", file=stream)
         return 2, None
 
+    print(f"Coverage: {coverage['mode']}; device modules: {', '.join(coverage['device_modules']) or 'none'}", file=stream)
     started_at = now()
     run_id = f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex[:8]}"
     directory = root / REPORT_DIR / ticket_id / run_id
@@ -236,13 +263,13 @@ def run(ticket_id, root, requested_gate=None, execute=default_execute,
         print(f"[{ticket_id} {executed}] {check.name}: {'FAILED' if problems else 'ok'}", file=stream, flush=True)
     return finish_run(
         root, ticket_id, required, executed, before, tools, attached, records,
-        failures, warnings, started_at, run_id, directory, stream, retain,
+        failures, warnings, started_at, run_id, directory, stream, retain, coverage=coverage,
     )
 
 
 def finish_run(root, ticket_id, required, executed, before, tools, attached, records,
                failures, warnings, started_at, run_id, directory, stream=sys.stderr, retain=False,
-               execution=None):
+               execution=None, coverage=None):
     """Write an honest full-gate report from executed checks, local or collected."""
     if snapshot(root)["fingerprint"] != before["fingerprint"]:
         failures.append("inputs changed while checks were running")
@@ -250,6 +277,7 @@ def finish_run(root, ticket_id, required, executed, before, tools, attached, rec
         warnings.append("tested an uncommitted working tree, not a clean commit")
     report = {
         "schema_version": SCHEMA_VERSION,
+        "coverage": coverage or selection.coverage(before["head"], gate=executed, full=True),
         "run_id": run_id,
         "ticket": ticket_id,
         "gate": {"required": required, "executed": executed},
@@ -269,7 +297,8 @@ def finish_run(root, ticket_id, required, executed, before, tools, attached, rec
     path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     for failure in failures:
         print(f"FAILED: {failure}", file=stream)
-    print(f"{report['outcome'].upper()}: {ticket_id} {executed}, run {run_id}", file=stream)
+    label = f"{executed} {report['coverage']['mode']} ({', '.join(report['coverage']['device_modules']) or 'no device suites'})"
+    print(f"{report['outcome'].upper()}: {ticket_id} {label}, run {run_id}", file=stream)
     print(f"Report: {path.relative_to(root)}", file=stream)
     if retain and not failures:
         line = evidence.retain(root, path)
@@ -308,9 +337,23 @@ def run_merge_candidate(base, root, requested_gate=None, stream=sys.stderr, **op
         print(f"REFUSED: {error}", file=stream)
         return 2, []
     print(f"Merge candidate against {base[:12]}: {', '.join(selected)}", file=stream)
+    try:
+        candidate = candidate_plan(root, base)
+        tickets = load_tickets(root)
+        for identifier in selected:
+            if identifier != UNTICKETED:
+                resolve_gate(tickets, identifier, requested_gate)
+    except (Refusal, ValueError, OSError) as error:
+        print(f"REFUSED: {error}", file=stream)
+        return 2, []
     worst, paths = 0, []
     for identifier in selected:
-        code, path = run(identifier, root, requested_gate=requested_gate, stream=stream, **options)
+        chosen = requested_gate or (candidate["gate"] if identifier == UNTICKETED else None)
+        scope = None
+        if requested_gate is None:
+            executed = chosen or resolve_gate(load_tickets(root), identifier, None)[1]
+            scope = selection.coverage(candidate["coverage"]["base"], candidate["coverage"]["changed_paths"], executed)
+        code, path = run(identifier, root, requested_gate=chosen, stream=stream, coverage=scope, **options)
         worst = max(worst, code)
         if path is not None:
             paths.append(path)
@@ -318,10 +361,22 @@ def run_merge_candidate(base, root, requested_gate=None, stream=sys.stderr, **op
 
 
 def is_document(path):
-    """A file no device test can see: anything under docs/ that is not code, or top-level Markdown."""
-    if path.endswith(".py"):
-        return False
-    return path.startswith("docs/") or ("/" not in path and path.endswith(".md"))
+    return selection.is_document(path)
+
+
+def resolve_base(root, base):
+    result = subprocess.run(["git", "-C", str(root), "rev-parse", "--verify", f"{base}^{{commit}}"],
+                            capture_output=True, text=True)
+    if result.returncode:
+        raise Refusal(f"Unknown base revision {base}")
+    return result.stdout.strip()
+
+
+def candidate_plan(root, base):
+    base = resolve_base(root, base)
+    paths = changed_paths(root, base)
+    gate = "G2" if merge_candidate_tickets(root, base) or any(not is_document(p) for p in paths) else "G0"
+    return {"gate": gate, "coverage": selection.coverage(base, paths, gate)}
 
 
 def changed_paths(root, base):
@@ -337,15 +392,10 @@ def changed_paths(root, base):
 
 
 def candidate_gate(root, base):
-    """The gate CI asks for on a merge candidate: G2, unless it advances no ticket and touches only documents.
-
-    Anything uncertain (an unreadable board, an unknown base) is G2.
-    """
+    """Uncertain comparisons require full device verification."""
     try:
-        if merge_candidate_tickets(root, base):
-            return "G2"
-        return "G1" if all(is_document(path) for path in changed_paths(root, base)) else "G2"
-    except (ValueError, OSError, subprocess.CalledProcessError):
+        return candidate_plan(root, base)["gate"]
+    except (Refusal, ValueError, OSError, subprocess.CalledProcessError):
         return "G2"
 
 
@@ -363,6 +413,9 @@ def run_landed(base, root, stream=sys.stderr, **options):
     if not known:
         print(f"REFUSED: Unknown base revision {base}; fetch full history before verifying", file=stream)
         return 2, []
-    print(f"Landed on main since {base[:12]}: host gate", file=stream)
-    code, path = run(UNTICKETED, root, stream=stream, **options)
+    candidate = candidate_plan(root, base)
+    gate = "G0" if candidate["gate"] == "G0" else "G1"
+    print(f"Landed on main since {base[:12]}: {gate}", file=stream)
+    scope = selection.coverage(resolve_base(root, base), changed_paths(root, base), gate=gate)
+    code, path = run(UNTICKETED, root, requested_gate=gate, coverage=scope, stream=stream, **options)
     return code, [path] if path is not None else []

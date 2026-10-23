@@ -420,6 +420,7 @@ private fun LimitFields(state: CategoryEditorState, onAction: (CategoryEditorAct
                     label = suggestion.label,
                     selected = state.limitText == suggestion.pesos.toString(),
                     onClick = { onAction(CategoryEditorAction.SuggestionPicked(suggestion.pesos)) },
+                    modifier = Modifier.semantics { contentDescription = suggestion.spoken },
                     enabled = state.editable
                 )
             }

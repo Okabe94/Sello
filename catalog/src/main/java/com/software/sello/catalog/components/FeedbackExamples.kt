@@ -2,6 +2,7 @@ package com.software.sello.catalog.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -12,20 +13,29 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import com.software.sello.designsystem.component.Bullet
+import com.software.sello.designsystem.component.BulletList
 import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.ButtonTone
+import com.software.sello.designsystem.component.ChipFlow
 import com.software.sello.designsystem.component.ConfirmSlip
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
+import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.SelloButton
+import com.software.sello.designsystem.component.SelloChip
 import com.software.sello.designsystem.component.SelloNotice
+import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
+import com.software.sello.designsystem.component.Stamp
+import com.software.sello.designsystem.component.StampInk
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
 import kotlinx.coroutines.delay
@@ -181,5 +191,79 @@ fun ButtonExample() {
             modifier = Modifier.fillMaxWidth().testTag("button:disabled")
         )
         Result("Pulsaciones: $presses", "button:presses")
+    }
+}
+
+@Composable
+fun BulletListExample() {
+    Slip(Modifier.fillMaxWidth(), pinked = false) {
+        BulletList(
+            listOf(
+                Bullet(
+                    "Cualquiera que abra el archivo puede leerlo.",
+                    "Muestra tus montos, categorías y notas."
+                ),
+                Bullet("Tú lo guardas y lo cuidas.", "Sello no guarda copias por ti."),
+                Bullet(null, "Un punto sin encabezado en negrita.")
+            )
+        )
+    }
+}
+
+private enum class BackupStage { Idle, Saving, Saved, Failed, Unknown }
+
+/** The states of saving a file, with synthetic figures: what the Respaldo screen shows. */
+@Composable
+fun BackupStatesExample() {
+    var stage by rememberSaveable { mutableStateOf(BackupStage.Idle) }
+    Stack {
+        ChipFlow {
+            BackupStage.entries.forEach { option ->
+                SelloChip(
+                    label = option.name,
+                    selected = stage == option,
+                    onClick = { stage = option },
+                    modifier = Modifier.testTag("backup:${option.name}")
+                )
+            }
+        }
+        when (stage) {
+            BackupStage.Failed -> ErrorSlip(
+                title = "No se pudo guardar el respaldo",
+                message = "Tus datos no cambiaron. Puede haber quedado un archivo incompleto.",
+                retryLabel = "Intentar de nuevo",
+                onRetry = { stage = BackupStage.Saving }
+            )
+
+            BackupStage.Unknown -> ErrorSlip(
+                title = "No sabemos si el respaldo terminó",
+                message = "La app se cerró mientras lo guardaba. Crea uno nuevo.",
+                retryLabel = "Crear un respaldo nuevo",
+                onRetry = { stage = BackupStage.Saving }
+            )
+
+            else -> Unit
+        }
+        Slip(Modifier.fillMaxWidth(), pinked = false) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Último respaldo", style = MaterialTheme.typography.headlineSmall)
+                if (stage == BackupStage.Saved) {
+                    Stamp("Guardado", StampInk.Good, land = true)
+                }
+            }
+            LeaderLine("Gastos", "3")
+            LeaderLine("Ingresos", "1")
+            LeaderLine("Archivo", "4 KB")
+        }
+        SelloButton(
+            text = if (stage == BackupStage.Saving) "Guardando…" else "Crear respaldo",
+            onClick = { stage = BackupStage.Saving },
+            loading = stage == BackupStage.Saving,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

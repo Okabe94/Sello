@@ -1,10 +1,10 @@
 # 0008 — Starting over when storage cannot be opened
 
 **Owner:** project owner (user) · **Updated:** 2026-10-16
-**Status:** approved recovery rules; retry and start-over are implemented.
+**Status:** approved recovery rules; retry, start-over and restore are implemented.
 
 Show a recovery screen when storage cannot be opened. Say that nothing was deleted
-and offer **Intentar de nuevo** and **Empezar de cero**. Build the financial graph
+and offer **Intentar de nuevo**, **Restaurar un respaldo** and **Empezar de cero**. Build the financial graph
 only after storage opens; this screen must work without it.
 
 Use one general storage-failure message. The current failure cannot distinguish a
@@ -28,12 +28,23 @@ or migration performance warrants a change.
 ## Remaining recovery work
 
 The kept copy is private plaintext financial data with no recovery screen yet.
-SELLO-030 must make backup restore reachable from this screen and decide whether
-the kept copy can be recovered. SELLO-031 must erase it on reset; SELLO-032 must
-include it in private-file checks. See the
+SELLO-030 must make backup restore reachable from this screen. Decided with the
+owner on 2026-10-22 (SELLO-030): the kept copy is never recovered by Sello; a restore
+from this screen sets the unreadable file aside, as starting over does, and fills the
+new store from the backup. Reset erases it (SELLO-031); SELLO-032 checks it is
+never shared or backed up ([MVP data handling](../privacy/mvp-data-handling.md)).
+
+Implemented in SELLO-030: the chosen file is read and checked whole before anything
+moves, and its preview shows only the backup's date and counts, with an explicit
+confirmation and no typed word, as restoring inside the app has (the word is D09's
+for replacing data with nothing). Confirming sets the database aside, which also
+clears any restore staged for it, opens the new store without showing it, and
+restores into it under a new operation; the app then starts again in a new task and
+process. A failure after the set-aside says the restore did not finish; on restart
+the staged file or receipt shows what happened, and Respaldo can restore again. See the
 [recovery epic](../planning/mvp/epics/E07-recovery-privacy.md).
 
 ## Verification
 
 Host: `SetAsideTest`, `StartupTest`, `StartupFailureViewModelTest`.
-Device: `UnreadableFileSetAsideTest`, `StartupFailureScreenTest`.
+Device: `UnreadableFileSetAsideTest`, `RestoreAfterSetAsideTest`, `StartupFailureScreenTest`.

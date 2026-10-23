@@ -1,6 +1,6 @@
 # SELLO-E07 — Backup, restore, reset and privacy
 
-- **Status:** In Progress
+- **Status:** Done
 - **Goal:** Ship a local financial app whose data can be recovered and deliberately removed.
 - **Exit:** Real document workflows, bounded portable validation, durable restore/reset recovery and verified privacy boundaries.
 
@@ -137,7 +137,7 @@ synthetic, inspect independent expected counts/bytes/values and confirm validati
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-028, SELLO-015, SELLO-004
 - **Gate:** G2
 
@@ -202,11 +202,71 @@ Create/run `*BackupExportViewModelTest`, `*DocumentWriteContractTest` and Backup
 G2. Select a real provider/document, reopen/validate resulting bytes, inject write/close/
 cancellation failures and record exact file size/count/hash plus last-success behavior.
 
+### Delivery evidence
+
+- **Revision:** the gate tested commit `56af035` on `sello-029-backup-save`, on `main`
+  at `54b47f0`; the only uncommitted file was the previous run's retained report.
+  The Quality run line below is added to that commit afterwards.
+- **Decisions:** the owner chose, on 2026-10-22, from a concept mock-up: the disclosure
+  always on screen above the button (D08/P01–P02, before the destination is chosen);
+  "Último respaldo" keeps date, counts, size and file name; a process that dies
+  mid-save leaves an unknown outcome and a new file is offered, with no attempt to
+  reopen the old one; a failed save leaves the document alone and warns about a
+  possibly incomplete file; the mock-up's Spanish copy. Added during delivery: the
+  Respaldo screen has no Anotar dock, so its button is the only action, and the
+  disclosure's bullet list is the new design-system `BulletList`.
+- **Requirement mapping:** domain ports `BackupExports`, `DocumentWriter` and
+  `BackupRecords` (`domain/port/Backups.kt`); data adapters `BackupExport` (SELLO-028
+  encoder, read-back check) and DataStore keys `backup_*_v1`, which are not portable
+  preferences. `AndroidDocumentWriter` opens the picker's document with `wt`, writes,
+  flushes, syncs where possible and closes; any refusal, write or close error is
+  `Failed`. `BackupSession` (one per process) records the start before the first byte
+  and the outcome after close, so leaving the screen does not cut a file short.
+  `BackupViewModel`/`BackupScreen`: Configuración → "Tus datos" → Respaldo; the system
+  `CreateDocument` dialog suggests `sello-respaldo-AAAA-MM-DD-HHmm.json`; dismissing it
+  changes nothing; "Guardado" lands only after close; failure and unknown-outcome
+  slips; the picker's answer reaches a recreated process through the saved name. No
+  storage permission was added, and there is no restore action (SELLO-030).
+- **Red / Green:** mutations each turned tests red: "Guardado" set before the document
+  closed and an unrecorded start (`guardadoComesOnlyAfterTheDocumentIsClosed`), no
+  unknown-outcome check (`aStartLeftByAProcessThatDiedIsAnUnknownOutcomeNotASave`), and
+  a writer that reported success on an I/O error (four of six
+  `DocumentWriteContractTest` cases). The first device run of the test provider
+  failed because it ran without the Kotlin library; it is Java.
+- **Tests:** host `BackupViewModelTest` (12), `SettingsViewModelTest` (+2) and
+  `DataStoreUserPreferencesTest` (+4); device `DocumentWriteContractTest` (6, a real
+  test content provider: bytes intact, replace not mix, refused, read-only, cut-off
+  pipe, not a document) and `BackupFileJourneyTest` (4: Configuración → Respaldo →
+  save, then the file read back by `BackupCodec` as G01's counts and amounts with no
+  revision or row change; dismissed picker; a broken document keeps the last backup;
+  20,000 synthetic expenses saved while the main thread never stalls 700 ms). Catalog
+  `feedback.bullet-list` and `feedback.backup-states`.
+- **Gate results:** `./scripts/verify-ticket SELLO-029 --retain` passed all six checks,
+  full coverage. Host: 632 tests; device: 632 tests run fresh; zero failures, errors or
+  skips. Lint had zero errors and the same 33 warnings as SELLO-028, none in changed
+  code (a `toUri` warning in the writer was fixed before this run). Earlier runs of
+  this commit's code failed only on the shared emulator: once left in the sandbox by
+  the evidence walk, once when another session reinstalled the app mid-run (the AVD
+  was then restarted); later runs were redone after HANDOFF and the generated board
+  views were updated.
+- **Quality run:** run 20261022T234722Z-f2a44ec0; SELLO-029 G2 passed; HEAD 56af035, inputs sha256 96d2bab9b4a9; report docs/planning/mvp/quality-reports/SELLO-029.json sha256 6470d3f5f5ab337b006fdee2e35e2d9c3373eacc88283a304dee6c294410ce47
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`,
+  serial `emulator-5582`. On the same AVD, with the sandbox's G01 scenario, the real
+  system picker (DocumentsUI → Downloads) saved two files; the second,
+  2,297 bytes, read back through `BackupCodec` as one category, three expenses and one
+  income ([screenshots and file check](../../../testing/evidence/SELLO-029)). No
+  physical device or personal data was used.
+- **Review:** executor self-review covered success only after close, no write on a
+  dismissed picker, the unknown outcome, and that nothing financial changes. Done is
+  proposed by this ticket's pull request; its merge is the designated owner
+  acceptance under `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass is
+  claimed.
+
 ## SELLO-030 — Implement staged atomic restore and resumable preference completion
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-028, SELLO-029, SELLO-012, SELLO-023, SELLO-004
 - **Gate:** G2
 
@@ -285,11 +345,99 @@ Create/run RestoreCommandContractTest on real Room, `*RestoreRecoveryViewModelTe
 and RestoreJourneyTest; G2. Test failures before/inside/after commit, actual staged-file
 reopen and pending preferences. Compare restored fields/order/zone/totals with original backup.
 
+### Execution progress
+
+- **Part 1 of 2, restore inside the app** (`sello-030-restore-in-app`). The owner chose,
+  on 2026-10-22, from a concept mock-up: two parts; pending preferences kept in the
+  private staged file, not a new Room table; the set-aside `sello-unreadable.db` is
+  never recovered ([ADR 0008](../../../decisions/0008-unreadable-storage-start-over.md));
+  a restart into Recibo after a restore; the mock-up's copy and D09's approved wording.
+  Delivered: Respaldo → Restaurar (open dialog, bounded read, whole-file check,
+  counted preview, confirm, cancel); `RoomRestores` with one replacement transaction
+  (new generation, backup zone, `history.restore` receipt), replay by operation
+  identifier, staleness check, private staging that survives a restart and expires;
+  preferences applied after commit and resumed at start-up; D09 pending-preferences
+  slip with a retry that never replaces again; restart on leaving. Tests: 13 real-Room
+  `RestoreCommandContractTest`, 12 `RestoreViewModelTest`, 3 `RestoreJourneyTest`.
+- **Part 1 gate:** `./scripts/verify-ticket SELLO-030 --retain` passed on `08f37c2`
+  (`main` at `025f903`), run 20261023T003800Z-8b43d9e8 on the API-30 AVD `ci30`
+  (`emulator-5582`): 644 host and 648 device tests, zero failures; lint 0 errors and
+  the 33 existing warnings. Mutations each turned a test red: no staleness check
+  (`aChangeAfterThePreviewRefusesTheReplacementUntilPreviewedAgain`), no replay by
+  receipt (`askingAgainAfterACrashBeforeTheFileMovedReplaysTheSameReplacement`). The
+  system open dialog on this AVD did not return a tapped file, so screenshots come from
+  `RestoreJourneyTest`, whose picker is answered by the test
+  ([evidence](../../../testing/evidence/SELLO-030)). Not the ticket's Quality run: the
+  ticket stays In Progress until part 2.
+- **Part 2 of 2, restore from the start-up failure screen** (`sello-030-restore-at-start`).
+  Frame 6 of the mock-up: "Restaurar un respaldo" between Intentar de nuevo and Empezar
+  de cero. The chosen file is read and checked whole (`BackupCodec.check`) before
+  anything moves; the preview shows only the backup's date, in its own zone, and
+  counts, with an explicit confirmation and no typed word (D09's word is for replacing
+  data with nothing). Confirming sets the database aside, which now also clears any
+  restore staged for it, opens the new store without showing it and restores into it
+  through `RoomRestores`; the outcome is the shared Restaurado or D09 pending slip, and
+  going on restarts in a new task and process. A failure after the set-aside is "La
+  restauración no terminó", then a restart. Copy beyond frame 6 (preview, interrupted)
+  is new and follows frames 2–4. Tests: `StartupTest` (+8), `StartupFailureViewModelTest`
+  (+10), `StartupFailureScreenTest` (+8), real-file `RestoreAfterSetAsideTest` (2).
+
+### Delivery evidence
+
+- **Revision:** the final gate tested commit `a7cfc11` on `sello-030-restore-at-start`,
+  stacked on part 1 (`8f3c6f7`, PR #80) over `main` at `025f903`; the only
+  uncommitted file was the previous run's retained report. The Quality run line below
+  is added to that commit afterwards.
+- **Decisions:** see Execution progress: the owner's 2026-10-22 choices from the
+  concept mock-up (two parts, staged-file pending preferences, `sello-unreadable.db`
+  never recovered, restart into Recibo, mock-up and D09 copy). Added during delivery:
+  no typed word for a restore at start-up, and new preview/interrupted copy following
+  frames 2–4, both offered for owner review in the pull request.
+- **Requirement mapping:** whole-file check before preview (`BackupCodec.read`/`check`);
+  counted preview tied to generation/revision, refreshed when stale; one replacement
+  transaction with a new generation, the backup zone and a `history.restore` receipt,
+  so older drafts, undo and commands are refused; replay by operation identifier after
+  an unknown outcome or crash; preferences applied after commit from the private
+  staged file, D09 slip naming only failed groups, retry without a second replacement,
+  resumed at start-up; staging cleared on cancel, completion, expiry and set-aside;
+  restart on leaving. Reachable from the start-up failure screen (ADR 0008) without
+  the financial graph shown. No permission or URI grant was added; backups carry no
+  debug jobs, permissions or internal receipts.
+- **Red / Green:** mutations each turned tests red: no staleness check and no replay by
+  receipt (part 1); restoring without a checked file, retrying after a restore opened
+  the new store, no lock while restoring, the new store published mid-restore, and no
+  staging cleanup on set-aside (part 2). The first part-2 gate failed only the
+  architecture check (the start-up screen imported the backup feature); the shared
+  slips moved to `presentation/restore`.
+- **Tests:** host `RestoreViewModelTest` (12), `StartupTest` (16, +8),
+  `StartupFailureViewModelTest` (20, +10); device `RestoreCommandContractTest` (13,
+  real Room), `RestoreAfterSetAsideTest` (2, real files), `RestoreJourneyTest` (3),
+  `StartupFailureScreenTest` (16, +8).
+- **Gate results:** `./scripts/verify-ticket SELLO-030 --retain` passed all six checks,
+  full coverage. Host: 662 tests; device: 658 tests (data 216, design-system 122, app
+  299, catalog 21); zero failures, errors or skips. Lint had zero errors and the same
+  33 warnings as SELLO-029, none in changed code.
+- **Quality run:** run 20261023T020912Z-17275c57; SELLO-030 G2 passed; HEAD a7cfc11, inputs sha256 7ddc6479d7a2; report docs/planning/mvp/quality-reports/SELLO-030.json sha256 3a4ae5b436ca5ff96a2a2af7db0b73e96a691e086b964f134bf0281670a87cf3
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`,
+  serial `emulator-5582`. On the same AVD, with the database overwritten by random
+  bytes, the start-up failure screen restored a synthetic G01 backup chosen through the
+  real system open dialog (selected with the keyboard; a tap did not return the file
+  on this image) and Recibo opened on it; the database then held one category, three
+  expenses, one income, generation 2 and one `history.restore` receipt, with
+  `sello-unreadable.db` kept and staging empty
+  ([screenshots](../../../testing/evidence/SELLO-030)). In-app screenshots come from
+  `RestoreJourneyTest`. No physical device or personal data was used.
+- **Review:** executor self-review covered no change before confirmation, one
+  replacement per operation, the pending-preferences wording, and that nothing at
+  start-up opens a second store. Done is proposed by this ticket's final pull request;
+  its merge is the designated owner acceptance under `QUALITY_FLOW.md`. No owner
+  approval, merge or hosted CI pass is claimed.
+
 ## SELLO-031 — Deliver fenced two-confirmation reset and recovery
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-030, SELLO-020, SELLO-021, SELLO-004
 - **Gate:** G2
 
@@ -362,11 +510,58 @@ Create/run ResetGenerationContractTest, `*ResetViewModelTest` and ResetReuseJour
 G2. Interrupt before/after commit/preferences, reopen DB, replay stale operations,
 inspect retained metadata, and create a new real category/expense from empty afterward.
 
+### Delivery evidence
+
+- **Revision:** the gate tested commit `be535f4` on `sello-031-reset`, on `main` at
+  `3645778`; the only uncommitted file was the retained report. The Quality run line
+  below is added to that commit afterwards.
+- **Decisions:** the owner approved, on 2026-10-22, from a concept mock-up: its own
+  screen from Configuración → Tus datos; every stored preference back to first-run,
+  including correction hints and "Último respaldo"; changed counts return to the first
+  confirmation and need the word again; one pull request; the mock-up's copy. Added
+  during delivery: the database file is compacted after the erase so no erased row
+  survives in free pages or the write-ahead log, and a failed preference reset names
+  both groups because they are cleared in one DataStore edit.
+- **Requirement mapping:** counted preview tied to generation/revision, exact trimmed
+  `BORRAR`, stale counts refused (`ResetViewModel`, `ResetSession`, `ResetScreen`);
+  `RoomResets` erases every financial row, `deleted_expense`/`deleted_income` and all
+  receipts in one transaction, keeps one `history.reset` receipt with no subject, sets
+  the device zone and a new generation; old drafts, undo and sandbox runners are
+  refused by the generation; `pending.properties` holds only the operation, written
+  before the transaction, so a restart finishes a committed erase (files, compaction,
+  preferences once) and forgets an uncommitted one; the restore folder and
+  `sello-unreadable.db` with companions are deleted (ADR 0008); restart into first-run
+  Recibo. External backup files are not touched and the screens say so; no permission
+  was added.
+- **Red / Green:** mutations each turned tests red: no compaction, no staleness check,
+  no replay by receipt, receipts kept, the set-aside copy kept
+  (`ResetGenerationContractTest`) and no exact-word check (`ResetViewModelTest`).
+- **Tests:** device `ResetGenerationContractTest` (10, real Room and files),
+  `ResetReuseJourneyTest` (2), `ResetScreenTest` (10), `ScenarioReplayTest` (+1, a
+  sandbox runner refused after a reset); host `ResetViewModelTest` (12).
+- **Gate results:** `./scripts/verify-ticket SELLO-031 --retain` passed all six checks,
+  full coverage. Host: 674 tests; device: 681 tests (data 226, design-system 122, app
+  312, catalog 21); zero failures, errors or skips. Lint had zero errors and the same
+  33 warnings as before, none in changed code.
+- **Quality run:** run 20261023T025243Z-f7973252; SELLO-031 G2 passed; HEAD be535f4, inputs sha256 6f33a2bf7319; report docs/planning/mvp/quality-reports/SELLO-031.json sha256 cf4505d4767463f1bd6be4280dc2c25d670fed0582154b8a77c05a53f3e5de31
+- **Device / Artifact:** on the isolated synthetic API-30 AVD `ci30` (`emulator-5582`),
+  a synthetic G01 backup was restored, then erased: wrong word left "Borrar todo"
+  disabled; afterwards every financial table was empty, one `history.reset` receipt
+  remained, the write-ahead log was empty and no category name or note was found in
+  the database bytes; first-run Recibo opened; the backup file was still 3,066 bytes and
+  restoring it again worked across the new generation
+  ([screenshots](../../../testing/evidence/SELLO-031)). No physical device or personal
+  data was used.
+- **Review:** executor self-review covered no change before the word, one erase per
+  operation, what survives, and that backups are not claimed erased. Done is proposed
+  by this ticket's pull request; its merge is the designated owner acceptance under
+  `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass is claimed.
+
 ## SELLO-032 — Verify privacy, file boundaries and developer-data isolation
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-029, SELLO-030, SELLO-031, SELLO-024, SELLO-004
 - **Gate:** G2
 
@@ -433,3 +628,53 @@ approved D08/D09 and official backup/documents sources in the executor guide.
 Create/run ManifestPrivacyTest, FileBoundaryTest and DebugReleaseIsolationTest;
 G2. Retain merged-manifest/artifact inventories, synthetic-marker log checks and
 executed real file/restore/reset journeys under minimal permissions.
+
+### Delivery evidence
+
+- **Revision:** the gate tested commit `fc83fef` on `sello-032-privacy`, on `main` at
+  `7924d95`; the only uncommitted file was the retained report. The Quality run line
+  below is added to that commit afterwards.
+- **Decisions:** the owner approved, on 2026-10-22: the picker adapters accept only
+  provider (`content://`) documents; AndroidX's profile-install receiver stays,
+  documented (it requires DUMP); the privacy disclosure is the developer document,
+  with the in-app Respaldo and Borrar datos wording unchanged; one pull request. This
+  is the last E07 ticket, so its pull request also proposes E07 Done.
+- **Requirement mapping:** merged-manifest checks for release and debug
+  (`verifyReleaseManifestPrivacy`, `verifyDebugManifestPrivacy` in
+  `gradle/privacy.gradle.kts`): `allowBackup="false"`, every storage domain excluded
+  from cloud backup, device transfer and Android 11 full backup, only the AndroidX
+  signature permission, no exported or URI-granting provider, every exported
+  component with a written reason; `verifyReleaseDependencies` refuses test, tooling
+  and test-manifest libraries on the release runtime; `verifyReleaseHasNoDeveloperTools`
+  now also looks for the debug composition, sandbox storage names and debug previews.
+  Gap found and fixed: `AndroidDocumentReader`/`AndroidDocumentWriter` accepted any
+  address, so a `file://` path could read or overwrite a private file; `providerDocument`
+  now admits only provider documents. No FileProvider, cache use or app logging
+  exists; the kept unreadable copy is excluded from backup, never shared and erased
+  by reset. [MVP data handling](../../../privacy/mvp-data-handling.md) states what is
+  stored, what may leave and the checks; architecture §7 now names them.
+- **Red / Green:** `FileBoundaryTest` failed first on the real gap (a `file://`
+  address read and overwrote a private canary) and passed after the fix. Mutations each
+  failed the matching check with the matching reason: INTERNET permission, a device-
+  transfer domain not excluded, an exported FileProvider, JUnit on the release
+  classpath (with the strict dependency lock relaxed only for that run, then restored)
+  and the reader writing file contents to the log (`LogPrivacyTest`). The six new
+  developer-tool markers were each found in the debug APK and none in release.
+- **Tests:** device `FileBoundaryTest` (3), `ProfileFileBoundaryTest` (2),
+  `LogPrivacyTest` (1, a probe line proves the log is read); build checks above on
+  every assemble.
+- **Gate results:** `./scripts/verify-ticket SELLO-032 --retain` passed all six checks,
+  full coverage. Host: 674 tests; device: 687 tests (data 228, design-system 122, app
+  316, catalog 21); zero failures, errors or skips. Lint had zero errors and the same
+  33 warnings as before.
+- **Quality run:** run 20261023T032312Z-0ebf80cd; SELLO-032 G2 passed; HEAD fc83fef, inputs sha256 44b104955e59; report docs/planning/mvp/quality-reports/SELLO-032.json sha256 5d5f21f5e63f249b8888aac19da96cde7f96557288ee058760a007044c0a2e29
+- **Device / Artifact:** the isolated synthetic API-30 AVD `ci30` (`emulator-5582`).
+  Retained inventories: merged release and debug manifests, release libraries and the
+  release APK developer-tools check ([evidence](../../../testing/evidence/SELLO-032)).
+  Real backup, restore and reset journeys ran under these minimal permissions in
+  `LogPrivacyTest`, `RestoreJourneyTest` and `ResetReuseJourneyTest`. No physical
+  device or personal data was used.
+- **Review:** executor self-review covered the merged manifests, the release
+  inventory, profile and document boundaries and the log check. Done for SELLO-032 and
+  E07 is proposed by this pull request; its merge is the designated owner acceptance
+  under `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass is claimed.

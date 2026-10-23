@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import com.software.sello.catalog.components.ActionLineExample
 import com.software.sello.catalog.components.AmountExample
 import com.software.sello.catalog.components.AnswerSlipExample
+import com.software.sello.catalog.components.BackupStatesExample
+import com.software.sello.catalog.components.BulletListExample
 import com.software.sello.catalog.components.ButtonExample
 import com.software.sello.catalog.components.CategoryCellExample
 import com.software.sello.catalog.components.CategoryCircleExample
@@ -329,6 +331,16 @@ val catalogExamples: List<CatalogExample> = listOf(
         CatalogGroup.Feedback,
         R.string.catalog_example_notice
     ) { NoticeExample() },
+    CatalogExample(
+        "feedback.bullet-list",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_bullet_list
+    ) { BulletListExample() },
+    CatalogExample(
+        "feedback.backup-states",
+        CatalogGroup.Feedback,
+        R.string.catalog_example_backup_states
+    ) { BackupStatesExample() },
     CatalogExample(
         "feedback.slip-skeleton",
         CatalogGroup.Feedback,

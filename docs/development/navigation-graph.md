@@ -27,6 +27,8 @@ flowchart LR
 
     recibo <-->|Recibo / Resumen tabs| resumen[ResumenRoute<br/>ResumenRoot → ResumenScreen]
     recibo -->|gear| settings[SettingsRoute<br/>SettingsRoot → SettingsScreen]
+    settings -->|Respaldo| backup[BackupRoute<br/>BackupRoot → BackupScreen]
+    settings -->|Borrar todos los datos| reset[ResetRoute<br/>ResetRoot → ResetScreen]
     recibo -->|add category| categoryCreate[CategoryEditorRoute<br/>CategoryEditorRoot → CategoryEditorScreen]
     recibo -.->|open category| reciboDetail[Recibo category detail<br/>ShellState.detailCategoryId<br/>CategoryDetailScreen]
 
@@ -64,7 +66,7 @@ flowchart LR
     classDef route fill:#eef2ff,stroke:#3346a8,stroke-width:2px,color:#111;
     classDef local fill:#fffaf0,stroke:#9a6700,stroke-width:2px,stroke-dasharray:5 5,color:#111;
     classDef outside fill:#f6f8fa,stroke:#57606a,stroke-width:2px,color:#111;
-    class recibo,resumen,settings,categoryCreate,categoryEdit,expenseEdit,incomeHistory,resumenDetail,incomeEntry,incomeEdit,prerequisite,expenseEntry route;
+    class recibo,resumen,settings,backup,categoryCreate,categoryEdit,expenseEdit,incomeHistory,resumenDetail,incomeEntry,incomeEdit,prerequisite,expenseEntry route;
     class reciboDetail,entryRequest,active,expenseMode,incomeMode local;
     class launch,failure,deepLink outside;
 ```
@@ -86,7 +88,7 @@ layout primitives are intentionally omitted.
 
 | Screen or surface | Route and host composables | Feature-local composables | Main shared composables |
 | --- | --- | --- | --- |
-| Startup failure | Outside graph: `StartupFailureRoot` → `StartupFailureScreen` | `Explanation`, `Warning` | `SelloScaffold`, `Slip`, `FormField`, `FieldMessageText`, `SelloButton` |
+| Startup failure | Outside graph: `StartupFailureRoot` → `StartupFailureScreen` | `Explanation`, `Warning`, `RestoreFromBackup`, restore `Preview`, `RestoredSlip` (`presentation/restore`); system `OpenDocument` | `SelloScaffold`, `Slip`, `FormField`, `FieldMessageText`, `SelloButton`, `ErrorSlip` |
 | Recibo | `ReciboRoute` → `SelloAppRoot` → `ReciboDestination` → `ShellScreen` → `ReciboScreen` | `SummarySlip`, `CategoriesSlip`, `FigureHeader`, `StaleSlip` | `Slip`, `CategoryGrid`, `CategoryCell`, `MoneyText`, `LeaderLine`, `Stamp`, `SlipSkeleton`, `EmptySlip`, `ErrorSlip`, `SelloButton` |
 | Recibo category detail | No route; `ReciboDestination` supplies `ShellDetail` to `ShellScreen` → `CategoryDetailScreen` | `HeaderSlip`, `Expenses`, `ExpenseList`, plus shared `FigureHeader` and `StaleSlip` | `Slip`, `CategoryCircle`, `ActionLine`, `LeaderLine`, `MoneyText`, `SelloNotice`, `SlipSkeleton`, `EmptySlip`, `ErrorSlip`, `SelloButton` |
 | Resumen | `ResumenRoute` → `ShellScreen` → `ResumenRoot` → `ResumenScreen` | `ResumenPane`, `SummarySlips`, `ChartSlips`, `ResumenHeading`, `ChartWidth` | `Slip`, `MoneyText`, `LeaderLine`, `Stamp`, `LineChart`, `ColumnsChart`, `SlipSkeleton`, `EmptySlip`, `ErrorSlip`, `SelloButton` |
@@ -98,7 +100,9 @@ layout primitives are intentionally omitted.
 | Edit income | `IncomeEditRoute(incomeId)` → `IncomeFormRoot` → `IncomeFormScreen` | Same income composables; the kind switch is omitted | Same income shared composables as above |
 | Create category | `CategoryEditorRoute(forEntry)` → `CategoryEditorRoot` → `CategoryEditorScreen` | `Form`, `LimitFields`, `SectionLabel`; `ArchiveConfirmation` is edit-only | `SelloScaffold`, `FormField`, `IconChoiceGrid`, `ChipFlow`, `SelloChip`, `SwitchRow`, `DigitGrouping`, `Slip`, `ConfirmSlip`, `SlipSkeleton`, `ErrorSlip`, `SelloButton` |
 | Edit category | `CategoryEditRoute(categoryId, month)` → `CategoryManagementRoot` → `CategoryEditorScreen` | `Form`, `LimitFields`, `SectionLabel`, `ArchiveConfirmation` | Same category shared composables as above |
-| Configuración | `SettingsRoute` → `ShellScreen` → `SettingsRoot` → `SettingsScreen` | `AppearanceControls`, `CategoryOrderingControls`, `SectionTitle`, `ControlLabel` | `Slip`, `ChipFlow`, `SelloChip`, `SegmentedSwitch`, `SlipSkeleton`, `ErrorSlip` |
+| Configuración | `SettingsRoute` → `ShellScreen` → `SettingsRoot` → `SettingsScreen` | `AppearanceControls`, `CategoryOrderingControls`, `DataControls`, `SectionTitle`, `ControlLabel` | `Slip`, `ChipFlow`, `SelloChip`, `SegmentedSwitch`, `LeaderLine`, `SlipSkeleton`, `ErrorSlip` |
+| Respaldo | `BackupRoute` → `ShellScreen` (no dock) → `BackupRoot` → `BackupScreen` + `RestoreSection` | `LastBackupSlip`, `Disclosure`, restore `Preview`/`Counts`/`Restored`/`Pending`; system `CreateDocument` and `OpenDocument` pickers | `Slip`, `LeaderLine`, `Stamp`, `BulletList`, `SelloButton`, `ErrorSlip`, `SlipSkeleton` |
+| Borrar datos | `ResetRoute` → `ShellScreen` (no dock) → `ResetRoot` → `ResetScreen` | `Counts`, `Word`, `Erased`, `Pending` | `Slip`, `FormField`, `Stamp`, `BulletList`, `SelloButton`, `ErrorSlip`, `SlipSkeleton` |
 | Shared shell | `SelloAppRoot` → `ShellScreen` | `MonthPicker`, `CorrectionNoticeBar`; `ReciboDestination`, `EntryDestination` are private navigation hosts | `SelloScaffold`, `SelloNavigationBar` / `SelloNavigationRail`, `SelloDock`, `MonthSwitcher`, `MonthGrid`, `SelloNotice` |
 
 ## Navigation test coverage
@@ -112,6 +116,9 @@ contract without a real `NavHost`.
 | Healthy first launch starts on Recibo | `ShellOnDeviceTest.aNewInstallationOpensOnAnHonestEmptyReciboForTheCurrentMonth` | Device |
 | Recibo ↔ Resumen, shared month, recreation and Back to Recibo | `ShellOnDeviceTest.resumenKeepsTheSharedMonthThroughRecreationAndBackReturnsToRecibo`; `NavigationStateTest.backClosesAPanelThenADetailThenReturnsToReciboThenLeaves` | Device + unit/state |
 | Recibo → Configuración → Back, without losing selected month or Recibo state | `SettingsJourneyTest.settingsPreserveTheSelectedMonthFinancialRowsAndTheReciboBackStack` | Journey |
+| Recibo → Configuración → Respaldo → save a document | `BackupFileJourneyTest` | Journey |
+| Respaldo → choose a file → preview → replace, or reject/cancel with no change | `RestoreJourneyTest` | Journey |
+| Configuración → Borrar todos los datos → counts → BORRAR → erased, then a new category and expense; cancel at either step | `ResetReuseJourneyTest`; `ResetScreenTest` | Journey + instrumented Compose UI |
 | Recibo category detail on compact and wide windows | `ShellScreenLayoutTest`; `ReciboListDetailWideTest`; `NavigationStateTest.aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth` | Device + unit/state |
 | Restoring the open Recibo category and keeping its identity while loading | `NavigationStateTest.anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed`; `DetailIdentityTest` | Unit/state |
 | Resumen → income history → new income → Back, and Resumen → routed category detail → Back | `ResumenJourneyTest.realEntrySummarySourceLinksAndRecreationReconcileWithStorage` | Journey |
@@ -125,7 +132,7 @@ contract without a real `NavHost`.
 | Category detail → expense edit/delete → detail/list with undo | `ExpenseCorrectionJourneyTest` | Journey |
 | Stored expense → Recibo → category detail/list across restart | `WalkingSliceJourneyTest.aSavedExpenseReachesReciboItsCategoryAndItsListAndIsThereAfterStartingAgain` | Journey |
 | Month picker open/select/restore and Back precedence | `ShellOnDeviceTest`; `ShellScreenLayoutTest`; `WideWindowBackTest`; `MonthPickerShortcutTest`; `MonthSwitcherLabelTest`; `MonthSessionTest` | Device + unit/state |
-| Startup failure actions | `StartupFailureScreenTest` | Instrumented Compose UI; outside normal graph |
+| Startup failure actions, including restore preview and outcomes | `StartupFailureScreenTest` | Instrumented Compose UI; outside normal graph |
 
 ### Known coverage limits
 

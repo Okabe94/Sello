@@ -13,8 +13,8 @@ import java.time.Instant
 
 /**
  * A stored receipt, decoded. The subject is the record the operation changed: an
- * expense for the four expense kinds, an income for the four income kinds, a category
- * for every other kind. Exactly one of the three is present.
+ * expense for the four expense kinds, an income for the four income kinds, none for a
+ * restore of the whole history, a category for every other kind.
  */
 internal class StoredReceipt(
     val receipt: OperationReceipt,
@@ -64,6 +64,11 @@ internal fun OperationReceiptEntity.toStored(): Outcome<StoredReceipt, StorageFa
                     inputDigest,
                     expenseId = valid("subject_id", ExpenseId.of(subject))
                 )
+
+            OperationKind.RestoreHistory, OperationKind.ResetHistory -> {
+                check("subject_id", subjectId == null)
+                StoredReceipt(receipt, inputDigest)
+            }
 
             in IncomeKinds ->
                 StoredReceipt(

@@ -114,8 +114,32 @@ record at version 1. Restoring it is SELLO-030.
 
 `BackupExport.create` reads every financial row in one Room transaction, then the
 preferences, encodes, and reads its own output back with the same rules, so the app
-never hands out a file it would refuse. It returns the name, bytes and counts;
-writing them to a document the person chose is SELLO-029.
+never hands out a file it would refuse. It returns the name, bytes and counts.
+
+In the app (`feature/backup`), the system's "Guardar como" offers the name;
+`AndroidDocumentWriter` writes, flushes and closes the chosen document, and only then
+is the backup "Guardado" and remembered (`BackupRecords`, in DataStore). A start is
+recorded before the first byte, so a process that dies mid-save leaves an unknown
+outcome, never a saved one. Sello never deletes a document it failed to complete.
+
+## Restoring a file
+
+In the app (Respaldo → Restaurar), the system's open dialog returns a document; at
+most 10 MiB plus one byte is read. `RoomRestores.stage` checks it with
+`BackupCodec.read` and keeps it privately with a new operation identifier, the
+history position (generation, revision) it was previewed at, and the time. A staged
+file survives a restart, but is forgotten after a day or once the generation changes.
+
+The replacement refuses a history that moved since the preview; the person previews
+again. Inside one transaction a receipt for the same operation means it already
+happened, so asking again after an unknown outcome or a crash replays instead of
+replacing twice. Afterwards the backup's appearance and order are applied; a group
+that fails stays pending, with the file, and is retried at start-up and on request.
+
+From the start-up failure screen there is no store to stage into, so the file is
+checked whole with `BackupCodec.check` and held in memory for the preview. Confirming
+sets the unreadable database aside, opens a new empty store and stages and replaces
+there as above.
 
 ## Changing the format
 

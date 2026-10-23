@@ -1,6 +1,6 @@
 # SELLO-E08 — Integrated MVP release evidence
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Goal:** Demonstrate a usable recoverable release, not merely assembled debug APKs.
 - **Exit:** Passed complete MVP journeys, temporal/recovery corpus, accessible adaptive UI and signed optimized release; outstanding risks are explicitly accepted or fixed.
 
@@ -8,17 +8,18 @@
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-018, SELLO-019, SELLO-020, SELLO-021, SELLO-022, SELLO-023, SELLO-009, SELLO-063, SELLO-064, SELLO-065, SELLO-066, SELLO-067, SELLO-004
 - **Gate:** G2
 
 ### Outcome
-Verify and fix the assembled daily-use UI across input methods and window configurations.
+Verify and fix the assembled daily-use UI across window, text-size and theme configurations.
 
 ### Deliverables
 Automated/manual journey matrix and evidence for four schemes, scales 1.0/1.3/2.0,
-compact/short-landscape/medium/expanded layouts, TalkBack, keyboard/Switch Access,
-insets and reduced motion. Include actual draft/session restoration, not rotation alone.
+compact/short-landscape/medium/expanded layouts, insets, reduced motion and the
+accessibility semantics tests can read (spoken amounts, labels, targets). Include
+actual draft/session restoration, not rotation alone.
 
 ### Acceptance criteria
 - All daily-use flows work without clipping/covered fields, color-only status,
@@ -27,11 +28,13 @@ insets and reduced motion. Include actual draft/session restoration, not rotatio
   eligible process recreation. Force-stop/cold start is reported separately from
   OS process-death restoration and must not create a duplicate save.
 - Issues discovered are fixed with regression tests; no blanket a11y waiver.
+- Manual TalkBack, Switch Access and hardware keyboard walks are not part of this
+  ticket; they are post-MVP in SELLO-074.
 
 ### Tests
-Run affected connected Compose tests on agreed API/window configurations; execute
-screen-reader/focus walkthrough and capture screenshot/video/checklist evidence.
-Verify exact money semantics in visual and accessible outputs; G2.
+Run affected connected Compose tests on agreed API/window configurations; capture
+screenshot/video/checklist evidence of the device walks. Verify exact money
+semantics in visual and accessible outputs; G2.
 
 ### Working checkpoint
 Integrated daily-use MVP is usable on devices; no recovery or catalog workflow is
@@ -46,11 +49,17 @@ Read [Sello v2](../../../design/v2/README.md) (large text, reduced motion, exact
 From SELLO-E12 (2026-10-16): the journeys include the v2 Recibo delivered by
 SELLO-061–069, so this ticket starts after that epic.
 
+**Owner direction (2026-10-23):** manual assistive-technology walks (TalkBack,
+Switch Access, hardware keyboard) are outside the MVP and move to post-MVP
+[SELLO-074](E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard).
+The automated semantics checks stay here: exact spoken amounts, labels, focus order,
+48dp targets and status that is not color alone.
+
 ### Implementation plan
 1. Create `docs/testing/ui-acceptance-matrix.md` listing build/API/window/font/theme/
    input mode, each daily-use journey and expected accessible exact values.
-2. Automate Compose semantic/focus/restoration checks and execute screen-reader,
-   hardware keyboard/Switch Access and reduced-motion walks on agreed configurations.
+2. Automate Compose semantic/focus/restoration checks and execute reduced-motion
+   walks on agreed configurations.
 3. Run compact portrait, <480dp short landscape, medium and expanded panes with
    keyboard/gesture insets and scales 1.0/1.3/2.0. Test both completed tab stacks.
 4. Exercise drafts/operation IDs through rotation, eligible process death and cold
@@ -59,7 +68,7 @@ SELLO-061–069, so this ticket starts after that epic.
    tests and rerun prior completed journeys. Keep a matrix of passes and outstanding blockers.
 
 ### Concrete cases and pitfalls
-- TalkBack announces currency/full amount and stamp meaning; charts provide exact
+- Semantics carry the currency/full amount and stamp meaning; charts provide exact
   selected/text values. Color-only over-budget state is not accessible.
 - A focused note field remains reachable with keyboard open in landscape; 2.0 scale
   cannot truncate hero amounts or put save/delete actions below an unreachable panel.
@@ -70,11 +79,83 @@ Run affected app/design-system/catalog connected tests and G2 across the approve
 matrix. Retain annotated screenshot/video/focus notes with exact configuration and
 financial scenario. No single screenshot or emulator configuration closes the whole matrix.
 
+### Execution progress
+
+- **Part 1 of 2, sweep and fixes** (`sello-033-ui-matrix`). The owner chose, on
+  2026-10-23: the real app shell for the sweep, WCAG AA as the contrast floor, fixes in
+  the same part when small. Delivered: `UiAcceptanceSweepTest` opens 13 daily-use
+  screens through the app's own buttons in five windows (compact 2.0, short landscape
+  1.3 and 2.0, medium, expanded; all four themes), checking 48dp touch targets, text
+  not cut short, amounts spoken in pesos and main actions inside the window;
+  `SelloColorsTest` gained the stamp, soft-fill and past-month pairs. Fixed, each red
+  first: screen and month titles take a second line, and move under their actions when
+  even that does not fit; the rail widens to its longest label; chips wrap; limit
+  suggestions and Resumen's limit line are read with "pesos". Matrix:
+  [UI acceptance matrix](../../../testing/ui-acceptance-matrix.md).
+- **Part 1 gate:** `./scripts/verify-ticket SELLO-033 --retain` passed on `4a156c5`
+  (`main` at `87f3a8f`), run 20261023T065031Z-dbb34ab5 on the API-30 AVD `ci30`
+  (`emulator-5582`): 674 host and 702 device tests, zero failures; lint 0 errors and
+  the 33 existing warnings. Not the ticket's Quality run: the ticket stays In Progress
+  until part 2.
+- **Part 2 of 2, device walks** (`sello-033-walks`). On the isolated API-30 phone
+  emulator `sello022_api30`: process death for a new expense, a saved expense, an
+  expense edit, a new income and a new category, each draft back in a new process
+  and each confirmed action one receipt, unchanged by a further kill; rotation in the
+  same process; force-stop and cold start reported apart; real medium and expanded
+  windows; the note composer sideways with the keyboard at 2.0; reduced motion. The
+  sideways walk found **Listo** under the navigation bar on the right; the composer now
+  keeps its content clear of the side system bars (red first in
+  `ComponentContractsTest`). Results and screenshots are in the matrix.
+
+### Delivery evidence
+
+- **Revision:** the final gate tested commit `8a50ce9` on `sello-033-walks`, on `main`
+  at `f67ae77` (part 1, pull request #86); the only uncommitted file was the retained
+  report. The Quality run line below is added to that commit afterwards.
+- **Decisions:** the owner moved manual TalkBack, Switch Access and keyboard walks to
+  post-MVP SELLO-074 on 2026-10-23 (pull request #85), and chose the real app shell
+  for the sweep, WCAG AA for contrast and small fixes in the same part.
+- **Requirement mapping:** [UI acceptance matrix](../../../testing/ui-acceptance-matrix.md):
+  four schemes, scales 1.0/1.3/2.0, compact, short-landscape, medium and expanded
+  windows in `UiAcceptanceSweepTest` and real-window walks; insets (system bars,
+  keyboard, a side navigation bar); reduced motion; exact spoken amounts; process
+  death, rotation and cold start reported separately, each confirmed action one
+  receipt. Tab, month, detail and panel Back keep their existing tests; no manual
+  assistive-technology walk is claimed.
+- **Red / Green:** each fix failed first: `LargeTextFitTest` (titles, month title,
+  rail, chips, a title moved under its action), `CategoryEditorViewModelTest` and
+  `CategoryManagementViewModelTest` (suggestions read "200.000"), `ChartExactSelectionTest`
+  (no spoken limit line), `ComponentContractsTest.aNavigationBarAtTheSideCoversNeitherCancelNorDone`
+  (Listo under a 48dp side inset). The sweep's first runs had two faulty checks of its
+  own, a width-overflow flag true for whole text and a clipped-node size without
+  Compose's touch widening; both were corrected and recorded in the matrix.
+- **Tests:** device `UiAcceptanceSweepTest` (5 windows), `LargeTextFitTest` (6),
+  `ComponentContractsTest` (+1); assertions added to `ChartExactSelectionTest`,
+  `CategoryEditorScreenTest`, `ResumenScreenTest`, the two category view model tests
+  and `SelloColorsTest`.
+- **Gate results:** `./scripts/verify-ticket SELLO-033 --retain` passed all six checks,
+  full coverage. Host: 674 tests; device: 703 tests (data 229, design-system 129, app
+  324, catalog 21); zero failures, errors or skips. Lint had zero errors and the same
+  33 warnings as before. Part 1 passed its own gate (run 20261023T065031Z-dbb34ab5).
+  Its hosted check failed once in `ScenarioReplayTest.aRunInterruptedAfterACommitAndResumedMatchesAFreshRunExactly`,
+  unrelated to this ticket, and passed when the workflow was run again; reported, not
+  changed here.
+- **Quality run:** run 20261023T074006Z-cfef9451; SELLO-033 G2 passed; HEAD 8a50ce9, inputs sha256 ff410882368c; report docs/planning/mvp/quality-reports/SELLO-033.json sha256 f3c4887e236a3a15243391c3e9378df8ce9f9ca55dd884d674457c53a752024d
+- **Device / Artifact:** the gate ran on the isolated synthetic API-30 AVD `ci30`
+  (`emulator-5582`); the walks on the isolated API-30 AVD `sello022_api30`
+  (`emulator-5584`), wiped first, with debug builds of the code under test;
+  screenshots in [evidence](../../../testing/evidence/SELLO-033). No physical device or
+  personal data was used.
+- **Review:** executor self-review covered each check's false positives, the test
+  windows against real ones and every walk's database result. Done is proposed by this
+  ticket's pull request; its merge is the designated owner acceptance under
+  `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass is claimed.
+
 ## SELLO-034 — Prove integrated data retention and recovery failure safety
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-030, SELLO-031, SELLO-032, SELLO-027, SELLO-004
 - **Gate:** G2
 
@@ -132,6 +213,51 @@ failure references; do not invent compatibility with the old app database.
 Run data/app connected migration/recovery suites and TemporalScenarioCorpusTest,
 then G2. Record each failure point, before/after row/receipt/generation state and
 supported version pair. Archive fixtures/checksums and actual device/API evidence.
+
+### Delivery evidence
+
+- **Revision:** the gate tested commit `204c417` on `sello-034-recovery-matrix`, on
+  `main` at `6074176`; the only uncommitted file was the retained report. The Quality
+  run line below is added to that commit afterwards.
+- **Decisions:** the owner approved, on 2026-10-22: all nine sandbox scenarios through a
+  backup and restore; fixing here that Respaldo's top-bar arrow left a restored
+  history without restarting; one pull request.
+- **Requirement mapping:** [recovery matrix](../../testing/recovery-matrix.md) lists the
+  supported schema (1→2→3, open 3; newer refused to the start-up failure screen) and
+  backup-format pairs (1 into schema 3; newer refused), every restore, reset, start-up
+  and storage failure point with its outcome and test, and corrupt/unavailable storage
+  behaviour. `RecoveryRetentionTest` chains a hand-written version 1 history (archived
+  category, budget history, past-month limits, ordered expenses with notes, salary and
+  other income, Lima zone, a receipt) through upgrade, backup with preferences,
+  restore into a Bogotá installation, reset and restore again, asserting exact rows,
+  zone and generation at each step; restored records start at version 1, as the
+  backup format defines. `TemporalScenarioCorpusTest` round-trips all nine scenarios:
+  identical rows for all, and the seven with a final check after their last saved
+  change match all 24 figures again. `ScenarioReplayTest` shows a scenario in a new
+  process after a reset finds no receipts, does not advance and writes nothing. No
+  pre-v1 migration is invented; the older app's database stays unsupported.
+- **Red / Green:** `theTopBarsBackArrowAfterARestoreStartsTheAppAgain` failed first
+  (the arrow went back without restarting) and passed once `BackupRoute` sends a
+  replaced history's arrow through `RestoreAction.Leave`. Adding it exposed that the
+  restore journey tests depended on run order through the process-wide session; each
+  test now resets it. The retention test's first expectation of kept record versions
+  was wrong against the format and was corrected from the format, not the output.
+- **Tests:** device `RecoveryRetentionTest` (1), `TemporalScenarioCorpusTest` (+1),
+  `ScenarioReplayTest` (+1), `RestoreJourneyTest` (+1).
+- **Gate results:** `./scripts/verify-ticket SELLO-034 --retain` passed all six checks,
+  full coverage. Host: 674 tests; device: 691 tests (data 229, design-system 122, app
+  319, catalog 21); zero failures, errors or skips. Lint had zero errors and the same
+  33 warnings as before. An earlier run of this work failed only ktlint on two new test
+  files, with every test passing; they were formatted and the gate run again.
+- **Quality run:** run 20261023T045232Z-335c50c5; SELLO-034 G2 passed; HEAD 204c417, inputs sha256 e47e3fe8b175; report docs/planning/mvp/quality-reports/SELLO-034.json sha256 8b02e8ae2b5977ea40b19396fac57584265a0981867feec2efe08f1455879f0b
+- **Device / Artifact:** the isolated synthetic API-30 AVD `ci30` (`emulator-5582`);
+  the corpus run logs each scenario's round trip under `ScenarioCorpus`. No physical
+  device or personal data was used.
+- **Review:** executor self-review covered the version pairs, the expected values'
+  independence and the reset boundary. Found and left: the sandbox labels steps erased
+  by a reset "Sin escritura, como se esperaba" (recovery matrix, known gaps). Done is
+  proposed by this pull request; its merge is the designated owner acceptance under
+  `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass is claimed.
 
 ## SELLO-035 — Validate performance and optimized release composition
 

@@ -129,4 +129,14 @@ interface ExpenseDao {
             "ORDER BY effective_date, sequence LIMIT :limit"
     )
     suspend fun all(afterDate: String, afterSequence: Long, limit: Int): List<ExpenseEntity>
+
+    /** For a restore only. */
+    @Query("DELETE FROM expense")
+    suspend fun deleteAll(): Int
+
+    @Insert
+    suspend fun insertAll(expenses: List<ExpenseEntity>)
+
+    @Query("SELECT COUNT(*) FROM expense")
+    suspend fun count(): Int
 }

@@ -32,6 +32,23 @@ abstract class ProfileDao {
     abstract suspend fun advanceRevision(generation: Long, from: Long, to: Long): Int
 
     /**
+     * A restore: the backup's [zone], a new [generation] and the next [revision], only if
+     * the profile is still at [expectedGeneration] and [expectedRevision]. Returns 1 or 0.
+     */
+    @Query(
+        "UPDATE profile SET financial_zone = :zone, generation = :generation, " +
+            "revision = :revision WHERE id = 1 AND generation = :expectedGeneration " +
+            "AND revision = :expectedRevision"
+    )
+    abstract suspend fun replaceHistory(
+        zone: String,
+        generation: Long,
+        revision: Long,
+        expectedGeneration: Long,
+        expectedRevision: Long
+    ): Int
+
+    /**
      * Stores [candidate] only if no profile exists, then reads what is stored. One
      * transaction, so zone, generation and revision appear together or not at all.
      */

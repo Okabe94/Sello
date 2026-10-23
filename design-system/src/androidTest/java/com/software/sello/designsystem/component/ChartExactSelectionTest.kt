@@ -115,7 +115,11 @@ class ChartExactSelectionTest {
                     points = points,
                     summary = summary,
                     modifier = Modifier.testTag("chart"),
-                    reference = ChartReference(9_000_000_000_000_000, "Límite 9.000 B"),
+                    reference = ChartReference(
+                        9_000_000_000_000_000,
+                        "Límite 9.000 B",
+                        "Límite 9.000.000.000.000.000 pesos"
+                    ),
                     height = 40.dp
                 )
             }
@@ -123,6 +127,8 @@ class ChartExactSelectionTest {
             val height = rule.onNodeWithTag("chart").getUnclippedBoundsInRoot().height
             assertTrue("$it chart is $height", height >= 130.dp)
             rule.onNodeWithText("Límite 9.000 B").assertIsDisplayed()
+            // The line's label is shortened like an axis; it is read in full.
+            rule.onNodeWithContentDescription("Límite 9.000.000.000.000.000 pesos").assertExists()
             // Without a selection callback the marks still speak but cannot be picked.
             assertEquals(it, 0, rule.onAllNodes(selectable).fetchSemanticsNodes().size)
             rule.onNodeWithContentDescription(second.spoken).assertExists()

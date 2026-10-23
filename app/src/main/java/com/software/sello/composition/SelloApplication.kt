@@ -1,9 +1,9 @@
 package com.software.sello.composition
 
 import android.app.Application
-import androidx.lifecycle.ViewModelProvider
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
+import com.software.sello.platform.AndroidDocumentReader
 import com.software.sello.platform.ProcessFinancialZone
 import com.software.sello.platform.SystemAuditClock
 import com.software.sello.platform.SystemDispatcherProvider
@@ -21,14 +21,17 @@ class SelloApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         variant = variantComposition(this)
+        val dispatchers = SystemDispatcherProvider()
+        val documents = AndroidDocumentReader(contentResolver, dispatchers)
         startup = Startup(
             start = ::openAndBuildGraph,
-            moveUnreadable = { setAsideStorage(applicationContext, variant.names) }
+            moveUnreadable = { setAsideStorage(applicationContext, variant.names) },
+            readBackup = { readStartupBackup(documents, it, dispatchers) }
         )
     }
 
     /** The graph is started only on data that opened, so it is started at most once. */
-    private fun openAndBuildGraph(): Outcome<ViewModelProvider.Factory, StorageFailure> {
+    private fun openAndBuildGraph(): Outcome<Started, StorageFailure> {
         // The financial zone comes from the database: the device zone is stored on first
         // use and never read again, so a later trip does not move recorded days.
         val opened = openStorage(
@@ -55,7 +58,7 @@ class SelloApplication : Application() {
                         ) + variant.modules(opened.value.profile)
                     )
                 }
-                Outcome.Success(viewModels(application.koin))
+                Outcome.Success(Started(viewModels(application.koin), application.koin.get()))
             }
         }
     }

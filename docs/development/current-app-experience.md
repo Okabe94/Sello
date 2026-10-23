@@ -23,11 +23,12 @@ categories and monthly budgets.
   where a rail is present.
 - Recibo, Resumen, category detail and income history share one selected month.
 - Expenses, income, categories and limits are stored in Room. Appearance, Recibo
-  ordering and dismissed correction announcements are stored in DataStore.
+  ordering, dismissed correction announcements and the last backup are stored in
+  DataStore.
 - The app uses the shared `:design-system`. The separate `:catalog` app renders those
   real components with synthetic data and no product repositories.
 
-Not present in customer navigation: backup, restore, reset, sandbox controls, goals,
+Not present in customer navigation: sandbox controls, goals,
 investments, recurrence, alerts, analytical export or batch entry. There are no
 placeholder destinations for them.
 
@@ -107,7 +108,12 @@ What matters for placement work:
 second-step warning that requires the exact trimmed word `BORRAR`; it keeps the
 unreadable store aside, clears the old task and launches a fresh one. It never
 replaces a failed read with an empty app. The warning and typed text survive
-recreation.
+recreation. "Restaurar un respaldo" opens the system open dialog; the whole file is
+checked and previewed with its date and counts only. Confirming sets the unreadable
+store aside, fills a new one from the backup and shows "Restaurado" (or the pending
+preferences); "Ir al recibo" restarts the app. If it fails after the set-aside, "La
+restauración no terminó" leads to a restart. A preview does not survive process
+death; the file is chosen again.
 
 ### 2. Recibo
 
@@ -260,8 +266,62 @@ immediately. Theme and ink update the root theme without replacing the navigatio
 stack, selected month or drafts. Controls are disabled while a write runs. A read or
 write failure shows an error slip with retry and says financial data is unchanged.
 
+A "Tus datos" slip has the Respaldo row with the last backup's date, or "Nunca"; it
+opens Respaldo. Below it, "Borrar todos los datos" (Pide confirmación dos veces)
+opens Borrar datos.
+
 **Placement:** a shell route, so it keeps the month title, picker and dock even though
 its controls are not month settings. It has Back and no tab bar.
+
+### 10. Respaldo
+
+**Entry:** the Respaldo row in Configuración.
+
+**Behavior:** the last backup (date, counts, size, file name) and, always above the
+button, what a backup file is: readable by anyone, no password, the person's to keep,
+synced by a cloud provider on its own terms, untouched by deleting Sello's data.
+"Crear respaldo" opens the system save dialog; dismissing it changes nothing. Data is
+read and written off the main thread and the save continues if the screen is left.
+"Guardado" lands only after the document is written and closed. A failed save keeps
+the last good backup and warns about a possibly incomplete file; a save the app never
+finished (the process died) is reported as unknown, never as saved. Format:
+[backup format](../data/backup-format.md).
+
+**Restaurar**, below it: "Elegir archivo" opens the system open dialog; the whole file
+is checked before anything is shown, and a file that cannot be restored is named by
+kind (not a backup, newer version, damaged, too large, invalid content) with "Tus
+datos no cambiaron". A valid file shows current and backup counts, the backup's
+date and the replacement warning; nothing changes until "Reemplazar con el respaldo".
+The replacement is one transaction with a new generation, so older drafts and undo
+offers are refused. The backup's zone, appearance and order follow; if a preference
+cannot be applied, D09's "Historial financiero restaurado" names only those, with a
+retry that never replaces the history again. "Restaurado" → "Ir al recibo" (or Back,
+or the top bar's arrow) restarts the app. A preview or result scrolls into view at the top; once the history
+is replaced it is the only thing shown. The start-up failure screen offers the same
+restore (see Startup failure).
+
+### 11. Borrar datos
+
+**Entry:** "Borrar todos los datos" in Configuración → Tus datos.
+
+**Behavior:** first the counts read with the history's version ("Se borran 2
+categorías, 3 gastos y 1 ingreso, con sus límites y notas"), that appearance and
+order return to first-run, and that backup files outside Sello are not erased;
+"Continuar" or "Cancelar". Then the exact word: "Borrar todo" is enabled only for
+`BORRAR` (spaces around it allowed); "Cancelar" or Back returns to the counts. The
+open step and the typed word survive recreation. If the history changed meanwhile
+the counts are read again with "Tus datos cambiaron mientras confirmabas" and both
+confirmations are needed again. An erase removes every financial row, undo copy and
+receipt in one transaction, takes the device's zone and a new generation, deletes
+the kept unreadable copy and staged restores, compacts the file and resets every
+preference. "Borrado" → "Empezar de nuevo" (or Back) restarts into first-run Recibo.
+A preference reset that fails is named with its first-run values and a retry that
+erases nothing else; an unknown outcome is checked with the same operation.
+
+**Placement:** a shell route without the dock, like Respaldo.
+
+**Placement:** a shell route with Back and no Anotar dock: its own button is the only
+action.
 
 ## Appearance and motion
 
@@ -306,12 +366,17 @@ in [layout and charts](layout-and-charts.md). Screen-specific qualifications:
   width; their dock stays below the content.
 - Category grids use two columns, three when content width reaches 560dp, and one
   from font scale 1.3.
+- At large text, screen titles, the month title and chips take a second line before
+  any ellipsis; a title with no room beside its actions moves under them. The rail
+  widens to its longest label.
 
 The components already provide 48dp minimum targets, full spoken money, headings,
 chart summaries and selectable marks, named secondary actions, non-gesture
 alternatives, selected-state semantics, live error/notice announcements and layouts
-exercised at font scales 1.0, 1.3 and 2.0. This is an implemented baseline, not a
-claim of a completed manual TalkBack/Switch Access audit.
+exercised at font scales 1.0, 1.3 and 2.0. The assembled app was checked across
+windows, text sizes, themes and process restoration in the
+[UI acceptance matrix](../testing/ui-acceptance-matrix.md). Manual TalkBack, Switch
+Access and keyboard walks are post-MVP (SELLO-074).
 
 ## Component catalog and previews
 
@@ -354,7 +419,7 @@ beside each feature.
 - Category and transaction forms are full-screen flows, not sheets or side panels.
 - The month and date pickers are Material 3 dialogs and sheets with Sello colors, not
   custom calendar components.
-- Backup/restore/reset are planned but not routed. The debug sandbox is a separate
+- The debug sandbox is a separate
   debug-only activity, not a route in the app.
 - There is no production network permission, account, sync, notification or cloud UI.
 

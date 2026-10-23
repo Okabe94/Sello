@@ -56,6 +56,10 @@ The roadmap also holds SELLO-E10/044, an owner-requested legacy data import that
 runs through the released backup validator and restore. It needs a legacy export
 from the owner when it starts and depends on SELLO-036 Done.
 
+SELLO-E14/074 holds the manual TalkBack, Switch Access and hardware keyboard pass
+over the released app. The owner moved it out of the MVP on 2026-10-23; the MVP
+keeps the automated accessibility semantics in SELLO-033 and D10.
+
 Canonical epic files share this directory for stable IDs/cross-links. `Increment`
 metadata is `MVP` (default for the existing eight epics) or explicit `Post-MVP`.
 The generator validates both increments together, rejects MVP dependencies on
@@ -82,7 +86,7 @@ were delivered. Retired IDs must not be reused.
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Portable backups, resumable restore, safe reset and privacy boundaries | SELLO-028–032 |
 | [SELLO-E08](epics/E08-release.md) | Executed device, recovery, performance and production-release evidence | SELLO-033–036 |
 | [SELLO-E12](epics/E12-v2-recibo.md) | Recibo status, answer slip, frame and save feedback matching Sello v2 | SELLO-061–069 |
-| [SELLO-E13](epics/E13-v2-current-app.md) | Entry, income, Resumen and one component set matching Sello v2 | SELLO-070–074 |
+| [SELLO-E13](epics/E13-v2-current-app.md) | Entry, income, Resumen and one component set matching Sello v2 | SELLO-070–073 |
 
 An epic is Done only when all child tickets are Done and its integrated outcome
 works. Foundation tasks do not masquerade as user features; each still has a

@@ -1,7 +1,11 @@
 package com.software.sello.data
 
 import android.content.Context
+import com.software.sello.data.backup.BackupExport
+import com.software.sello.data.backup.RoomBackupSnapshots
+import com.software.sello.data.backup.RoomRestores
 import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.keptFiles
 import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.local.setAside
 import com.software.sello.data.preferences.PREFERENCES_FILE
@@ -19,13 +23,18 @@ import com.software.sello.data.repository.RoomResumenSnapshots
 import com.software.sello.data.repository.UndoWindow
 import com.software.sello.data.repository.discardKeptCopies
 import com.software.sello.data.repository.reading
+import com.software.sello.data.reset.RoomResets
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.port.AppearancePreferences
 import com.software.sello.domain.port.AuditClock
+import com.software.sello.domain.port.BackupExports
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryExpenseSearch
 import com.software.sello.domain.port.CategoryInsightsSnapshots
+import com.software.sello.domain.port.CategoryOrderingPreferences
 import com.software.sello.domain.port.CategoryReads
+import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialClock
@@ -34,8 +43,13 @@ import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.PreferenceReset
 import com.software.sello.domain.port.RecordIdSource
+import com.software.sello.domain.port.Resets
+import com.software.sello.domain.port.Restores
 import com.software.sello.domain.port.ResumenSnapshots
+import java.io.File
+import java.time.ZoneId
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -45,7 +59,10 @@ import kotlin.coroutines.CoroutineContext
  */
 class FinancialStorage internal constructor(
     private val database: SelloDatabase,
-    val profiles: FinancialProfileStore
+    val profiles: FinancialProfileStore,
+    private val restoreFolder: File,
+    private val resetFolder: File,
+    private val setAsideDatabase: File
 ) : AutoCloseable {
     /**
      * The expense workflow. It takes its clocks and identifier source here because the
@@ -95,6 +112,46 @@ class FinancialStorage internal constructor(
         computation: CoroutineContext
     ): CategoryInsightsSnapshots = RoomCategoryInsightsSnapshots(database, clock, computation)
 
+    /** Restores into this storage, staged in its own private folder. */
+    fun restores(
+        appearance: AppearancePreferences,
+        ordering: CategoryOrderingPreferences,
+        ids: RecordIdSource,
+        audit: AuditClock,
+        dispatchers: DispatcherProvider
+    ): Restores =
+        RoomRestores(database, restoreFolder, appearance, ordering, ids, audit, dispatchers)
+
+    /**
+     * Erasing this storage on request: its rows, its restore folder, the copy set aside
+     * when it would not open, and the preferences [preferences] reset. A new history
+     * takes [deviceZone].
+     */
+    fun resets(
+        preferences: PreferenceReset,
+        deviceZone: () -> ZoneId,
+        audit: AuditClock,
+        dispatchers: DispatcherProvider
+    ): Resets = RoomResets(
+        database,
+        resetFolder,
+        restoreFolder,
+        keptFiles(setAsideDatabase),
+        preferences,
+        deviceZone,
+        audit,
+        dispatchers
+    )
+
+    /** Backup files of this storage, with the portable preferences beside it. */
+    fun backupExports(
+        appearance: AppearancePreferences,
+        ordering: CategoryOrderingPreferences,
+        audit: AuditClock,
+        dispatchers: DispatcherProvider
+    ): BackupExports =
+        BackupExport(RoomBackupSnapshots(database), appearance, ordering, audit, dispatchers)
+
     /**
      * Takes the financial clock for the same reason the commands do. [computation] must
      * carry the dispatcher the month's figures are worked out on; it is never the caller's.
@@ -131,6 +188,12 @@ data class StorageNames(val database: String, val preferences: String) {
     /** Where [database] is kept when it cannot be opened and the person starts again. */
     val setAsideDatabase: String get() = database.removeSuffix(".db") + "-unreadable.db"
 
+    /** The private folder a restore into [database] is staged in. */
+    val restoreFolder: String get() = database.removeSuffix(".db") + "-restore"
+
+    /** The private folder an erase of [database] is tracked in until it is finished. */
+    val resetFolder: String get() = database.removeSuffix(".db") + "-reset"
+
     companion object {
         val Normal = StorageNames(SelloDatabase.FILE_NAME, PREFERENCES_FILE)
     }
@@ -148,7 +211,13 @@ fun openFinancialStorage(
     names: StorageNames = StorageNames.Normal
 ): FinancialStorage {
     val database = openSelloDatabase(context, queries, names.database)
-    return FinancialStorage(database, RoomFinancialProfileStore(database, audit))
+    return FinancialStorage(
+        database,
+        RoomFinancialProfileStore(database, audit),
+        File(context.filesDir, names.restoreFolder),
+        File(context.filesDir, names.resetFolder),
+        context.getDatabasePath(names.setAsideDatabase)
+    )
 }
 
 /**
@@ -156,7 +225,8 @@ fun openFinancialStorage(
  * its set-aside name (`sello-unreadable.db` for the app's own) in the same private
  * folder so the next open starts an empty one. The file is kept, not deleted, because
  * a file this build cannot read may be intact: one written by a newer version reads
- * again once the app is updated.
+ * again once the app is updated. A restore staged for the file that moved belongs to
+ * it, so its private folder is cleared; the next store starts with none.
  */
 fun setAsideFinancialStorage(
     context: Context,
@@ -164,4 +234,6 @@ fun setAsideFinancialStorage(
 ): Outcome<Unit, StorageFailure> = setAside(
     context.getDatabasePath(names.database),
     context.getDatabasePath(names.setAsideDatabase)
-)
+).also { moved ->
+    if (moved is Outcome.Success) File(context.filesDir, names.restoreFolder).deleteRecursively()
+}

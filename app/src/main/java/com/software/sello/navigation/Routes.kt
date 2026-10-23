@@ -19,6 +19,14 @@ data object ResumenRoute
 @Serializable
 data object SettingsRoute
 
+/** Making a backup file, reached from Configuración. */
+@Serializable
+data object BackupRoute
+
+/** Borrar todos los datos, reached from Configuración. */
+@Serializable
+data object ResetRoute
+
 @Serializable
 data class ResumenCategoryRoute(val categoryId: String)
 

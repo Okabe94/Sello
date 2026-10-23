@@ -305,12 +305,15 @@ deferred beyond MVP. Remaining implementation inputs are listed in the
   and neutralize spreadsheet formula injection.
 - **MUST** keep private local storage, disable unapproved OS backup/device transfer,
   redact diagnostics, minimize permissions, and narrowly scope/clean shared cache
-  files. Disclose plaintext backups/exports; checksums are not encryption.
+  files. Disclose plaintext backups/exports; checksums are not encryption. Read and
+  write only provider (`content://`) documents the pickers return, never a path.
 - **MUST**, for approved D08 MVP policy, use manual plaintext JSON backup without
   password/encryption claims. Explain readable financial contents before saving,
   manual-recovery responsibility, provider-managed sync for cloud-backed destinations
-  and that app reset does not erase external copies. Clean private temporary files;
-  do not claim the scaffold already enforces these platform/file requirements.
+  and that app reset does not erase external copies. Clean private temporary files.
+  The merged-manifest, release and file/log checks in
+  [MVP data handling](docs/privacy/mvp-data-handling.md) enforce these; keep them
+  passing rather than describing protection they do not test.
 - **COULD** add reviewed encryption or an isolated legacy JSON translator after
   an explicit product/security decision. Never custom crypto or old database import.
 

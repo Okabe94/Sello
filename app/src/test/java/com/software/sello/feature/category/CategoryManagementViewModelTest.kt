@@ -116,7 +116,8 @@ class CategoryManagementViewModelTest {
     private var nextId = 500
     private val money = MoneyFormatter(
         object : MoneyLabels {
-            override fun amount(currency: Currency, digits: String, isOne: Boolean) = digits
+            override fun amount(currency: Currency, digits: String, isOne: Boolean) =
+                "$digits pesos"
 
             override fun negative(amount: String) = amount
 
@@ -215,6 +216,10 @@ class CategoryManagementViewModelTest {
             listOf(now.name, now.iconKey, now.unlimited, now.limitText)
         )
         assertEquals(october to false, now.targetMonth to now.historical)
+        assertEquals(
+            listOf("200.000 pesos", "300.000 pesos", "500.000 pesos"),
+            now.suggestions.map { it.spoken }
+        )
         assertFalse(now.changed || now.canSubmit || now.limitLocked)
         assertTrue(now.canArchive)
         assertEquals(emptyList<CategoryCommand>(), commands.submitted)

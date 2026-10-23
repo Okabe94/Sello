@@ -91,6 +91,8 @@
     <string name="catalog_example_investments">Return and valuation states</string>
     <string name="catalog_example_icon_strip">Icon strip and Recibo pin</string>
     <string name="catalog_example_danger_ticket">Confirmation, undo, ticket and danger</string>
+    <string name="catalog_example_bullet_list">BulletList</string>
+    <string name="catalog_example_backup_states">Backup save states</string>
     <string name="catalog_example_celebration">Goal completion celebration</string>
     <string name="catalog_demo_ingreso_en_pesos" formatted="false">Ingreso en pesos</string>
     <string name="catalog_demo_gasto_en_pesos" formatted="false">Gasto en pesos</string>

@@ -4,8 +4,8 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-22 · **Product baseline:** `54b47f0`, plus the uncommitted category-detail worktree update.
-SELLO-001–028, SELLO-061–073 and epics E01–E06 and E12 are recorded Done in the canonical tickets.
+**Snapshot:** 2026-10-23 · **Product baseline:** `1159f8a`, plus the category-detail branch.
+SELLO-001–034, SELLO-061–073 and epics E01–E07, E12 and E13 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -22,7 +22,11 @@ verification or release-acceptance claims.
 - Exact totals, budget remaining/allowance, Resumen charts, net flow and allocation.
 - Shared month, restored drafts/navigation, appearance and category-order settings.
 - Room schema 3 for finances; DataStore for nonfinancial preferences.
-- Startup retry and confirmed start-over preserve an unreadable database privately.
+- Backups save and restore through the system file picker, also from the start-up
+  failure screen; retry and confirmed start-over preserve an unreadable database privately.
+- Configuración → Borrar todos los datos erases the history after counts and BORRAR.
+- No network permission or OS backup; every build checks its manifests, release
+  libraries and APK against [MVP data handling](../privacy/mvp-data-handling.md).
 
 The modules are `:app`, `:domain`, `:data`, `:design-system` and the separate
 `:catalog`. The extra `:prototype` app renders v1.1 sample screens with no storage.
@@ -64,6 +68,12 @@ tracks the remaining financial inputs.
 | [SELLO-026](../planning/mvp/epics/E06-live-testing.md#sello-026--add-truthful-failure-receipt-and-recovery-diagnostics) | Sandbox-only simulated faults (failed read, lost answer or interruption after a real save, failure before storage), an operation inspector that reads real receipts, an edge-case scenario and a redacted diagnostic shared on request. |
 | [SELLO-027](../planning/mvp/epics/E06-live-testing.md#sello-027--establish-the-growing-temporal-regression-scenario-suite) | Nine sandbox scenarios with checks taken from the approved examples (G01, H01–H05, I01–I02, AR01–AR02) or derived by hand and labelled; `TemporalScenarioCorpusTest` runs each fresh and resumed; [corpus](../testing/sandbox-scenarios.md) with replay steps and the recurrence obligation. E06 is done. |
 | [SELLO-028](../planning/mvp/epics/E07-recovery-privacy.md#sello-028--define-portable-mvp-backups-and-bounded-validation) | A versioned plaintext JSON [backup format](../data/backup-format.md), independent of Room: one-revision snapshot, preferences captured separately (left out if unreadable), and a strict reader that rejects a whole bad file with where it is and writes nothing. No screen yet: saving is SELLO-029, restoring SELLO-030. |
+| [SELLO-029](../planning/mvp/epics/E07-recovery-privacy.md#sello-029--deliver-real-document-picker-backup-creation) | Configuración → Respaldo saves a backup through the system file picker, after an always-visible plaintext disclosure; "Guardado" only after the document is closed, a failed save keeps the last backup, and a save cut off by a dead process shows as unknown. No restore yet (SELLO-030). |
+| [SELLO-030](../planning/mvp/epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion) | Respaldo → Restaurar checks a whole file, previews current against backup counts and replaces the history in one transaction (new generation, backup zone), then applies its preferences, naming any that failed with a retry that never replaces twice; the app restarts. The start-up failure screen offers the same restore, setting the unreadable file aside first. |
+| [SELLO-031](../planning/mvp/epics/E07-recovery-privacy.md#sello-031--deliver-fenced-two-confirmation-reset-and-recovery) | Configuración → Borrar todos los datos counts what goes, then needs the exact word BORRAR; one transaction erases every financial row, undo copy and receipt (keeping one `history.reset` receipt), the kept unreadable copy and staged restores go, the file is compacted and preferences return to first-run, then the app restarts empty. Backup files outside Sello are untouched. |
+| [SELLO-032](../planning/mvp/epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation) | Build-time checks on the merged manifests (backup off, allowed permissions and exported parts only), the release libraries and the release APK; the picker adapters accept only provider documents; device tests for file boundaries and a log free of synthetic markers; [MVP data handling](../privacy/mvp-data-handling.md). E07 is done. |
+| [SELLO-033](../planning/mvp/epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) | Every daily-use screen checked in five windows, three text sizes and four themes, plus process-death, rotation and cold-start walks on an emulator. Large text now wraps titles, chips and rail labels; limit amounts are read with "pesos"; the note composer clears a side navigation bar. [UI acceptance matrix](../testing/ui-acceptance-matrix.md). |
+| [SELLO-034](../planning/mvp/epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) | A v1 history survives upgrade, backup, restore, reset and restore again on real files; all nine sandbox scenarios round-trip through a backup with their last figures; after a reset nothing comes back in a new process; Respaldo's top-bar arrow restarts after a restore. [Recovery matrix](../testing/recovery-matrix.md). |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-062](../planning/mvp/epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Recibo's answer slip reads "Restante del presupuesto" with a signed remainder, the per-day figure under a tear line and a closing line for past months. The Ajustar presupuesto link is SELLO-067. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
@@ -80,19 +90,17 @@ tracks the remaining financial inputs.
 
 ## Remaining work
 
-- SELLO-074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the last E13
-  ticket, a recorded manual TalkBack and Switch Access pass over the v2 screens.
-- SELLO-029–032: saving a backup through the document picker, restore, reset and
-  their privacy verification. Restore from startup failure and reset erasure of the
-  kept unreadable copy remain open.
-- SELLO-033–036: integrated accessibility, restoration, performance and signed
-  release acceptance. The current app is not a completed MVP release.
+- SELLO-035–036: performance and signed release acceptance. The current app is not
+  a completed MVP release.
+- SELLO-074 ([E14](../planning/mvp/epics/E14-assistive-technology.md)): the manual
+  TalkBack, Switch Access and keyboard pass, moved post-MVP by the owner on
+  2026-10-23. E13 is done without it.
 - Goal/investment features, recurrence and other deferred capabilities remain
-  outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
+  outside MVP; signed carryover, legacy import and the assistive-technology pass
+  are on the post-MVP roadmap.
 
-The [board](../planning/mvp/BOARD.md) currently lists SELLO-029 without
-unmet ticket dependencies, plus E13's SELLO-074 (deferred) and E08's SELLO-033. Their other prerequisites remain in
-the ticket briefs; no statuses are changed by this handoff.
+The [board](../planning/mvp/BOARD.md) currently lists E08's SELLO-035 without unmet
+ticket dependencies. Its other prerequisites remain in the ticket brief.
 
 ## Detail references
 

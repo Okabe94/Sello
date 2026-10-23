@@ -78,4 +78,18 @@ interface LimitDao {
         afterMonth: String,
         limit: Int
     ): List<MonthLimitEntity>
+
+    /** For a restore only. */
+    @Query("DELETE FROM default_limit")
+    suspend fun deleteAllDefaults(): Int
+
+    /** For a restore only. */
+    @Query("DELETE FROM month_limit")
+    suspend fun deleteAllMonthLimits(): Int
+
+    @Insert
+    suspend fun insertDefaults(limits: List<DefaultLimitEntity>)
+
+    @Insert
+    suspend fun insertMonthLimits(limits: List<MonthLimitEntity>)
 }

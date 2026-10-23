@@ -122,7 +122,10 @@ class TestLedger(
         database,
         RoomFinancialProfileStore(database) {
             audit
-        }
+        },
+        files.restoreFolder,
+        files.resetFolder,
+        files.context.getDatabasePath(StorageNames(files.name, "unused").setAsideDatabase)
     )
 
     /** A new installation: a profile and nothing else. */

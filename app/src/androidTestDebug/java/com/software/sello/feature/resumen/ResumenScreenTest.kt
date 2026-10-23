@@ -235,6 +235,7 @@ class ResumenScreenTest {
         rule.onNodeWithText("* Mes en curso: lo gastado hasta hoy.").performScrollTo()
             .assertIsDisplayed()
         rule.onNodeWithText("Límite 100.000").assertExists()
+        rule.onNodeWithContentDescription("Límite 100.000 pesos").assertExists()
     }
 
     @Test

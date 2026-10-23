@@ -84,7 +84,8 @@ class CategoryEditorViewModelTest {
     private var nextId = 500
     private val money = MoneyFormatter(
         object : MoneyLabels {
-            override fun amount(currency: Currency, digits: String, isOne: Boolean) = digits
+            override fun amount(currency: Currency, digits: String, isOne: Boolean) =
+                "$digits pesos"
 
             override fun negative(amount: String) = amount
 
@@ -138,6 +139,10 @@ class CategoryEditorViewModelTest {
         assertEquals("directions_bus", state.iconKey)
         assertEquals(14, state.iconKeys.size)
         assertEquals(listOf("200.000", "300.000", "500.000"), state.suggestions.map { it.label })
+        assertEquals(
+            listOf("200.000 pesos", "300.000 pesos", "500.000 pesos"),
+            state.suggestions.map { it.spoken }
+        )
         assertFalse(state.loading || state.loadFailed || state.forEntry || state.canSubmit)
         assertNull(state.result)
     }

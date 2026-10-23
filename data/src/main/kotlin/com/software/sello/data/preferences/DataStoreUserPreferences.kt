@@ -7,6 +7,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.software.sello.domain.model.AppearancePreference
@@ -17,12 +19,18 @@ import com.software.sello.domain.model.CorrectionAnnouncementPreference
 import com.software.sello.domain.model.InkPreference
 import com.software.sello.domain.model.ThemePreference
 import com.software.sello.domain.port.AppearancePreferences
+import com.software.sello.domain.port.BackupRecord
+import com.software.sello.domain.port.BackupRecords
+import com.software.sello.domain.port.BackupSummary
 import com.software.sello.domain.port.CategoryOrderingPreferences
 import com.software.sello.domain.port.CorrectionAnnouncementPreferences
+import com.software.sello.domain.port.LastBackup
 import com.software.sello.domain.port.PreferenceFailure
 import com.software.sello.domain.port.PreferenceRead
+import com.software.sello.domain.port.PreferenceReset
 import com.software.sello.domain.port.PreferenceWrite
 import java.io.IOException
+import java.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,7 +52,9 @@ internal const val PREFERENCES_FILE = "sello-preferences"
 class DataStoreUserPreferences internal constructor(private val data: DataStore<Preferences>) :
     AppearancePreferences,
     CategoryOrderingPreferences,
-    CorrectionAnnouncementPreferences {
+    CorrectionAnnouncementPreferences,
+    BackupRecords,
+    PreferenceReset {
     private val readAttempt = MutableStateFlow(0L)
 
     /** [fileName] is the profile's preferences file; see `StorageNames`. */
@@ -87,6 +97,25 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
 
     override suspend fun dismissPastLimitAnnouncement(): PreferenceWrite =
         write { this[PAST_LIMIT_SEEN] = true }
+
+    override fun observeBackups(): Flow<PreferenceRead<BackupRecord>> = observe(::backups)
+
+    override suspend fun backupStarted(): PreferenceWrite = write { this[BACKUP_UNFINISHED] = true }
+
+    override suspend fun backupCompleted(last: LastBackup): PreferenceWrite = write {
+        this[BACKUP_AT] = last.at.toEpochMilli()
+        this[BACKUP_NAME] = last.name
+        this[BACKUP_BYTES] = last.bytes
+        this[BACKUP_CATEGORIES] = last.summary.categories
+        this[BACKUP_EXPENSES] = last.summary.expenses
+        this[BACKUP_INCOMES] = last.summary.incomes
+        remove(BACKUP_UNFINISHED)
+    }
+
+    override suspend fun backupAbandoned(): PreferenceWrite = write { remove(BACKUP_UNFINISHED) }
+
+    /** Every key goes in one edit, so each reads its first-run default again. */
+    override suspend fun resetAll(): PreferenceWrite = write { clear() }
 
     /**
      * A failed DataStore collection ends, so keep the public flow alive around each attempt.
@@ -181,6 +210,33 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
         )
     )
 
+    /** The last backup is all of its keys or none of them; anything between is damage. */
+    private fun backups(stored: Preferences): Decoded<BackupRecord> {
+        val unfinished = stored[BACKUP_UNFINISHED] ?: false
+        val keys = listOf(
+            BACKUP_AT,
+            BACKUP_NAME,
+            BACKUP_BYTES,
+            BACKUP_CATEGORIES,
+            BACKUP_EXPENSES,
+            BACKUP_INCOMES
+        )
+        val present = keys.count { it in stored }
+        if (present == 0) return Decoded.Value(BackupRecord(null, unfinished))
+        if (present != keys.size) return Decoded.Invalid
+        val bytes = stored[BACKUP_BYTES]!!
+        val counts =
+            listOf(stored[BACKUP_CATEGORIES]!!, stored[BACKUP_EXPENSES]!!, stored[BACKUP_INCOMES]!!)
+        if (bytes < 0 || counts.any { it < 0 }) return Decoded.Invalid
+        val last = LastBackup(
+            at = Instant.ofEpochMilli(stored[BACKUP_AT]!!),
+            name = stored[BACKUP_NAME]!!,
+            bytes = bytes,
+            summary = BackupSummary(counts[0], counts[1], counts[2])
+        )
+        return Decoded.Value(BackupRecord(last, unfinished))
+    }
+
     private sealed interface Decoded<out T> {
         data class Value<T>(val value: T) : Decoded<T>
         data object Invalid : Decoded<Nothing>
@@ -193,6 +249,13 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
         val CATEGORY_DIRECTION = stringPreferencesKey("recibo_category_direction_v1")
         val PAST_EXPENSE_SEEN = booleanPreferencesKey("past_expense_correction_seen_v1")
         val PAST_LIMIT_SEEN = booleanPreferencesKey("past_limit_correction_seen_v1")
+        val BACKUP_UNFINISHED = booleanPreferencesKey("backup_unfinished_v1")
+        val BACKUP_AT = longPreferencesKey("backup_last_at_v1")
+        val BACKUP_NAME = stringPreferencesKey("backup_last_name_v1")
+        val BACKUP_BYTES = longPreferencesKey("backup_last_bytes_v1")
+        val BACKUP_CATEGORIES = intPreferencesKey("backup_last_categories_v1")
+        val BACKUP_EXPENSES = intPreferencesKey("backup_last_expenses_v1")
+        val BACKUP_INCOMES = intPreferencesKey("backup_last_incomes_v1")
 
         val ThemePreference.stored: String
             get() = when (this) {

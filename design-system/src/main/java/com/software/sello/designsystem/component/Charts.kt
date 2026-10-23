@@ -68,9 +68,12 @@ data class ChartPoint(
     val referenceValue: Long? = null
 )
 
-/** The single reference line a chart may carry, with its own label. */
+/**
+ * The single reference line a chart may carry, with its own [label]. The label may be
+ * shortened like an axis; [spoken] says the exact amount, such as "Límite 350.000 pesos".
+ */
 @Immutable
-data class ChartReference(val value: Long, val label: String)
+data class ChartReference(val value: Long, val label: String, val spoken: String = label)
 
 /** The smallest a chart may be. */
 val ChartMinHeight = 130.dp
@@ -352,6 +355,7 @@ private fun ChartFrame(
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.ink,
                     modifier = Modifier
+                        .semantics { contentDescription = reference.spoken }
                         .offset(y = (y - LabelRoom / 2).coerceAtLeast(0.dp))
                         .background(colors.paper)
                         .padding(horizontal = 4.dp)

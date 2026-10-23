@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.software.sello.R
 import com.software.sello.designsystem.component.ChipFlow
 import com.software.sello.designsystem.component.ErrorSlip
+import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.SegmentedSwitch
 import com.software.sello.designsystem.component.SelloChip
 import com.software.sello.designsystem.component.Slip
@@ -30,12 +31,18 @@ import com.software.sello.domain.model.CategoryOrder
 import com.software.sello.domain.model.CategoryOrderDirection
 import com.software.sello.domain.model.InkPreference
 import com.software.sello.domain.model.ThemePreference
+import com.software.sello.presentation.date.dateLabels
 
 @Composable
-fun SettingsRoot(viewModels: ViewModelProvider.Factory, contentPadding: PaddingValues) {
+fun SettingsRoot(
+    viewModels: ViewModelProvider.Factory,
+    contentPadding: PaddingValues,
+    onOpenBackup: () -> Unit,
+    onOpenReset: () -> Unit
+) {
     val model: SettingsViewModel = viewModel(factory = viewModels)
     val state by model.state.collectAsStateWithLifecycle()
-    SettingsScreen(state, model::onAction, contentPadding)
+    SettingsScreen(state, model::onAction, contentPadding, onOpenBackup, onOpenReset)
 }
 
 /** Persisted, nonfinancial preferences. Every control is a real setting, never a placeholder. */
@@ -44,6 +51,8 @@ fun SettingsScreen(
     state: SettingsState,
     onAction: (SettingsAction) -> Unit,
     contentPadding: PaddingValues,
+    onOpenBackup: () -> Unit,
+    onOpenReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -67,6 +76,41 @@ fun SettingsScreen(
         }
         AppearanceControls(state, onAction)
         CategoryOrderingControls(state, onAction)
+        DataControls(state.backup, onOpenBackup, onOpenReset)
+    }
+}
+
+@Composable
+private fun DataControls(backup: BackupLine, onOpenBackup: () -> Unit, onOpenReset: () -> Unit) {
+    val value = when (backup) {
+        BackupLine.Loading -> ""
+
+        BackupLine.Unreadable -> stringResource(R.string.settings_backup_unreadable)
+
+        is BackupLine.Read -> backup.lastAt?.let {
+            dateLabels().moment(it, backup.zone, stringResource(R.string.backup_moment))
+        } ?: stringResource(R.string.settings_backup_never)
+    }
+    Slip(Modifier.fillMaxWidth().testTag(SETTINGS_DATA_TAG)) {
+        SectionTitle(R.string.settings_data)
+        LeaderLine(
+            label = stringResource(R.string.settings_backup),
+            value = value,
+            onClick = onOpenBackup,
+            modifier = Modifier.testTag(SETTINGS_BACKUP_TAG)
+        )
+        Text(
+            text = stringResource(R.string.settings_backup_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = SelloTheme.colors.inkSoft
+        )
+        LeaderLine(
+            label = stringResource(R.string.settings_reset),
+            value = "",
+            caption = stringResource(R.string.settings_reset_caption),
+            onClick = onOpenReset,
+            modifier = Modifier.testTag(SETTINGS_RESET_TAG)
+        )
     }
 }
 
@@ -181,3 +225,6 @@ const val SETTINGS_INK_TAG = "settings:ink"
 const val SETTINGS_ORDERING_TAG = "settings:ordering"
 const val SETTINGS_ORDER_TAG = "settings:order"
 const val SETTINGS_DIRECTION_TAG = "settings:direction"
+const val SETTINGS_DATA_TAG = "settings:data"
+const val SETTINGS_BACKUP_TAG = "settings:backup"
+const val SETTINGS_RESET_TAG = "settings:reset"

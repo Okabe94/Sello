@@ -15,7 +15,20 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.domain.model.CategoryOrder
+import com.software.sello.domain.model.CategoryOrderDirection
+import com.software.sello.domain.model.CategoryOrderingPreference
+import com.software.sello.domain.port.BackupSummary
+import com.software.sello.domain.port.CheckedBackup
+import com.software.sello.domain.port.PendingPreferences
+import com.software.sello.domain.port.RestoreOutcome
+import com.software.sello.domain.port.RestoreRejection
+import com.software.sello.presentation.restore.RESTORE_DONE_TAG
+import com.software.sello.presentation.restore.RESTORE_LEAVE_TAG
+import java.time.Instant
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -128,5 +141,133 @@ class StartupFailureScreenTest {
         rule.onNodeWithTag(STARTUP_CONFIRM_TAG).performScrollTo().assertIsDisplayed().performClick()
 
         assertEquals(listOf<StartupFailureAction>(StartupFailureAction.Confirm), actions)
+    }
+
+    private val backup = CheckedBackup(
+        Instant.parse("2026-10-22T19:30:00Z"),
+        ZoneId.of("America/Lima"),
+        BackupSummary(categories = 2, expenses = 3, incomes = 1)
+    )
+
+    @Test
+    fun restoringABackupIsOfferedBetweenTryingAgainAndStartingOver() {
+        show(StartupFailureState())
+
+        rule.onNodeWithText("Restaurar un respaldo").assertIsDisplayed()
+        val top = { tag: String -> rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot.top }
+        assertTrue(top(STARTUP_RETRY_TAG) < top(STARTUP_RESTORE_TAG))
+        assertTrue(top(STARTUP_RESTORE_TAG) < top(STARTUP_START_OVER_TAG))
+        rule.onNodeWithTag(STARTUP_RESTORE_TAG).performClick()
+
+        assertEquals(listOf<StartupFailureAction>(StartupFailureAction.RestoreBackup), actions)
+    }
+
+    @Test
+    fun thePreviewSaysWhatTheBackupHoldsAndThatTheDataIsKeptAside() {
+        show(StartupFailureState(restore = StartupRestoreStep.Previewing(backup)))
+
+        rule.onNodeWithTag(STARTUP_RESTORE_PREVIEW_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("¿Restaurar este respaldo?").assertIsDisplayed()
+        // 19:30 UTC is 2:30 p. m. in Lima, the backup's own zone.
+        rule.onNodeWithText("Respaldo del 22 oct 2026, 2:30", substring = true).assertExists()
+        rule.onNodeWithText("Tiene 2 categorías, 3 gastos y 1 ingreso.").assertExists()
+        rule.onNodeWithText("queda guardado aparte", substring = true).assertExists()
+        rule.onNodeWithTag(STARTUP_RESTORE_CONFIRM_TAG).performScrollTo().performClick()
+        rule.onNodeWithTag(STARTUP_RESTORE_CANCEL_TAG).performScrollTo().performClick()
+
+        assertEquals(
+            listOf(StartupFailureAction.ConfirmRestore, StartupFailureAction.CancelRestore),
+            actions
+        )
+    }
+
+    @Test
+    fun whileRestoringNothingElseCanBePressed() {
+        show(StartupFailureState(restore = StartupRestoreStep.Restoring(backup)))
+
+        rule.onNodeWithText("Restaurando…").performScrollTo().assertIsDisplayed()
+        val choices = listOf(
+            STARTUP_RESTORE_CONFIRM_TAG,
+            STARTUP_RESTORE_CANCEL_TAG,
+            STARTUP_RETRY_TAG,
+            STARTUP_RESTORE_TAG,
+            STARTUP_START_OVER_TAG
+        )
+        for (tag in choices) {
+            rule.onNodeWithTag(tag).performScrollTo().assertIsNotEnabled()
+        }
+    }
+
+    @Test
+    fun aFileThatCannotBeRestoredSaysWhyAndOffersAnother() {
+        show(
+            StartupFailureState(
+                restore = StartupRestoreStep.Rejected(RestoreRejection.NewerVersion)
+            )
+        )
+
+        rule.onNodeWithTag(STARTUP_RESTORE_REJECTED_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Lo hizo una versión más nueva de Sello", substring = true)
+            .assertIsDisplayed()
+        rule.onNodeWithText("Elegir otro archivo").performScrollTo().performClick()
+
+        assertEquals(listOf<StartupFailureAction>(StartupFailureAction.RestoreBackup), actions)
+    }
+
+    @Test
+    fun anInterruptedRestoreSaysSoAndContinuingIsTheWayOn() {
+        show(StartupFailureState(restore = StartupRestoreStep.Interrupted))
+
+        rule.onNodeWithTag(STARTUP_RESTORE_INTERRUPTED_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("La restauración no terminó").assertIsDisplayed()
+        rule.onNodeWithText("Continuar").performScrollTo().performClick()
+
+        assertEquals(listOf<StartupFailureAction>(StartupFailureAction.Leave), actions)
+    }
+
+    @Test
+    fun aRestoredBackupIsRestauradoAndGoingOnLeaves() {
+        val done = RestoreOutcome.Restored(BackupSummary(2, 3, 1), PendingPreferences(null, null))
+        show(StartupFailureState(restore = StartupRestoreStep.Restored(done)))
+
+        rule.onNodeWithTag(RESTORE_DONE_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Se restauró el respaldo: 2 categorías, 3 gastos y 1 ingreso.")
+            .assertExists()
+        rule.onNodeWithTag(RESTORE_LEAVE_TAG).performScrollTo().performClick()
+
+        assertEquals(listOf<StartupFailureAction>(StartupFailureAction.Leave), actions)
+    }
+
+    @Test
+    fun preferencesNotAppliedAreNamedAndOnlyTheyAreRetried() {
+        val pending = RestoreOutcome.Restored(
+            BackupSummary(2, 3, 1),
+            PendingPreferences(
+                null,
+                CategoryOrderingPreference(
+                    CategoryOrder.Alphabetical,
+                    CategoryOrderDirection.Ascending
+                )
+            )
+        )
+        show(StartupFailureState(restore = StartupRestoreStep.Restored(pending)))
+
+        rule.onNodeWithText("Historial financiero restaurado").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Orden de categorías: Alfabético, de menor a mayor").assertExists()
+        rule.onNodeWithText("Apariencia", substring = true).assertDoesNotExist()
+        rule.onNodeWithText("Aplicar orden").performScrollTo().performClick()
+
+        assertEquals(listOf<StartupFailureAction>(StartupFailureAction.ApplyPreferences), actions)
+    }
+
+    @Test
+    fun atTwiceTheFontSizeThePreviewCanStillBeConfirmed() {
+        show(StartupFailureState(restore = StartupRestoreStep.Previewing(backup)), fontScale = 2f)
+
+        rule.onNodeWithTag(STARTUP_RESTORE_CANCEL_TAG).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag(STARTUP_RESTORE_CONFIRM_TAG).performScrollTo().assertIsDisplayed()
+            .performClick()
+
+        assertEquals(listOf<StartupFailureAction>(StartupFailureAction.ConfirmRestore), actions)
     }
 }

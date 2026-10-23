@@ -8,9 +8,15 @@ import com.software.sello.domain.model.InkPreference
 import com.software.sello.domain.model.ThemePreference
 import com.software.sello.domain.port.AppearancePreferences
 import com.software.sello.domain.port.CategoryOrderingPreferences
+import com.software.sello.domain.port.LastBackup
 import com.software.sello.domain.port.PreferenceFailure
 import com.software.sello.domain.port.PreferenceRead
 import com.software.sello.domain.port.PreferenceWrite
+import com.software.sello.feature.backup.HandBackupRecords
+import com.software.sello.feature.backup.g01Summary
+import com.software.sello.navigation.HandFinancialClock
+import java.time.Instant
+import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +37,9 @@ import org.junit.Test
 class SettingsViewModelTest {
     private val appearance = HandAppearancePreferences()
     private val ordering = HandOrderingPreferences()
+    private val backups = HandBackupRecords()
+    private val clock = HandFinancialClock("2026-10-22")
+    private val bogota = ZoneId.of("America/Bogota")
 
     @Before
     fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -40,7 +49,7 @@ class SettingsViewModelTest {
 
     @Test
     fun changingEachControlUsesItsNarrowPortAndShowsThePersistedValues() = runTest {
-        val model = SettingsViewModel(appearance, ordering)
+        val model = SettingsViewModel(appearance, ordering, backups, clock)
         runCurrent()
 
         model.onAction(SettingsAction.ThemeChosen(ThemePreference.Dark))
@@ -65,7 +74,7 @@ class SettingsViewModelTest {
 
     @Test
     fun anUnreadablePreferenceStaysVisibleAndRetryKeepsKnownValues() = runTest {
-        val model = SettingsViewModel(appearance, ordering)
+        val model = SettingsViewModel(appearance, ordering, backups, clock)
         runCurrent()
         appearance.values.value = PreferenceRead.Failed(
             PreferenceFailure.Unavailable,
@@ -86,7 +95,7 @@ class SettingsViewModelTest {
 
     @Test
     fun aFailedNonfinancialWriteIsReportedWithoutChangingTheDisplayedFinancialOrder() = runTest {
-        val model = SettingsViewModel(appearance, ordering)
+        val model = SettingsViewModel(appearance, ordering, backups, clock)
         runCurrent()
         ordering.nextWrite = PreferenceWrite.Failed(PreferenceFailure.Unavailable)
 
@@ -96,6 +105,32 @@ class SettingsViewModelTest {
         assertEquals(PreferenceFailure.Unavailable, model.state.value.failure)
         assertEquals(CategoryOrder.MostUsed, model.state.value.categoryOrdering.order)
         assertTrue(!model.state.value.busy)
+    }
+
+    @Test
+    fun theBackupRowSaysNeverUntilABackupIsRecordedThenItsMoment() = runTest {
+        val model = SettingsViewModel(appearance, ordering, backups, clock)
+        runCurrent()
+
+        assertEquals(BackupLine.Read(null, bogota), model.state.value.backup)
+
+        val at = Instant.parse("2026-10-22T19:30:00Z")
+        backups.backupCompleted(LastBackup(at, "sello-respaldo.json", 4_096, g01Summary))
+        runCurrent()
+
+        assertEquals(BackupLine.Read(at, bogota), model.state.value.backup)
+    }
+
+    @Test
+    fun anUnreadableBackupRecordIsSaidSoAndLeavesTheOtherControlsAlone() = runTest {
+        val model = SettingsViewModel(appearance, ordering, backups, clock)
+        runCurrent()
+
+        backups.failReads()
+        runCurrent()
+
+        assertEquals(BackupLine.Unreadable, model.state.value.backup)
+        assertEquals(null, model.state.value.failure)
     }
 }
 

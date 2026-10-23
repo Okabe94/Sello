@@ -10,6 +10,9 @@ import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 /** The database file first, then the files SQLite keeps beside it. */
 private val Companions = listOf("", "-journal", "-wal", "-shm")
 
+/** [kept] and the companion files SQLite may have left beside it. */
+internal fun keptFiles(kept: File): List<File> = Companions.map { File(kept.path + it) }
+
 /**
  * Moves a closed [database] that could not be opened, with its companion files, to
  * [kept]. Nothing is deleted except an earlier kept copy, which the new one replaces

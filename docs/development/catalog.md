@@ -1,7 +1,7 @@
 # Component catalog
 
 The independently installed Sello Catalog lists each `:design-system` component once,
-in ten groups, with 56 synthetic, interactive examples. The visual reference is
+in ten groups, with 58 synthetic, interactive examples. The visual reference is
 [Sello v2](../design/v2/README.md); the HTML component inventory's
 Exists/Extend/New labels are not a code completeness check. SELLO-073 retired the v1
 components v2 replaced (`AmountField`, the v1 `EntryDock` and the v1
@@ -32,7 +32,7 @@ Each ID is `<group>.<name>` and is stable for targeted UI tests;
 | `inputs` | `button`, `chip`, `chip-rows`, `field-pill`, `form-field`, `switch`, `settings-controls`, `icon-choice`, `icon-strip`, `amount`, `keypad`, `note-composer`, `entry` | Button kinds and tones; wrapping chips and two-row choices; amount fitting, refused paste and limits; compact pad; keyboard note composer; the whole expense and income entry with unknown-save and restored-draft states |
 | `navigation` | `scaffold`, `entry-dock`, `navigation-bar`, `month-bar`, `month-switcher`, `past-month-ribbon` | Frame with the ribbon slot; full-width docks in each tone; two/three/four tabs and the rail; month bar and title bar; pushed-screen month title; return-to-current-month |
 | `charts` | `columns`, `line`, `split`, `comparison`, `ranking` | Columns and line selection; assigned/unassigned split, striped current month, recorded values; same-cutoff comparison; category ranking and total |
-| `feedback` | `confirm-slip`, `empty-slip`, `error-slip`, `notice`, `slip-skeleton`, `danger-and-ticket`, `celebration` | Confirmation, empty, read failure and loading; undo/busy notices, multi-stamp ticket and danger slip; goal completion overlay |
+| `feedback` | `confirm-slip`, `empty-slip`, `error-slip`, `notice`, `bullet-list`, `backup-states`, `slip-skeleton`, `danger-and-ticket`, `celebration` | Confirmation, empty, read failure and loading; undo/busy notices; points to read before acting; saving a backup (saving, Guardado, failed, unknown); multi-stamp ticket and danger slip; goal completion overlay |
 | `goals` | `milestones`, `goal-pill`, `goal-cards`, `movements`, `investments` | Milestone places, Recibo goal and reached row, active/completed cards, signed movements, returns and valuations |
 
 Use the catalog controls for both inks, light/dark, fonts 1.0/1.3/2.0 and

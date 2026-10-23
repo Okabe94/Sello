@@ -3,13 +3,19 @@ package com.software.sello.composition
 import android.content.Context
 import com.software.sello.data.FinancialStorage
 import com.software.sello.data.StorageNames
+import com.software.sello.domain.port.AppRestart
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.DispatcherProvider
+import com.software.sello.domain.port.DocumentReader
+import com.software.sello.domain.port.DocumentWriter
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.RecordIdSource
+import com.software.sello.platform.AndroidDocumentReader
+import com.software.sello.platform.AndroidDocumentWriter
 import com.software.sello.platform.AndroidTimeSignals
 import com.software.sello.platform.ApplicationScope
+import com.software.sello.platform.ProcessAppRestart
 import com.software.sello.platform.ProcessFinancialZone
 import com.software.sello.platform.RandomRecordIds
 import com.software.sello.platform.SystemAuditClock
@@ -54,6 +60,9 @@ fun platformModule(financialZone: ProcessFinancialZone): Module = module {
 fun androidModule(context: Context): Module = module {
     single<Context> { context }
     singleOf(::AndroidTimeSignals) { bind<TimeSignals>() }
+    single<DocumentWriter> { AndroidDocumentWriter(context.contentResolver, get()) }
+    single<DocumentReader> { AndroidDocumentReader(context.contentResolver, get()) }
+    single<AppRestart> { ProcessAppRestart(context) }
 }
 
 fun productionModules(

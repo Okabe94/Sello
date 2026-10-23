@@ -48,9 +48,9 @@ class CategoryEditorScreenTest {
         iconKeys = CategoryIcons.keys,
         iconKey = "home",
         suggestions = listOf(
-            LimitSuggestion(200_000, "200.000"),
-            LimitSuggestion(300_000, "300.000"),
-            LimitSuggestion(500_000, "500.000")
+            LimitSuggestion(200_000, "200.000", "200.000 pesos"),
+            LimitSuggestion(300_000, "300.000", "300.000 pesos"),
+            LimitSuggestion(500_000, "500.000", "500.000 pesos")
         )
     )
 
@@ -139,7 +139,8 @@ class CategoryEditorScreenTest {
         rule.onNodeWithContentDescription("Mascotas").performScrollTo().performClick()
         rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
         limit.performScrollTo().performTextInput("5")
-        rule.onNodeWithText("300.000").performScrollTo().performClick()
+        // A suggestion is read with its currency, not as a bare number.
+        rule.onNodeWithContentDescription("300.000 pesos").performScrollTo().performClick()
         rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().performClick()
         rule.onNodeWithContentDescription("Volver").performClick()
 

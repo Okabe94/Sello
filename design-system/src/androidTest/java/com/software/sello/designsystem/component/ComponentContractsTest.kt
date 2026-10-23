@@ -2,14 +2,17 @@ package com.software.sello.designsystem.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
@@ -19,6 +22,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.isHeading
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -29,6 +33,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
@@ -263,6 +268,30 @@ class ComponentContractsTest {
         rule.onNode(hasSetTextAction()).assertTextContains(note)
         rule.onNodeWithContentDescription("Listo").assertIsNotEnabled().performClick()
         assertEquals(0, submitted)
+    }
+
+    @Test
+    fun aNavigationBarAtTheSideCoversNeitherCancelNorDone() {
+        rule.setContent {
+            CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
+                SelloTheme {
+                    NoteComposer(
+                        AnnotatedString("Gasto en Comida"), "Taxi", {}, "4/60",
+                        "Opcional", null, "Listo", "Cancelar", {}, {},
+                        windowInsets = WindowInsets(left = 40.dp, right = 48.dp)
+                    )
+                }
+            }
+        }
+        val sheet = rule.onAllNodes(isRoot()).fetchSemanticsNodes().last().boundsInRoot
+
+        val done = rule.onNodeWithContentDescription("Listo").fetchSemanticsNode().boundsInRoot
+        val cancel = rule.onNodeWithText("Cancelar").fetchSemanticsNode().boundsInRoot
+        for (button in listOf(done, cancel)) {
+            assertTrue("$button in $sheet", button.right <= sheet.right - 48f)
+        }
+        val field = rule.onNode(hasSetTextAction()).fetchSemanticsNode().boundsInRoot
+        assertTrue("field $field in $sheet", field.left >= sheet.left + 40f)
     }
 
     @Test

@@ -366,12 +366,17 @@ in [layout and charts](layout-and-charts.md). Screen-specific qualifications:
   width; their dock stays below the content.
 - Category grids use two columns, three when content width reaches 560dp, and one
   from font scale 1.3.
+- At large text, screen titles, the month title and chips take a second line before
+  any ellipsis; a title with no room beside its actions moves under them. The rail
+  widens to its longest label.
 
 The components already provide 48dp minimum targets, full spoken money, headings,
 chart summaries and selectable marks, named secondary actions, non-gesture
 alternatives, selected-state semantics, live error/notice announcements and layouts
-exercised at font scales 1.0, 1.3 and 2.0. This is an implemented baseline, not a
-claim of a completed manual TalkBack/Switch Access audit.
+exercised at font scales 1.0, 1.3 and 2.0. The assembled app was checked across
+windows, text sizes, themes and process restoration in the
+[UI acceptance matrix](../testing/ui-acceptance-matrix.md). Manual TalkBack, Switch
+Access and keyboard walks are post-MVP (SELLO-074).
 
 ## Component catalog and previews
 

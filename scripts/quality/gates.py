@@ -72,6 +72,7 @@ def plan(gate):
         Check("board-check", ("python3", "docs/planning/mvp/board.py", "--check", "--skip-evidence")),
         Check("board-tests", ("python3", "-m", "unittest", "discover", "-s", "docs/planning/mvp", "-p", "test_board.py")),
         Check("quality-tests", ("python3", "-m", "unittest", "discover", "-s", "scripts/quality", "-p", "test_*.py")),
+        Check("performance-tests", ("python3", "-m", "unittest", "discover", "-s", "scripts/performance", "-p", "test_*.py")),
         Check("architecture", ("python3", "scripts/quality/architecture.py")),
         Check("gradle-host", ("./gradlew", *HOST_TASKS, "--continue"), results=HOST_RESULTS, lint=True),
     ]

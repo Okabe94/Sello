@@ -244,7 +244,7 @@ class DistributedGateTests(unittest.TestCase):
         write(self.root, 'app/src/Main.kt', 'fun main() = println(1)\n')
         self.assertEqual(0, self.part('host', event='push')[0])
         self.assertEqual(0, self.collect(event='push')[0])
-        self.assertEqual(['board-check', 'board-tests', 'quality-tests', 'architecture', 'gradle-host'], self.harness.executed)
+        self.assertEqual(['board-check', 'board-tests', 'quality-tests', 'performance-tests', 'architecture', 'gradle-host'], self.harness.executed)
 
     def test_incompatible_toolchains_are_rejected(self):
         self.all_parts()

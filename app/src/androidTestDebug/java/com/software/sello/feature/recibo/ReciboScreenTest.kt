@@ -1,5 +1,8 @@
 package com.software.sello.feature.recibo
 
+import androidx.activity.FullyDrawnReporter
+import androidx.activity.FullyDrawnReporterOwner
+import androidx.activity.compose.LocalFullyDrawnReporterOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -217,6 +220,29 @@ class ReciboScreenTest {
         rule.onNodeWithTag(RECIBO_LOADING_TAG).assertIsDisplayed()
         rule.onNodeWithTag(RECIBO_SUMMARY_TAG).assertDoesNotExist()
         rule.onNodeWithTag(RECIBO_CATEGORIES_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun theAppIsReportedFullyDrawnOnceRecibosFiguresAreReadAndNotWhileLoading() {
+        var reported = 0
+        val owner = object : FullyDrawnReporterOwner {
+            override val fullyDrawnReporter = FullyDrawnReporter({ it.run() }) { reported++ }
+        }
+        var state by mutableStateOf<ReciboState>(ReciboState.Loading)
+        rule.setContent {
+            CompositionLocalProvider(LocalFullyDrawnReporterOwner provides owner) {
+                SelloTheme(reducedMotion = true) {
+                    ReciboScreen(state, { actions += it }, PaddingValues(12.dp))
+                }
+            }
+        }
+        rule.waitForIdle()
+        assertEquals(0, reported)
+
+        state = overspent()
+        rule.waitForIdle()
+
+        assertEquals(1, reported)
     }
 
     @Test

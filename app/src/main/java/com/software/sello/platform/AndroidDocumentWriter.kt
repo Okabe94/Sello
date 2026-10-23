@@ -4,7 +4,6 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
-import androidx.core.net.toUri
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.DocumentDestination
 import com.software.sello.domain.port.DocumentWrite
@@ -24,7 +23,7 @@ class AndroidDocumentWriter(
 ) : DocumentWriter {
     override suspend fun write(destination: DocumentDestination, bytes: ByteArray): DocumentWrite =
         withContext(dispatchers.io) {
-            val uri = destination.id.toUri()
+            val uri = providerDocument(destination.id) ?: return@withContext DocumentWrite.Failed
             try {
                 // "wt" truncates, so an existing document chosen again is replaced, not mixed.
                 val descriptor = resolver.openFileDescriptor(uri, "wt")

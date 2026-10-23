@@ -1,7 +1,6 @@
 package com.software.sello.platform
 
 import android.content.ContentResolver
-import androidx.core.net.toUri
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.DocumentRead
 import com.software.sello.domain.port.DocumentReader
@@ -21,7 +20,8 @@ class AndroidDocumentReader(
     override suspend fun read(source: DocumentSource, maxBytes: Int): DocumentRead =
         withContext(dispatchers.io) {
             try {
-                val stream = resolver.openInputStream(source.id.toUri())
+                val uri = providerDocument(source.id) ?: return@withContext DocumentRead.Failed
+                val stream = resolver.openInputStream(uri)
                     ?: return@withContext DocumentRead.Failed
                 stream.use {
                     val held = ByteArrayOutputStream()

@@ -139,4 +139,5 @@ receipt exists is finished, and one without a receipt is forgotten.
 
 ## Not here yet
 
-- Privacy and private-file verification: SELLO-032.
+- Nothing in this list; what is stored where, and what may leave, is in
+  [MVP data handling](../privacy/mvp-data-handling.md).

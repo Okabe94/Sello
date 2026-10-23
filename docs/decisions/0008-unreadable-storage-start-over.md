@@ -31,8 +31,8 @@ The kept copy is private plaintext financial data with no recovery screen yet.
 SELLO-030 must make backup restore reachable from this screen. Decided with the
 owner on 2026-10-22 (SELLO-030): the kept copy is never recovered by Sello; a restore
 from this screen sets the unreadable file aside, as starting over does, and fills the
-new store from the backup. Reset erases it (SELLO-031); SELLO-032 must
-include it in private-file checks.
+new store from the backup. Reset erases it (SELLO-031); SELLO-032 checks it is
+never shared or backed up ([MVP data handling](../privacy/mvp-data-handling.md)).
 
 Implemented in SELLO-030: the chosen file is read and checked whole before anything
 moves, and its preview shows only the backup's date and counts, with an explicit

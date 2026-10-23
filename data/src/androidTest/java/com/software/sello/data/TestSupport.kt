@@ -35,6 +35,9 @@ class DatabaseFiles : ExternalResource() {
 
     /** This test's own restore staging folder, removed afterwards. */
     val restoreFolder: File get() = File(context.filesDir, name.removeSuffix(".db") + "-restore")
+
+    /** This test's own reset folder, removed afterwards. */
+    val resetFolder: File get() = File(context.filesDir, name.removeSuffix(".db") + "-reset")
     private val opened = mutableListOf<SelloDatabase>()
 
     /** Each call is a fresh handle on the same file, as after a process restart. */
@@ -45,6 +48,7 @@ class DatabaseFiles : ExternalResource() {
         opened.forEach { if (it.isOpen) it.close() }
         context.deleteDatabase(name)
         restoreFolder.deleteRecursively()
+        resetFolder.deleteRecursively()
     }
 }
 

@@ -37,11 +37,12 @@ import com.software.sello.presentation.date.dateLabels
 fun SettingsRoot(
     viewModels: ViewModelProvider.Factory,
     contentPadding: PaddingValues,
-    onOpenBackup: () -> Unit
+    onOpenBackup: () -> Unit,
+    onOpenReset: () -> Unit
 ) {
     val model: SettingsViewModel = viewModel(factory = viewModels)
     val state by model.state.collectAsStateWithLifecycle()
-    SettingsScreen(state, model::onAction, contentPadding, onOpenBackup)
+    SettingsScreen(state, model::onAction, contentPadding, onOpenBackup, onOpenReset)
 }
 
 /** Persisted, nonfinancial preferences. Every control is a real setting, never a placeholder. */
@@ -51,6 +52,7 @@ fun SettingsScreen(
     onAction: (SettingsAction) -> Unit,
     contentPadding: PaddingValues,
     onOpenBackup: () -> Unit,
+    onOpenReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -74,12 +76,12 @@ fun SettingsScreen(
         }
         AppearanceControls(state, onAction)
         CategoryOrderingControls(state, onAction)
-        DataControls(state.backup, onOpenBackup)
+        DataControls(state.backup, onOpenBackup, onOpenReset)
     }
 }
 
 @Composable
-private fun DataControls(backup: BackupLine, onOpenBackup: () -> Unit) {
+private fun DataControls(backup: BackupLine, onOpenBackup: () -> Unit, onOpenReset: () -> Unit) {
     val value = when (backup) {
         BackupLine.Loading -> ""
 
@@ -101,6 +103,13 @@ private fun DataControls(backup: BackupLine, onOpenBackup: () -> Unit) {
             text = stringResource(R.string.settings_backup_body),
             style = MaterialTheme.typography.bodyMedium,
             color = SelloTheme.colors.inkSoft
+        )
+        LeaderLine(
+            label = stringResource(R.string.settings_reset),
+            value = "",
+            caption = stringResource(R.string.settings_reset_caption),
+            onClick = onOpenReset,
+            modifier = Modifier.testTag(SETTINGS_RESET_TAG)
         )
     }
 }
@@ -218,3 +227,4 @@ const val SETTINGS_ORDER_TAG = "settings:order"
 const val SETTINGS_DIRECTION_TAG = "settings:direction"
 const val SETTINGS_DATA_TAG = "settings:data"
 const val SETTINGS_BACKUP_TAG = "settings:backup"
+const val SETTINGS_RESET_TAG = "settings:reset"

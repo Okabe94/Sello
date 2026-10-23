@@ -21,7 +21,10 @@ enum class OperationKind(val key: String) {
     SetMonthLimit("category.set_month_limit"),
 
     /** The whole financial history replaced by a backup. It has no single subject. */
-    RestoreHistory("history.restore")
+    RestoreHistory("history.restore"),
+
+    /** The whole financial history erased on request. It has no single subject. */
+    ResetHistory("history.reset")
 }
 
 /**

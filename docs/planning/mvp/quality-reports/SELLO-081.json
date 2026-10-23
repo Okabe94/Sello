@@ -2,7 +2,7 @@
   "schema_version": 2,
   "coverage": {
     "mode": "full",
-    "base": "f01d983a3039c0b99d12ddd54cfe0ff88a2c7cb1",
+    "base": "29004f5f05e4d63a9bc3b704916c2516c0f2a742",
     "changed_paths": [],
     "device_modules": [
       "data",
@@ -11,7 +11,7 @@
       "catalog"
     ]
   },
-  "run_id": "20261023T215417Z-732ec24d",
+  "run_id": "20261023T230202Z-27a8f6fb",
   "ticket": "SELLO-081",
   "gate": {
     "required": "G2",
@@ -24,26 +24,14 @@
     "tested an uncommitted working tree, not a clean commit"
   ],
   "snapshot": {
-    "head": "f01d983a3039c0b99d12ddd54cfe0ff88a2c7cb1",
+    "head": "29004f5f05e4d63a9bc3b704916c2516c0f2a742",
     "dirty": true,
     "dirty_files": [
-      "docs/decisions/0017-goals-recurrence-investments.md",
-      "docs/development/HANDOFF.md",
-      "docs/planning/mvp/ROADMAP.md",
-      "docs/planning/mvp/epics/E16-v2-today-gaps.md",
-      "docs/planning/mvp/quality-reports/SELLO-080.json",
-      "docs/planning/mvp/roadmap-dependency-links.csv",
-      "docs/planning/mvp/roadmap-jira-import.csv",
-      "docs/testing/evidence/category-editor/1-limite-y-total.png",
-      "docs/testing/evidence/category-editor/2-sin-limite.png",
-      "docs/testing/evidence/resumen-v2/1-como-va-este-mes.png",
-      "docs/testing/evidence/resumen-v2/2-un-mes-normal.png",
-      "docs/testing/evidence/resumen-v2/3-que-dias-gastas-mas.png",
-      "domain/src/test/kotlin/com/software/sello/domain/policy/ResumenInsightsTest.kt"
+      "docs/planning/mvp/quality-reports/SELLO-080.json"
     ],
     "fingerprint": {
       "algorithm": "sha256",
-      "value": "0a5aa7a8b1bf57b6cc3770350512f94ffaeaff9fae6af76a0e0ac0803c3f1f87",
+      "value": "ad2e8c229377209ad79aa7f9c5df6e7c4277fc1491fb93e9ba33d2946574b75c",
       "files": 968
     },
     "acceptance": "25cad91684261933d18c31378a2b9b2c1acca593fa60e5cde3b1daadb49dd4c5"
@@ -69,52 +57,52 @@
       "name": "board-check",
       "command": "python3 docs/planning/mvp/board.py --check --skip-evidence",
       "log": "board-check.log",
-      "started_at": "2026-10-23T21:54:17+00:00",
+      "started_at": "2026-10-23T23:02:02+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T21:54:17+00:00"
+      "finished_at": "2026-10-23T23:02:03+00:00"
     },
     {
       "name": "board-tests",
       "command": "python3 -m unittest discover -s docs/planning/mvp -p test_board.py",
       "log": "board-tests.log",
-      "started_at": "2026-10-23T21:54:17+00:00",
+      "started_at": "2026-10-23T23:02:03+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T21:54:17+00:00"
+      "finished_at": "2026-10-23T23:02:03+00:00"
     },
     {
       "name": "quality-tests",
       "command": "python3 -m unittest discover -s scripts/quality -p test_*.py",
       "log": "quality-tests.log",
-      "started_at": "2026-10-23T21:54:17+00:00",
+      "started_at": "2026-10-23T23:02:03+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T21:54:26+00:00"
+      "finished_at": "2026-10-23T23:02:09+00:00"
     },
     {
       "name": "performance-tests",
       "command": "python3 -m unittest discover -s scripts/performance -p test_*.py",
       "log": "performance-tests.log",
-      "started_at": "2026-10-23T21:54:26+00:00",
+      "started_at": "2026-10-23T23:02:09+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T21:54:27+00:00"
+      "finished_at": "2026-10-23T23:02:09+00:00"
     },
     {
       "name": "architecture",
       "command": "python3 scripts/quality/architecture.py",
       "log": "architecture.log",
-      "started_at": "2026-10-23T21:54:27+00:00",
+      "started_at": "2026-10-23T23:02:09+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T21:54:28+00:00"
+      "finished_at": "2026-10-23T23:02:10+00:00"
     },
     {
       "name": "gradle-host",
       "command": "./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue",
       "log": "gradle-host.log",
-      "started_at": "2026-10-23T21:54:28+00:00",
+      "started_at": "2026-10-23T23:02:10+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T21:54:29+00:00",
+      "finished_at": "2026-10-23T23:02:11+00:00",
       "results": {
         "suites": 71,
-        "tests": 743,
+        "tests": 744,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -130,9 +118,9 @@
       "name": "gradle-device",
       "command": "./gradlew :data:connectedDebugAndroidTest :design-system:connectedDebugAndroidTest :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest --continue",
       "log": "gradle-device.log",
-      "started_at": "2026-10-23T21:54:30+00:00",
+      "started_at": "2026-10-23T23:02:11+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T22:02:37+00:00",
+      "finished_at": "2026-10-23T23:10:11+00:00",
       "modules": {
         "data": {
           "suites": 1,
@@ -173,6 +161,6 @@
       "fresh_results": true
     }
   ],
-  "started_at": "2026-10-23T21:54:17+00:00",
-  "finished_at": "2026-10-23T22:02:38+00:00"
+  "started_at": "2026-10-23T23:02:02+00:00",
+  "finished_at": "2026-10-23T23:10:12+00:00"
 }

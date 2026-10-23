@@ -2020,7 +2020,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-080 --retain`.
 ### Delivery evidence
 
 - **Revision:** tested snapshot is branch `sello-080-082-resumen-v2` with `main`
-  (`f5864bf`) merged in, identified exactly by the retained input fingerprint below;
+  (`136a1aa`) merged in, identified exactly by the retained input fingerprint below;
   the commit and pull request follow this evidence.
 - **Decisions:** the owner chose, on 2026-10-23, to deliver this before the SELLO-079
   audit (E16 note). The kept daily chart (""Así crecen tus gastos"") is removed, as the
@@ -2043,8 +2043,8 @@ Focused tests, then `./scripts/verify-ticket SELLO-080 --retain`.
   zero rate base) and `ResumenRenderModelTest`'s hero cases failed; all passed after
   the change. `ResumenScreenTest` covers the hero in progress, capped ranges, a finished
   month, no rate, a first month, the one-line bars and the explanation's 16sp size.
-- **Gate results:** `./scripts/verify-ticket SELLO-080 --retain` passed all seven checks (board, board tests, quality tests, performance tests, architecture, host, device) on the merged working tree. Host: 743 tests, results reused from Gradle's cache; device: 753 tests run fresh (app 360, data 236, design-system 136, catalog 21); zero failures, errors or skips. Lint had zero errors and 34 warnings.
-- **Quality run:** run 20261023T214246Z-081b97a6; SELLO-080 G2 passed; HEAD f01d983, inputs sha256 0a5aa7a8b1bf; report docs/planning/mvp/quality-reports/SELLO-080.json sha256 e5b101792e559c1876cdfed28a075dac97bbfa8a821e23d84a5b437df91572d7
+- **Gate results:** `./scripts/verify-ticket SELLO-080 --retain` passed all seven checks (board, board tests, quality tests, performance tests, architecture, host, device) on the merged working tree. Host: 744 tests, results reused from Gradle's cache; device: 753 tests run fresh (app 360, data 236, design-system 136, catalog 21); zero failures, errors or skips. Lint had zero errors and 34 warnings.
+- **Quality run:** run 20261023T225328Z-d4199b96; SELLO-080 G2 passed; HEAD 29004f5, inputs sha256 ad2e8c229377; report docs/planning/mvp/quality-reports/SELLO-080.json sha256 533eb308afe9149249d0a12350a51ba5581a855a266de59b1c38f43f5d818230
 - **Device / Artifact:** the gate ran on an isolated API-30 AVD (320 × 640dp) the
   executor created; screenshots on a second isolated Pixel 6 AVD with the ""Seis meses""
   sandbox scenario are in `docs/testing/evidence/resumen-v2/`. No personal data or
@@ -2173,7 +2173,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-081 --retain`.
 ### Delivery evidence
 
 - **Revision:** tested snapshot is branch `sello-080-082-resumen-v2` with `main`
-  (`f5864bf`) merged in, identified exactly by the retained input fingerprint below;
+  (`136a1aa`) merged in, identified exactly by the retained input fingerprint below;
   the commit and pull request follow this evidence.
 - **Decisions:** delivered before the SELLO-079 audit (owner, 2026-10-23). The owner
   chose a six-month weekday window after seeing the selected-month and four-month
@@ -2192,8 +2192,8 @@ Focused tests, then `./scripts/verify-ticket SELLO-081 --retain`.
   averages, gaps, finished months, ties, the six-month cap) and `ResumenRenderModelTest`
   failed before the calculations and passed after; `ChartLabelTest` failed on a stub
   and passed. `ResumenScreenTest` covers both slips, exact selection and both periods.
-- **Gate results:** `./scripts/verify-ticket SELLO-081 --retain` passed all seven checks (board, board tests, quality tests, performance tests, architecture, host, device) on the merged working tree. Host: 743 tests, results reused from Gradle's cache; device: 753 tests run fresh (app 360, data 236, design-system 136, catalog 21); zero failures, errors or skips. Lint had zero errors and 34 warnings.
-- **Quality run:** run 20261023T215417Z-732ec24d; SELLO-081 G2 passed; HEAD f01d983, inputs sha256 0a5aa7a8b1bf; report docs/planning/mvp/quality-reports/SELLO-081.json sha256 83ae99a3fa29d5f6ca46ece88f78d5a63c895c4fa43a52d17957ce6773d17ca1
+- **Gate results:** `./scripts/verify-ticket SELLO-081 --retain` passed all seven checks (board, board tests, quality tests, performance tests, architecture, host, device) on the merged working tree. Host: 744 tests, results reused from Gradle's cache; device: 753 tests run fresh (app 360, data 236, design-system 136, catalog 21); zero failures, errors or skips. Lint had zero errors and 34 warnings.
+- **Quality run:** run 20261023T230202Z-27a8f6fb; SELLO-081 G2 passed; HEAD 29004f5, inputs sha256 ad2e8c229377; report docs/planning/mvp/quality-reports/SELLO-081.json sha256 ad994ac581071c4f23de8052c06678a7bb63418c7e23b1e6205bebbedf105140
 - **Device / Artifact:** as SELLO-080; `2-un-mes-normal.png` and
   `3-que-dias-gastas-mas.png` in `docs/testing/evidence/resumen-v2/`.
 - **Review:** executor self-review only. Done is proposed by this ticket's pull request;
@@ -2321,7 +2321,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-082 --retain`.
 ### Delivery evidence
 
 - **Revision:** tested snapshot is branch `sello-080-082-resumen-v2` with `main`
-  (`f5864bf`) merged in, identified exactly by the retained input fingerprint below;
+  (`136a1aa`) merged in, identified exactly by the retained input fingerprint below;
   the commit and pull request follow this evidence.
 - **Decisions:** delivered before the SELLO-079 audit (owner, 2026-10-23). A finished
   month never shows a suggestion, as the v2 past-month state shows.
@@ -2337,8 +2337,8 @@ Focused tests, then `./scripts/verify-ticket SELLO-082 --retain`.
 - **Red / Green:** `ResumenInsightsTest`'s suggestion cases, the dismissal store tests
   in `DataStoreUserPreferencesTest` and `ResumenViewModelTest`'s dismissal cases failed
   on stubs and passed after; `ResumenScreenTest` covers the note, its action and ×.
-- **Gate results:** `./scripts/verify-ticket SELLO-082 --retain` passed all seven checks (board, board tests, quality tests, performance tests, architecture, host, device) on the merged working tree. Host: 743 tests, results reused from Gradle's cache; device: 753 tests run fresh (app 360, data 236, design-system 136, catalog 21); zero failures, errors or skips. Lint had zero errors and 34 warnings.
-- **Quality run:** run 20261023T220238Z-0a419ebd; SELLO-082 G2 passed; HEAD f01d983, inputs sha256 0a5aa7a8b1bf; report docs/planning/mvp/quality-reports/SELLO-082.json sha256 8661c127e852be4002977167315c2554bec650771327346b1d2c6dc7af058776
+- **Gate results:** `./scripts/verify-ticket SELLO-082 --retain` passed all seven checks (board, board tests, quality tests, performance tests, architecture, host, device) on the merged working tree. Host: 744 tests, results reused from Gradle's cache; device: 753 tests run fresh (app 360, data 236, design-system 136, catalog 21); zero failures, errors or skips. Lint had zero errors and 34 warnings.
+- **Quality run:** run 20261023T231012Z-79e049ea; SELLO-082 G2 passed; HEAD 29004f5, inputs sha256 ad2e8c229377; report docs/planning/mvp/quality-reports/SELLO-082.json sha256 6e3aa62e709c366629adc5c6a9be286e16a7bcd711e84f196524c24a3af12bdc
 - **Device / Artifact:** as SELLO-080. The sample scenarios have no category over its
   limit twice in a row, so the note is shown by screen tests, not a screenshot.
 - **Review:** executor self-review only. Done is proposed by this ticket's pull request;

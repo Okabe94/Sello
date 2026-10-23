@@ -118,6 +118,19 @@ class SelloColorsTest {
                 add(Triple(c.pastBar, c.paper, mark))
                 add(Triple(s.onGain, s.gain, text))
                 add(Triple(s.onLoss, s.loss, text))
+                // Stamps, slips and the past-month bar: each "on" colour on its own fill.
+                add(Triple(c.onPastBar, c.pastBar, text))
+                add(Triple(c.onPastBarSoft, c.pastBarSoft, text))
+                add(Triple(s.onGainSoft, s.gainSoft, text))
+                add(Triple(s.onLossSoft, s.lossSoft, text))
+                add(Triple(s.gain, s.gainSoft, text))
+                add(Triple(s.loss, s.lossSoft, text))
+                add(Triple(s.warn, s.warnSoft, text))
+                add(Triple(c.inkSoft, c.paperDim, text))
+                add(Triple(c.brand, c.paperDim, text))
+                listOf(c.brandSoft, c.pastBarSoft, s.gainSoft, s.lossSoft, s.warnSoft).forEach {
+                    add(Triple(c.ink, it, text))
+                }
                 c.categories.forEach { category ->
                     listOf(c.desk, c.paper, c.paperAlt).forEach { add(Triple(category, it, mark)) }
                 }

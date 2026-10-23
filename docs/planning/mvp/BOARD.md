@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 46/49 · **Epics Done:** 9/10
 
-Backlog: 3 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 46
+Backlog: 2 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 46
 
 [Workflow, gates and definition of done](README.md)
 
@@ -29,7 +29,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) | Execute accessibility, adaptive and process-restoration journeys | SELLO-E08 | P0 | G2 | None |
 
 ## Review
 
@@ -43,7 +45,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) | Execute accessibility, adaptive and process-restoration journeys | SELLO-E08 | P0 | G2 | None |
 | [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) | Validate performance and optimized release composition | SELLO-E08 | P0 | G3 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) |
 | [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | Accept the complete MVP and prepare release handoff | SELLO-E08 | P0 | G3 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) |
 
@@ -100,4 +101,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys)
+None. Complete current Ready tickets first.

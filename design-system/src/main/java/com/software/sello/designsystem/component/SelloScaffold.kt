@@ -33,13 +33,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.software.sello.designsystem.theme.SelloTheme
@@ -271,6 +274,11 @@ fun SelloScaffold(
     }
 }
 
+/**
+ * The title row: navigation icon, title and actions on one line. When large text leaves
+ * the title no room beside the actions, even on two lines, the title moves under them
+ * and takes the whole width, so it is never cut short.
+ */
 @Composable
 private fun TopBar(
     title: String,
@@ -280,34 +288,82 @@ private fun TopBar(
     actions: @Composable RowScope.() -> Unit,
     modifier: Modifier
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = TopBarHeight)
-            .padding(horizontal = if (navigationIcon == null) ContentMargin else 0.dp)
-    ) {
-        navigationIcon?.invoke()
-        Column(modifier = Modifier.weight(1f)) {
-            if (titleContent != null) {
-                titleContent()
-            } else {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.semantics { heading() }
+    val measurer = rememberTextMeasurer()
+    val titleStyle = MaterialTheme.typography.titleLarge
+    val margin = if (navigationIcon == null) ContentMargin else 0.dp
+    SubcomposeLayout(modifier.fillMaxWidth().heightIn(min = TopBarHeight)) { constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val start = margin.roundToPx()
+        val nav = subcompose(TopBarSlot.Navigation) { navigationIcon?.invoke() }
+            .map { it.measure(loose) }
+        val navWidth = nav.maxOfOrNull { it.width } ?: 0
+        val acts = subcompose(TopBarSlot.Actions) {
+            Row(verticalAlignment = Alignment.CenterVertically, content = actions)
+        }.map {
+            it.measure(loose.copy(maxWidth = (constraints.maxWidth - navWidth).coerceAtLeast(0)))
+        }
+        val actionsWidth = acts.maxOfOrNull { it.width } ?: 0
+        val beside = (constraints.maxWidth - start * 2 - navWidth - actionsWidth).coerceAtLeast(0)
+        val stacked = titleContent == null && actionsWidth > 0 &&
+            measurer.measure(
+                title,
+                titleStyle,
+                maxLines = TITLE_LINES,
+                constraints = Constraints(maxWidth = beside)
+            ).multiParagraph.didExceedMaxLines
+        val titleStart = if (stacked) ContentMargin.roundToPx() else start + navWidth
+        val titleWidth = if (stacked) constraints.maxWidth - titleStart * 2 else beside
+        val heading = subcompose(TopBarSlot.Title) {
+            Column {
+                if (titleContent != null) {
+                    titleContent()
+                } else {
+                    // A second line before an ellipsis: large text must not cut a title short.
+                    Text(
+                        text = title,
+                        style = titleStyle,
+                        maxLines = TITLE_LINES,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                }
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                }
+            }
+        }.map { it.measure(Constraints(maxWidth = titleWidth.coerceAtLeast(0))) }
+        val headingHeight = heading.maxOfOrNull { it.height } ?: 0
+        val iconsHeight = maxOf(
+            nav.maxOfOrNull { it.height } ?: 0,
+            acts.maxOfOrNull { it.height } ?: 0
+        )
+        val minHeight = TopBarHeight.roundToPx()
+        val rowHeight = if (stacked) {
+            maxOf(iconsHeight, minHeight)
+        } else {
+            maxOf(iconsHeight, headingHeight, minHeight)
+        }
+        val height = if (stacked) rowHeight + headingHeight + TitleGap.roundToPx() else rowHeight
+        layout(constraints.maxWidth, height) {
+            nav.forEach { it.placeRelative(start, (rowHeight - it.height) / 2) }
+            acts.forEach {
+                it.placeRelative(
+                    constraints.maxWidth - start - it.width,
+                    (rowHeight - it.height) / 2
                 )
             }
-            if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            heading.forEach {
+                val y = if (stacked) rowHeight else (rowHeight - it.height) / 2
+                it.placeRelative(titleStart, y)
             }
         }
-        actions()
     }
 }
 
+private enum class TopBarSlot { Navigation, Actions, Title }
+
+private const val TITLE_LINES = 2
+private val TitleGap = 8.dp
 private val TopBarHeight = 50.dp
 private val ContentMargin = 12.dp
 private val NoticeGap = 8.dp

@@ -203,6 +203,9 @@ private fun ChartSlips(
         val limitLabel = state.monthLimit?.let {
             stringResource(R.string.resumen_limit_line, it.amount.digits)
         }
+        val limitSpoken = state.monthLimit?.let {
+            stringResource(R.string.resumen_limit_line, it.amount.spoken)
+        }
         ChartWidth(state.history.size, "resumen.history.chart") { modifier ->
             ColumnsChart(
                 state.history.map { point ->
@@ -224,7 +227,7 @@ private fun ChartSlips(
                 state.selectedHistory,
                 { onAction(ResumenAction.SelectHistory(it)) },
                 reference = state.monthLimit?.let {
-                    ChartReference(it.value, limitLabel.orEmpty())
+                    ChartReference(it.value, limitLabel.orEmpty(), limitSpoken.orEmpty())
                 },
                 stripedCurrent = true
             )

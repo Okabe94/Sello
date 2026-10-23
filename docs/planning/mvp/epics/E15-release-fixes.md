@@ -2,11 +2,11 @@
 
 - **Status:** Backlog
 - **Increment:** Post-MVP
-- **Goal:** Fix the defects found while measuring and releasing the MVP, each with a test.
-- **Exit:** Every ticket below is Done: counts and dates read as the rest of the app writes them, and the sandbox scenario tests pass reliably.
+- **Goal:** Fix the defects found while measuring and accepting the MVP, each with a test.
+- **Exit:** Every ticket below is Done: counts and dates read as the rest of the app writes them, a failed backup says why, and the sandbox scenario tests pass reliably.
 
-**Owner direction (2026-10-23):** the defects found during SELLO-035 are logged here
-rather than fixed in it. None changes money, stored data or the release itself.
+**Owner direction (2026-10-23):** the defects found during SELLO-035 and SELLO-036 are
+logged here rather than fixed in them. None changes money, stored data or the release itself.
 
 ## SELLO-075 — Group thousands in every count the app shows
 
@@ -141,3 +141,46 @@ runner from before the simulated restart still answering; see `ScenarioRunner`.
 
 ### Verification recipe
 Repeated focused runs, then `./scripts/verify-ticket SELLO-077 --retain`.
+
+## SELLO-078 — Say what failed when a backup does not pass its own check
+
+- **Type:** Task
+- **Priority:** P2
+- **Status:** Backlog
+- **Depends on:** SELLO-004
+- **Gate:** G2
+
+### Outcome
+A backup the app refuses to hand out because it fails its own reading check is reported
+as that, not as "Tus datos superan lo que cabe en un respaldo".
+
+### Deliverables
+A distinct message for a self-check failure, separate from a history that is really too
+large, with a test.
+
+### Acceptance criteria
+- A history over the backup limits still reports it is too large.
+- Any other self-check rejection reports that the backup could not be made correctly,
+  that nothing in Sello changed and that it is a fault to report.
+- Nothing about the rejected data is shown beyond what the current messages show.
+
+### Tests
+`BackupViewModelTest` or a screen test for both failures; G2.
+
+### Working checkpoint
+Both failures show their own message.
+
+### Context and starting points
+Found in SELLO-036: on Android 16 every backup failed its own check (fixed there) and
+was reported as too large, which hid the cause. `BackupSession` maps
+`BackupPreparationFailure.Unrestorable` to `BackupFailure.TooLarge`.
+
+### Implementation plan
+1. Tell a too-large rejection apart from other self-check rejections.
+2. Add the message and tests.
+
+### Concrete cases and pitfalls
+- Keep the "an empty file may be left" warning for both.
+
+### Verification recipe
+Focused tests, then `./scripts/verify-ticket SELLO-078 --retain`.

@@ -1314,8 +1314,8 @@ names expected new test behavior, not pretend pre-existing test classes.
 ",1014,High,Backlog,sello-074
 1015,Epic,SELLO-E15 — Fixes found during release work,"Local ID: SELLO-E15
 Increment: Post-MVP
-Goal: Fix the defects found while measuring and releasing the MVP, each with a test.
-Exit: Every ticket below is Done: counts and dates read as the rest of the app writes them, and the sandbox scenario tests pass reliably.",,Highest,Backlog,sello-e15
+Goal: Fix the defects found while measuring and accepting the MVP, each with a test.
+Exit: Every ticket below is Done: counts and dates read as the rest of the app writes them, a failed backup says why, and the sandbox scenario tests pass reliably.",,Highest,Backlog,sello-e15
 75,Task,SELLO-075 — Group thousands in every count the app shows,"Local ID: SELLO-075
 Epic: SELLO-E15
 Increment: Post-MVP
@@ -1684,3 +1684,124 @@ Focused tests run first; the gate is the final integrated checkpoint. Documentat
 names expected new test behavior, not pretend pre-existing test classes.
 
 ",1015,High,Backlog,sello-077
+78,Task,SELLO-078 — Say what failed when a backup does not pass its own check,"Local ID: SELLO-078
+Epic: SELLO-E15
+Increment: Post-MVP
+Repository source: docs/planning/mvp/epics/E15-release-fixes.md
+Resource links resolve relative to that repository file.
+Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
+
+- **Type:** Task
+- **Priority:** P2
+- **Status:** Backlog
+- **Depends on:** SELLO-004
+- **Gate:** G2
+
+### Outcome
+A backup the app refuses to hand out because it fails its own reading check is reported
+as that, not as ""Tus datos superan lo que cabe en un respaldo"".
+
+### Deliverables
+A distinct message for a self-check failure, separate from a history that is really too
+large, with a test.
+
+### Acceptance criteria
+- A history over the backup limits still reports it is too large.
+- Any other self-check rejection reports that the backup could not be made correctly,
+  that nothing in Sello changed and that it is a fault to report.
+- Nothing about the rejected data is shown beyond what the current messages show.
+
+### Tests
+`BackupViewModelTest` or a screen test for both failures; G2.
+
+### Working checkpoint
+Both failures show their own message.
+
+### Context and starting points
+Found in SELLO-036: on Android 16 every backup failed its own check (fixed there) and
+was reported as too large, which hid the cause. `BackupSession` maps
+`BackupPreparationFailure.Unrestorable` to `BackupFailure.TooLarge`.
+
+### Implementation plan
+1. Tell a too-large rejection apart from other self-check rejections.
+2. Add the message and tests.
+
+### Concrete cases and pitfalls
+- Keep the ""an empty file may be left"" warning for both.
+
+### Verification recipe
+Focused tests, then `./scripts/verify-ticket SELLO-078 --retain`.
+
+Shared definition of done and gates:
+
+1. Deliverables are checked in and satisfy every acceptance criterion. Changes
+   respect architecture/source-set boundaries and do not activate deferred features.
+2. Behavior changes have a meaningful failing test followed by passing evidence;
+   pure build/docs tasks instead show negative/configuration/link checks as applicable.
+3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
+   command/environment, revision, result counts, report paths, and device/API where
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
+4. Existing completed journeys still work. No successful stubs, inaccessible
+   placeholders, destructive migrations, compile failures, or failed read → zero.
+5. Applicable catalog examples and sandbox scenarios grow with the change.
+   Accessibility, process restoration, financial bounds and error handling are
+   checked where the ticket touches them; the final epic does not postpone quality.
+6. Reviewer checks code, financial/recovery semantics, release isolation and
+   evidence. Update the canonical ticket status/evidence, then regenerate the board.
+
+Add a `### Delivery evidence` section to completed tickets with requirement mapping,
+red/green commands, integration/device results, review and unresolved issues.
+Do not rewrite acceptance after execution just to make a ticket pass.
+
+Use these required evidence fields (no placeholder values): `Revision`,
+`Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
+`Review`, each written as `- **Field:** evidence`. State why a red test/device gate
+is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
+
+## Gate profiles
+
+Use the environment from [setup](../../development/setup.md).
+
+- **G0 — documentation:** board structure/tests, quality-tool tests and architecture,
+  using Python/Git only. Selected by `--merge-candidate BASE` only when every
+  changed path qualifies as documentation and no ticket advances. It cannot
+  complete a ticket; bootstrap ticket history remains unchanged.
+- **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
+  structure check, board and quality-tool tests, the architecture rules
+  (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
+  writes a report. `scripts/quality/gates.py` owns the task list; a test keeps this
+  block identical to it. Run the Gradle command directly only for quick feedback.
+
+```bash
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+```
+
+- **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
+  emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
+  `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
+  and `:catalog:connectedDebugAndroidTest` by default, and refuses to start without
+  a connected device. `--affected BASE` selects only impacted modules and their
+  consumers; `--gate G2` always forces all four. App → app; catalog → catalog;
+  data/domain → data/app; design-system → design-system/app/catalog. Mixed scopes
+  are unioned; shared/build/tooling/unknown changes require all four. Every selected
+  suite must execute freshly without skips. Reports name full versus affected
+  coverage; a targeted run is not full G2. See [ADR 0014](../../decisions/0014-change-aware-quality-gates.md).
+  Assembling test APKs is not device acceptance.
+- **G3 — release:** full G2, then the release checks: every release library has a
+  reviewed licence, the optimized APK is signed by the owner's pinned certificate and
+  passes artifact inspection, and it installs and starts on the emulator. CI runs it
+  with a throwaway key; only the owner's run completes the ticket
+  ([ADR 0016](../../decisions/0016-release-gate-signing-split.md)). Release tickets also
+  record configuration, performance and signed backup smoke evidence. MVP delivers a
+  private APK, not a store/AAB upload.
+
+Focused tests run first; the gate is the final integrated checkpoint. Documentation
+names expected new test behavior, not pretend pre-existing test classes.
+
+",1015,Medium,Backlog,sello-078

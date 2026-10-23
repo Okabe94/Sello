@@ -6,6 +6,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.software.sello.data.backup.BackupBounds
+import com.software.sello.domain.port.AppRestart
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.feature.backup.BackupSession
 import com.software.sello.feature.backup.BackupViewModel
@@ -128,7 +129,9 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
  * The one view model built without the graph: its screen is shown when the data could
  * not be opened, which is exactly when there is no graph.
  */
-fun startupFailureViewModels(recovery: StartupRecovery): ViewModelProvider.Factory =
-    viewModelFactory {
-        initializer { StartupFailureViewModel(createSavedStateHandle(), recovery) }
-    }
+fun startupFailureViewModels(
+    recovery: StartupRecovery,
+    restart: AppRestart
+): ViewModelProvider.Factory = viewModelFactory {
+    initializer { StartupFailureViewModel(createSavedStateHandle(), recovery, restart) }
+}

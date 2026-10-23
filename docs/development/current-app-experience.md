@@ -108,7 +108,12 @@ What matters for placement work:
 second-step warning that requires the exact trimmed word `BORRAR`; it keeps the
 unreadable store aside, clears the old task and launches a fresh one. It never
 replaces a failed read with an empty app. The warning and typed text survive
-recreation.
+recreation. "Restaurar un respaldo" opens the system open dialog; the whole file is
+checked and previewed with its date and counts only. Confirming sets the unreadable
+store aside, fills a new one from the backup and shows "Restaurado" (or the pending
+preferences); "Ir al recibo" restarts the app. If it fails after the set-aside, "La
+restauración no terminó" leads to a restart. A preview does not survive process
+death; the file is chosen again.
 
 ### 2. Recibo
 
@@ -291,8 +296,8 @@ offers are refused. The backup's zone, appearance and order follow; if a prefere
 cannot be applied, D09's "Historial financiero restaurado" names only those, with a
 retry that never replaces the history again. "Restaurado" → "Ir al recibo" (or Back)
 restarts the app. A preview or result scrolls into view at the top; once the history
-is replaced it is the only thing shown. Restore from the start-up failure screen is
-the second part of SELLO-030.
+is replaced it is the only thing shown. The start-up failure screen offers the same
+restore (see Startup failure).
 
 **Placement:** a shell route with Back and no Anotar dock: its own button is the only
 action.
@@ -388,8 +393,7 @@ beside each feature.
 - Category and transaction forms are full-screen flows, not sheets or side panels.
 - The month and date pickers are Material 3 dialogs and sheets with Sello colors, not
   custom calendar components.
-- Reset is planned but not routed; restore is not yet offered from the start-up
-  failure screen (SELLO-030 part 2). The debug sandbox is a separate
+- Reset is planned but not routed. The debug sandbox is a separate
   debug-only activity, not a route in the app.
 - There is no production network permission, account, sync, notification or cloud UI.
 

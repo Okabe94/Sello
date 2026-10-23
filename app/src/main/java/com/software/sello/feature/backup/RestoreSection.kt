@@ -40,9 +40,14 @@ import com.software.sello.domain.model.InkPreference
 import com.software.sello.domain.model.ThemePreference
 import com.software.sello.domain.port.BackupSummary
 import com.software.sello.domain.port.PendingPreferences
+import com.software.sello.domain.port.RestoreOutcome
 import com.software.sello.domain.port.RestoreRejection
 import com.software.sello.domain.port.StagedRestore
 import com.software.sello.presentation.date.dateLabels
+import com.software.sello.presentation.restore.RestoreBody
+import com.software.sello.presentation.restore.RestoreHeading
+import com.software.sello.presentation.restore.RestoredSlip
+import com.software.sello.presentation.restore.message
 
 /**
  * Restoring from a file: choose, check, preview, confirm, then the outcome. Nothing is
@@ -55,8 +60,8 @@ fun RestoreSection(state: RestoreState, onAction: (RestoreAction) -> Unit) {
             Modifier.fillMaxWidth().testTag(RESTORE_TAG),
             pinked = false
         ) {
-            Heading(stringResource(R.string.restore_title))
-            Body(stringResource(R.string.restore_body))
+            RestoreHeading(stringResource(R.string.restore_title))
+            RestoreBody(stringResource(R.string.restore_body))
             SelloButton(
                 text = stringResource(
                     if (step ==
@@ -104,11 +109,12 @@ fun RestoreSection(state: RestoreState, onAction: (RestoreAction) -> Unit) {
             modifier = Modifier.testTag(RESTORE_UNKNOWN_TAG)
         )
 
-        is RestoreStep.Restored -> if (step.outcome.preferences.done) {
-            Restored(step.outcome.summary, onAction)
-        } else {
-            Pending(step.outcome.preferences, step.applying, onAction)
-        }
+        is RestoreStep.Restored -> RestoredSlip(
+            step.outcome,
+            step.applying,
+            onApply = { onAction(RestoreAction.ApplyPreferences) },
+            onLeave = { onAction(RestoreAction.Leave) }
+        )
     }
 }
 
@@ -124,9 +130,9 @@ private fun Preview(
         Modifier.fillMaxWidth().testTag(RESTORE_PREVIEW_TAG),
         pinked = false
     ) {
-        Heading(stringResource(R.string.restore_preview_title))
+        RestoreHeading(stringResource(R.string.restore_preview_title))
         state.zone?.let { zone ->
-            Body(
+            RestoreBody(
                 stringResource(
                     R.string.restore_preview_date,
                     dateLabels().moment(
@@ -147,7 +153,7 @@ private fun Preview(
             )
         }
         Counts(staged.current, staged.replacement)
-        Body(stringResource(R.string.restore_preview_warning))
+        RestoreBody(stringResource(R.string.restore_preview_warning))
         SelloButton(
             text = stringResource(
                 if (replacing) R.string.restore_replacing else R.string.restore_confirm
@@ -212,168 +218,6 @@ private fun Cell(text: String, header: Boolean = false, spoken: String? = null) 
     )
 }
 
-@Composable
-private fun Restored(summary: BackupSummary, onAction: (RestoreAction) -> Unit) {
-    Slip(Modifier.fillMaxWidth().testTag(RESTORE_DONE_TAG), pinked = false) {
-        FlowRow(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            itemVerticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Heading(stringResource(R.string.restore_done_title))
-            Stamp(
-                text = stringResource(R.string.restore_done_stamp),
-                ink = StampInk.Good,
-                land = true,
-                modifier = Modifier.padding(vertical = 6.dp)
-                    .semantics { liveRegion = LiveRegionMode.Polite }
-            )
-        }
-        Body(
-            stringResource(
-                R.string.restore_done_body,
-                pluralStringResource(
-                    R.plurals.restore_categories,
-                    summary.categories,
-                    summary.categories
-                ),
-                pluralStringResource(
-                    R.plurals.restore_expenses,
-                    summary.expenses,
-                    summary.expenses
-                ),
-                pluralStringResource(R.plurals.restore_incomes, summary.incomes, summary.incomes)
-            )
-        )
-        GoToRecibo(onAction)
-    }
-}
-
-/** D09's approved wording: the history is restored; only these preferences are not. */
-@Composable
-private fun Pending(
-    preferences: PendingPreferences,
-    applying: Boolean,
-    onAction: (RestoreAction) -> Unit
-) {
-    Slip(Modifier.fillMaxWidth().testTag(RESTORE_PENDING_TAG), pinked = false) {
-        Heading(stringResource(R.string.restore_pending_title))
-        Body(stringResource(R.string.restore_pending_body))
-        BulletList(
-            listOfNotNull(
-                preferences.appearance?.let {
-                    Bullet(
-                        null,
-                        stringResource(
-                            R.string.restore_pending_appearance,
-                            stringResource(it.theme.label()),
-                            stringResource(it.ink.label())
-                        )
-                    )
-                },
-                preferences.ordering?.let {
-                    Bullet(
-                        null,
-                        stringResource(
-                            R.string.restore_pending_ordering,
-                            stringResource(it.order.label()),
-                            stringResource(it.direction.label())
-                        )
-                    )
-                }
-            ),
-            Modifier.padding(top = SelloTheme.spacing.sm)
-        )
-        SelloButton(
-            text = stringResource(
-                when {
-                    preferences.appearance != null && preferences.ordering != null ->
-                        R.string.restore_apply_both
-
-                    preferences.appearance != null -> R.string.restore_apply_appearance
-
-                    else -> R.string.restore_apply_ordering
-                }
-            ),
-            onClick = { onAction(RestoreAction.ApplyPreferences) },
-            loading = applying,
-            enabled = !applying,
-            modifier = Modifier.fillMaxWidth().padding(top = SelloTheme.spacing.md)
-                .testTag(RESTORE_APPLY_TAG)
-        )
-        Text(
-            text = stringResource(R.string.restore_pending_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = SelloTheme.colors.inkSoft,
-            modifier = Modifier.padding(top = SelloTheme.spacing.sm)
-        )
-        GoToRecibo(onAction, kind = ButtonKind.Text)
-    }
-}
-
-@Composable
-private fun GoToRecibo(onAction: (RestoreAction) -> Unit, kind: ButtonKind = ButtonKind.Filled) {
-    SelloButton(
-        text = stringResource(R.string.restore_go_to_recibo),
-        onClick = { onAction(RestoreAction.Leave) },
-        kind = kind,
-        modifier = Modifier.fillMaxWidth().padding(top = SelloTheme.spacing.md)
-            .testTag(RESTORE_LEAVE_TAG)
-    )
-}
-
-@Composable
-private fun Heading(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.headlineSmall,
-        modifier = Modifier.semantics { heading() }
-    )
-}
-
-@Composable
-private fun Body(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyLarge,
-        color = SelloTheme.colors.inkSoft,
-        modifier = Modifier.padding(top = SelloTheme.spacing.xs)
-    )
-}
-
-private fun RestoreRejection.message() = when (this) {
-    RestoreRejection.Unreadable -> R.string.restore_rejected_unreadable
-    RestoreRejection.TooLarge -> R.string.restore_rejected_too_large
-    RestoreRejection.NotABackup -> R.string.restore_rejected_not_backup
-    RestoreRejection.NewerVersion -> R.string.restore_rejected_newer
-    RestoreRejection.Damaged -> R.string.restore_rejected_damaged
-    RestoreRejection.InvalidContent -> R.string.restore_rejected_content
-}
-
-private fun ThemePreference.label() = when (this) {
-    ThemePreference.System -> R.string.settings_theme_system
-    ThemePreference.Light -> R.string.settings_theme_light
-    ThemePreference.Dark -> R.string.settings_theme_dark
-}
-
-private fun InkPreference.label() = when (this) {
-    InkPreference.Cobalto -> R.string.settings_ink_cobalto
-    InkPreference.Violeta -> R.string.settings_ink_violeta
-}
-
-private fun CategoryOrder.label() = when (this) {
-    CategoryOrder.MostUsed -> R.string.settings_order_most_used
-    CategoryOrder.Alphabetical -> R.string.settings_order_alphabetical
-    CategoryOrder.AmountSpent -> R.string.settings_order_amount_spent
-    CategoryOrder.Limit -> R.string.settings_order_limit
-    CategoryOrder.LatestExpenseAdded -> R.string.settings_order_latest_expense_added
-}
-
-private fun CategoryOrderDirection.label() = when (this) {
-    CategoryOrderDirection.Descending -> R.string.restore_pending_descending
-    CategoryOrderDirection.Ascending -> R.string.restore_pending_ascending
-}
-
 const val RESTORE_TAG = "restore"
 const val RESTORE_CHOOSE_TAG = "restore:choose"
 const val RESTORE_REJECTED_TAG = "restore:rejected"
@@ -382,7 +226,3 @@ const val RESTORE_PREVIEW_TAG = "restore:preview"
 const val RESTORE_CONFIRM_TAG = "restore:confirm"
 const val RESTORE_CANCEL_TAG = "restore:cancel"
 const val RESTORE_UNKNOWN_TAG = "restore:unknown"
-const val RESTORE_DONE_TAG = "restore:done"
-const val RESTORE_PENDING_TAG = "restore:pending"
-const val RESTORE_APPLY_TAG = "restore:apply"
-const val RESTORE_LEAVE_TAG = "restore:leave"

@@ -5,6 +5,7 @@ import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
 import java.time.Instant
+import java.time.ZoneId
 
 /** A document outside Sello that the person chose to read, such as one from the system picker. */
 data class DocumentSource(val id: String)
@@ -39,6 +40,13 @@ data class StagedRestore(
     val generation: Long,
     val revision: Long
 )
+
+/**
+ * A backup read and checked whole without opening any storage, as when the data could
+ * not be opened at start: when it was made, the financial zone it was made in, and
+ * what it would restore.
+ */
+data class CheckedBackup(val backupAt: Instant, val zone: ZoneId, val contents: BackupSummary)
 
 /** Why a chosen file cannot be restored. Nothing was changed. */
 enum class RestoreRejection {

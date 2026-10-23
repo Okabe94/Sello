@@ -10,14 +10,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -539,6 +544,8 @@ fun IconChoiceStrip(
  * its facts in bold spans, and [contextIcon] leads it; [contextDescription] is what a
  * screen reader hears for the box, with amounts spoken in full. Under the box, [hint] (such as
  * "Opcional") gives way to [error]. Validation and draft retention are caller-owned.
+ * The paper reaches the screen's edges; its content keeps clear of [windowInsets] at the
+ * sides, such as a navigation bar on the right of a phone held sideways.
  */
 @Composable
 fun NoteComposer(
@@ -554,7 +561,8 @@ fun NoteComposer(
     onCancel: () -> Unit,
     contextIcon: SelloIcon? = null,
     contextDescription: String = context.text,
-    doneEnabled: Boolean = error == null
+    doneEnabled: Boolean = error == null,
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val colors = SelloTheme.colors
     val focus = remember { FocusRequester() }
@@ -572,12 +580,10 @@ fun NoteComposer(
         Box(Modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.BottomCenter) {
             Surface(color = colors.paper, shape = SelloTheme.shapes.sheet) {
                 Column(
-                    Modifier.fillMaxWidth().padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        top = 4.dp,
-                        bottom = 10.dp
-                    )
+                    Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Horizontal))
+                        .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 10.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

@@ -2,7 +2,7 @@
   "schema_version": 2,
   "coverage": {
     "mode": "full",
-    "base": "4a156c5d721410b02902e2593c2256c3a50ed2b3",
+    "base": "8a50ce9df819f973c09537729e6a87337ac3c309",
     "changed_paths": [],
     "device_modules": [
       "data",
@@ -11,7 +11,7 @@
       "catalog"
     ]
   },
-  "run_id": "20261023T065031Z-dbb34ab5",
+  "run_id": "20261023T074006Z-cfef9451",
   "ticket": "SELLO-033",
   "gate": {
     "required": "G2",
@@ -23,13 +23,13 @@
     "gradle-host: 33 lint warnings"
   ],
   "snapshot": {
-    "head": "4a156c5d721410b02902e2593c2256c3a50ed2b3",
+    "head": "8a50ce9df819f973c09537729e6a87337ac3c309",
     "dirty": false,
     "dirty_files": [],
     "fingerprint": {
       "algorithm": "sha256",
-      "value": "3aa31c9b9e88d1896c9ff702b8a500f8ca5bd7ba0668a1e6a9f705ed3d6292cb",
-      "files": 865
+      "value": "ff410882368c7aa42adcc908aeaa07ba76a4de694c66322926952274505ca59a",
+      "files": 875
     },
     "acceptance": "5209b4a12e87a6f76468af6c0941ac6e6e67dea2800bd52b1eeea636c1b3549e"
   },
@@ -54,41 +54,41 @@
       "name": "board-check",
       "command": "python3 docs/planning/mvp/board.py --check --skip-evidence",
       "log": "board-check.log",
-      "started_at": "2026-10-23T06:50:31+00:00",
+      "started_at": "2026-10-23T07:40:07+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T06:50:31+00:00"
+      "finished_at": "2026-10-23T07:40:07+00:00"
     },
     {
       "name": "board-tests",
       "command": "python3 -m unittest discover -s docs/planning/mvp -p test_board.py",
       "log": "board-tests.log",
-      "started_at": "2026-10-23T06:50:31+00:00",
+      "started_at": "2026-10-23T07:40:07+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T06:50:31+00:00"
+      "finished_at": "2026-10-23T07:40:07+00:00"
     },
     {
       "name": "quality-tests",
       "command": "python3 -m unittest discover -s scripts/quality -p test_*.py",
       "log": "quality-tests.log",
-      "started_at": "2026-10-23T06:50:31+00:00",
+      "started_at": "2026-10-23T07:40:07+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T06:50:38+00:00"
+      "finished_at": "2026-10-23T07:40:13+00:00"
     },
     {
       "name": "architecture",
       "command": "python3 scripts/quality/architecture.py",
       "log": "architecture.log",
-      "started_at": "2026-10-23T06:50:38+00:00",
+      "started_at": "2026-10-23T07:40:13+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T06:50:38+00:00"
+      "finished_at": "2026-10-23T07:40:14+00:00"
     },
     {
       "name": "gradle-host",
       "command": "./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue",
       "log": "gradle-host.log",
-      "started_at": "2026-10-23T06:50:38+00:00",
+      "started_at": "2026-10-23T07:40:14+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T06:51:20+00:00",
+      "finished_at": "2026-10-23T07:40:42+00:00",
       "results": {
         "suites": 66,
         "tests": 674,
@@ -107,9 +107,9 @@
       "name": "gradle-device",
       "command": "./gradlew :data:connectedDebugAndroidTest :design-system:connectedDebugAndroidTest :app:connectedDebugAndroidTest :catalog:connectedDebugAndroidTest --continue",
       "log": "gradle-device.log",
-      "started_at": "2026-10-23T06:51:20+00:00",
+      "started_at": "2026-10-23T07:40:42+00:00",
       "exit_code": 0,
-      "finished_at": "2026-10-23T06:56:32+00:00",
+      "finished_at": "2026-10-23T07:45:47+00:00",
       "modules": {
         "data": {
           "suites": 1,
@@ -120,7 +120,7 @@
         },
         "design-system": {
           "suites": 1,
-          "tests": 128,
+          "tests": 129,
           "failures": 0,
           "errors": 0,
           "skipped": 0
@@ -142,7 +142,7 @@
       },
       "results": {
         "suites": 4,
-        "tests": 702,
+        "tests": 703,
         "failures": 0,
         "errors": 0,
         "skipped": 0
@@ -150,6 +150,6 @@
       "fresh_results": true
     }
   ],
-  "started_at": "2026-10-23T06:50:31+00:00",
-  "finished_at": "2026-10-23T06:56:33+00:00"
+  "started_at": "2026-10-23T07:40:06+00:00",
+  "finished_at": "2026-10-23T07:45:47+00:00"
 }

@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 46/50 · **Epics Done:** 8/10
+**Tickets Done:** 46/49 · **Epics Done:** 9/10
 
-Backlog: 4 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 46
+Backlog: 3 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 46
 
 [Workflow, gates and definition of done](README.md)
 
@@ -21,7 +21,7 @@ Backlog: 4 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 46
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Done | 5/5 |
 | [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | In Progress | 1/4 |
 | [SELLO-E12](epics/E12-v2-recibo.md) | Make Home answer "how am I doing this month" with the factual status, wording and frame approved in Sello v2. | Done | 9/9 |
-| [SELLO-E13](epics/E13-v2-current-app.md) | Every screen the app already has looks and behaves as approved in Sello v2, using one set of components, before new features are added. | Backlog | 4/5 |
+| [SELLO-E13](epics/E13-v2-current-app.md) | Every screen the app already has looks and behaves as approved in Sello v2, using one set of components, before new features are added. | Done | 4/4 |
 
 ## Ready
 
@@ -46,7 +46,6 @@ No tickets.
 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) | Execute accessibility, adaptive and process-restoration journeys | SELLO-E08 | P0 | G2 | None |
 | [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) | Validate performance and optimized release composition | SELLO-E08 | P0 | G3 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) |
 | [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | Accept the complete MVP and prepare release handoff | SELLO-E08 | P0 | G3 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) |
-| [SELLO-074](epics/E13-v2-current-app.md#sello-074--review-the-v2-screens-with-talkback-and-switch-access) | Review the v2 screens with TalkBack and Switch Access | SELLO-E13 | P1 | G2 | None |
 
 ## Done
 
@@ -101,4 +100,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-074](epics/E13-v2-current-app.md#sello-074--review-the-v2-screens-with-talkback-and-switch-access)
+[SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys)

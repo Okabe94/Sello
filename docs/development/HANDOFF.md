@@ -83,16 +83,18 @@ forecast remains only as Resumen's estimate, and
 
 ## Remaining work
 
-- SELLO-074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the last E13
-  ticket, a recorded manual TalkBack and Switch Access pass over the v2 screens.
-- SELLO-033–036: integrated accessibility, restoration, performance and signed
-  release acceptance. The current app is not a completed MVP release.
+- SELLO-033–036: integrated adaptive/large-text/process-restoration checks,
+  performance and signed release acceptance. The current app is not a completed
+  MVP release.
+- SELLO-074 ([E14](../planning/mvp/epics/E14-assistive-technology.md)): the manual
+  TalkBack, Switch Access and keyboard pass, moved post-MVP by the owner on
+  2026-10-23. E13 is done without it.
 - Goal/investment features, recurrence and other deferred capabilities remain
-  outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
+  outside MVP; signed carryover, legacy import and the assistive-technology pass
+  are on the post-MVP roadmap.
 
 The [board](../planning/mvp/BOARD.md) currently lists E08's SELLO-033 without unmet
-ticket dependencies, plus E13's SELLO-074 (deferred). Their other prerequisites remain in
-the ticket briefs; no statuses are changed by this handoff.
+ticket dependencies. Its other prerequisites remain in the ticket brief.
 
 ## Detail references
 

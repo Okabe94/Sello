@@ -1,6 +1,6 @@
 # 0001 — MVP product and financial contract
 
-**Owner:** project owner (user) · **Updated:** 2026-10-16
+**Owner:** project owner (user) · **Updated:** 2026-10-23
 **Status:** approved product rules; replacement budget guidance has open inputs in
 [ADR 0012](0012-budget-guidance-contract.md). Approval does not mean implementation
 or release verification is complete.
@@ -249,9 +249,11 @@ there, and reset must also erase that private kept copy.
 ## D10 — Release acceptance and review
 
 Test the verified minimum/target SDK matrix, compact/short landscape/medium/expanded
-windows, font scales 1.0/1.3/2.0, all four themes, TalkBack, keyboard, Switch Access
-and reduced motion. Require production-signed installation and recovery on at
+windows, font scales 1.0/1.3/2.0, all four themes, automated accessibility
+semantics and reduced motion. Require production-signed installation and recovery on at
 least one physical device. Assembly and debug signing do not prove these checks.
+Manual TalkBack, Switch Access and hardware keyboard walks are post-MVP
+(owner direction, 2026-10-23); the app still builds for them under ARCHITECTURE.md.
 
 The project owner approves product/privacy choices and release go/no-go, performs
 physical-device testing and controls release build/signing/key custody. Assign an

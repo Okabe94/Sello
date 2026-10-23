@@ -164,12 +164,21 @@ class CategoryDetailScreenTest {
             .map { heroText(it).getUnclippedBoundsInRoot() }
         assertEquals(labels[0].top, labels[1].top)
         assertEquals(labels[1].top, labels[2].top)
-        val firstGap = labels[1].left - labels[0].left
-        val secondGap = labels[2].left - labels[1].left
+        // Centred in three equal columns, so the label centres are evenly spaced.
+        val centres = labels.map { (it.left + it.right) / 2 }
+        val firstGap = centres[1] - centres[0]
+        val secondGap = centres[2] - centres[1]
         assertTrue(
             "The three columns must be equally spaced",
             kotlin.math.abs(firstGap.value - secondGap.value) <= 1f
         )
+        listOf("9 días" to 0, "+6,7 %" to 2).forEach { (value, column) ->
+            val bounds = heroText(value).getUnclippedBoundsInRoot()
+            assertTrue(
+                "$value must be centred under its label",
+                kotlin.math.abs(((bounds.left + bounds.right) / 2 - centres[column]).value) <= 1f
+            )
+        }
         listOf("Para", "Al día", "Frente a sep").forEach {
             assertEquals(12.5.sp, textStyle(it).fontSize)
         }

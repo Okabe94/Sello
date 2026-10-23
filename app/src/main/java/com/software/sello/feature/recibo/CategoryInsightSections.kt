@@ -290,6 +290,7 @@ private fun CategoryHistory(categoryId: String, figures: DetailInsights) {
                 it.limit != null
             }
         ) {
+            Spacer(Modifier.height(SelloTheme.spacing.sm))
             ChartDetail(stringResource(R.string.category_detail_history_limit_legend))
         }
         figures.history.firstOrNull { it.month.toString() == selected }?.let { entry ->

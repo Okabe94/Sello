@@ -2,7 +2,9 @@ package com.software.sello.feature.resumen
 
 import androidx.compose.runtime.Immutable
 import com.software.sello.designsystem.component.ChartPoint
+import com.software.sello.designsystem.component.ComparisonBar
 import com.software.sello.designsystem.component.MoneyTextValue
+import com.software.sello.domain.model.SpendingDirection
 
 sealed interface ResumenState {
     data object Loading : ResumenState
@@ -12,25 +14,88 @@ sealed interface ResumenState {
     @Immutable
     data class Ready(
         val month: String,
+        val hero: ResumenHero,
         val income: MoneyTextValue,
         val spent: MoneyTextValue,
         val netFlow: MoneyTextValue,
         val allocated: MoneyTextValue,
         val unallocated: MoneyTextValue,
-        val daily: List<ResumenPoint>,
         val history: List<ResumenPoint>,
         /** The selected month's limit, drawn once as a dashed line over the columns. */
         val monthLimit: ResumenLimit?,
+        /** Shown above the columns once there is enough history to average. */
+        val normalMonth: ResumenNormalMonth?,
         /** Ranked by what was spent, most first; their amounts add up to [spent]. */
         val categories: List<ResumenCategory>,
+        val weekdays: ResumenWeekdays?,
+        /** Null when there is none, or it was dismissed this month. */
+        val suggestion: ResumenSuggestion?,
         val empty: Boolean,
         val insufficientHistory: Boolean,
         val stale: Boolean,
+        /** The day the figures run to, as written in a sentence: "22 de octubre". */
         val asOf: String,
-        val selectedDaily: String? = null,
-        val selectedHistory: String? = null
+        val selectedHistory: String? = null,
+        val selectedWeekday: String? = null
     ) : ResumenState
 }
+
+/**
+ * How the selected month is going, or how it closed. [monthName] is as written in a
+ * sentence ("octubre"). Without [comparison], [spent] is shown alone, from day 1 to
+ * [throughDay].
+ */
+@Immutable
+data class ResumenHero(
+    val inProgress: Boolean,
+    val monthName: String,
+    val spent: MoneyTextValue,
+    val throughDay: Int,
+    val comparison: ResumenComparison?
+)
+
+/**
+ * The difference with [previousName], never negative: [direction] says which way.
+ * [percent] is written "11,1", or null when the month before had nothing on those days.
+ * [throughDay] and [previousThroughDay] are null when whole months are compared.
+ */
+@Immutable
+data class ResumenComparison(
+    val previousName: String,
+    val difference: MoneyTextValue,
+    val direction: SpendingDirection,
+    val percent: String?,
+    val throughDay: Int?,
+    val previousThroughDay: Int?,
+    val bars: List<ComparisonBar>
+)
+
+@Immutable
+data class ResumenNormalMonth(val amount: MoneyTextValue, val months: Int)
+
+/**
+ * Average spending per weekday, Monday first. [busiest] is the plural day name ("sábados")
+ * when one stands out. With [lastSixMonths] the averages cover the last six months;
+ * otherwise they start [from], written as in a sentence.
+ */
+@Immutable
+data class ResumenWeekdays(
+    val points: List<ResumenPoint>,
+    val busiest: String?,
+    val busiestAverage: MoneyTextValue?,
+    val from: String,
+    val lastSixMonths: Boolean
+)
+
+/** A category over its limit in [months] (names as in a sentence) that could be adjusted. */
+@Immutable
+data class ResumenSuggestion(
+    val categoryId: String,
+    val name: String,
+    val months: List<String>,
+    val averageSpent: MoneyTextValue,
+    val limit: MoneyTextValue
+)
 
 @Immutable
 data class ResumenPoint(
@@ -61,7 +126,9 @@ data class ResumenCategory(
 sealed interface ResumenAction {
     data object Retry : ResumenAction
 
-    data class SelectDaily(val id: String) : ResumenAction
-
     data class SelectHistory(val id: String) : ResumenAction
+
+    data class SelectWeekday(val id: String) : ResumenAction
+
+    data object DismissSuggestion : ResumenAction
 }

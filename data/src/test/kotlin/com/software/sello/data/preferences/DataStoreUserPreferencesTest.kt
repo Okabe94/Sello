@@ -6,11 +6,14 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.software.sello.domain.model.AppearancePreference
+import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryOrder
 import com.software.sello.domain.model.CategoryOrderDirection
 import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.CorrectionAnnouncementPreference
+import com.software.sello.domain.model.DismissedSuggestion
 import com.software.sello.domain.model.InkPreference
+import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.ThemePreference
 import com.software.sello.domain.port.BackupRecord
 import com.software.sello.domain.port.BackupSummary
@@ -20,6 +23,7 @@ import com.software.sello.domain.port.PreferenceRead
 import com.software.sello.domain.port.PreferenceWrite
 import java.io.IOException
 import java.time.Instant
+import java.time.YearMonth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -201,6 +205,47 @@ class DataStoreUserPreferencesTest {
             DataStoreUserPreferences(data).observeCorrectionAnnouncements().first()
         )
     }
+
+    @Test
+    fun aDismissedSuggestionSurvivesANewAdapterAndALaterOneReplacesIt() = runTest {
+        val data = HandDataStore()
+        val october = DismissedSuggestion(YearMonth.of(2026, 10), cafe)
+        val november = DismissedSuggestion(YearMonth.of(2026, 11), cafe)
+
+        assertEquals(
+            PreferenceRead.Ready(null),
+            DataStoreUserPreferences(data).observeDismissedSuggestion().first()
+        )
+        assertEquals(
+            PreferenceWrite.Saved,
+            DataStoreUserPreferences(data).dismissSuggestion(october)
+        )
+        assertEquals(
+            PreferenceRead.Ready(october),
+            DataStoreUserPreferences(data).observeDismissedSuggestion().first()
+        )
+        DataStoreUserPreferences(data).dismissSuggestion(november)
+        assertEquals(
+            PreferenceRead.Ready(november),
+            DataStoreUserPreferences(data).observeDismissedSuggestion().first()
+        )
+    }
+
+    @Test
+    fun aDamagedDismissalIsVisibleAsInvalid() = runTest {
+        val raw =
+            mutablePreferencesOf(stringPreferencesKey("resumen_suggestion_dismissed_v1") to "x")
+        val preferences = DataStoreUserPreferences(HandDataStore(raw))
+
+        assertEquals(
+            PreferenceRead.Failed<DismissedSuggestion?>(PreferenceFailure.InvalidValue, null),
+            preferences.observeDismissedSuggestion().first()
+        )
+    }
+
+    private val cafe = (
+        CategoryId.of("00000000-0000-4000-8000-000000000001") as Outcome.Success
+        ).value
 
     @Test
     fun anUnknownStoredCodeIsVisibleAndIsNotSilentlyRewritten() = runTest {

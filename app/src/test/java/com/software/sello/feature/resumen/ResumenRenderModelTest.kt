@@ -1,26 +1,38 @@
 package com.software.sello.feature.resumen
 
 import com.software.sello.designsystem.component.ChartPeriod
+import com.software.sello.domain.model.CategoryId
+import com.software.sello.domain.model.CategoryName
 import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.DailySpending
+import com.software.sello.domain.model.LimitAdjustment
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.MonthlySnapshot
+import com.software.sello.domain.model.NormalMonth
+import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.OverallBudget
 import com.software.sello.domain.model.PastVerdict
 import com.software.sello.domain.model.ResumenSnapshot
 import com.software.sello.domain.model.SnapshotFailure
+import com.software.sello.domain.model.SpendingComparison
+import com.software.sello.domain.model.SpendingDirection
 import com.software.sello.domain.model.SpendingMonth
+import com.software.sello.domain.model.WeekdayPattern
+import com.software.sello.domain.model.WeekdaySpending
 import com.software.sello.domain.port.ResumenSnapshotState
 import com.software.sello.feature.expense.categoryIn
 import com.software.sello.feature.expense.monthOf
 import com.software.sello.feature.expense.storedExpense
 import com.software.sello.presentation.money.MoneyFormatter
 import com.software.sello.presentation.money.MoneyLabels
+import java.math.BigInteger
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -62,16 +74,12 @@ class ResumenRenderModelTest {
     }
 
     @Test
-    fun chartsKeepExactValuesAndDatesNotRoundedCoordinates() {
+    fun aSingleMonthHasTooLittleHistoryAndTheDateIsWrittenAsInASentence() {
         val state = render.render(ResumenSnapshotState.Ready(resumenSnapshot()))
         assertTrue(state is ResumenState.Ready)
         state as ResumenState.Ready
-        assertEquals(listOf(10_000L, 25_000L, 30_000L), state.daily.map { it.chart.value })
-        assertEquals("2026-10-02", state.daily[1].chart.id)
-        assertEquals("25.000 pesos", state.daily[1].amount.spoken)
-        assertEquals("15.000 pesos", state.daily[1].detail?.spoken)
-        assertTrue(state.daily[1].chart.spoken.contains("25.000 pesos"))
         assertTrue(state.insufficientHistory)
+        assertEquals("3 de octubre", state.asOf)
     }
 
     @Test
@@ -111,7 +119,7 @@ class ResumenRenderModelTest {
         )
         assertTrue(state is ResumenState.Ready)
         assertTrue((state as ResumenState.Ready).stale)
-        assertEquals("2026-10-03", state.asOf)
+        assertEquals("3 de octubre", state.asOf)
     }
 
     // --- v2: the month in progress, the limit line and the ranking ---
@@ -186,5 +194,165 @@ class ResumenRenderModelTest {
         assertEquals(0.6f, state.categories[0].share, 0.0001f)
         assertEquals(0.4f, state.categories[1].share, 0.0001f)
         assertEquals("75.000 pesos", state.spent.spoken)
+    }
+
+    // --- v2: the comparison, a normal month, weekdays and the suggestion ---
+
+    private fun ready(snapshot: ResumenSnapshot) =
+        render.render(ResumenSnapshotState.Ready(snapshot)) as ResumenState.Ready
+
+    @Test
+    fun theMonthInProgressIsComparedWithTheSameDaysOfSeptember() {
+        val snapshot = resumenSnapshot(spent = 400_000).copy(
+            comparison = SpendingComparison(
+                september,
+                Money.cop(400_000),
+                Money.cop(450_000),
+                3,
+                3,
+                Money.cop(50_000),
+                SpendingDirection.Less,
+                BigInteger.valueOf(111)
+            )
+        )
+
+        val hero = ready(snapshot).hero
+
+        assertTrue(hero.inProgress)
+        assertEquals("octubre" to 3, hero.monthName to hero.throughDay)
+        val comparison = hero.comparison!!
+        assertEquals("septiembre", comparison.previousName)
+        assertEquals("50.000 pesos", comparison.difference.spoken)
+        assertEquals("11,1", comparison.percent)
+        assertEquals(3 to 3, comparison.throughDay to comparison.previousThroughDay)
+        assertEquals(
+            listOf("Octubre" to "400.000", "Septiembre" to "450.000"),
+            comparison.bars.map { it.label to it.amount.digits }
+        )
+        // 400.000 of 450.000 on the same scale; the larger fills the bar.
+        assertEquals(400_000f / 450_000f, comparison.bars[0].fraction, 0.0001f)
+        assertEquals(1f, comparison.bars[1].fraction, 0.0001f)
+        assertEquals(listOf(true, false), comparison.bars.map { it.current })
+    }
+
+    @Test
+    fun aFinishedMonthWithNothingToCompareShowsWhatItSpentAlone() {
+        val spent = resumenSnapshot(spent = 80_000)
+        val snapshot = spent.copy(budget = spent.budget.copy(month = september))
+
+        val hero = ready(snapshot).hero
+
+        assertFalse(hero.inProgress)
+        assertEquals("septiembre" to 30, hero.monthName to hero.throughDay)
+        assertEquals("80.000 pesos", hero.spent.spoken)
+        assertNull(hero.comparison)
+    }
+
+    @Test
+    fun aNormalMonthIsShownOnlyOnceThereIsHistory() {
+        val normal = NormalMonth(Money.cop(778_000), 5)
+        val alone = resumenSnapshot().copy(normalMonth = normal)
+        val history = alone.copy(
+            history = listOf(
+                SpendingMonth(september, Money.cop(900_000), null, null, 4),
+                SpendingMonth(october, Money.cop(30_000), null, null, 3)
+            )
+        )
+
+        assertNull(ready(alone).normalMonth)
+        assertEquals(
+            "778.000 pesos" to 5,
+            ready(history).normalMonth?.let {
+                it.amount.spoken to
+                    it.months
+            }
+        )
+    }
+
+    @Test
+    fun weekdaysAreMondayFirstWithTheBusiestNamedAndExact() {
+        val averages = listOf(18_200L, 21_500L, 19_800L, 24_100L, 31_400L, 42_700L, 27_300L)
+        val snapshot = resumenSnapshot().copy(
+            weekdays = WeekdayPattern(
+                LocalDate.of(2026, 7, 1),
+                LocalDate.of(2026, 10, 3),
+                DayOfWeek.entries.zip(averages) { day, pesos ->
+                    WeekdaySpending(day, Money.cop(pesos))
+                },
+                DayOfWeek.SATURDAY,
+                lastSixMonths = true
+            )
+        )
+
+        val weekdays = ready(snapshot).weekdays!!
+
+        assertEquals(
+            listOf("L", "M", "X", "J", "V", "S", "D"),
+            weekdays.points.map {
+                it.chart.axisLabel
+            }
+        )
+        assertEquals(averages, weekdays.points.map { it.chart.value })
+        assertEquals("sábados, 42.700 pesos", weekdays.points[5].chart.spoken)
+        assertEquals(
+            listOf(
+                ChartPeriod.Past,
+                ChartPeriod.Past,
+                ChartPeriod.Past,
+                ChartPeriod.Past,
+                ChartPeriod.Past,
+                ChartPeriod.Current,
+                ChartPeriod.Past
+            ),
+            weekdays.points.map { it.chart.period }
+        )
+        assertEquals(
+            "sábados" to "42.700 pesos",
+            weekdays.busiest to weekdays.busiestAverage?.spoken
+        )
+        assertEquals("1 de julio" to true, weekdays.from to weekdays.lastSixMonths)
+    }
+
+    @Test
+    fun withNoBusiestDayNoneIsNamedOrHighlighted() {
+        val snapshot = resumenSnapshot().copy(
+            weekdays = WeekdayPattern(
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 9),
+                DayOfWeek.entries.map { WeekdaySpending(it, Money.cop(1_000)) },
+                null
+            )
+        )
+
+        val weekdays = ready(snapshot).weekdays!!
+
+        assertNull(weekdays.busiest)
+        assertNull(weekdays.busiestAverage)
+        assertTrue(weekdays.points.all { it.chart.period == ChartPeriod.Past })
+    }
+
+    @Test
+    fun theSuggestionNamesTheCategoryItsMonthsAndBothAmounts() {
+        val hogar = (CategoryId.of("00000000-0000-4000-8000-000000000002") as Outcome.Success).value
+        val snapshot = resumenSnapshot().copy(
+            suggestion = LimitAdjustment(
+                hogar,
+                (CategoryName.of("Hogar") as Outcome.Success).value,
+                listOf(YearMonth.of(2026, 8), september),
+                Money.cop(230_000),
+                Money.cop(200_000)
+            )
+        )
+
+        assertEquals(
+            ResumenSuggestion(
+                hogar.value,
+                "Hogar",
+                listOf("agosto", "septiembre"),
+                resumenMoney().format(Money.cop(230_000)),
+                resumenMoney().format(Money.cop(200_000))
+            ),
+            ready(snapshot).suggestion
+        )
     }
 }

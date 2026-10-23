@@ -7,6 +7,7 @@ import com.software.sello.domain.port.BackupRecords
 import com.software.sello.domain.port.CategoryOrderingPreferences
 import com.software.sello.domain.port.CorrectionAnnouncementPreferences
 import com.software.sello.domain.port.PreferenceReset
+import com.software.sello.domain.port.SuggestionPreferences
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -20,6 +21,7 @@ fun preferencesModule(fileName: String = StorageNames.Normal.preferences): Modul
     single<AppearancePreferences> { get<DataStoreUserPreferences>() }
     single<CategoryOrderingPreferences> { get<DataStoreUserPreferences>() }
     single<CorrectionAnnouncementPreferences> { get<DataStoreUserPreferences>() }
+    single<SuggestionPreferences> { get<DataStoreUserPreferences>() }
     single<BackupRecords> { get<DataStoreUserPreferences>() }
     single<PreferenceReset> { get<DataStoreUserPreferences>() }
 }

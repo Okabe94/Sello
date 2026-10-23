@@ -5,6 +5,7 @@ import com.software.sello.domain.model.CategoryOrder
 import com.software.sello.domain.model.CategoryOrderDirection
 import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.CorrectionAnnouncementPreference
+import com.software.sello.domain.model.DismissedSuggestion
 import com.software.sello.domain.model.InkPreference
 import com.software.sello.domain.model.ThemePreference
 import kotlinx.coroutines.flow.Flow
@@ -44,4 +45,10 @@ interface CorrectionAnnouncementPreferences {
     fun observeCorrectionAnnouncements(): Flow<PreferenceRead<CorrectionAnnouncementPreference>>
     suspend fun dismissPastExpenseAnnouncement(): PreferenceWrite
     suspend fun dismissPastLimitAnnouncement(): PreferenceWrite
+}
+
+/** The one Resumen suggestion dismissed most recently; a new dismissal replaces it. */
+interface SuggestionPreferences {
+    fun observeDismissedSuggestion(): Flow<PreferenceRead<DismissedSuggestion?>>
+    suspend fun dismissSuggestion(dismissed: DismissedSuggestion): PreferenceWrite
 }

@@ -1,11 +1,20 @@
 package com.software.sello.feature.resumen
 
 import androidx.lifecycle.SavedStateHandle
+import com.software.sello.domain.model.CategoryId
+import com.software.sello.domain.model.CategoryName
+import com.software.sello.domain.model.DismissedSuggestion
+import com.software.sello.domain.model.LimitAdjustment
+import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.ResumenSnapshot
 import com.software.sello.domain.model.SnapshotFailure
+import com.software.sello.domain.port.PreferenceFailure
+import com.software.sello.domain.port.PreferenceRead
+import com.software.sello.domain.port.PreferenceWrite
 import com.software.sello.domain.port.ResumenSnapshotState
 import com.software.sello.domain.port.ResumenSnapshots
+import com.software.sello.domain.port.SuggestionPreferences
 import com.software.sello.navigation.HandFinancialClock
 import com.software.sello.navigation.HandMonotonicClock
 import com.software.sello.navigation.MonthSession
@@ -35,6 +44,7 @@ class ResumenViewModelTest {
     private val october = YearMonth.of(2026, 10)
     private val session = MonthSession(HandFinancialClock("2026-10-13"), HandMonotonicClock())
     private val reads = HandResumenSnapshots()
+    private val suggestions = HandSuggestions()
 
     @Before
     fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -43,7 +53,7 @@ class ResumenViewModelTest {
     fun reset() = Dispatchers.resetMain()
 
     private fun model(saved: SavedStateHandle = SavedStateHandle()) =
-        ResumenViewModel(saved, reads, session, resumenMoney())
+        ResumenViewModel(saved, reads, session, resumenMoney(), suggestions)
 
     private fun TestScope.watch(model: ResumenViewModel) =
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { model.state.collect {} }
@@ -90,12 +100,12 @@ class ResumenViewModelTest {
         watch(model)
         val original = resumenSnapshot(income = 200_000)
         reads.of(october).value = ResumenSnapshotState.Ready(original)
-        model.onAction(ResumenAction.SelectDaily("2026-10-03"))
+        model.onAction(ResumenAction.SelectHistory("2026-10"))
         val corrected = resumenSnapshot(spent = 27_000, income = 200_000)
         reads.of(october).value = ResumenSnapshotState.Ready(corrected)
         val shown = model.state.value as ResumenState.Ready
-        assertEquals("2026-10-03", shown.selectedDaily)
-        assertEquals("27.000 pesos", shown.daily.last().amount.spoken)
+        assertEquals("2026-10", shown.selectedHistory)
+        assertEquals("27.000 pesos", shown.history.last().amount.spoken)
         assertEquals("173.000 pesos", shown.netFlow.spoken)
         assertEquals("100.000 pesos", shown.unallocated.spoken)
         assertEquals(1, reads.started)
@@ -106,31 +116,99 @@ class ResumenViewModelTest {
         val model = model()
         watch(model)
         reads.of(october).value = ResumenSnapshotState.Ready(resumenSnapshot())
-        model.onAction(ResumenAction.SelectDaily("not-a-date"))
-        assertNull((model.state.value as ResumenState.Ready).selectedDaily)
-        model.onAction(ResumenAction.SelectDaily("2026-10-02"))
+        model.onAction(ResumenAction.SelectHistory("not-a-month"))
+        assertNull((model.state.value as ResumenState.Ready).selectedHistory)
+        model.onAction(ResumenAction.SelectHistory("2026-10"))
         advanceTimeBy(2_999)
-        assertEquals("2026-10-02", (model.state.value as ResumenState.Ready).selectedDaily)
+        assertEquals("2026-10", (model.state.value as ResumenState.Ready).selectedHistory)
         advanceTimeBy(2)
         runCurrent()
-        assertNull((model.state.value as ResumenState.Ready).selectedDaily)
+        assertNull((model.state.value as ResumenState.Ready).selectedHistory)
         assertEquals(1, reads.started)
     }
 
     @Test
     fun restoredSelectionUsesSourceIdsAndDoesNotLeakIntoAnotherMonth() = runTest {
-        val saved = SavedStateHandle(mapOf("resumen.daily" to "2026-10|2026-10-02"))
+        val saved = SavedStateHandle(mapOf("resumen.history" to "2026-10|2026-10"))
         val model = model(saved)
         watch(model)
         reads.of(october).value = ResumenSnapshotState.Ready(resumenSnapshot())
-        assertEquals("2026-10-02", (model.state.value as ResumenState.Ready).selectedDaily)
+        assertEquals("2026-10", (model.state.value as ResumenState.Ready).selectedHistory)
         val september = YearMonth.of(2026, 9)
         session.select(september)
         val original = resumenSnapshot()
         reads.of(september).value = ResumenSnapshotState.Ready(
             original.copy(budget = original.budget.copy(month = september))
         )
-        assertNull((model.state.value as ResumenState.Ready).selectedDaily)
+        assertNull((model.state.value as ResumenState.Ready).selectedHistory)
+    }
+
+    // --- The suggestion ---
+
+    private val hogar = (
+        CategoryId.of(
+            "00000000-0000-4000-8000-000000000002"
+        ) as Outcome.Success
+        ).value
+
+    private fun withSuggestion() = resumenSnapshot().copy(
+        suggestion = LimitAdjustment(
+            hogar,
+            (CategoryName.of("Hogar") as Outcome.Success).value,
+            listOf(YearMonth.of(2026, 8), YearMonth.of(2026, 9)),
+            Money.cop(230_000),
+            Money.cop(200_000)
+        )
+    )
+
+    @Test
+    fun dismissingTheSuggestionRemembersItForThisMonthAndHidesIt() = runTest {
+        val model = model()
+        watch(model)
+        reads.of(october).value = ResumenSnapshotState.Ready(withSuggestion())
+        assertEquals("Hogar", (model.state.value as ResumenState.Ready).suggestion?.name)
+
+        model.onAction(ResumenAction.DismissSuggestion)
+
+        assertEquals(listOf(DismissedSuggestion(october, hogar)), suggestions.written)
+        assertNull((model.state.value as ResumenState.Ready).suggestion)
+    }
+
+    @Test
+    fun aSuggestionDismissedLastMonthComesBackWhileItStillApplies() = runTest {
+        suggestions.stored.value =
+            PreferenceRead.Ready(DismissedSuggestion(YearMonth.of(2026, 9), hogar))
+        val model = model()
+        watch(model)
+
+        reads.of(october).value = ResumenSnapshotState.Ready(withSuggestion())
+
+        assertEquals("Hogar", (model.state.value as ResumenState.Ready).suggestion?.name)
+    }
+
+    @Test
+    fun aDismissalThatCannotBeReadHidesNothing() = runTest {
+        suggestions.stored.value =
+            PreferenceRead.Failed(PreferenceFailure.InvalidValue, null)
+        val model = model()
+        watch(model)
+
+        reads.of(october).value = ResumenSnapshotState.Ready(withSuggestion())
+
+        assertEquals("Hogar", (model.state.value as ResumenState.Ready).suggestion?.name)
+    }
+}
+
+private class HandSuggestions : SuggestionPreferences {
+    val stored = MutableStateFlow<PreferenceRead<DismissedSuggestion?>>(PreferenceRead.Ready(null))
+    val written = mutableListOf<DismissedSuggestion>()
+
+    override fun observeDismissedSuggestion(): Flow<PreferenceRead<DismissedSuggestion?>> = stored
+
+    override suspend fun dismissSuggestion(dismissed: DismissedSuggestion): PreferenceWrite {
+        written += dismissed
+        stored.value = PreferenceRead.Ready(dismissed)
+        return PreferenceWrite.Saved
     }
 }
 

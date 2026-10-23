@@ -1,6 +1,6 @@
 # SELLO-E15 — Fixes found during release work
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Increment:** Post-MVP
 - **Goal:** Fix the defects found while measuring and accepting the MVP, each with a test.
 - **Exit:** Every ticket below is Done: counts and dates read as the rest of the app writes them, a failed backup says why, and the sandbox scenario tests pass reliably.
@@ -99,7 +99,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-076 --retain`.
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004
 - **Gate:** G2
 
@@ -141,6 +141,20 @@ runner from before the simulated restart still answering; see `ScenarioRunner`.
 
 ### Verification recipe
 Repeated focused runs, then `./scripts/verify-ticket SELLO-077 --retain`.
+
+### Execution progress
+
+- **Cause, 2026-10-23:** not the runner from before the restart. A new process's
+  `ScenarioRunner.recover()` runs in the background and, once it held the step lock,
+  replaced the whole log with the steps confirmed so far. A step taken before it ran
+  was then relisted from its receipt: "Guardado" instead of "Ya estaba guardado", and
+  a check as "Comprobado antes" instead of its figures, exactly the two CI failures.
+  Which came first depended on thread timing. The same could happen in the debug tools
+  when Paso is tapped right after a restart; no record or figure was ever affected.
+- **Fix:** `recover()` lists only the steps confirmed by earlier processes (the stored
+  progress the runner was built on) and puts them ahead of the steps this process has
+  already logged, whose results it keeps; running it twice lists them once. No test
+  waits, retries or sleeps were added.
 
 ## SELLO-078 — Say what failed when a backup does not pass its own check
 

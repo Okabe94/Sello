@@ -105,18 +105,23 @@ class ScenarioRunner(
     private val scope: CoroutineScope,
     private val stepMillis: Long = SandboxTime.STEP_MILLIS
 ) {
-    private val mutable = MutableStateFlow(ScenarioState(scenario, store.read().nextStep))
+    /** The steps confirmed by earlier processes; this process's own steps start here. */
+    private val confirmed = store.read().nextStep
+    private val mutable = MutableStateFlow(ScenarioState(scenario, confirmed))
     val state: StateFlow<ScenarioState> = mutable.asStateFlow()
 
     private val stepping = Mutex()
     private var player: Job? = null
     private val categoryIds = mutableMapOf<String, CategoryId>()
 
-    /** Lists the steps confirmed in earlier processes from their stored receipts. */
+    /**
+     * Lists the steps confirmed in earlier processes from their stored receipts, ahead of
+     * any this process has already taken, whose own results it keeps.
+     */
     fun recover(): Job = scope.launch {
         val loaded = scenario ?: return@launch
         stepping.withLock {
-            val records = (0 until mutable.value.next).map { index ->
+            val records = (0 until confirmed).map { index ->
                 val step = loaded.steps[index]
                 val receipt = receiptOf(loaded, index, step)
                 StepRecord(
@@ -132,7 +137,9 @@ class ScenarioRunner(
                     }
                 )
             }
-            mutable.update { it.copy(log = records) }
+            mutable.update { state ->
+                state.copy(log = records + state.log.filter { it.index >= confirmed })
+            }
         }
     }
 

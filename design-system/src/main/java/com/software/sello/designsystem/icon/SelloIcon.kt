@@ -22,6 +22,7 @@ enum class SelloIcon(@DrawableRes val filled: Int, @DrawableRes val outlined: In
     Star(R.drawable.ic_sello_star, R.drawable.ic_sello_star_outline),
     Add(R.drawable.ic_sello_add),
     ArrowBack(R.drawable.ic_sello_arrow_back),
+    ArrowUpward(R.drawable.ic_sello_arrow_upward),
     Backspace(R.drawable.ic_sello_backspace),
     Check(R.drawable.ic_sello_check),
     Checkroom(R.drawable.ic_sello_checkroom),
@@ -45,6 +46,7 @@ enum class SelloIcon(@DrawableRes val filled: Int, @DrawableRes val outlined: In
     ReceiptLong(R.drawable.ic_sello_receipt_long, R.drawable.ic_sello_receipt_long_outlined),
     Restaurant(R.drawable.ic_sello_restaurant),
     School(R.drawable.ic_sello_school),
+    Sell(R.drawable.ic_sello_sell),
     Settings(R.drawable.ic_sello_settings),
     ShoppingCart(R.drawable.ic_sello_shopping_cart),
     Theaters(R.drawable.ic_sello_theaters)

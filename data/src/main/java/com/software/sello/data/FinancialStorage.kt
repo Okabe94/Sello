@@ -6,6 +6,8 @@ import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.local.setAside
 import com.software.sello.data.preferences.PREFERENCES_FILE
 import com.software.sello.data.repository.RoomCategoryCommands
+import com.software.sello.data.repository.RoomCategoryExpenseSearch
+import com.software.sello.data.repository.RoomCategoryInsightsSnapshots
 import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomExpenseReads
@@ -21,6 +23,8 @@ import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CategoryExpenseSearch
+import com.software.sello.domain.port.CategoryInsightsSnapshots
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
@@ -83,6 +87,13 @@ class FinancialStorage internal constructor(
     val categoryReads: CategoryReads = RoomCategoryReads(database)
 
     val expenseReads: ExpenseReads = RoomExpenseReads(database)
+
+    val categoryExpenseSearch: CategoryExpenseSearch = RoomCategoryExpenseSearch(database)
+
+    fun categoryInsights(
+        clock: FinancialClock,
+        computation: CoroutineContext
+    ): CategoryInsightsSnapshots = RoomCategoryInsightsSnapshots(database, clock, computation)
 
     /**
      * Takes the financial clock for the same reason the commands do. [computation] must

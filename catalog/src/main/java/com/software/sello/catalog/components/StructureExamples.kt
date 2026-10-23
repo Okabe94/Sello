@@ -389,6 +389,23 @@ private const val SELECTION_MILLIS = 3_000L
 @Composable
 fun ColumnsChartExample() {
     Stack {
+        Slip {
+            SlipHeading("Gasto anotado y margen de esta semana") { Text("70.000 por gastar") }
+            ColumnsChart(
+                points = listOf(
+                    ChartPoint("1", "sem 1", 100_000, "Semana 1: 100.000 pesos anotados"),
+                    ChartPoint(
+                        "2",
+                        "esta",
+                        90_000,
+                        "Semana actual: 20.000 pesos anotados y 70.000 pesos por gastar",
+                        ChartPeriod.Current,
+                        stripedFromValue = 20_000
+                    )
+                ),
+                summary = "La parte sólida es gasto anotado y la rayada es lo que queda por gastar"
+            )
+        }
         SelectableChart(
             question = "Tu día más caro",
             points = weekdayPoints(),

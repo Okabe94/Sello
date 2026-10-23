@@ -1,6 +1,7 @@
 package com.software.sello.designsystem.component
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
@@ -31,6 +32,7 @@ enum class ButtonTone { Brand, Gain, Ink, Loss }
 /**
  * Sello's button. While [loading] it keeps its label and colours, shows a spinner in
  * place of the icon and ignores presses, so a save cannot be submitted twice.
+ * [contentPadding] lets a text button end flush with the content beside it.
  */
 @Composable
 fun SelloButton(
@@ -41,7 +43,8 @@ fun SelloButton(
     icon: SelloIcon? = null,
     enabled: Boolean = true,
     loading: Boolean = false,
-    tone: ButtonTone = ButtonTone.Brand
+    tone: ButtonTone = ButtonTone.Brand,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding
 ) {
     val colors = SelloTheme.colors
     val (toneInk, onTone) = when (tone) {
@@ -73,6 +76,7 @@ fun SelloButton(
         } else {
             null
         },
+        contentPadding = contentPadding,
         modifier = modifier.heightIn(min = if (kind == ButtonKind.Text) 46.dp else 56.dp)
     ) {
         if (loading) {

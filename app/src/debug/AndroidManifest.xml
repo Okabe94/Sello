@@ -6,7 +6,9 @@
         <activity
             android:name=".devtools.ToolsActivity"
             android:exported="true"
+            android:icon="@mipmap/ic_tools_launcher"
             android:label="@string/tools_name"
+            android:roundIcon="@mipmap/ic_tools_launcher"
             android:taskAffinity="com.software.sello.tools"
             android:theme="@style/Theme.Sello">
             <intent-filter>

@@ -452,3 +452,11 @@ ADR 0011, ADR 0012, the philosophy and the screen briefs updated to match.
   defaults to its first contribution. This settles presentation choices left open in the
   [Inversiones brief](../screen-briefs/investments.md); ledger, periods, dividends
   policy and FX stay open.
+
+## Category detail
+
+Category detail retains the [v1.1 reference](../sello-spec.html#s-categoria), with
+an owner-approved order change on 2026-10-22: hero → latest expenses → En números →
+Cada semana gastas → Un mes normal aquí. [ADR 0015](../../decisions/0015-category-detail-insights.md)
+records the approved weekly and completed-month-history rules. Existing no-symbol,
+archive-only deletion and current status decisions continue to apply.

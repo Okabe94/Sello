@@ -1,30 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    <!-- Plain Sello stamp in Cobalto; Catalog adds the colour ring, Prototype the dashed sketch. -->
     <path
-        android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
-        android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+        android:pathData="M39.06,42.52L64.66,38.46Q69.64,37.67 70.43,42.65L73.13,59.72Q73.92,64.70 68.94,65.48L43.34,69.54Q38.36,70.33 37.57,65.35L34.87,48.28Q34.08,43.30 39.06,42.52Z"
+        android:strokeColor="#FF1F3BE0"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.02" />
+    <path
+        android:fillColor="#FF1F3BE0"
+        android:pathData="M56.34,48.12Q55.08,48.27 54.31,48.39Q53.33,48.54 52.47,48.74L51.80,44.51L52.48,44.40Q54.72,44.05 57.16,43.97Q57.94,43.95 58.93,43.99L59.55,47.92Q58.63,47.95 56.34,48.12ZM56.46,57.55Q56.37,56.98 56.25,56.73Q56.13,56.49 55.92,56.42Q55.72,56.36 55.24,56.38L51.82,56.50Q48.80,56.64 47.51,55.20Q46.94,54.59 46.62,53.63Q46.30,52.68 46.07,51.26Q45.59,48.23 46.94,46.65Q48.02,45.36 50.66,44.74L51.53,50.23Q51.59,50.58 51.65,50.82Q51.72,51.06 51.82,51.19Q51.93,51.34 52.13,51.37Q52.33,51.41 52.72,51.38L56.56,51.25Q57.75,51.22 58.53,51.35Q59.30,51.48 59.90,51.92Q61.34,53.01 61.85,56.28Q62.40,59.74 61.10,61.38Q60.51,62.11 59.59,62.55Q58.67,62.99 57.37,63.28ZM50.82,64.09Q49.41,64.18 48.67,64.15L48.04,60.17Q49.67,60.05 51.77,59.86Q53.09,59.71 53.63,59.62Q55.11,59.39 55.56,59.23L56.23,63.49L55.93,63.54Q53.20,63.97 50.82,64.09Z" />
 </vector>

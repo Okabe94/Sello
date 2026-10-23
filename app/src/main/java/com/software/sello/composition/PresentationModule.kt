@@ -12,6 +12,7 @@ import com.software.sello.feature.expense.ExpenseEntryViewModel
 import com.software.sello.feature.income.IncomeFormViewModel
 import com.software.sello.feature.income.IncomeHistoryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
+import com.software.sello.feature.recibo.CategoryExpensesViewModel
 import com.software.sello.feature.recibo.ReciboViewModel
 import com.software.sello.feature.resumen.ResumenViewModel
 import com.software.sello.feature.settings.AppearanceViewModel
@@ -83,7 +84,24 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     }
     initializer { ReciboViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
     initializer {
-        CategoryDetailViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+        CategoryDetailViewModel(
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get()
+        )
+    }
+    initializer {
+        CategoryExpensesViewModel(
+            createSavedStateHandle(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get()
+        )
     }
     initializer {
         ExpenseEntryViewModel(

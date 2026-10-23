@@ -7,6 +7,8 @@ import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.ExpenseId
 import com.software.sello.domain.model.MonthlySnapshot
 import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.port.CategoryInsightsSnapshots
+import com.software.sello.domain.port.CategoryInsightsState
 import com.software.sello.domain.port.ExpenseCursor
 import com.software.sello.domain.port.ExpensePage
 import com.software.sello.domain.port.ExpenseReads
@@ -47,7 +49,8 @@ class CategoryDetailViewModel(
     private val snapshots: MonthlySnapshots,
     private val expenses: ExpenseReads,
     private val money: MoneyFormatter,
-    private val corrections: ExpenseCorrections
+    private val corrections: ExpenseCorrections,
+    private val insightsSnapshots: CategoryInsightsSnapshots
 ) : ViewModel() {
     private val render = ReciboRenderModel(money)
     private val category = MutableStateFlow<String?>(null)
@@ -86,8 +89,17 @@ class CategoryDetailViewModel(
                 val id = shown.categoryId?.let { CategoryId.of(it) as? Outcome.Success }?.value
                 when {
                     shown.categoryId == null -> flowOf(CategoryDetailState.Closed)
+
                     id == null -> flowOf(CategoryDetailState.Gone)
-                    else -> snapshots.observe(shown.month).flatMapLatest { detail(it, shown, id) }
+
+                    else -> snapshots.observe(shown.month)
+                        .combine(insightsSnapshots.observe(id, shown.month)) { snapshot, insights ->
+                            snapshot to
+                                insights
+                        }
+                        .flatMapLatest { (snapshot, insights) ->
+                            detail(snapshot, shown, id, insights)
+                        }
                 }
             }
             .combine(deleteProblem) { state, problem ->
@@ -156,7 +168,8 @@ class CategoryDetailViewModel(
     private fun detail(
         state: SnapshotState,
         shown: Shown,
-        id: CategoryId
+        id: CategoryId,
+        insights: CategoryInsightsState
     ): Flow<CategoryDetailState> {
         val (snapshot, stale) = when (state) {
             SnapshotState.Loading -> return flowOf(CategoryDetailState.Loading)
@@ -171,6 +184,27 @@ class CategoryDetailViewModel(
             today = snapshot.asOf,
             stale = stale,
             canRecord = !line.archived && snapshot.month == YearMonth.from(snapshot.asOf),
+            insights = when (insights) {
+                CategoryInsightsState.Loading -> DetailInsightsState.Loading
+
+                is CategoryInsightsState.Failed -> DetailInsightsState.Failed
+
+                is CategoryInsightsState.Ready -> {
+                    val other = insights.snapshot.budget
+                    if (insights.snapshot.categoryId == id &&
+                        other.generation == snapshot.generation &&
+                        other.revision == snapshot.revision &&
+                        other.asOf == snapshot.asOf && other.zone == snapshot.zone &&
+                        other.month == snapshot.month
+                    ) {
+                        DetailInsightsState.Ready(
+                            CategoryInsightsRenderModel(money).render(insights.snapshot)
+                        )
+                    } else {
+                        DetailInsightsState.Loading
+                    }
+                }
+            },
             expenses = when (
                 val before = kept
                     ?.takeIf { it.shown == shown && it.generation == snapshot.generation }?.list

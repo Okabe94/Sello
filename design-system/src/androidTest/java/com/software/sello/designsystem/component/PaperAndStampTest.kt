@@ -3,22 +3,32 @@ package com.software.sello.designsystem.component
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.getAlignmentLinePosition
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlin.math.abs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -122,4 +132,60 @@ class PaperAndStampTest {
             assertTrue("$it action line is $action", action >= 48.dp)
         }
     }
+
+    @Test
+    fun leaderAndAmountSitOnTheLabelsFirstLineNotTheMiddleOfTheRow() = leaderOnLabel(1f)
+
+    @Test
+    fun leaderStaysOnTheLabelsFirstLineWithLargeText() =
+        // Wide enough that the dots still have room at double size.
+        leaderOnLabel(2f, width = 640.dp, densityScale = 0.6f)
+
+    // v1.1 `.ln`: the row aligns on its first baseline, so the amount shares the label's
+    // line and the dots run 5 px above it (`.ld`: 2 px border raised 4 px), however tall
+    // the date under the label makes the row.
+    private fun leaderOnLabel(fontScale: Float, width: Dp = 360.dp, densityScale: Float = 1f) {
+        rule.inEveryScheme(
+            fontScale = fontScale,
+            width = width,
+            densityScale = densityScale,
+            content = {
+                Slip {
+                    LeaderLine("Rappi, almuerzo", Modifier.testTag("dated"), caption = "mié 21") {
+                        MoneyText(MoneyTextValue(MoneySign.None, "", "20.600", "20.600 pesos"))
+                    }
+                    LeaderLine("Fecha", "jue 22 oct", Modifier.testTag("plain"))
+                }
+            }
+        ) {
+            rule.assertLeaderOnLabel("$it at ${fontScale}x", "dated", "Rappi, almuerzo") {
+                hasContentDescription("20.600 pesos")
+            }
+            rule.assertLeaderOnLabel("$it at ${fontScale}x", "plain", "Fecha") {
+                hasText("jue 22 oct")
+            }
+        }
+    }
 }
+
+private fun ComposeContentTestRule.assertLeaderOnLabel(
+    scheme: String,
+    row: String,
+    label: String,
+    value: () -> SemanticsMatcher
+) {
+    fun inRow(matcher: SemanticsMatcher) =
+        onNode(matcher and hasAnyAncestor(hasTestTag(row)), useUnmergedTree = true)
+    val labelBaseline = inRow(hasText(label)).baselineInRoot()
+    val valueBaseline = inRow(value()).baselineInRoot()
+    val dots = inRow(hasTestTag(LEADER_DOTS_TAG)).getUnclippedBoundsInRoot()
+    val dotsCentre = (dots.top + dots.bottom) / 2
+    assertNear("$scheme $row amount baseline", labelBaseline, valueBaseline)
+    assertNear("$scheme $row dots", labelBaseline - 5.dp, dotsCentre)
+}
+
+private fun SemanticsNodeInteraction.baselineInRoot(): Dp =
+    getUnclippedBoundsInRoot().top + getAlignmentLinePosition(FirstBaseline)
+
+private fun assertNear(what: String, expected: Dp, actual: Dp) =
+    assertTrue("$what at $actual, expected $expected", abs((actual - expected).value) <= 1f)

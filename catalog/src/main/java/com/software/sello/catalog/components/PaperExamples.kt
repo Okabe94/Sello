@@ -3,7 +3,9 @@ package com.software.sello.catalog.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -165,6 +167,48 @@ fun KeyValueExample() {
             }
         }
         TearLine()
-        KeyValue("Tu día más caro", "Sábado", caption = "Una nota que puede ocupar dos líneas")
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm)
+        ) {
+            KeyValue("Para", modifier = Modifier.weight(1f)) {
+                Text("9 días", style = MaterialTheme.typography.titleMedium)
+            }
+            KeyValue("Al día", modifier = Modifier.weight(1f)) {
+                MoneyText(copFixture(31_950), textStyle = MaterialTheme.typography.titleMedium)
+            }
+            KeyValue("Frente a sep", modifier = Modifier.weight(1f)) {
+                Text(
+                    "+6,7 %",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SelloTheme.colors.semantic.warn
+                )
+            }
+        }
+        TearLine()
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md)
+        ) {
+            KeyValue("Gastos", modifier = Modifier.weight(1f), icon = SelloIcon.ReceiptLong) {
+                Text("13 en 22 días", style = MaterialTheme.typography.labelLarge)
+            }
+            KeyValue("En promedio", modifier = Modifier.weight(1f), icon = SelloIcon.Sell) {
+                MoneyText(copFixture(47_108), textStyle = MaterialTheme.typography.labelLarge)
+            }
+        }
+        Spacer(Modifier.height(SelloTheme.spacing.lg))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md)
+        ) {
+            KeyValue("El mayor", modifier = Modifier.weight(1f), icon = SelloIcon.ArrowUpward) {
+                MoneyText(copFixture(186_500), textStyle = MaterialTheme.typography.labelLarge)
+                Text("Mercado de ejemplo · sáb 3", style = MaterialTheme.typography.labelMedium)
+            }
+            KeyValue("Tu día más caro", modifier = Modifier.weight(1f), icon = SelloIcon.Event) {
+                Text("Sábado", style = MaterialTheme.typography.labelLarge)
+            }
+        }
     }
 }

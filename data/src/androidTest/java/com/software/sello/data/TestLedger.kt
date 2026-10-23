@@ -2,6 +2,8 @@ package com.software.sello.data
 
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.repository.RoomCategoryCommands
+import com.software.sello.data.repository.RoomCategoryExpenseSearch
+import com.software.sello.data.repository.RoomCategoryInsightsSnapshots
 import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomExpenseReads
@@ -23,6 +25,8 @@ import com.software.sello.domain.model.OperationReceipt
 import com.software.sello.domain.model.TransactionAmount
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CategoryExpenseSearch
+import com.software.sello.domain.port.CategoryInsightsSnapshots
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.CommittedCategoryChange
 import com.software.sello.domain.port.CreateCategory
@@ -91,6 +95,8 @@ class TestLedger(
     lateinit var snapshots: MonthlySnapshots
     lateinit var resumen: ResumenSnapshots
     lateinit var expenseReads: ExpenseReads
+    lateinit var categoryInsights: CategoryInsightsSnapshots
+    lateinit var categoryExpenseSearch: CategoryExpenseSearch
     lateinit var incomes: IncomeCommands
     lateinit var incomeReads: IncomeReads
 
@@ -107,6 +113,8 @@ class TestLedger(
         snapshots = RoomMonthlySnapshots(database, clock, computation)
         resumen = RoomResumenSnapshots(database, clock, computation)
         expenseReads = RoomExpenseReads(database)
+        categoryInsights = RoomCategoryInsightsSnapshots(database, clock, computation)
+        categoryExpenseSearch = RoomCategoryExpenseSearch(database)
     }
 
     /** The storage as the app's composition gets it, on the same file. */

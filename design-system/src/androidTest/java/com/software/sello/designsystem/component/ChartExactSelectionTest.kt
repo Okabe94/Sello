@@ -89,6 +89,25 @@ class ChartExactSelectionTest {
     fun lineMarksSelectTheOriginalPointNotAPixel() = selectsExactly(line = true)
 
     @Test
+    fun aPartlyStripedColumnKeepsRecordedAndAvailableAmountsDistinctWhenSelected() {
+        val current = ChartPoint(
+            "week",
+            "esta",
+            75_000,
+            "Semana actual: 5.000 pesos anotados y 70.000 pesos por gastar",
+            ChartPeriod.Current,
+            stripedFromValue = 5_000
+        )
+        var picked: String? = null
+        rule.inEveryScheme(content = {
+            ColumnsChart(listOf(current), "Gastos y margen", onSelect = { picked = it })
+        }) {
+            rule.onNodeWithContentDescription(current.spoken).assertIsDisplayed().performClick()
+            assertEquals("week", picked)
+        }
+    }
+
+    @Test
     fun aChartIsNeverShorterThan130dpAndCarriesOneLabelledReference() {
         rule.inEveryScheme(
             content = {

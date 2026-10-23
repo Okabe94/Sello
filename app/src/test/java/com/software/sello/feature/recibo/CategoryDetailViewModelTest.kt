@@ -49,6 +49,7 @@ class CategoryDetailViewModelTest {
     private val session = MonthSession(HandFinancialClock("2026-10-23"), HandMonotonicClock())
     private val snapshots = HandSnapshots()
     private val reads = HandExpenseReads()
+    private val insights = HandCategoryInsights()
     private val commands = HandExpenseCommands()
     private var nextOperation = 700
     private val labels = object : MoneyLabels {
@@ -79,7 +80,14 @@ class CategoryDetailViewModelTest {
             CoroutineScope(Dispatchers.Main)
         )
         val viewModel =
-            CategoryDetailViewModel(session, snapshots, reads, MoneyFormatter(labels), corrections)
+            CategoryDetailViewModel(
+                session,
+                snapshots,
+                reads,
+                MoneyFormatter(labels),
+                corrections,
+                insights
+            )
         // Something has to be watching for the state to be kept up to date.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.state.collect {}
@@ -104,6 +112,52 @@ class CategoryDetailViewModelTest {
 
     private fun show(viewModel: CategoryDetailViewModel, category: Int) =
         viewModel.onAction(CategoryDetailAction.Show(uuid(category)))
+
+    @Test
+    fun insightsWaitForTheSameRevisionGenerationAndFinancialDayAsTheHero() = runTest {
+        val vm = started()
+        commit(many(3))
+        show(vm, 1)
+        val budget = (
+            snapshots.read(
+                october
+            ) as com.software.sello.domain.model.Outcome.Success
+            ).value
+        val raw = com.software.sello.domain.model.CategoryInsights(
+            budget, food.category.id, null, null, 23,
+            com.software.sello.domain.model.Money.cop(
+                1_000
+            ),
+            null, null, null, emptyList(), null, emptyList()
+        )
+        insights.state.value =
+            com.software.sello.domain.port.CategoryInsightsState.Ready(
+                raw.copy(budget = budget.copy(revision = 2))
+            )
+        assertEquals(DetailInsightsState.Loading, vm.ready.insights)
+        insights.state.value =
+            com.software.sello.domain.port.CategoryInsightsState.Ready(
+                raw.copy(budget = budget.copy(generation = 2))
+            )
+        assertEquals(DetailInsightsState.Loading, vm.ready.insights)
+        insights.state.value =
+            com.software.sello.domain.port.CategoryInsightsState.Ready(
+                raw.copy(budget = budget.copy(asOf = budget.asOf.minusDays(1)))
+            )
+        assertEquals(DetailInsightsState.Loading, vm.ready.insights)
+        insights.state.value = com.software.sello.domain.port.CategoryInsightsState.Ready(raw)
+        assertEquals(
+            plain("1.000"),
+            (vm.ready.insights as DetailInsightsState.Ready).figures.averageExpense
+        )
+        insights.state.value =
+            com.software.sello.domain.port.CategoryInsightsState.Failed(
+                SnapshotFailure.Unrepresentable,
+                raw
+            )
+        assertEquals(DetailInsightsState.Failed, vm.ready.insights)
+        assertEquals(plain("3.000"), vm.ready.category.spent)
+    }
 
     @Test
     fun nothingIsShownOrReadUntilACategoryIsOpened() = runTest {

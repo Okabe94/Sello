@@ -4,7 +4,7 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-22 · **Product baseline:** `def067f`.
+**Snapshot:** 2026-10-22 · **Product baseline:** `54b47f0`, plus the uncommitted category-detail worktree update.
 SELLO-001–028, SELLO-061–073 and epics E01–E06 and E12 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
@@ -13,6 +13,11 @@ verification or release-acceptance claims.
 
 - Offline, local-only COP expenses/income, with Recibo and Resumen as working tabs.
 - Category creation/editing, archive/unarchive, monthly limits and past corrections.
+- Category detail follows the owner's hero → latest expenses → En números → weekly
+  spending → historical average order, with real insights and a searchable expense
+  browser. Its current-month chart point shares the hero's live limit; the average
+  still uses completed months. See [the detail guide](recibo-and-detail.md#category-detail).
+- Main and tools launchers now use the existing Marca artwork, including themed icons.
 - Expense/income history, editing, deletion and guarded six-second undo.
 - Exact totals, budget remaining/allowance, Resumen charts, net flow and allocation.
 - Shared month, restored drafts/navigation, appearance and category-order settings.
@@ -21,10 +26,11 @@ verification or release-acceptance claims.
 
 The modules are `:app`, `:domain`, `:data`, `:design-system` and the separate
 `:catalog`. The extra `:prototype` app renders v1.1 sample screens with no storage.
-[Sello v2](../design/v2/README.md) is the approved design; its redesign is not yet
-implemented. Recibo's status is factual under ADR 0012 BG1 (SELLO-061); the pace
-forecast remains only as Resumen's estimate, and
-[ADR 0012](../decisions/0012-budget-guidance-contract.md) tracks the open inputs.
+[Sello v2](../design/v2/README.md) is the approved design. Category detail retains
+the v1.1 presentation with the owner's section order and the calculations in
+[ADR 0015](../decisions/0015-category-detail-insights.md). Recibo's status is factual
+under ADR 0012 BG1 (SELLO-061); [ADR 0012](../decisions/0012-budget-guidance-contract.md)
+tracks the remaining financial inputs.
 
 ## Completed ticket outcomes
 

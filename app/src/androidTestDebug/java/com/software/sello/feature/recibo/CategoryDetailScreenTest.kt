@@ -1,14 +1,18 @@
 package com.software.sello.feature.recibo
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
@@ -20,20 +24,29 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.designsystem.component.ACTION_LINE_MENU_TAG
 import com.software.sello.designsystem.component.MoneySign
 import com.software.sello.designsystem.component.MoneyTextValue
+import com.software.sello.designsystem.theme.SelloInk
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.designsystem.theme.selloColors
 import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.month.monthNames
+import java.io.File
 import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,18 +60,21 @@ class CategoryDetailScreenTest {
     private var recordHere = 0
     private val edited = mutableListOf<String>()
     private var editCategory = 0
+    private var openedAll = 0
     private var pastLimitAnnouncementDismissed = 0
 
     private fun show(
         state: CategoryDetailState,
         fontScale: Float = 1f,
         showName: Boolean = false,
-        showPastLimitAnnouncement: Boolean = false
+        showPastLimitAnnouncement: Boolean = false,
+        ink: SelloInk = SelloInk.Cobalto,
+        dark: Boolean = false
     ) {
         rule.setContent {
             val density = LocalDensity.current.density
             CompositionLocalProvider(LocalDensity provides Density(density, fontScale)) {
-                SelloTheme(reducedMotion = true) {
+                SelloTheme(ink = ink, darkTheme = dark, reducedMotion = true) {
                     CategoryDetailScreen(
                         state = state,
                         months = monthNames(),
@@ -69,6 +85,7 @@ class CategoryDetailScreenTest {
                         contentPadding = PaddingValues(12.dp),
                         onEditExpense = { edited += it },
                         onEditCategory = { editCategory++ },
+                        onShowAllExpenses = { openedAll++ },
                         showPastLimitAnnouncement = showPastLimitAnnouncement,
                         onDismissPastLimitAnnouncement = { pastLimitAnnouncementDismissed++ }
                     )
@@ -116,6 +133,321 @@ class CategoryDetailScreenTest {
     private fun inRow(id: String, text: String) =
         hasText(text) and hasAnyAncestor(hasTestTag(categoryExpenseTag(id)))
 
+    private fun heroText(text: String) = rule.onNode(
+        hasText(text) and hasAnyAncestor(hasTestTag(CATEGORY_DETAIL_HEADER_TAG)),
+        useUnmergedTree = true
+    )
+
+    private fun textStyle(text: String): androidx.compose.ui.text.TextStyle {
+        val layouts = mutableListOf<TextLayoutResult>()
+        heroText(text).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        assertEquals(1, layouts.size)
+        return layouts.single().layoutInput.style
+    }
+
+    private fun footerFigures() = insightFigures().copy(
+        allowance = ReciboPerDay(plain("31.950"), 9),
+        comparisonMonth = YearMonth.of(2026, 9),
+        comparison = "+6,7 %",
+        comparisonDirection = DetailComparisonDirection.Higher
+    )
+
+    @Test
+    fun heroFooterMatchesTheThreeEqualColumnsAndTypeSizesInTheReference() {
+        show(
+            ready(ExpenseListState.Rows(rows, more = false))
+                .copy(insights = DetailInsightsState.Ready(footerFigures()))
+        )
+        heroText("9 días").assertIsDisplayed()
+        heroText("9 días, incluido hoy").assertDoesNotExist()
+        val labels = listOf("Para", "Al día", "Frente a sep")
+            .map { heroText(it).getUnclippedBoundsInRoot() }
+        assertEquals(labels[0].top, labels[1].top)
+        assertEquals(labels[1].top, labels[2].top)
+        val firstGap = labels[1].left - labels[0].left
+        val secondGap = labels[2].left - labels[1].left
+        assertTrue(
+            "The three columns must be equally spaced",
+            kotlin.math.abs(firstGap.value - secondGap.value) <= 1f
+        )
+        listOf("Para", "Al día", "Frente a sep").forEach {
+            assertEquals(12.5.sp, textStyle(it).fontSize)
+        }
+        listOf("9 días", "+6,7 %").forEach {
+            assertEquals(16.sp, textStyle(it).fontSize)
+            assertEquals(FontWeight.W800, textStyle(it).fontWeight)
+        }
+        val target = InstrumentationRegistry.getInstrumentation().targetContext.filesDir
+        File(target, "category-hero-footer.png").outputStream().use {
+            rule.onNodeWithTag(CATEGORY_DETAIL_HEADER_TAG).captureToImage()
+                .asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
+    @Test
+    fun higherSpendingUsesTheReferencesAmberComparisonColor() {
+        show(
+            ready(ExpenseListState.Rows(rows, more = false))
+                .copy(insights = DetailInsightsState.Ready(footerFigures()))
+        )
+        assertEquals(selloColors(SelloInk.Cobalto, false).semantic.warn, textStyle("+6,7 %").color)
+    }
+
+    @Test
+    fun lowerSpendingUsesGreenInTheDarkVioletTheme() {
+        val figures = footerFigures().copy(
+            comparison = "−6,7 %",
+            comparisonDirection = DetailComparisonDirection.Lower
+        )
+        show(
+            ready(ExpenseListState.Rows(rows, more = false))
+                .copy(insights = DetailInsightsState.Ready(figures)),
+            ink = SelloInk.Violeta,
+            dark = true
+        )
+        assertEquals(selloColors(SelloInk.Violeta, true).semantic.gain, textStyle("−6,7 %").color)
+    }
+
+    @Test
+    fun anUnchangedComparisonUsesOrdinaryInkAndTheLastDayIsSingular() {
+        val figures = footerFigures().copy(
+            allowance = ReciboPerDay(plain("5.000"), 1),
+            comparison = "0,0 %",
+            comparisonDirection = DetailComparisonDirection.Equal
+        )
+        show(
+            ready(ExpenseListState.Rows(rows, more = false))
+                .copy(insights = DetailInsightsState.Ready(figures)),
+            ink = SelloInk.Violeta
+        )
+        heroText("1 día").assertIsDisplayed()
+        assertEquals(selloColors(SelloInk.Violeta, false).ink, textStyle("0,0 %").color)
+    }
+
+    @Test
+    fun theCompleteHeroFooterWrapsAtDoubleFontWithoutLosingAnyFigure() {
+        val figures = footerFigures().copy(allowance = ReciboPerDay(plain("999.999.999.999"), 9))
+        show(
+            ready(ExpenseListState.Rows(rows, more = false))
+                .copy(insights = DetailInsightsState.Ready(figures)),
+            fontScale = 2f,
+            dark = true
+        )
+        heroText("9 días").performScrollTo().assertIsDisplayed()
+        heroText("Al día").performScrollTo().assertIsDisplayed()
+        rule.onNode(
+            hasContentDescription("999.999.999.999 pesos") and
+                hasAnyAncestor(hasTestTag("detail:planning")),
+            useUnmergedTree = true
+        ).performScrollTo().assertIsDisplayed()
+        heroText("Frente a sep").performScrollTo().assertIsDisplayed()
+        heroText("+6,7 %").performScrollTo().assertIsDisplayed()
+        assertEquals(selloColors(SelloInk.Cobalto, true).semantic.warn, textStyle("+6,7 %").color)
+    }
+
+    @Test
+    fun numbersUseTwoColumnsWithLabelsAboveValuesAndTheLargestNoteBelowItsAmount() {
+        show(
+            ready(ExpenseListState.Rows(rows, more = false))
+                .copy(insights = DetailInsightsState.Ready(insightFigures()))
+        )
+        rule.onNodeWithTag("detail:numbers").performScrollTo()
+        fun fact(text: String) = rule.onNode(
+            hasText(text) and hasAnyAncestor(hasTestTag("detail:numbers")),
+            useUnmergedTree = true
+        )
+        val count = fact("Gastos").getUnclippedBoundsInRoot()
+        val largest = fact("El mayor").getUnclippedBoundsInRoot()
+        val weekday = fact("Tu día más caro").getUnclippedBoundsInRoot()
+        assertTrue(
+            "The second row must contain two columns: $largest, $weekday",
+            weekday.left > largest.right
+        )
+        assertEquals(largest.top, weekday.top)
+        assertEquals(count.left, largest.left)
+        val average = fact("En promedio").getUnclippedBoundsInRoot()
+        assertEquals(count.top, average.top)
+        assertEquals(average.left, weekday.left)
+        val countValue = fact("13 en 22 días").getUnclippedBoundsInRoot()
+        assertTrue("The count belongs under its label", countValue.top >= count.bottom)
+        val amount = fact("20.600").getUnclippedBoundsInRoot()
+        val caption = fact("Rappi, almuerzo · Hoy, mié 21 oct").getUnclippedBoundsInRoot()
+        assertTrue(
+            "The largest expense amount belongs under its label",
+            amount.top >= largest.bottom
+        )
+        assertTrue("The note and date belong below the amount", caption.top >= amount.bottom)
+        fact("Cada vez").assertDoesNotExist()
+    }
+
+    @Test
+    fun sectionsFollowTheOwnersOrderAndChartsExposeExactRecordedAndAvailableAmounts() {
+        val figures = insightFigures()
+        show(
+            ready(
+                ExpenseListState.Rows(rows, more = false)
+            ).copy(insights = DetailInsightsState.Ready(figures))
+        )
+        val positions = listOf(
+            CATEGORY_DETAIL_HEADER_TAG,
+            CATEGORY_DETAIL_LIST_TAG,
+            "detail:numbers",
+            "detail:weeks",
+            "detail:history"
+        )
+            .map { rule.onNodeWithTag(it).fetchSemanticsNode().positionInRoot.y }
+        assertTrue(positions.toString(), positions.zipWithNext().all { (a, b) -> a < b })
+        rule.onNodeWithTag("detail:weeks").performScrollTo()
+        rule.onNodeWithContentDescription(
+            "Del 22 al 28: gastado 5.000 pesos. Aún puedes gastar 70.000 pesos esta semana."
+        )
+            .assertExists().performClick()
+        rule.onNodeWithText("Por gastar esta semana").assertExists()
+        rule.onNodeWithTag("detail:history").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Un mes normal aquí").assertIsDisplayed()
+    }
+
+    @Test
+    fun theInsightSectionsRemainReachableAtTwiceTheFontSize() {
+        insightSectionsRemainReachable(2f)
+    }
+
+    @Test
+    fun theInsightSectionsRemainReachableAtOnePointThreeFontScale() {
+        insightSectionsRemainReachable(1.3f)
+    }
+
+    private fun insightSectionsRemainReachable(fontScale: Float) {
+        val note = "Una nota tan larga como se permite escribir en un gasto, sí"
+        val amount = "999.999.999.999"
+        val figures = insightFigures().copy(
+            averageExpense = plain(amount),
+            largest = rows.first().copy(note = note, amount = plain(amount))
+        )
+        show(
+            ready(
+                ExpenseListState.Rows(rows, more = false)
+            ).copy(insights = DetailInsightsState.Ready(figures)),
+            fontScale = fontScale
+        )
+        listOf("detail:numbers", "detail:weeks", "detail:history").forEach {
+            rule.onNodeWithTag(it).performScrollTo().assertIsDisplayed()
+        }
+        rule.onNodeWithText("En promedio", useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed()
+        val caption = rule.onNodeWithText(
+            "$note · Hoy, mié 21 oct",
+            useUnmergedTree = true
+        )
+        caption.performScrollTo().assertIsDisplayed()
+        val layouts = mutableListOf<TextLayoutResult>()
+        caption.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        assertEquals(1, layouts.size)
+        assertTrue(
+            "The largest expense note must wrap without clipping",
+            layouts.none {
+                it.hasVisualOverflow
+            }
+        )
+        val grid = rule.onNodeWithTag("detail:numbers").getUnclippedBoundsInRoot()
+        val values = rule.onAllNodes(
+            hasContentDescription("$amount pesos") and
+                hasAnyAncestor(hasTestTag("detail:numbers")),
+            useUnmergedTree = true
+        ).fetchSemanticsNodes()
+        assertEquals(2, values.size)
+        values.forEach { value ->
+            val left = value.positionInRoot.x
+            val right = left + value.size.width
+            with(value.layoutInfo.density) {
+                assertTrue(
+                    "The exact amount must stay inside the grid",
+                    left >= grid.left.toPx() && right <= grid.right.toPx()
+                )
+            }
+        }
+    }
+
+    private fun insightFigures() = DetailInsights(
+        allowance = ReciboPerDay(plain("10.000"), 10), comparisonMonth = null, comparison = null,
+        elapsedDays = 22,
+        averageExpense = plain(
+            "20.000"
+        ),
+        largest = rows.first(), weekday = java.time.DayOfWeek.THURSDAY,
+        weeklyAverage = plain("31.667"),
+        weeks = listOf(
+            DetailWeek(
+                4,
+                LocalDate.of(2026, 10, 22),
+                LocalDate.of(2026, 10, 28),
+                plain("5.000"),
+                5_000,
+                true,
+                plain("70.000"),
+                75_000
+            )
+        ),
+        historicalAverage = plain("10.000"),
+        history = listOf(
+            DetailHistoryMonth(
+                YearMonth.of(2026, 8),
+                plain("20.000"),
+                20_000,
+                plain("200.000"),
+                200_000
+            ),
+            DetailHistoryMonth(YearMonth.of(2026, 9), plain("0"), 0, plain("200.000"), 200_000),
+            DetailHistoryMonth(
+                YearMonth.of(2026, 10),
+                plain("100.000"),
+                100_000,
+                plain("500.000"),
+                500_000,
+                current = true
+            )
+        )
+    )
+
+    @Test
+    fun latestExpensesAreACompactPreviewImmediatelyAfterTheHeader() {
+        val five = (1..5).map { index ->
+            ExpenseRow("$index", LocalDate.of(2026, 10, 21), "Compra $index", plain("1.000"), false)
+        }
+        show(ready(ExpenseListState.Rows(five, more = true)))
+
+        rule.onNodeWithText("Últimos gastos").assertIsDisplayed()
+        rule.onNodeWithText("Compra 4", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("Compra 5", useUnmergedTree = true).assertDoesNotExist()
+        rule.onNodeWithText("Ver los 13").assertExists()
+    }
+
+    @Test
+    fun viewAllEndsFlushWithTheAmountsBelowIt() {
+        // v1.1: "ver los 13" sits at the slip's content edge, the same edge as each amount.
+        val counted = rows.filterNot { it.notCountedYet }
+        show(ready(ExpenseListState.Rows(counted, more = true)))
+
+        val label = rule.onNode(
+            hasText("Ver los 13") and hasAnyAncestor(hasTestTag(CATEGORY_DETAIL_MORE_TAG)),
+            useUnmergedTree = true
+        ).getUnclippedBoundsInRoot()
+        val amount = rule.onNode(
+            hasContentDescription("20.600 pesos") and
+                hasAnyAncestor(hasTestTag(categoryExpenseTag("1"))),
+            useUnmergedTree = true
+        ).getUnclippedBoundsInRoot()
+        assertTrue(
+            "label ends at ${label.right}, amounts at ${amount.right}",
+            (label.right - amount.right).value in -1f..1f
+        )
+        val target = InstrumentationRegistry.getInstrumentation().targetContext.filesDir
+        File(target, "category-latest.png").outputStream().use {
+            rule.onNodeWithTag(CATEGORY_DETAIL_LIST_TAG).captureToImage()
+                .asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
     @Test
     fun theHeaderSaysWhatIsLeftSpentAndTheLimitExactlyAndInWords() {
         show(ready(ExpenseListState.Rows(rows, more = false)))
@@ -148,7 +480,7 @@ class CategoryDetailScreenTest {
     fun eachExpenseShowsItsNoteDayAndExactAmountAndTheCountIsOfAllOfThem() {
         show(ready(ExpenseListState.Rows(rows, more = false)))
 
-        rule.onNodeWithText("13 gastos").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Ver todos").performScrollTo().assertIsDisplayed()
         rule.onNode(inRow("1", "Rappi, almuerzo"), useUnmergedTree = true).assertExists()
         rule.onNode(inRow("1", "Hoy, mié 21 oct"), useUnmergedTree = true).assertExists()
         rule.onNode(
@@ -163,36 +495,15 @@ class CategoryDetailScreenTest {
             useUnmergedTree = true
         ).assertExists()
         // Everything is listed, so there is nothing more to ask for.
-        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).assertExists()
     }
 
     @Test
-    fun aPartOfTheListSaysHowManyAreShownOfHowManyAndOffersTheRest() {
+    fun thePreviewOpensTheFullExpenseBrowserInsteadOfExpandingInPlace() {
         show(ready(ExpenseListState.Rows(rows, more = true)))
-
-        rule.onNodeWithText("Se muestran 3 de 13").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().performClick()
-
-        assertEquals(listOf<CategoryDetailAction>(CategoryDetailAction.ShowMore), actions)
-        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_FAILED_TAG).assertDoesNotExist()
-    }
-
-    @Test
-    fun whileMoreIsBeingReadTheButtonCannotBePressedAndAFailureToReadMoreIsSaid() {
-        show(ready(ExpenseListState.Rows(rows, more = true, loadingMore = true)))
-        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().assertIsNotEnabled()
-    }
-
-    @Test
-    fun aFailureToReadMoreKeepsTheRowsAndSaysSo() {
-        show(ready(ExpenseListState.Rows(rows, more = true, moreFailed = true)))
-
-        rule.onNodeWithText("No pudimos leer más gastos. Inténtalo de nuevo.")
-            .performScrollTo().assertIsDisplayed()
-        rule.onNode(inRow("1", "Rappi, almuerzo"), useUnmergedTree = true).assertExists()
-        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().performClick()
-
-        assertEquals(listOf<CategoryDetailAction>(CategoryDetailAction.ShowMore), actions)
+        assertEquals(1, openedAll)
+        assertEquals(emptyList<CategoryDetailAction>(), actions)
     }
 
     @Test
@@ -367,7 +678,7 @@ class CategoryDetailScreenTest {
 
     @Test
     fun aNewExpenseAtTheTopLeavesEveryRowThatWasThereBeingTheSameRow() {
-        val before = (1..30).toList()
+        val before = (1..3).toList()
         val change = showChanging(numbered(before))
         val drawn = drawnBy(before)
 
@@ -380,20 +691,20 @@ class CategoryDetailScreenTest {
 
     @Test
     fun aRowTakenOutOfTheMiddleLeavesTheOthersBeingTheSameRows() {
-        val before = (1..30).toList()
+        val before = (1..3).toList()
         val change = showChanging(numbered(before))
-        val after = before - 12
+        val after = before - 2
         val drawn = drawnBy(after)
 
         change(numbered(after))
 
         assertEquals(drawn, drawnBy(after))
-        rule.onNodeWithTag(categoryExpenseTag("n12")).assertDoesNotExist()
+        rule.onNodeWithTag(categoryExpenseTag("n2")).assertDoesNotExist()
     }
 
     @Test
     fun rowsThatChangePlacesAreStillThemselves() {
-        val before = (1..10).toList()
+        val before = (1..4).toList()
         val change = showChanging(numbered(before))
         val drawn = drawnBy(before)
 
@@ -401,7 +712,7 @@ class CategoryDetailScreenTest {
 
         assertEquals(drawn, drawnBy(before))
         // And each still shows its own text, in its new place.
-        rule.onNode(inRow("n7", "Gasto 7"), useUnmergedTree = true).assertExists()
+        rule.onNode(inRow("n3", "Gasto 3"), useUnmergedTree = true).assertExists()
     }
 
     // --- Correcting an expense from the list ---
@@ -514,12 +825,12 @@ class CategoryDetailScreenTest {
 
     @Test
     fun theCategoryCanBeEditedFromItsHeader() {
-        show(ready(ExpenseListState.Rows(rows, more = false)))
+        show(ready(ExpenseListState.Rows(rows, more = false)), showName = true)
 
         rule.onNodeWithTag(CATEGORY_DETAIL_EDIT_TAG).performScrollTo().assertIsDisplayed()
             .performClick()
 
-        rule.onNodeWithText("Editar categoría").assertExists()
+        rule.onNodeWithContentDescription("Editar categoría").assertExists()
         assertEquals(1, editCategory)
         assertEquals(emptyList<CategoryDetailAction>(), actions)
     }

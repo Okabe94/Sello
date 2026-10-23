@@ -104,7 +104,7 @@ class PastMonthRibbonShellTest {
                 state,
                 monthNames(),
                 { actions += it },
-                detail = ShellDetail("Alimentación", content),
+                detail = ShellDetail("Alimentación", content = content),
                 content = content
             )
         }

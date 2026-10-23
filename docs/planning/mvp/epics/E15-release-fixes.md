@@ -59,7 +59,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-075 --retain`.
 
 - **Type:** Task
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004
 - **Gate:** G2
 
@@ -94,6 +94,17 @@ Found in SELLO-035. `ResumenRenderModel` sets `asOf = budget.asOf.toString()`, a
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-076 --retain`.
+
+### Execution progress
+
+- **Overlap, 2026-10-23:** SELLO-080–082 (#95) already changed the line to "hasta 3 de
+  octubre", the form of Resumen's new weekday line. The owner chose to keep that long
+  form, add "el" and show the year only for a day from another year: "Movimientos
+  anotados hasta el 3 de octubre", "… hasta el 31 de diciembre de 2026" seen in 2027.
+  The "could not refresh" line uses the same form.
+- `ResumenRenderModel` formats `asOf` against the current financial month, which
+  `ResumenViewModel` takes from the month session. The financial day itself is
+  unchanged: a past month still says up to which day it was read.
 
 ## SELLO-077 — Make the sandbox scenario replay tests reliable
 

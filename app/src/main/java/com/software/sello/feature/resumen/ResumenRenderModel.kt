@@ -16,16 +16,21 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class ResumenRenderModel(private val money: MoneyFormatter) {
-    fun render(state: ResumenSnapshotState): ResumenState = when (state) {
+    /** [current] is the financial month in progress; a date from another year shows its year. */
+    fun render(state: ResumenSnapshotState, current: YearMonth): ResumenState = when (state) {
         ResumenSnapshotState.Loading -> ResumenState.Loading
 
-        is ResumenSnapshotState.Ready -> month(state.snapshot, false)
+        is ResumenSnapshotState.Ready -> month(state.snapshot, false, current)
 
-        is ResumenSnapshotState.Failed -> state.lastGood?.let { month(it, true) }
+        is ResumenSnapshotState.Failed -> state.lastGood?.let { month(it, true, current) }
             ?: ResumenState.Failed
     }
 
-    private fun month(snapshot: ResumenSnapshot, stale: Boolean): ResumenState.Ready {
+    private fun month(
+        snapshot: ResumenSnapshot,
+        stale: Boolean,
+        current: YearMonth
+    ): ResumenState.Ready {
         val budget = snapshot.budget
         val firstRecordedMonth = snapshot.history.indexOfFirst { it.expenseCount > 0 }
         // With fewer than two months recorded there is nothing yet to average or compare.
@@ -100,7 +105,9 @@ class ResumenRenderModel(private val money: MoneyFormatter) {
             empty = history.isEmpty(),
             insufficientHistory = insufficient,
             stale = stale,
-            asOf = budget.asOf.format(sentenceDate)
+            asOf = budget.asOf.format(
+                if (budget.asOf.year == current.year) sentenceDate else sentenceDateWithYear
+            )
         )
     }
 
@@ -191,6 +198,8 @@ class ResumenRenderModel(private val money: MoneyFormatter) {
         val monthFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM uuuu", locale)
         val monthNameFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("LLLL", locale)
         val sentenceDate: DateTimeFormatter = DateTimeFormatter.ofPattern("d 'de' MMMM", locale)
+        val sentenceDateWithYear: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("d 'de' MMMM 'de' uuuu", locale)
         val dayInitials = mapOf(
             DayOfWeek.MONDAY to "L",
             DayOfWeek.TUESDAY to "M",

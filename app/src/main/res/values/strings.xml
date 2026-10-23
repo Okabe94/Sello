@@ -422,7 +422,7 @@
     <string name="navigation_back">Volver</string>
     <string name="screen_title_month">%1$s · %2$s</string>
     <string name="resumen_load_failed">No pudimos leer el resumen. Intenta de nuevo.</string>
-    <string name="resumen_stale">No pudimos actualizar. Estas cifras son de la última lectura, hasta %1$s.</string>
+    <string name="resumen_stale">No pudimos actualizar. Estas cifras son de la última lectura, hasta el %1$s.</string>
     <string name="resumen_net_flow">Ingresos menos gastos</string>
     <string name="resumen_income_title">Ingresos</string>
     <string name="resumen_income_recorded">Ingresos anotados</string>
@@ -433,7 +433,7 @@
     <string name="resumen_in_progress_note">* Mes en curso: lo gastado hasta hoy.</string>
     <string name="resumen_limit_line">Límite %1$s</string>
     <string name="resumen_where_it_goes">¿Dónde se va?</string>
-    <string name="resumen_actual_through">Movimientos anotados hasta %1$s</string>
+    <string name="resumen_actual_through">Movimientos anotados hasta el %1$s</string>
     <string name="resumen_empty">Aún no hay gastos</string>
     <string name="resumen_empty_body">Cuando anotes un gasto, aquí verás cómo crece tu historia.</string>
     <string name="resumen_record_expense">Anotar un gasto</string>

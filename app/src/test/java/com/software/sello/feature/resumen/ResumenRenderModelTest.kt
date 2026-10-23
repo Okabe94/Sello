@@ -63,6 +63,10 @@ internal fun resumenSnapshot(spent: Long = 30_000, income: Long = 150_000): Resu
 class ResumenRenderModelTest {
     private val render = ResumenRenderModel(resumenMoney())
 
+    /** Rendered in October 2026, the fixture's month. */
+    private fun ResumenRenderModel.render(state: ResumenSnapshotState) =
+        render(state, YearMonth.of(2026, 10))
+
     @Test
     fun cashFlowAndPlanningCapacityAreDifferentExactAmounts() {
         val state = render.render(ResumenSnapshotState.Ready(resumenSnapshot()))
@@ -120,6 +124,17 @@ class ResumenRenderModelTest {
         assertTrue(state is ResumenState.Ready)
         assertTrue((state as ResumenState.Ready).stale)
         assertEquals("3 de octubre", state.asOf)
+    }
+
+    @Test
+    fun theRecordedUntilDayShowsItsYearOnlyWhenItIsFromAnotherYear() {
+        val ready = ResumenSnapshotState.Ready(resumenSnapshot())
+
+        assertEquals("3 de octubre", (render.render(ready) as ResumenState.Ready).asOf)
+        assertEquals(
+            "3 de octubre de 2026",
+            (render.render(ready, YearMonth.of(2027, 1)) as ResumenState.Ready).asOf
+        )
     }
 
     // --- v2: the month in progress, the limit line and the ranking ---

@@ -13,12 +13,13 @@
 - **Gate:** G2
 
 ### Outcome
-Verify and fix the assembled daily-use UI across input methods and window configurations.
+Verify and fix the assembled daily-use UI across window, text-size and theme configurations.
 
 ### Deliverables
 Automated/manual journey matrix and evidence for four schemes, scales 1.0/1.3/2.0,
-compact/short-landscape/medium/expanded layouts, TalkBack, keyboard/Switch Access,
-insets and reduced motion. Include actual draft/session restoration, not rotation alone.
+compact/short-landscape/medium/expanded layouts, insets, reduced motion and the
+accessibility semantics tests can read (spoken amounts, labels, targets). Include
+actual draft/session restoration, not rotation alone.
 
 ### Acceptance criteria
 - All daily-use flows work without clipping/covered fields, color-only status,
@@ -27,11 +28,13 @@ insets and reduced motion. Include actual draft/session restoration, not rotatio
   eligible process recreation. Force-stop/cold start is reported separately from
   OS process-death restoration and must not create a duplicate save.
 - Issues discovered are fixed with regression tests; no blanket a11y waiver.
+- Manual TalkBack, Switch Access and hardware keyboard walks are not part of this
+  ticket; they are post-MVP in SELLO-074.
 
 ### Tests
-Run affected connected Compose tests on agreed API/window configurations; execute
-screen-reader/focus walkthrough and capture screenshot/video/checklist evidence.
-Verify exact money semantics in visual and accessible outputs; G2.
+Run affected connected Compose tests on agreed API/window configurations; capture
+screenshot/video/checklist evidence of the device walks. Verify exact money
+semantics in visual and accessible outputs; G2.
 
 ### Working checkpoint
 Integrated daily-use MVP is usable on devices; no recovery or catalog workflow is
@@ -46,11 +49,17 @@ Read [Sello v2](../../../design/v2/README.md) (large text, reduced motion, exact
 From SELLO-E12 (2026-10-16): the journeys include the v2 Recibo delivered by
 SELLO-061–069, so this ticket starts after that epic.
 
+**Owner direction (2026-10-23):** manual assistive-technology walks (TalkBack,
+Switch Access, hardware keyboard) are outside the MVP and move to post-MVP
+[SELLO-074](E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard).
+The automated semantics checks stay here: exact spoken amounts, labels, focus order,
+48dp targets and status that is not color alone.
+
 ### Implementation plan
 1. Create `docs/testing/ui-acceptance-matrix.md` listing build/API/window/font/theme/
    input mode, each daily-use journey and expected accessible exact values.
-2. Automate Compose semantic/focus/restoration checks and execute screen-reader,
-   hardware keyboard/Switch Access and reduced-motion walks on agreed configurations.
+2. Automate Compose semantic/focus/restoration checks and execute reduced-motion
+   walks on agreed configurations.
 3. Run compact portrait, <480dp short landscape, medium and expanded panes with
    keyboard/gesture insets and scales 1.0/1.3/2.0. Test both completed tab stacks.
 4. Exercise drafts/operation IDs through rotation, eligible process death and cold
@@ -59,7 +68,7 @@ SELLO-061–069, so this ticket starts after that epic.
    tests and rerun prior completed journeys. Keep a matrix of passes and outstanding blockers.
 
 ### Concrete cases and pitfalls
-- TalkBack announces currency/full amount and stamp meaning; charts provide exact
+- Semantics carry the currency/full amount and stamp meaning; charts provide exact
   selected/text values. Color-only over-budget state is not accessible.
 - A focused note field remains reachable with keyboard open in landscape; 2.0 scale
   cannot truncate hero amounts or put save/delete actions below an unreachable panel.

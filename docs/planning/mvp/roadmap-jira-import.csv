@@ -1158,3 +1158,130 @@ Focused tests run first; the gate is the final integrated checkpoint. Documentat
 names expected new test behavior, not pretend pre-existing test classes.
 
 ",1010,Medium,Backlog,sello-044
+1014,Epic,SELLO-E14 — Assistive-technology review after MVP,"Local ID: SELLO-E14
+Increment: Post-MVP
+Goal: Confirm that a person using TalkBack, Switch Access or a hardware keyboard can use the whole released app.
+Exit: A recorded manual pass over every released screen with each of the three, with every finding fixed with a test or ticketed.",,Highest,Backlog,sello-e14
+74,Task,"SELLO-074 — Review the app with TalkBack, Switch Access and a keyboard","Local ID: SELLO-074
+Epic: SELLO-E14
+Increment: Post-MVP
+Repository source: docs/planning/mvp/epics/E14-assistive-technology.md
+Resource links resolve relative to that repository file.
+Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
+
+- **Type:** Task
+- **Priority:** P1
+- **Status:** Backlog
+- **Depends on:** SELLO-073, SELLO-004
+- **Gate:** G2
+
+### Outcome
+A person has used every screen with TalkBack, with Switch Access and with a hardware
+keyboard on a device, and what they found is fixed or ticketed.
+
+### Deliverables
+A recorded manual pass (device, Android version, settings, screens and findings) in
+`docs/testing/`, with fixes for small issues and tickets for larger ones.
+
+### Acceptance criteria
+- Every screen and state in the released scope is covered: Recibo, entry (expense
+  and income, including the composer and unknown outcome), income history, Resumen,
+  category detail and editor, Configuración, Respaldo, Borrar, the start-up failure
+  screen and the frame.
+- Amounts are spoken exactly; status changes are announced once; focus order follows
+  the visual order; every action is reachable by switch and by keyboard.
+- Findings are fixed with a test or ticketed; none are left unrecorded.
+
+### Tests
+The manual pass itself; regression tests for each fix; G2.
+
+### Working checkpoint
+The recorded pass lists no open, unrecorded finding.
+
+### Context and starting points
+Accessibility baseline: ""Adaptive and accessibility baseline"" in the current app
+inventory and ARCHITECTURE.md. Automated tests already cover semantics and target
+sizes; this ticket is the human check they cannot replace.
+
+### Implementation plan
+1. Run the pass with TalkBack, then Switch Access, then a hardware keyboard, on a
+   physical device.
+2. Record findings; fix small ones with tests; ticket the rest.
+
+### Concrete cases and pitfalls
+- The celebration and ribbons use live regions; check they are not announced twice.
+- Use synthetic data only; no personal records on the review device.
+
+### Verification recipe
+The recorded pass, focused tests for fixes, then `./scripts/verify-ticket SELLO-074 --retain`.
+
+Shared definition of done and gates:
+
+1. Deliverables are checked in and satisfy every acceptance criterion. Changes
+   respect architecture/source-set boundaries and do not activate deferred features.
+2. Behavior changes have a meaningful failing test followed by passing evidence;
+   pure build/docs tasks instead show negative/configuration/link checks as applicable.
+3. Ticket-specific tests and its gate pass on the integrated branch. Record exact
+   command/environment, revision, result counts, report paths, and device/API where
+   relevant. A skipped gate is an outstanding requirement, not a pass. Use
+   `./scripts/verify-ticket` and record validated `Quality run` evidence before
+   Review/Done; see QUALITY_FLOW.md.
+4. Existing completed journeys still work. No successful stubs, inaccessible
+   placeholders, destructive migrations, compile failures, or failed read → zero.
+5. Applicable catalog examples and sandbox scenarios grow with the change.
+   Accessibility, process restoration, financial bounds and error handling are
+   checked where the ticket touches them; the final epic does not postpone quality.
+6. Reviewer checks code, financial/recovery semantics, release isolation and
+   evidence. Update the canonical ticket status/evidence, then regenerate the board.
+
+Add a `### Delivery evidence` section to completed tickets with requirement mapping,
+red/green commands, integration/device results, review and unresolved issues.
+Do not rewrite acceptance after execution just to make a ticket pass.
+
+Use these required evidence fields (no placeholder values): `Revision`,
+`Requirement mapping`, `Red / Green`, `Gate results`, `Device / Artifact`, and
+`Review`, each written as `- **Field:** evidence`. State why a red test/device gate
+is inapplicable for a pure documentation task; do not waive a required G2/G3 test.
+Every ticket also requires `Quality run` before Review or Done, except the
+bootstrap tickets 001–003.
+
+## Gate profiles
+
+Use the environment from [setup](../../development/setup.md).
+
+- **G0 — documentation:** board structure/tests, quality-tool tests and architecture,
+  using Python/Git only. Selected by `--merge-candidate BASE` only when every
+  changed path qualifies as documentation and no ticket advances. It cannot
+  complete a ticket; bootstrap ticket history remains unchanged.
+- **G1 — integrated host:** `./scripts/verify-ticket SELLO-0XX` runs the board
+  structure check, board and quality-tool tests, the architecture rules
+  (`python3 scripts/quality/architecture.py`) and the Gradle command below, then
+  writes a report. `scripts/quality/gates.py` owns the task list; a test keeps this
+  block identical to it. Run the Gradle command directly only for quick feedback.
+
+```bash
+./gradlew ktlintCheck :domain:test :data:testDebugUnitTest :design-system:testDebugUnitTest \
+  :app:testDebugUnitTest :catalog:testDebugUnitTest lintDebug \
+  :app:assembleDebug :app:assembleRelease :catalog:assembleDebug --continue
+```
+
+- **G2 — affected device boundaries:** G1 plus real-Room/Compose tests on a pinned
+  emulator/device. The runner executes `:data:connectedDebugAndroidTest`,
+  `:design-system:connectedDebugAndroidTest`, `:app:connectedDebugAndroidTest`
+  and `:catalog:connectedDebugAndroidTest` by default, and refuses to start without
+  a connected device. `--affected BASE` selects only impacted modules and their
+  consumers; `--gate G2` always forces all four. App → app; catalog → catalog;
+  data/domain → data/app; design-system → design-system/app/catalog. Mixed scopes
+  are unioned; shared/build/tooling/unknown changes require all four. Every selected
+  suite must execute freshly without skips. Reports name full versus affected
+  coverage; a targeted run is not full G2. See [ADR 0014](../../decisions/0014-change-aware-quality-gates.md).
+  Assembling test APKs is not device acceptance.
+- **G3 — release:** G2 across agreed API/window/font configurations, optimized
+  production composition/artifact inspection, performance evidence, and signed
+  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
+  Separate ephemeral CI signing from the customer-distribution signing identity.
+
+Focused tests run first; the gate is the final integrated checkpoint. Documentation
+names expected new test behavior, not pretend pre-existing test classes.
+
+",1014,High,Backlog,sello-074

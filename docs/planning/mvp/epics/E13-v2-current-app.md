@@ -1,9 +1,9 @@
 # SELLO-E13 — Bring the rest of today's app to Sello v2
 
-- **Status:** Backlog
+- **Status:** Done
 - **Increment:** MVP
 - **Goal:** Every screen the app already has looks and behaves as approved in Sello v2, using one set of components, before new features are added.
-- **Exit:** Expense and income entry, income history and Resumen match their v2 designs for today's scope; superseded v1 components are gone from the app and catalog; a manual screen-reader and switch-access pass is recorded.
+- **Exit:** Expense and income entry, income history and Resumen match their v2 designs for today's scope; superseded v1 components are gone from the app and catalog.
 
 Read [ADR 0013](../../../decisions/0013-sello-v2-design.md), the
 [v2 README](../../../design/v2/README.md), the [current app inventory](../../../development/current-app-experience.md)
@@ -470,49 +470,3 @@ Full suites, then `./scripts/verify-ticket SELLO-073 --retain`.
   the kept v1 components and the catalog's single listing. Done is proposed by this
   ticket's pull request; its merge is the designated owner acceptance under
   `QUALITY_FLOW.md`. No owner approval, merge or hosted CI pass is claimed.
-
-## SELLO-074 — Review the v2 screens with TalkBack and Switch Access
-
-- **Type:** Task
-- **Priority:** P1
-- **Status:** Backlog
-- **Depends on:** SELLO-073, SELLO-004
-- **Gate:** G2
-
-### Outcome
-A person has used every v2 screen with TalkBack and with Switch Access on a device,
-and what they found is fixed or ticketed.
-
-### Deliverables
-A recorded manual pass (device, Android version, settings, screens and findings) in
-`docs/testing/`, with fixes for small issues and tickets for larger ones.
-
-### Acceptance criteria
-- Every v2 screen and state in today's scope is covered: Recibo, entry (expense and
-  income, including the composer and unknown outcome), income history, Resumen and
-  the frame.
-- Amounts are spoken exactly; status changes are announced once; focus order follows
-  the visual order; every action is reachable by switch.
-- Findings are fixed with a test or ticketed; none are left unrecorded.
-
-### Tests
-The manual pass itself; regression tests for each fix; G2.
-
-### Working checkpoint
-The recorded pass lists no open, unrecorded finding.
-
-### Context and starting points
-Accessibility baseline: "Adaptive and accessibility baseline" in the current app
-inventory and ARCHITECTURE.md. Automated tests already cover semantics and target
-sizes; this ticket is the human check they cannot replace.
-
-### Implementation plan
-1. Run the pass with TalkBack, then with Switch Access, on a physical device.
-2. Record findings; fix small ones with tests; ticket the rest.
-
-### Concrete cases and pitfalls
-- The celebration and ribbons use live regions; check they are not announced twice.
-- Use synthetic data only; no personal records on the review device.
-
-### Verification recipe
-The recorded pass, focused tests for fixes, then `./scripts/verify-ticket SELLO-074 --retain`.

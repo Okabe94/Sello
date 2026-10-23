@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 48/49 · **Epics Done:** 9/10
+**Tickets Done:** 49/49 · **Epics Done:** 10/10
 
-Backlog: 1 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 48
+Backlog: 0 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 49
 
 [Workflow, gates and definition of done](README.md)
 
@@ -19,7 +19,7 @@ Backlog: 1 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 48
 | [SELLO-E05](epics/E05-mvp-workflows.md) | Complete maintainable expense/income history and an honest monthly summary. | Done | 5/5 |
 | [SELLO-E06](epics/E06-live-testing.md) | Explore time-sensitive financial behavior safely through the actual app pipeline. | Done | 4/4 |
 | [SELLO-E07](epics/E07-recovery-privacy.md) | Ship a local financial app whose data can be recovered and deliberately removed. | Done | 5/5 |
-| [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | In Progress | 3/4 |
+| [SELLO-E08](epics/E08-release.md) | Demonstrate a usable recoverable release, not merely assembled debug APKs. | Done | 4/4 |
 | [SELLO-E12](epics/E12-v2-recibo.md) | Make Home answer "how am I doing this month" with the factual status, wording and frame approved in Sello v2. | Done | 9/9 |
 | [SELLO-E13](epics/E13-v2-current-app.md) | Every screen the app already has looks and behaves as approved in Sello v2, using one set of components, before new features are added. | Done | 4/4 |
 
@@ -41,9 +41,7 @@ No tickets.
 
 ## Backlog
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | Accept the complete MVP and prepare release handoff | SELLO-E08 | P0 | G3 | None |
+No tickets.
 
 ## Done
 
@@ -84,6 +82,7 @@ No tickets.
 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) | Execute accessibility, adaptive and process-restoration journeys | SELLO-E08 | P0 | G2 | None |
 | [SELLO-034](epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) | Prove integrated data retention and recovery failure safety | SELLO-E08 | P0 | G2 | None |
 | [SELLO-035](epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) | Validate performance and optimized release composition | SELLO-E08 | P0 | G3 | None |
+| [SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | Accept the complete MVP and prepare release handoff | SELLO-E08 | P0 | G3 | None |
 | [SELLO-061](epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Replace the pace verdict with the factual budget status | SELLO-E12 | P0 | G2 | None |
 | [SELLO-062](epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Rebuild the Recibo answer slip to v2 | SELLO-E12 | P0 | G2 | None |
 | [SELLO-063](epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Update the Recibo categories card and first-use and failed states | SELLO-E12 | P0 | G2 | None |
@@ -100,4 +99,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-036](epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff)
+None. Complete current Ready tickets first.

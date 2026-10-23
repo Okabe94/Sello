@@ -95,11 +95,14 @@ class BackupSnapshotConsistencyTest {
         PreferenceRead.Ready(CategoryOrderingPreference())
     )
 
-    private fun export(preferences: Preferences = darkViolet) = BackupExport(
+    private fun export(
+        preferences: Preferences = darkViolet,
+        now: Instant = Instant.parse("2026-10-22T19:30:00Z")
+    ) = BackupExport(
         RoomBackupSnapshots(ledger.database),
         preferences,
         preferences,
-        { Instant.parse("2026-10-22T19:30:00Z") },
+        { now },
         dispatchers
     )
 
@@ -212,6 +215,21 @@ class BackupSnapshotConsistencyTest {
         assertEquals(ThemePreference.Dark, plan.contents.preferences?.appearance?.theme)
         assertEquals(revision, ledger.revision())
         assertEquals(before, ledger.rows("expense", "id", "amount_minor", "version"))
+    }
+
+    @Test
+    fun aClockFinerThanMillisecondsStillMakesABackupStampedToTheMillisecond() = runBlocking {
+        // Newer Android clocks give microseconds; the format keeps milliseconds.
+        writeG01()
+
+        val file = export(
+            now = Instant.parse("2026-10-22T19:30:00.123456789Z")
+        ).create().valueOrFail()
+
+        assertTrue(
+            file.bytes.decodeToString().contains("\"exportedAt\": \"2026-10-22T19:30:00.123Z\"")
+        )
+        assertEquals(3, BackupCodec().read(file.bytes).valueOrFail().counts.expenses)
     }
 
     @Test

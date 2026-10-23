@@ -1,6 +1,6 @@
 # SELLO-E08 — Integrated MVP release evidence
 
-- **Status:** In Progress
+- **Status:** Done
 - **Goal:** Demonstrate a usable recoverable release, not merely assembled debug APKs.
 - **Exit:** Passed complete MVP journeys, temporal/recovery corpus, accessible adaptive UI and signed optimized release; outstanding risks are explicitly accepted or fixed.
 
@@ -434,7 +434,7 @@ measurements/thresholds and artifact exclusions. Never write secrets in commands
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-033, SELLO-034, SELLO-035, SELLO-004
 - **Gate:** G3
 
@@ -502,3 +502,58 @@ Run complete G3, `python3 docs/planning/mvp/board.py --check` and board unit tes
 Use the final checklist for actual owner/device walkthrough and record approval,
 candidate hash, exact scenario results and retained warnings. Generate board/CSV only
 after evidence/status edits; do not publish automatically.
+
+### Execution progress
+
+- **Owner decisions, 2026-10-23:** the owner is the independent technical reviewer and
+  gives the product go/no-go; the walkthrough runs on their Samsung SM-S731B
+  (`R5GYC4FA50N`) with a fresh install and synthetic data (option b); SELLO-075–077 and
+  the missing licence notice are accepted as non-blocking; the version name is
+  `0.1.0`; the backup blocker below is fixed in this ticket and its misleading message
+  logged as SELLO-078.
+- **Blocker found and fixed:** on the phone every backup failed its own check because
+  Android 16's clock gave the backup timestamp microseconds; `BackupExport` now rounds
+  it to the millisecond (red first in `BackupSnapshotConsistencyTest`). The walkthrough
+  was repeated on the rebuilt candidate from a fresh install.
+- **Delivered:** [MVP checklist](../../../release/mvp-checklist.md) with the candidate,
+  scope, evidence, walkthrough, developer-app check, accepted issues and recovery
+  guidance.
+
+### Delivery evidence
+
+- **Revision:** the gate tested commit `bf3d690` on `sello-036-acceptance`, on `main` at
+  `6f79598`; the only uncommitted file was the retained report. The status and this
+  section are added to that commit afterwards.
+- **Decisions:** as recorded under Execution progress (owner as independent reviewer and
+  go/no-go, option b on the owner's phone, four accepted issues, version `0.1.0`, the
+  backup fix here). The product go/no-go is the owner's merge of this pull request.
+- **Requirement mapping:** [MVP checklist](../../../release/mvp-checklist.md): candidate
+  `sello-0.1.0-1.apk`, 4,458,295 bytes, sha256
+  `1e28bb8c14d093b67846036fc96282bc94c3cbae06a7e60c95125a89fefa16a9`, signed (v2) by the
+  owner-confirmed certificate `abf6ccf5…d952`, mapping sha256
+  `c63995b6b3baca59ba15737923618672a119f2eab2c34e9f534100c101c424e5`; the G3 build is
+  byte-identical to the APK walked on the phone. Full flow on the Samsung SM-S731B
+  (Android 16) from a fresh install: category, expense, edit, delete and undo, income,
+  Resumen, appearance and order, backup, change, restore with restart, force-stop,
+  erase all, reuse, every figure as worked out beforehand. Catalog and sandbox (G01, 4
+  of 4 figures) launched on the API-30 emulator; neither is in the candidate. 48 other
+  MVP tickets Done with valid evidence; no out-of-scope feature or link present.
+- **Red / Green:** `aClockFinerThanMillisecondsStillMakesABackupStampedToTheMillisecond`
+  failed first with `Unrestorable(InvalidValue(exportedAt))`, as on the phone, and passed
+  once `BackupExport` rounds its timestamp to the millisecond.
+- **Tests:** device `BackupSnapshotConsistencyTest` (+1).
+- **Gate results:** `./scripts/verify-ticket SELLO-036 --retain` passed all eleven G3
+  checks, full coverage. Host: 694 tests; device: 729 tests (data 236, design-system
+  133, app 339, catalog 21); zero failures, errors or skips. Lint had zero errors and
+  the same 33 warnings as before; `release-production` and `release-launch` passed.
+- **Quality run:** run 20261023T202433Z-3d80d646; SELLO-036 G3 passed; HEAD bf3d690, inputs sha256 a704cb74f639; report docs/planning/mvp/quality-reports/SELLO-036.json sha256 e699f95401478220a25c9dd9dff8a121a4a9338a30913874753442c75fa30c9d
+- **Device / Artifact:** the owner's Samsung SM-S731B (`R5GYC4FA50N`, Android 16) for
+  the walkthrough, synthetic data only; the API-30 AVDs `ci30` (gate) and
+  `sello022_api30` (reproduction, catalog and sandbox). Left on the phone: Sello `0.1.0`
+  with synthetic data and two backup files in Downloads (14:58, from the failed attempt;
+  15:15). Nothing else on the phone was opened or changed.
+- **Review:** independent technical review and product go/no-go by the project owner;
+  executor self-review covered the expected values, the blocker's cause and the
+  candidate's identity. Accepted non-blocking: SELLO-075–078 and the licence notice.
+  Distribution, upload or tagging is not part of this ticket.
+

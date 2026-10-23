@@ -96,7 +96,14 @@ val verifyReleaseHasNoDeveloperTools by tasks.registering {
             "Sello Herramientas",
             "SimulatedFault",
             "tools_faults_heading",
-            "Sello sandbox diagnostic"
+            "Sello sandbox diagnostic",
+            // The debug composition, its sandbox storage names and the debug previews.
+            "DebugComposition",
+            "sandbox.db",
+            "sandbox-preferences",
+            "ReciboPreviews",
+            "ResumenPreviews",
+            "IncomePreviews"
         )
         val apks = apkDirectory.get().walkTopDown().filter { it.extension == "apk" }.toList()
         check(apks.isNotEmpty()) { "no APK in ${apkDirectory.get()}" }
@@ -127,6 +134,9 @@ val verifyReleaseHasNoDeveloperTools by tasks.registering {
 tasks.matching { it.name == "assembleRelease" }.configureEach {
     finalizedBy(verifyReleaseHasNoDeveloperTools)
 }
+
+// Manifest, backup-rule and release-library privacy checks; see the script.
+apply(from = rootProject.file("gradle/privacy.gradle.kts"))
 
 ktlint {
     version.set(libs.versions.ktlint.get())

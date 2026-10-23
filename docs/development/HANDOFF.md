@@ -5,7 +5,7 @@
 > subject to the user's current instructions.
 
 **Snapshot:** 2026-10-22 · **Product baseline:** `def067f`.
-SELLO-001–031, SELLO-061–073 and epics E01–E06 and E12 are recorded Done in the canonical tickets.
+SELLO-001–032, SELLO-061–073 and epics E01–E07 and E12 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -20,6 +20,8 @@ verification or release-acceptance claims.
 - Backups save and restore through the system file picker, also from the start-up
   failure screen; retry and confirmed start-over preserve an unreadable database privately.
 - Configuración → Borrar todos los datos erases the history after counts and BORRAR.
+- No network permission or OS backup; every build checks its manifests, release
+  libraries and APK against [MVP data handling](../privacy/mvp-data-handling.md).
 
 The modules are `:app`, `:domain`, `:data`, `:design-system` and the separate
 `:catalog`. The extra `:prototype` app renders v1.1 sample screens with no storage.
@@ -63,6 +65,7 @@ forecast remains only as Resumen's estimate, and
 | [SELLO-029](../planning/mvp/epics/E07-recovery-privacy.md#sello-029--deliver-real-document-picker-backup-creation) | Configuración → Respaldo saves a backup through the system file picker, after an always-visible plaintext disclosure; "Guardado" only after the document is closed, a failed save keeps the last backup, and a save cut off by a dead process shows as unknown. No restore yet (SELLO-030). |
 | [SELLO-030](../planning/mvp/epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion) | Respaldo → Restaurar checks a whole file, previews current against backup counts and replaces the history in one transaction (new generation, backup zone), then applies its preferences, naming any that failed with a retry that never replaces twice; the app restarts. The start-up failure screen offers the same restore, setting the unreadable file aside first. |
 | [SELLO-031](../planning/mvp/epics/E07-recovery-privacy.md#sello-031--deliver-fenced-two-confirmation-reset-and-recovery) | Configuración → Borrar todos los datos counts what goes, then needs the exact word BORRAR; one transaction erases every financial row, undo copy and receipt (keeping one `history.reset` receipt), the kept unreadable copy and staged restores go, the file is compacted and preferences return to first-run, then the app restarts empty. Backup files outside Sello are untouched. |
+| [SELLO-032](../planning/mvp/epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation) | Build-time checks on the merged manifests (backup off, allowed permissions and exported parts only), the release libraries and the release APK; the picker adapters accept only provider documents; device tests for file boundaries and a log free of synthetic markers; [MVP data handling](../privacy/mvp-data-handling.md). E07 is done. |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-062](../planning/mvp/epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Recibo's answer slip reads "Restante del presupuesto" with a signed remainder, the per-day figure under a tear line and a closing line for past months. The Ajustar presupuesto link is SELLO-067. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
@@ -81,15 +84,13 @@ forecast remains only as Resumen's estimate, and
 
 - SELLO-074 ([E13](../planning/mvp/epics/E13-v2-current-app.md)): the last E13
   ticket, a recorded manual TalkBack and Switch Access pass over the v2 screens.
-- SELLO-032: privacy, private-file boundaries and developer-data isolation; the last
-  E07 ticket.
 - SELLO-033–036: integrated accessibility, restoration, performance and signed
   release acceptance. The current app is not a completed MVP release.
 - Goal/investment features, recurrence and other deferred capabilities remain
   outside MVP; signed carryover and legacy import are on the post-MVP roadmap.
 
-The [board](../planning/mvp/BOARD.md) currently lists SELLO-032 without
-unmet ticket dependencies, plus E13's SELLO-074 (deferred) and E08's SELLO-033. Their other prerequisites remain in
+The [board](../planning/mvp/BOARD.md) currently lists E08's SELLO-033 and SELLO-034
+without unmet ticket dependencies, plus E13's SELLO-074 (deferred). Their other prerequisites remain in
 the ticket briefs; no statuses are changed by this handoff.
 
 ## Detail references

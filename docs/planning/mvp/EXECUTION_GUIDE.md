@@ -238,7 +238,7 @@ Recovering from failures:
 | `REFUSED: ... would be a downgrade` | The ticket's gate is the minimum. Remove `--gate` or pass a higher one. |
 | `REFUSED: No working java` / `Android SDK not found` | Export the setup environment in this shell. |
 | `REFUSED: ... no connected device` | Boot the isolated emulator from setup; test-APK assembly is not a substitute. |
-| `REFUSED: G3 ... not available` | Release checks arrive with SELLO-035. The ticket cannot be verified earlier. |
+| `release-production` failed: no signed release APK | G3 needs the owner's `sello.signing.*` entries; see [release](../release/README.md). A debug or throwaway key cannot stand in. |
 | `FAILED: <check> exited N` | Read `<check>.log` beside the report, fix the cause, run again. |
 | `FAILED: ... produced no test results` | The task ran no tests. Device results must be newer than the run. |
 | `FAILED: inputs changed while checks were running` | Stop editing during a run and run again. |

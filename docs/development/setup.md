@@ -323,8 +323,10 @@ Shut down only the emulator you created: `adb -s "$ANDROID_SERIAL" emu kill`.
 | No device or boot not completed | APK assembly is not launch/instrumentation evidence; provide an isolated emulator or record the missing gate. |
 
 Debug/test builds use a local development keystore outside source. `assembleRelease`
-needs **no distribution key** and currently yields
-`app/build/outputs/apk/release/app-release-unsigned.apk`. An unsigned/debug-signed
-artifact is not a production distribution build. The owner handles release builds,
-signing and physical-device tests; do not request passwords/keys or create release
-keys during setup. Missing signing secrets must not break ordinary local gates.
+needs **no distribution key**: without the owner's `sello.signing.*` entries in
+`~/.gradle/gradle.properties` it yields an unsigned
+`app/build/outputs/apk/release/app-release-unsigned.apk`, and ordinary gates pass.
+With them it yields a signed `app-release.apk`; see [release](../release/README.md).
+An unsigned or debug-signed artifact is not a production distribution build. The
+owner keeps the key and its passwords; do not request them or create release keys
+during setup. Only G3 needs the key, and without it G3 fails rather than substituting.

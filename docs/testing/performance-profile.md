@@ -170,10 +170,10 @@ Findings outside performance, reported and not fixed here:
   "10000 gastos".
 - Resumen shows "Movimientos anotados hasta 2026-10-23", a date in storage form.
 
-## Not covered yet
+## Not covered
 
-- Production signing: these builds carry a throwaway measurement key; signing with the
-  owner's key and inspecting that artifact are part 3, as is keeping R8's mapping file
-  beside a released APK so that a stack trace from it can be read.
+- Timing the production-signed APK: the timings above used a throwaway measurement key,
+  which does not change the code. The signed APK was checked by G3 and, by hand,
+  restored the large history and backed it up (1.14 s) on the same emulator.
 - A physical phone: the emulator runs on a fast desktop and flatters every number.
   The owner may run the same script on a phone; acceptance on a device is SELLO-036.

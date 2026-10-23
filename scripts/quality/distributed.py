@@ -82,7 +82,14 @@ def context(root, base, event):
         if gate == "G0" and identifier == runner.UNTICKETED:
             required[identifier] = "G0"
         else:
-            required[identifier] = runner.resolve_gate(tickets, identifier, gate)[0]
+            required[identifier] = runner.resolve_gate(tickets, identifier, None)[0]
+    if event != "push" and "G3" in required.values():
+        # A release ticket is verified at G3; CI's part of it signs with a throwaway key.
+        gate = "G3"
+        scope = selection.coverage(resolved.stdout.strip(), candidate["coverage"]["changed_paths"], gate)
+    for identifier in required:
+        if required[identifier] != "G0":
+            runner.resolve_gate(tickets, identifier, gate)
     gates.plan(gate)  # unavailable gates cannot be executed in parts either
     return {"base": resolved.stdout.strip(), "event": event, "gate": gate, "tickets": required,
             "session": session(), "coverage": scope, "groups": selection.groups(scope)}
@@ -90,6 +97,8 @@ def context(root, base, event):
 
 def checks_for(part, plan=None):
     if part == "host":
+        if plan and plan["gate"] == "G3":
+            return gates.plan("G1") + gates.release_checks(ci=True)
         return gates.plan("G0" if plan and plan["gate"] == "G0" else "G1")
     if part not in gates.DEVICE_GROUPS:
         raise runner.Refusal(f"Unknown CI part {part}")
@@ -178,7 +187,7 @@ def run_part(root, base, event, part, output=PART_DIRECTORY, execute=runner.defa
 
 
 def job_failures(gate, results):
-    expected = {"plan": "success", "host": "success", "device": "success" if gate == "G2" else "skipped"}
+    expected = {"plan": "success", "host": "success", "device": "success" if gate in ("G2", "G3") else "skipped"}
     return [f"{job} job was {results.get(job, 'missing')}, expected {state}"
             for job, state in expected.items() if results.get(job) != state]
 

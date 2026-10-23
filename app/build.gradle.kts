@@ -7,6 +7,17 @@ plugins {
     alias(libs.plugins.ktlint)
 }
 
+/*
+ * The owner's release key, read from their own ~/.gradle/gradle.properties and never
+ * from the repository: sello.signing.storeFile, storePassword, keyAlias, keyPassword.
+ * Without all four, the release build stays unsigned; nothing falls back to a debug key.
+ * See docs/release/README.md.
+ */
+val releaseSigning = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+    .associateWith {
+        providers.gradleProperty("sello.signing.$it").orNull?.takeIf(String::isNotBlank)
+    }
+
 android {
     namespace = "com.software.sello"
     compileSdk {
@@ -23,6 +34,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (releaseSigning.values.all { it != null }) {
+            create("release") {
+                storeFile = file(releaseSigning.getValue("storeFile")!!)
+                storePassword = releaseSigning.getValue("storePassword")
+                keyAlias = releaseSigning.getValue("keyAlias")
+                keyPassword = releaseSigning.getValue("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -32,6 +54,7 @@ android {
             optimization {
                 enable = true
             }
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {

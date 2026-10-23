@@ -96,6 +96,9 @@ tracks the remaining financial inputs.
 - SELLO-074 ([E14](../planning/mvp/epics/E14-assistive-technology.md)): the manual
   TalkBack, Switch Access and keyboard pass, moved post-MVP by the owner on
   2026-10-23. E13 is done without it.
+- SELLO-075–077 ([E15](../planning/mvp/epics/E15-release-fixes.md)): defects found
+  during SELLO-035 (counts without a thousands separator, Resumen's raw date, flaky
+  sandbox replay tests), logged by the owner on 2026-10-23.
 - Goal/investment features, recurrence and other deferred capabilities remain
   outside MVP; signed carryover, legacy import and the assistive-technology pass
   are on the post-MVP roadmap.

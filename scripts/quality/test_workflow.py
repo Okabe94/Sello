@@ -62,7 +62,7 @@ class HostedWorkflowTests(unittest.TestCase):
         device = self.jobs['device']
         self.assertIn('needs: plan', device)
         self.assertNotIn('needs: host', device)
-        self.assertIn("if: needs.plan.outputs.gate == 'G2'", device)
+        self.assertIn("if: needs.plan.outputs.gate == 'G2' || needs.plan.outputs.gate == 'G3'", device)
         self.assertIn('group: ${{ fromJSON(needs.plan.outputs.groups) }}', device)
         self.assertIn('fail-fast: false', device)
         self.assertIn('DEVICE_GROUP: ${{ matrix.group }}', device)

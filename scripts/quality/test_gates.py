@@ -32,9 +32,23 @@ class GateDocumentationTests(unittest.TestCase):
         self.assertEqual(host, device[: len(host)])
         self.assertTrue(device[-1].needs_device)
 
-    def test_release_gate_is_unavailable(self):
-        with self.assertRaises(gates.Unavailable):
-            gates.plan("G3")
+    def test_release_gate_extends_the_device_gate_with_the_owners_signing(self):
+        device, release = gates.plan("G2"), gates.plan("G3")
+        self.assertEqual(device, release[: len(device)])
+        self.assertEqual(["release-licenses", "release-production", "release-launch"],
+                         [check.name for check in release[len(device):]])
+        self.assertIn("production", release[-2].argv)
+        self.assertTrue(release[-1].needs_device)
+
+    def test_ci_release_gate_signs_with_a_throwaway_key_and_never_claims_production(self):
+        device, release = gates.plan("G2"), gates.plan("G3", ci=True)
+        self.assertEqual(device, release[: len(device)])
+        self.assertEqual(["release-licenses", "release-ephemeral"], [check.name for check in release[len(device):]])
+        self.assertNotIn("release-production", [check.name for check in release])
+
+    def test_lower_gates_are_the_same_on_ci(self):
+        for gate in ("G0", "G1", "G2"):
+            self.assertEqual(gates.plan(gate), gates.plan(gate, ci=True))
 
 
 if __name__ == "__main__":

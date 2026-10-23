@@ -1,0 +1,15 @@
+{
+  "comment": "Licences of the release build's runtime libraries, reviewed by hand. A module entry overrides its group; the longest matching group wins. An unlisted group fails G3. See docs/release/README.md.",
+  "groups": {
+    "androidx": "Apache-2.0",
+    "co.touchlab": "Apache-2.0",
+    "com.google.guava": "Apache-2.0",
+    "com.squareup.okio": "Apache-2.0",
+    "io.insert-koin": "Apache-2.0",
+    "org.jetbrains": "Apache-2.0",
+    "org.jspecify": "Apache-2.0"
+  },
+  "modules": {
+    "androidx.datastore:datastore-preferences-external-protobuf": "BSD-3-Clause"
+  }
+}

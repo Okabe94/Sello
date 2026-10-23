@@ -154,10 +154,10 @@ class RunnerTests(unittest.TestCase):
                       ticket("SELLO-004", dependencies="SELLO-003", gate="G2"))
         self.assert_refused(self.run_ticket(), "no connected device")
 
-    def test_release_gate_is_refused_until_its_checks_exist(self):
+    def test_release_gate_without_device_is_refused(self):
         self.set_epic(ticket("SELLO-003", status="Done"),
                       ticket("SELLO-004", dependencies="SELLO-003", gate="G3"))
-        self.assert_refused(self.run_ticket(), "not available")
+        self.assert_refused(self.run_ticket(), "no connected device")
 
     def test_missing_toolchain_is_refused(self):
         def missing(root):

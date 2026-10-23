@@ -1,0 +1,59 @@
+# 0016 — Release gate: the owner's signing proof locally, the rest also on CI
+
+**Owner:** project owner (user) · **Date:** 2026-10-23
+**Status:** owner-approved (option 1 of three, 2026-10-23); delivered by SELLO-035.
+Supersedes the G3 refusal in ADRs 0006, 0009 and 0014.
+
+## Context
+
+G3 must prove that the customer APK is signed with the owner's key, while the key stays
+with the owner: CI signing and customer-distribution signing are validated separately
+([D10](0001-mvp-contract.md#d10--release-acceptance-and-review), SELLO-035). CI verifies
+every active or newly completed ticket at the ticket's own gate, and a lower gate may
+not stand in. So CI cannot run G3 the way it runs G2, and without a decision a G3
+ticket could never pass its pull request.
+
+## Alternatives
+
+1. **Split (chosen).** The owner's machine runs all of G3 with the key; CI runs G3 with
+   a throwaway key and leaves the production proof to the owner's retained report.
+2. Production key in GitHub secrets, so CI runs all of G3. Rejected: a second copy of
+   the key, outside the owner's custody.
+3. No CI verification of G3. Rejected: merging needs passing required checks.
+
+## Decision
+
+G3 is all of G2 with full device coverage, then the release checks
+(`scripts/quality/gates.py`, `release_checks`):
+
+| Check | Owner's machine | CI |
+| --- | --- | --- |
+| `release-licenses`: each locked release library has a reviewed licence and `docs/release/dependencies.md` is current | yes | yes |
+| `release-production`: the APK verifies, is not debuggable, is `com.software.sello`, has R8's mapping file, and is signed by exactly the certificate pinned in `scripts/quality/release-certificate.txt` | yes | — |
+| `release-ephemeral`: the same artifact checks after signing a copy with a key made for that run | — | yes |
+| `release-launch`: the production APK installs on the API-30 emulator named by `ANDROID_SERIAL` and starts; a physical device is refused | yes | — |
+
+The build signs the release APK only from the owner's `sello.signing.*` Gradle
+properties; without them it stays unsigned and `release-production` fails: G3 is
+blocked, never satisfied by a debug or throwaway key. Completion evidence for a G3
+ticket must contain a passed `release-production` check (`evidence.check`); CI's report
+never completes one. CI accepts the owner's retained report only for the exact inputs
+under review, through `board.py --check --base` as for every ticket.
+
+## Consequences
+
+- G3 runs only for tickets whose gate is G3; everyday pull requests keep G2.
+- CI's G3 host part also needs `keytool` and build-tools' `apksigner`, `zipalign` and
+  `aapt2`, already present with the JDK and Android SDK.
+- Changing the key is a one-line change to the pinned digest. Users keep their data
+  only with APK key rotation (`apksigner rotate`), which needs the old key: losing it
+  forces uninstall and restore from a backup. See [release](../release/README.md).
+- Performance runs and configuration sweeps stay ticket evidence, not G3 checks.
+
+## Verification
+
+`test_gates`, `test_selection`, `test_evidence`, `test_distributed`, `test_workflow`,
+`test_release` and `test_licenses` cover both plans, full coverage, the production
+requirement for completion, CI's G3 plan and device jobs, certificate mismatch,
+refusal without a key and refusal of a physical device. SELLO-035's retained report is
+the first local G3 run.

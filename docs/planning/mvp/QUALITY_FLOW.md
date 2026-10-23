@@ -137,4 +137,8 @@ acceptance is met; the designated review still does. Agent instructions are poli
 not a security boundary: a committed report can be hand-edited, which is why CI
 re-executes the gate instead of trusting it.
 
-G3 is not executable until SELLO-035 delivers its checks; the runner refuses it.
+G3 adds release checks to a full G2: the licence list, the owner's production
+signature and artifact checks, and installing and opening that APK on the emulator.
+CI runs the same G3 with a throwaway key; only a report with the owner's production
+signing completes a G3 ticket. See [ADR 0016](../../decisions/0016-release-gate-signing-split.md)
+and [release](../../release/README.md).

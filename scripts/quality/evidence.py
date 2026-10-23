@@ -75,7 +75,7 @@ def load(path):
         problem = selection.problem(report["coverage"], report["gate"]["executed"], report["ticket"])
         if problem:
             raise EvidenceError(f"invalid coverage: {problem}")
-        if report["outcome"] == "passed" and report["gate"]["executed"] == "G2":
+        if report["outcome"] == "passed" and report["gate"]["executed"] in ("G2", "G3"):
             observed = {}
             for check in report["checks"]:
                 for module, counts in check.get("modules", {}).items():
@@ -131,6 +131,11 @@ def check(root, ticket_id, ticket_gate, quality_run, fresh):
     executed = report["gate"]["executed"]
     if GATES.index(executed) < GATES.index(required):
         raise EvidenceError(f"{executed} does not satisfy {required}")
+    if executed == "G3" and not any(
+        record["name"] == "release-production" and record["exit_code"] == 0 for record in report["checks"]
+    ):
+        raise EvidenceError("a G3 report completes a ticket only with the owner's production signing "
+                            "(release-production); CI's throwaway signing cannot")
     if report["run_id"] not in quality_run:
         raise EvidenceError(f"Quality run does not name run {report['run_id']} of the retained report")
     if hashlib.sha256(path.read_bytes()).hexdigest() not in quality_run:

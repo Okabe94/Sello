@@ -100,7 +100,7 @@ layout primitives are intentionally omitted.
 | Create category | `CategoryEditorRoute(forEntry)` → `CategoryEditorRoot` → `CategoryEditorScreen` | `Form`, `LimitFields`, `SectionLabel`; `ArchiveConfirmation` is edit-only | `SelloScaffold`, `FormField`, `IconChoiceGrid`, `ChipFlow`, `SelloChip`, `SwitchRow`, `DigitGrouping`, `Slip`, `ConfirmSlip`, `SlipSkeleton`, `ErrorSlip`, `SelloButton` |
 | Edit category | `CategoryEditRoute(categoryId, month)` → `CategoryManagementRoot` → `CategoryEditorScreen` | `Form`, `LimitFields`, `SectionLabel`, `ArchiveConfirmation` | Same category shared composables as above |
 | Configuración | `SettingsRoute` → `ShellScreen` → `SettingsRoot` → `SettingsScreen` | `AppearanceControls`, `CategoryOrderingControls`, `DataControls`, `SectionTitle`, `ControlLabel` | `Slip`, `ChipFlow`, `SelloChip`, `SegmentedSwitch`, `LeaderLine`, `SlipSkeleton`, `ErrorSlip` |
-| Respaldo | `BackupRoute` → `ShellScreen` (no dock) → `BackupRoot` → `BackupScreen` | `LastBackupSlip`, `Disclosure`; system `CreateDocument` picker | `Slip`, `LeaderLine`, `Stamp`, `BulletList`, `SelloButton`, `ErrorSlip`, `SlipSkeleton` |
+| Respaldo | `BackupRoute` → `ShellScreen` (no dock) → `BackupRoot` → `BackupScreen` + `RestoreSection` | `LastBackupSlip`, `Disclosure`, restore `Preview`/`Counts`/`Restored`/`Pending`; system `CreateDocument` and `OpenDocument` pickers | `Slip`, `LeaderLine`, `Stamp`, `BulletList`, `SelloButton`, `ErrorSlip`, `SlipSkeleton` |
 | Shared shell | `SelloAppRoot` → `ShellScreen` | `MonthPicker`, `CorrectionNoticeBar`; `ReciboDestination`, `EntryDestination` are private navigation hosts | `SelloScaffold`, `SelloNavigationBar` / `SelloNavigationRail`, `SelloDock`, `MonthSwitcher`, `MonthGrid`, `SelloNotice` |
 
 ## Navigation test coverage
@@ -115,6 +115,7 @@ contract without a real `NavHost`.
 | Recibo ↔ Resumen, shared month, recreation and Back to Recibo | `ShellOnDeviceTest.resumenKeepsTheSharedMonthThroughRecreationAndBackReturnsToRecibo`; `NavigationStateTest.backClosesAPanelThenADetailThenReturnsToReciboThenLeaves` | Device + unit/state |
 | Recibo → Configuración → Back, without losing selected month or Recibo state | `SettingsJourneyTest.settingsPreserveTheSelectedMonthFinancialRowsAndTheReciboBackStack` | Journey |
 | Recibo → Configuración → Respaldo → save a document | `BackupFileJourneyTest` | Journey |
+| Respaldo → choose a file → preview → replace, or reject/cancel with no change | `RestoreJourneyTest` | Journey |
 | Recibo category detail on compact and wide windows | `ShellScreenLayoutTest`; `ReciboListDetailWideTest`; `NavigationStateTest.aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth` | Device + unit/state |
 | Restoring the open Recibo category and keeping its identity while loading | `NavigationStateTest.anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed`; `DetailIdentityTest` | Unit/state |
 | Resumen → income history → new income → Back, and Resumen → routed category detail → Back | `ResumenJourneyTest.realEntrySummarySourceLinksAndRecreationReconcileWithStorage` | Journey |

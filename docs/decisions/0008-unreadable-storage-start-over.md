@@ -28,8 +28,10 @@ or migration performance warrants a change.
 ## Remaining recovery work
 
 The kept copy is private plaintext financial data with no recovery screen yet.
-SELLO-030 must make backup restore reachable from this screen and decide whether
-the kept copy can be recovered. SELLO-031 must erase it on reset; SELLO-032 must
+SELLO-030 must make backup restore reachable from this screen. Decided with the
+owner on 2026-10-22 (SELLO-030): the kept copy is never recovered by Sello; a restore
+from this screen sets the unreadable file aside, as starting over does, and fills the
+new store from the backup. SELLO-031 must erase it on reset; SELLO-032 must
 include it in private-file checks. See the
 [recovery epic](../planning/mvp/epics/E07-recovery-privacy.md).
 

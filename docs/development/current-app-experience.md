@@ -28,7 +28,7 @@ categories and monthly budgets.
 - The app uses the shared `:design-system`. The separate `:catalog` app renders those
   real components with synthetic data and no product repositories.
 
-Not present in customer navigation: restore, reset, sandbox controls, goals,
+Not present in customer navigation: reset, sandbox controls, goals,
 investments, recurrence, alerts, analytical export or batch entry. There are no
 placeholder destinations for them.
 
@@ -279,7 +279,20 @@ read and written off the main thread and the save continues if the screen is lef
 "Guardado" lands only after the document is written and closed. A failed save keeps
 the last good backup and warns about a possibly incomplete file; a save the app never
 finished (the process died) is reported as unknown, never as saved. Format:
-[backup format](../data/backup-format.md). There is no restore yet (SELLO-030).
+[backup format](../data/backup-format.md).
+
+**Restaurar**, below it: "Elegir archivo" opens the system open dialog; the whole file
+is checked before anything is shown, and a file that cannot be restored is named by
+kind (not a backup, newer version, damaged, too large, invalid content) with "Tus
+datos no cambiaron". A valid file shows current and backup counts, the backup's
+date and the replacement warning; nothing changes until "Reemplazar con el respaldo".
+The replacement is one transaction with a new generation, so older drafts and undo
+offers are refused. The backup's zone, appearance and order follow; if a preference
+cannot be applied, D09's "Historial financiero restaurado" names only those, with a
+retry that never replaces the history again. "Restaurado" → "Ir al recibo" (or Back)
+restarts the app. A preview or result scrolls into view at the top; once the history
+is replaced it is the only thing shown. Restore from the start-up failure screen is
+the second part of SELLO-030.
 
 **Placement:** a shell route with Back and no Anotar dock: its own button is the only
 action.
@@ -375,7 +388,8 @@ beside each feature.
 - Category and transaction forms are full-screen flows, not sheets or side panels.
 - The month and date pickers are Material 3 dialogs and sheets with Sello colors, not
   custom calendar components.
-- Restore and reset are planned but not routed. The debug sandbox is a separate
+- Reset is planned but not routed; restore is not yet offered from the start-up
+  failure screen (SELLO-030 part 2). The debug sandbox is a separate
   debug-only activity, not a route in the app.
 - There is no production network permission, account, sync, notification or cloud UI.
 

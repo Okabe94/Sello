@@ -90,4 +90,14 @@ interface IncomeDao {
             "ORDER BY effective_date, sequence LIMIT :limit"
     )
     suspend fun all(afterDate: String, afterSequence: Long, limit: Int): List<IncomeEntity>
+
+    /** For a restore only. */
+    @Query("DELETE FROM income")
+    suspend fun deleteAll(): Int
+
+    @Insert
+    suspend fun insertAll(incomes: List<IncomeEntity>)
+
+    @Query("SELECT COUNT(*) FROM income")
+    suspend fun count(): Int
 }

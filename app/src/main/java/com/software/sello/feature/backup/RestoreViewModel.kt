@@ -1,0 +1,98 @@
+package com.software.sello.feature.backup
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.software.sello.domain.port.AppRestart
+import com.software.sello.domain.port.DocumentSource
+import com.software.sello.domain.port.FinancialClock
+import java.time.ZoneId
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+
+/**
+ * The Restaurar part of Respaldo. Choosing a file is the system's; checking and
+ * replacing belong to [RestoreSession], so they outlive this screen. After a
+ * replacement, going on restarts the app, because the history, its generation and
+ * possibly its financial zone are not the ones this process started with.
+ */
+class RestoreViewModel(
+    private val session: RestoreSession,
+    private val restart: AppRestart,
+    clock: FinancialClock
+) : ViewModel() {
+    private val pickerRequest = MutableStateFlow(false)
+
+    init {
+        session.resume()
+    }
+
+    val state: StateFlow<RestoreState> = combine(
+        session.step,
+        pickerRequest,
+        clock.today
+    ) { step, request, today ->
+        RestoreState(step = step, pickerRequest = request, zone = today.zone)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MILLIS), RestoreState())
+
+    fun onAction(action: RestoreAction) {
+        when (action) {
+            RestoreAction.Choose -> if (!state.value.busy) pickerRequest.value = true
+
+            RestoreAction.PickerOpened -> pickerRequest.value = false
+
+            is RestoreAction.Chosen -> action.source?.let { session.choose(DocumentSource(it)) }
+
+            RestoreAction.Confirm -> session.confirm()
+
+            RestoreAction.Cancel -> session.cancel()
+
+            RestoreAction.Dismiss -> session.dismiss()
+
+            RestoreAction.ApplyPreferences -> session.applyPreferences()
+
+            RestoreAction.Leave -> {
+                session.finish()
+                restart.restart()
+            }
+        }
+    }
+
+    private companion object {
+        const val STOP_MILLIS = 5_000L
+    }
+}
+
+sealed interface RestoreAction {
+    data object Choose : RestoreAction
+
+    data object PickerOpened : RestoreAction
+
+    /** The picker's answer: a document, or null when it was dismissed. */
+    data class Chosen(val source: String?) : RestoreAction
+
+    data object Confirm : RestoreAction
+
+    data object Cancel : RestoreAction
+
+    data object Dismiss : RestoreAction
+
+    data object ApplyPreferences : RestoreAction
+
+    /** Ir al recibo, or Back, once the history has been replaced. */
+    data object Leave : RestoreAction
+}
+
+data class RestoreState(
+    val step: RestoreStep = RestoreStep.Idle,
+    val pickerRequest: Boolean = false,
+    val zone: ZoneId? = null
+) {
+    val busy: Boolean
+        get() = pickerRequest || step == RestoreStep.Checking || step is RestoreStep.Replacing
+
+    /** Once the history is or may be replaced, every way out starts the app again. */
+    val replaced: Boolean get() = step is RestoreStep.Restored || step is RestoreStep.Unknown
+}

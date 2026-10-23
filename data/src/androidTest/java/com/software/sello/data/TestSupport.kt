@@ -32,6 +32,9 @@ class DatabaseFiles : ExternalResource() {
     val context: Context get() = InstrumentationRegistry.getInstrumentation().targetContext
     val name = "test-${UUID.randomUUID()}.db"
     val file: File get() = context.getDatabasePath(name)
+
+    /** This test's own restore staging folder, removed afterwards. */
+    val restoreFolder: File get() = File(context.filesDir, name.removeSuffix(".db") + "-restore")
     private val opened = mutableListOf<SelloDatabase>()
 
     /** Each call is a fresh handle on the same file, as after a process restart. */
@@ -41,6 +44,7 @@ class DatabaseFiles : ExternalResource() {
     override fun after() {
         opened.forEach { if (it.isOpen) it.close() }
         context.deleteDatabase(name)
+        restoreFolder.deleteRecursively()
     }
 }
 

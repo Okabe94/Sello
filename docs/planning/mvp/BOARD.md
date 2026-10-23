@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 42/50 · **Epics Done:** 7/10
 
-Backlog: 8 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 42
+Backlog: 7 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 42
 
 [Workflow, gates and definition of done](README.md)
 
@@ -29,7 +29,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion) | Implement staged atomic restore and resumable preference completion | SELLO-E07 | P0 | G2 | None |
 
 ## Review
 
@@ -43,7 +45,6 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
-| [SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion) | Implement staged atomic restore and resumable preference completion | SELLO-E07 | P0 | G2 | None |
 | [SELLO-031](epics/E07-recovery-privacy.md#sello-031--deliver-fenced-two-confirmation-reset-and-recovery) | Deliver fenced two-confirmation reset and recovery | SELLO-E07 | P0 | G2 | [SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion) |
 | [SELLO-032](epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation) | Verify privacy, file boundaries and developer-data isolation | SELLO-E07 | P0 | G2 | [SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion), [SELLO-031](epics/E07-recovery-privacy.md#sello-031--deliver-fenced-two-confirmation-reset-and-recovery) |
 | [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) | Execute accessibility, adaptive and process-restoration journeys | SELLO-E08 | P0 | G2 | None |
@@ -101,4 +102,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-030](epics/E07-recovery-privacy.md#sello-030--implement-staged-atomic-restore-and-resumable-preference-completion), [SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-074](epics/E13-v2-current-app.md#sello-074--review-the-v2-screens-with-talkback-and-switch-access)
+[SELLO-033](epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys), [SELLO-074](epics/E13-v2-current-app.md#sello-074--review-the-v2-screens-with-talkback-and-switch-access)

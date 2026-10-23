@@ -122,6 +122,20 @@ is the backup "Guardado" and remembered (`BackupRecords`, in DataStore). A start
 recorded before the first byte, so a process that dies mid-save leaves an unknown
 outcome, never a saved one. Sello never deletes a document it failed to complete.
 
+## Restoring a file
+
+In the app (Respaldo → Restaurar), the system's open dialog returns a document; at
+most 10 MiB plus one byte is read. `RoomRestores.stage` checks it with
+`BackupCodec.read` and keeps it privately with a new operation identifier, the
+history position (generation, revision) it was previewed at, and the time. A staged
+file survives a restart, but is forgotten after a day or once the generation changes.
+
+The replacement refuses a history that moved since the preview; the person previews
+again. Inside one transaction a receipt for the same operation means it already
+happened, so asking again after an unknown outcome or a crash replays instead of
+replacing twice. Afterwards the backup's appearance and order are applied; a group
+that fails stays pending, with the file, and is retried at start-up and on request.
+
 ## Changing the format
 
 Any change to keys, meanings or rules is a new `version`. Version 1 stays readable

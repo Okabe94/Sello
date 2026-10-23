@@ -18,7 +18,10 @@ enum class OperationKind(val key: String) {
     ArchiveCategory("category.archive"),
     UnarchiveCategory("category.unarchive"),
     SetDefaultLimit("category.set_default_limit"),
-    SetMonthLimit("category.set_month_limit")
+    SetMonthLimit("category.set_month_limit"),
+
+    /** The whole financial history replaced by a backup. It has no single subject. */
+    RestoreHistory("history.restore")
 }
 
 /**

@@ -2,6 +2,7 @@ package com.software.sello.feature.backup
 
 import android.content.ActivityNotFoundException
 import android.text.format.Formatter
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +53,23 @@ private const val BACKUP_MIME = "application/json"
 fun BackupRoot(viewModels: ViewModelProvider.Factory, contentPadding: PaddingValues) {
     val model: BackupViewModel = viewModel(factory = viewModels)
     val state by model.state.collectAsStateWithLifecycle()
+    val restoreModel: RestoreViewModel = viewModel(factory = viewModels)
+    val restore by restoreModel.state.collectAsStateWithLifecycle()
+    // Any file may be a backup: providers name JSON differently, and the check decides.
+    val opener = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        restoreModel.onAction(RestoreAction.Chosen(uri?.toString()))
+    }
+    LaunchedEffect(restore.pickerRequest) {
+        if (!restore.pickerRequest) return@LaunchedEffect
+        restoreModel.onAction(RestoreAction.PickerOpened)
+        try {
+            opener.launch(arrayOf("*/*"))
+        } catch (_: ActivityNotFoundException) {
+            restoreModel.onAction(RestoreAction.Chosen(null))
+        }
+    }
+    // Once the history is replaced, leaving starts the app again from Recibo.
+    BackHandler(enabled = restore.replaced) { restoreModel.onAction(RestoreAction.Leave) }
     // The launcher is restored with the screen, so an answer that arrives after the
     // process was recreated still reaches the new view model.
     val picker = rememberLauncherForActivityResult(
@@ -66,7 +84,15 @@ fun BackupRoot(viewModels: ViewModelProvider.Factory, contentPadding: PaddingVal
             model.onAction(BackupAction.DestinationChosen(null))
         }
     }
-    BackupScreen(state, model::onAction, contentPadding)
+    BackupScreen(
+        state,
+        model::onAction,
+        contentPadding,
+        restoreFirst = restore.step != RestoreStep.Idle && restore.step != RestoreStep.Checking,
+        restoreOnly = restore.replaced
+    ) {
+        RestoreSection(restore, restoreModel::onAction)
+    }
 }
 
 /**
@@ -78,13 +104,25 @@ fun BackupScreen(
     state: BackupState,
     onAction: (BackupAction) -> Unit,
     contentPadding: PaddingValues,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    restoreFirst: Boolean = false,
+    restoreOnly: Boolean = false,
+    restore: @Composable () -> Unit = {}
 ) {
+    val scroll = rememberScrollState()
+    // A preview, rejection or outcome appears at the top; bring it into view from
+    // wherever the person tapped Elegir archivo.
+    val reducedMotion = SelloTheme.reducedMotion
+    LaunchedEffect(restoreFirst, restoreOnly) {
+        if (restoreFirst || restoreOnly) {
+            if (reducedMotion) scroll.scrollTo(0) else scroll.animateScrollTo(0)
+        }
+    }
     Column(
         verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scroll)
             .padding(contentPadding)
             .testTag(BACKUP_TAG)
     ) {
@@ -92,6 +130,10 @@ fun BackupScreen(
             SlipSkeleton(Modifier.testTag(BACKUP_LOADING_TAG))
             return@Column
         }
+        // A restore under way or just answered is the thing to read first; once the
+        // history is replaced it is the only thing on the screen.
+        if (restoreFirst || restoreOnly) restore()
+        if (restoreOnly) return@Column
         state.failure?.let { failure ->
             ErrorSlip(
                 title = stringResource(R.string.backup_failed_title),
@@ -137,6 +179,7 @@ fun BackupScreen(
             color = SelloTheme.colors.inkSoft,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
+        if (!restoreFirst) restore()
     }
 }
 

@@ -5,9 +5,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.software.sello.data.backup.BackupBounds
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.feature.backup.BackupSession
 import com.software.sello.feature.backup.BackupViewModel
+import com.software.sello.feature.backup.RestoreSession
+import com.software.sello.feature.backup.RestoreViewModel
 import com.software.sello.feature.category.CategoryEditorViewModel
 import com.software.sello.feature.category.CategoryManagementViewModel
 import com.software.sello.feature.expense.ExpenseEntryViewModel
@@ -45,6 +48,10 @@ fun presentationModule(): Module = module {
     }
     // A save runs for as long as the process, not the screen that started it.
     single { BackupSession(get(), get(), get(), get(), get<CoroutineScope>()) }
+    // Created with the graph, so a restore left with preferences pending resumes at start.
+    single(createdAtStart = true) {
+        RestoreSession(get(), get(), get<CoroutineScope>(), BackupBounds().maxBytes)
+    }
 }
 
 /**
@@ -58,6 +65,7 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     initializer {
         BackupViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get())
     }
+    initializer { RestoreViewModel(koin.get(), koin.get(), koin.get()) }
     initializer { ResumenViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get()) }
     initializer {
         IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())

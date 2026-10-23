@@ -266,7 +266,7 @@ cancellation failures and record exact file size/count/hash plus last-success be
 
 - **Type:** Story
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-028, SELLO-029, SELLO-012, SELLO-023, SELLO-004
 - **Gate:** G2
 
@@ -344,6 +344,33 @@ approved D09 and [recovery cases](../../../testing/mvp-financial-examples.md#rec
 Create/run RestoreCommandContractTest on real Room, `*RestoreRecoveryViewModelTest`
 and RestoreJourneyTest; G2. Test failures before/inside/after commit, actual staged-file
 reopen and pending preferences. Compare restored fields/order/zone/totals with original backup.
+
+### Execution progress
+
+- **Part 1 of 2, restore inside the app** (`sello-030-restore-in-app`). The owner chose,
+  on 2026-10-22, from a concept mock-up: two parts; pending preferences kept in the
+  private staged file, not a new Room table; the set-aside `sello-unreadable.db` is
+  never recovered ([ADR 0008](../../../decisions/0008-unreadable-storage-start-over.md));
+  a restart into Recibo after a restore; the mock-up's copy and D09's approved wording.
+  Delivered: Respaldo → Restaurar (open dialog, bounded read, whole-file check,
+  counted preview, confirm, cancel); `RoomRestores` with one replacement transaction
+  (new generation, backup zone, `history.restore` receipt), replay by operation
+  identifier, staleness check, private staging that survives a restart and expires;
+  preferences applied after commit and resumed at start-up; D09 pending-preferences
+  slip with a retry that never replaces again; restart on leaving. Tests: 13 real-Room
+  `RestoreCommandContractTest`, 12 `RestoreViewModelTest`, 3 `RestoreJourneyTest`.
+- **Part 1 gate:** `./scripts/verify-ticket SELLO-030 --retain` passed on `08f37c2`
+  (`main` at `025f903`), run 20261023T003800Z-8b43d9e8 on the API-30 AVD `ci30`
+  (`emulator-5582`): 644 host and 648 device tests, zero failures; lint 0 errors and
+  the 33 existing warnings. Mutations each turned a test red: no staleness check
+  (`aChangeAfterThePreviewRefusesTheReplacementUntilPreviewedAgain`), no replay by
+  receipt (`askingAgainAfterACrashBeforeTheFileMovedReplaysTheSameReplacement`). The
+  system open dialog on this AVD did not return a tapped file, so screenshots come from
+  `RestoreJourneyTest`, whose picker is answered by the test
+  ([evidence](../../../testing/evidence/SELLO-030)). Not the ticket's Quality run: the
+  ticket stays In Progress until part 2.
+- **Remaining, part 2:** "Restaurar un respaldo" on the start-up failure screen, setting
+  the unreadable file aside and restoring into a new store without the financial graph.
 
 ## SELLO-031 — Deliver fenced two-confirmation reset and recovery
 

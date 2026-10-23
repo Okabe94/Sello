@@ -114,7 +114,8 @@ class TestLedger(
         database,
         RoomFinancialProfileStore(database) {
             audit
-        }
+        },
+        files.restoreFolder
     )
 
     /** A new installation: a profile and nothing else. */

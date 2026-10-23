@@ -3,6 +3,7 @@ package com.software.sello.data
 import android.content.Context
 import com.software.sello.data.backup.BackupExport
 import com.software.sello.data.backup.RoomBackupSnapshots
+import com.software.sello.data.backup.RoomRestores
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.local.setAside
@@ -37,7 +38,9 @@ import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
+import com.software.sello.domain.port.Restores
 import com.software.sello.domain.port.ResumenSnapshots
+import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -47,7 +50,8 @@ import kotlin.coroutines.CoroutineContext
  */
 class FinancialStorage internal constructor(
     private val database: SelloDatabase,
-    val profiles: FinancialProfileStore
+    val profiles: FinancialProfileStore,
+    private val restoreFolder: File
 ) : AutoCloseable {
     /**
      * The expense workflow. It takes its clocks and identifier source here because the
@@ -89,6 +93,16 @@ class FinancialStorage internal constructor(
     val categoryReads: CategoryReads = RoomCategoryReads(database)
 
     val expenseReads: ExpenseReads = RoomExpenseReads(database)
+
+    /** Restores into this storage, staged in its own private folder. */
+    fun restores(
+        appearance: AppearancePreferences,
+        ordering: CategoryOrderingPreferences,
+        ids: RecordIdSource,
+        audit: AuditClock,
+        dispatchers: DispatcherProvider
+    ): Restores =
+        RoomRestores(database, restoreFolder, appearance, ordering, ids, audit, dispatchers)
 
     /** Backup files of this storage, with the portable preferences beside it. */
     fun backupExports(
@@ -135,6 +149,9 @@ data class StorageNames(val database: String, val preferences: String) {
     /** Where [database] is kept when it cannot be opened and the person starts again. */
     val setAsideDatabase: String get() = database.removeSuffix(".db") + "-unreadable.db"
 
+    /** The private folder a restore into [database] is staged in. */
+    val restoreFolder: String get() = database.removeSuffix(".db") + "-restore"
+
     companion object {
         val Normal = StorageNames(SelloDatabase.FILE_NAME, PREFERENCES_FILE)
     }
@@ -152,7 +169,11 @@ fun openFinancialStorage(
     names: StorageNames = StorageNames.Normal
 ): FinancialStorage {
     val database = openSelloDatabase(context, queries, names.database)
-    return FinancialStorage(database, RoomFinancialProfileStore(database, audit))
+    return FinancialStorage(
+        database,
+        RoomFinancialProfileStore(database, audit),
+        File(context.filesDir, names.restoreFolder)
+    )
 }
 
 /**

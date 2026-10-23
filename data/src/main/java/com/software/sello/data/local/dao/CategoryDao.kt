@@ -26,4 +26,14 @@ interface CategoryDao {
     /** Categories after [afterId] in identifier order, at most [limit]. */
     @Query("SELECT * FROM category WHERE id > :afterId ORDER BY id LIMIT :limit")
     suspend fun page(afterId: String, limit: Int): List<CategoryEntity>
+
+    /** For a restore only, after every row that refers to a category is gone. */
+    @Query("DELETE FROM category")
+    suspend fun deleteAll(): Int
+
+    @Insert
+    suspend fun insertAll(categories: List<CategoryEntity>)
+
+    @Query("SELECT COUNT(*) FROM category")
+    suspend fun count(): Int
 }

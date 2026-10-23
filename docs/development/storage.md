@@ -106,6 +106,13 @@ change needs no new backup version unless what a backup carries changes. Saving
 the file from Configuración → Respaldo writes it through the system document picker;
 the last successful backup is remembered in DataStore, never in Room.
 
+Restore (`RoomRestores`) stages a checked file in the profile's private folder
+(`sello-restore/`, `sandbox-restore/` for the sandbox), then in one transaction
+deletes every financial row and kept undo copy, inserts the backup's rows with
+their identifiers and order, sets the backup's zone, advances the generation and
+revision, and stores a `history.restore` receipt with no subject. Preferences are
+applied afterwards from the staged file, which stays until each group is applied.
+
 ## Changing the schema
 
 1. Change the entities, raise `version` in `SelloDatabase` and build: KSP writes the

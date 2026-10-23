@@ -19,6 +19,7 @@ import com.software.sello.domain.port.FinancialProfileStore
 import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.Restores
 import com.software.sello.domain.port.ResumenSnapshots
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
@@ -83,4 +84,5 @@ fun storageModule(storage: FinancialStorage): Module = module {
     single<IncomeCommands> { storage.incomeCommands(get(), get(), get(), get()) }
     single<IncomeReads> { storage.incomeReads }
     single<BackupExports> { storage.backupExports(get(), get(), get(), get()) }
+    single<Restores> { storage.restores(get(), get(), get(), get(), get()) }
 }

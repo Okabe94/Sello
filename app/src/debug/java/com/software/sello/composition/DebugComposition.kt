@@ -65,6 +65,8 @@ fun eraseFinancialStorage(context: Context, names: StorageNames) {
     context.deleteDatabase(names.setAsideDatabase)
     // Where DataStore keeps a preferences file named [StorageNames.preferences].
     File(context.filesDir, "datastore/${names.preferences}.preferences_pb").delete()
+    // A restore staged or half finished in the sandbox goes with its data.
+    File(context.filesDir, names.restoreFolder).deleteRecursively()
 }
 
 /**

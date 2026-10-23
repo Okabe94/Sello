@@ -7177,6 +7177,28 @@ production-signed optimized private APK candidate, not a debug/ephemeral CI subs
 Record hash/version/signing certificate, independent release money/recovery smoke,
 measurements/thresholds and artifact exclusions. Never write secrets in commands/reports.
 
+### Execution progress
+
+- **Owner decisions, 2026-10-23:** measurements through `adb` with no new libraries;
+  the API-30 emulator as the reference device; the targets in the
+  [performance profile](../../../testing/performance-profile.md), approved before any
+  result; the owner tests on physical devices and keeps the signing key, read in part 3
+  from the owner's `~/.gradle/gradle.properties`, never from the repository. An
+  independent technical reviewer is not assigned.
+- **Part 1 of 3, measurements** (`sello-035-measure`). Delivered: a seeded synthetic
+  large history (20 categories, 10,000 expenses, 2,000 incomes, 12 past months)
+  restored through Respaldo; `scripts/performance/measure.py` for cold and warm start,
+  Recibo scrolling, Resumen, a category's detail, backup and restore; Recibo reports
+  itself fully drawn once the month is read (red first); `MainThreadWorkTest` fails on
+  main-thread disk work from Sello's code. On the unshrunk release build, on top of
+  #88, every target is met; Resumen has the least margin (535 ms of 700). Remaining: R8 shrinking and keep rules with the
+  journeys re-measured (part 2); production signing, artifact inspection and G3
+  (part 3).
+- **Status stays Backlog until G3 exists.** The runner verifies an In Progress ticket
+  at its own gate, and G3 is what this ticket delivers; a lower gate may not stand in.
+  Parts 1 and 2 are verified as merge candidates (G2); part 3
+  runs G3 and proposes the ticket Done.
+
 Shared definition of done and gates:
 
 1. Deliverables are checked in and satisfy every acceptance criterion. Changes

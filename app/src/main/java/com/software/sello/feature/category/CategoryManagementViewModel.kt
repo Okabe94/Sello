@@ -107,9 +107,7 @@ class CategoryManagementViewModel(
             iconKey = saved[KEY_ICON] ?: "",
             unlimited = saved[KEY_UNLIMITED] ?: false,
             limitText = saved[KEY_LIMIT] ?: "",
-            suggestions = CategoryEditorViewModel.SUGGESTED_LIMITS.map {
-                LimitSuggestion(it, money.format(Money.cop(it)).digits)
-            },
+            suggestions = CategoryEditorViewModel.limitSuggestions(money),
             targetMonth = targetMonth,
             historical = targetMonth < currentMonth
         )

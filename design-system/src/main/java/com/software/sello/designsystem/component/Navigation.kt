@@ -6,13 +6,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Icon
@@ -77,9 +80,11 @@ fun SelloNavigationRail(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
+        // As wide as its longest label needs, so large text never shortens a tab's name.
         modifier = modifier
             .fillMaxHeight()
-            .width(RailWidth)
+            .width(IntrinsicSize.Max)
+            .widthIn(min = RailWidth)
             .background(colors.paper)
             .padding(vertical = 8.dp)
     ) {
@@ -93,12 +98,12 @@ fun SelloNavigationRail(
                 Icon(SelloIcon.Add.painter(), dock.label, tint = colors.onBrand)
             }
         }
-        Column(modifier = Modifier.selectableGroup()) {
+        Column(modifier = Modifier.fillMaxWidth().selectableGroup()) {
             navigation.destinations.forEach { destination ->
                 val selected = destination.id == navigation.selectedId
                 Row(
                     modifier = Modifier
-                        .width(RailWidth)
+                        .fillMaxWidth()
                         .heightIn(min = 56.dp)
                         .selectable(selected, role = Role.Tab) {
                             navigation.onSelect(destination.id)
@@ -158,7 +163,8 @@ fun MonthSwitcher(label: String, onClick: () -> Unit, modifier: Modifier = Modif
         Text(
             text = label,
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp, lineHeight = 24.sp),
-            maxLines = 1,
+            // A second line before an ellipsis, as for any screen title at large text.
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
         Icon(SelloIcon.KeyboardArrowDown.painter(), null, Modifier.size(22.dp))

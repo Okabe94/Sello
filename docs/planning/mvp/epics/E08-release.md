@@ -8,7 +8,7 @@
 
 - **Type:** Task
 - **Priority:** P0
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-018, SELLO-019, SELLO-020, SELLO-021, SELLO-022, SELLO-023, SELLO-009, SELLO-063, SELLO-064, SELLO-065, SELLO-066, SELLO-067, SELLO-004
 - **Gate:** G2
 
@@ -78,6 +78,28 @@ The automated semantics checks stay here: exact spoken amounts, labels, focus or
 Run affected app/design-system/catalog connected tests and G2 across the approved
 matrix. Retain annotated screenshot/video/focus notes with exact configuration and
 financial scenario. No single screenshot or emulator configuration closes the whole matrix.
+
+### Execution progress
+
+- **Part 1 of 2, sweep and fixes** (`sello-033-ui-matrix`). The owner chose, on
+  2026-10-23: the real app shell for the sweep, WCAG AA as the contrast floor, fixes in
+  the same part when small. Delivered: `UiAcceptanceSweepTest` opens 13 daily-use
+  screens through the app's own buttons in five windows (compact 2.0, short landscape
+  1.3 and 2.0, medium, expanded; all four themes), checking 48dp touch targets, text
+  not cut short, amounts spoken in pesos and main actions inside the window;
+  `SelloColorsTest` gained the stamp, soft-fill and past-month pairs. Fixed, each red
+  first: screen and month titles take a second line, and move under their actions when
+  even that does not fit; the rail widens to its longest label; chips wrap; limit
+  suggestions and Resumen's limit line are read with "pesos". Matrix:
+  [UI acceptance matrix](../../../testing/ui-acceptance-matrix.md).
+- **Part 1 gate:** `./scripts/verify-ticket SELLO-033 --retain` passed on `4a156c5`
+  (`main` at `87f3a8f`), run 20261023T065031Z-dbb34ab5 on the API-30 AVD `ci30`
+  (`emulator-5582`): 674 host and 702 device tests, zero failures; lint 0 errors and
+  the 33 existing warnings. Not the ticket's Quality run: the ticket stays In Progress
+  until part 2.
+- **Remaining, part 2:** process death, rotation and cold start walks on an emulator
+  with database checks; real-window walks for the keyboard in landscape at 2.0,
+  medium and expanded windows, and reduced motion; screenshots and the final gate.
 
 ## SELLO-034 — Prove integrated data retention and recovery failure safety
 

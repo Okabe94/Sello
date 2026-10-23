@@ -46,8 +46,8 @@ data class ArchiveQuestion(
     val discardsChanges: Boolean
 )
 
-/** A limit offered as a shortcut. [label] is the amount as it is shown. */
-data class LimitSuggestion(val pesos: Long, val label: String)
+/** A limit offered as a shortcut: drawn as [label], such as 200.000, and read as [spoken]. */
+data class LimitSuggestion(val pesos: Long, val label: String, val spoken: String)
 
 /** How the editor ended. Kept in state so a rotation cannot lose it. */
 sealed interface EditorResult {

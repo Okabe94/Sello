@@ -78,7 +78,7 @@ fun SelloChip(
                 role = Role.RadioButton,
                 onClick = onClick
             )
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         if (icon != null) {
             Icon(
@@ -88,11 +88,12 @@ fun SelloChip(
                 modifier = Modifier.size(18.dp)
             )
         }
+        // A label too long for the row at large text takes a second line, not an ellipsis.
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.W600),
             color = content,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }

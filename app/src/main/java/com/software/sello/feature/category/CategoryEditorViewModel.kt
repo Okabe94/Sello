@@ -53,9 +53,7 @@ class CategoryEditorViewModel(
             // No limit is chosen, never assumed: a new draft starts asking for an amount.
             unlimited = saved[KEY_UNLIMITED] ?: false,
             limitText = saved[KEY_LIMIT] ?: "",
-            suggestions = SUGGESTED_LIMITS.map {
-                LimitSuggestion(it, money.format(Money.cop(it)).digits)
-            },
+            suggestions = limitSuggestions(money),
             result = saved.get<String>(KEY_CREATED)?.let(EditorResult::Created)
         )
     )
@@ -282,6 +280,12 @@ class CategoryEditorViewModel(
 
         /** Limits offered before the person has any of their own, in pesos. */
         val SUGGESTED_LIMITS = listOf(200_000L, 300_000L, 500_000L)
+
+        /** [SUGGESTED_LIMITS] as chips, each read with its currency. */
+        fun limitSuggestions(money: MoneyFormatter) = SUGGESTED_LIMITS.map {
+            val amount = money.format(Money.cop(it))
+            LimitSuggestion(it, amount.digits, amount.spoken)
+        }
 
         private const val KEY_NAME = "category.name"
         private const val KEY_ICON = "category.icon"

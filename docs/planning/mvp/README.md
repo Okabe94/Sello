@@ -60,6 +60,10 @@ SELLO-E14/074 holds the manual TalkBack, Switch Access and hardware keyboard pas
 over the released app. The owner moved it out of the MVP on 2026-10-23; the MVP
 keeps the automated accessibility semantics in SELLO-033 and D10.
 
+SELLO-E15/075–077 holds the defects found during SELLO-035, logged by the owner on
+2026-10-23: counts without a thousands separator, Resumen's date in storage form and
+the intermittent sandbox scenario replay tests.
+
 Canonical epic files share this directory for stable IDs/cross-links. `Increment`
 metadata is `MVP` (default for the existing eight epics) or explicit `Post-MVP`.
 The generator validates both increments together, rejects MVP dependencies on

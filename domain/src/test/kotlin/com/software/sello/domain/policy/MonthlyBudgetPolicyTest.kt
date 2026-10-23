@@ -510,4 +510,59 @@ class MonthlyBudgetPolicyTest {
         assertEquals(bogota, read.zone)
         assertEquals(3L to 41L, read.generation to read.revision)
     }
+
+    private fun paused(number: Int) =
+        CategoryInMonth(category(number, "Pausada $number"), MonthBudgetState.Paused)
+
+    private fun id(number: Int) = CategoryId.of(uuid(number)).valueOrFail()
+
+    private fun pesos(amount: Long) = BudgetLimit.finite(Money.cop(amount)).valueOrFail()
+
+    private val october =
+        listOf(limited(1, 900_000), limited(2, 300_000), unlimited(3), paused(4))
+
+    @Test
+    fun theMonthsLimitTotalAsItIsAddsOnlyTheFiniteLimits() {
+        val total = MonthlyBudgetPolicy.limitTotalWith(october, categoryId = null, limit = null)
+
+        assertEquals(Money.cop(1_200_000), total.valueOrFail())
+    }
+
+    @Test
+    fun aNewCategorysLimitIsAddedToTheMonthsTotal() {
+        val total =
+            MonthlyBudgetPolicy.limitTotalWith(october, categoryId = null, limit = pesos(200_000))
+
+        assertEquals(Money.cop(1_400_000), total.valueOrFail())
+    }
+
+    @Test
+    fun aChangedLimitReplacesTheCategorysOldOneInTheTotal() {
+        val raised = MonthlyBudgetPolicy.limitTotalWith(october, id(2), pesos(500_000))
+        val removed = MonthlyBudgetPolicy.limitTotalWith(october, id(2), BudgetLimit.Unlimited)
+        val firstLimit = MonthlyBudgetPolicy.limitTotalWith(october, id(4), pesos(100_000))
+
+        assertEquals(Money.cop(1_400_000), raised.valueOrFail())
+        assertEquals(Money.cop(900_000), removed.valueOrFail())
+        assertEquals(Money.cop(1_300_000), firstLimit.valueOrFail())
+    }
+
+    @Test
+    fun aMonthWithNoFiniteLimitHasNoTotal() {
+        val total =
+            MonthlyBudgetPolicy.limitTotalWith(listOf(unlimited(3)), null, BudgetLimit.Unlimited)
+
+        assertNull(total.valueOrFail())
+    }
+
+    @Test
+    fun aTotalTooLargeToHoldIsRefusedNotWrapped() {
+        val total = MonthlyBudgetPolicy.limitTotalWith(
+            listOf(limited(1, Long.MAX_VALUE)),
+            categoryId = null,
+            limit = pesos(1)
+        )
+
+        assertEquals(SnapshotFailure.Unrepresentable, total.errorOrFail())
+    }
 }

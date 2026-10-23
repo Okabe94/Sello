@@ -174,6 +174,8 @@ class UiAcceptanceSweepTest(private val window: Window) {
         open(hasTestTag(CATEGORY_DETAIL_EDIT_TAG))
         awaitOrDescribe(hasTestTag(EDITOR_SUBMIT_TAG))
         check("Category edit", EDITOR_SUBMIT_TAG)
+        // The form opens with the keyboard up for the name; Back first puts it away.
+        Espresso.closeSoftKeyboard()
         back()
 
         open(hasContentDescription("Anotar un gasto"))
@@ -188,6 +190,7 @@ class UiAcceptanceSweepTest(private val window: Window) {
         open(hasTestTag(RECIBO_ADD_CATEGORY_TAG))
         awaitOrDescribe(hasTestTag(EDITOR_SUBMIT_TAG))
         check("New category", EDITOR_SUBMIT_TAG)
+        Espresso.closeSoftKeyboard()
         back()
 
         open(hasText("Resumen") and hasClickAction())

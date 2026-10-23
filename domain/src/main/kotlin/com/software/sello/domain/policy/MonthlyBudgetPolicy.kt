@@ -3,6 +3,7 @@ package com.software.sello.domain.policy
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.BudgetStanding
 import com.software.sello.domain.model.Category
+import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryMonth
 import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.DailyAllowance
@@ -173,6 +174,23 @@ object MonthlyBudgetPolicy {
                 futureDatedExpenses = future
             )
         )
+    }
+
+    /**
+     * The month's `L`, as [snapshot] adds it, were [categoryId]'s limit [limit]
+     * instead; with a null [categoryId], [limit] is a new category's. A null [limit]
+     * adds nothing. Null when no category would have a finite limit.
+     */
+    fun limitTotalWith(
+        categories: List<CategoryInMonth>,
+        categoryId: CategoryId?,
+        limit: BudgetLimit?
+    ): Outcome<Money?, SnapshotFailure> {
+        val others = categories.filter { categoryId == null || it.category.id != categoryId }
+            .mapNotNull { ((it.state as? MonthBudgetState.Limited)?.limit as? BudgetLimit.Finite) }
+        val finite = others + listOfNotNull(limit as? BudgetLimit.Finite)
+        if (finite.isEmpty()) return Outcome.Success(null)
+        return total(finite.map { it.amount })
     }
 
     private fun total(amounts: List<Money>): Outcome<Money, SnapshotFailure> =

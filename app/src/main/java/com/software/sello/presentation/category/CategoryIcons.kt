@@ -46,7 +46,33 @@ object CategoryIcons {
             SelloIcon.PhoneIphone,
             R.string.category_icon_phone_iphone
         ),
-        CategoryIconOption("child_care", SelloIcon.ChildCare, R.string.category_icon_child_care)
+        CategoryIconOption("child_care", SelloIcon.ChildCare, R.string.category_icon_child_care),
+        CategoryIconOption(
+            "directions_car",
+            SelloIcon.DirectionsCar,
+            R.string.category_icon_directions_car
+        ),
+        CategoryIconOption(
+            "local_gas_station",
+            SelloIcon.LocalGasStation,
+            R.string.category_icon_local_gas_station
+        ),
+        CategoryIconOption("bolt", SelloIcon.Bolt, R.string.category_icon_bolt),
+        CategoryIconOption("wifi", SelloIcon.Wifi, R.string.category_icon_wifi),
+        CategoryIconOption("savings", SelloIcon.Savings, R.string.category_icon_savings),
+        CategoryIconOption(
+            "credit_card",
+            SelloIcon.CreditCard,
+            R.string.category_icon_credit_card
+        ),
+        CategoryIconOption("redeem", SelloIcon.Redeem, R.string.category_icon_redeem),
+        CategoryIconOption(
+            "sports_esports",
+            SelloIcon.SportsEsports,
+            R.string.category_icon_sports_esports
+        ),
+        CategoryIconOption("spa", SelloIcon.Spa, R.string.category_icon_spa),
+        CategoryIconOption("handyman", SelloIcon.Handyman, R.string.category_icon_handyman)
     )
 
     val keys: List<String> = options.map { it.key }

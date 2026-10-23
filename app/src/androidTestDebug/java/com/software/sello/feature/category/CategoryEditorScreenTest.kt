@@ -9,8 +9,11 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
@@ -18,6 +21,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
@@ -29,6 +33,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.software.sello.designsystem.component.MoneySign
+import com.software.sello.designsystem.component.MoneyTextValue
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.category.CategoryIcons
 import org.junit.Assert.assertEquals
@@ -93,19 +99,74 @@ class CategoryEditorScreenTest {
     }
 
     @Test
-    fun withSinLimiteChosenThereIsNoAmountToTypeAndNoAmountToPick() {
-        // An amount typed before the switch is kept by the form and not shown.
+    fun withSinLimiteChosenTheAmountAndSuggestionsStayGreyedOutAndCannotBeUsed() {
+        // An amount typed before the switch is kept, greyed out, and is not sent.
         show(ready.copy(name = "Mercado", unlimited = true, limitText = "450000"))
 
         rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().assertIsOn()
-        limit.assertDoesNotExist()
-        rule.onNodeWithTag(EDITOR_LIMIT_TAG).assertDoesNotExist()
-        for (suggestion in listOf("200.000", "300.000", "500.000", "450.000", "450000")) {
-            rule.onNodeWithText(suggestion).assertDoesNotExist()
+        limit.performScrollTo().assertIsDisplayed().assertIsNotEnabled()
+        assertEquals("450.000", drawnLimit())
+        for (suggestion in listOf("200.000 pesos", "300.000 pesos", "500.000 pesos")) {
+            rule.onNodeWithContentDescription(suggestion).performScrollTo().assertIsNotEnabled()
         }
         rule.onNodeWithTag(EDITOR_SUBMIT_TAG).performScrollTo().assertIsEnabled().performClick()
 
         assertEquals(listOf<CategoryEditorAction>(CategoryEditorAction.Submit), actions)
+    }
+
+    @Test
+    fun theNameIsFocusedOnceTheNewFormIsReady() {
+        var state by mutableStateOf(CategoryEditorState())
+        rule.setContent { SelloTheme(reducedMotion = true) { CategoryEditorScreen(state, {}) } }
+        state = ready
+
+        rule.waitForIdle()
+        name.assertIsFocused()
+    }
+
+    @Test
+    fun theNameIsFocusedWhenAnExistingCategoryOpens() {
+        show(editing)
+
+        rule.waitForIdle()
+        name.assertIsFocused()
+    }
+
+    @Test
+    fun aFormThatCannotBeChangedDoesNotTakeFocus() {
+        show(ready.copy(name = "Mercado", busy = true))
+
+        rule.waitForIdle()
+        rule.onAllNodes(isFocused()).assertCountEquals(0)
+    }
+
+    private fun total(digits: String, changes: Boolean) = LimitTotal(
+        october,
+        MoneyTextValue(MoneySign.None, "", digits, "$digits pesos"),
+        changes
+    )
+
+    @Test
+    fun theMonthsTotalSaysWhatItWouldBecomeWithThisLimit() {
+        show(ready.copy(limitText = "200000", limitTotal = total("1.400.000", changes = true)))
+
+        rule.onNodeWithTag(EDITOR_TOTAL_TAG).performScrollTo().assertIsDisplayed()
+            .assertContentDescriptionEquals("Tu límite total de octubre pasaría a 1.400.000 pesos")
+    }
+
+    @Test
+    fun aTotalTheLimitDoesNotChangeIsSaidAsItIs() {
+        show(ready.copy(unlimited = true, limitTotal = total("1.200.000", changes = false)))
+
+        rule.onNodeWithTag(EDITOR_TOTAL_TAG).performScrollTo()
+            .assertContentDescriptionEquals("Tu límite total de octubre es 1.200.000 pesos")
+    }
+
+    @Test
+    fun withNoTotalToShowThereIsNoLine() {
+        show(ready)
+
+        rule.onNodeWithTag(EDITOR_TOTAL_TAG).assertDoesNotExist()
     }
 
     @Test
@@ -145,8 +206,9 @@ class CategoryEditorScreenTest {
         rule.onNodeWithContentDescription("Volver").performClick()
 
         // The form is given the same state again, so the field goes back to "Mer" and
-        // says so; what matters is that the typed text was reported first, as typed.
-        assertEquals(CategoryEditorAction.NameChanged("cMer"), actions.first())
+        // says so; what matters is that the typed text was reported first, as typed,
+        // after the name already there.
+        assertEquals(CategoryEditorAction.NameChanged("Merc"), actions.first())
         assertEquals(
             listOf(
                 CategoryEditorAction.IconPicked("pets"),

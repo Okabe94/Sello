@@ -216,10 +216,12 @@ class CategoryManagementViewModelTest {
             listOf(now.name, now.iconKey, now.unlimited, now.limitText)
         )
         assertEquals(october to false, now.targetMonth to now.historical)
+        // Café's own 100.000, topped up with the first two starting suggestions.
         assertEquals(
-            listOf("200.000 pesos", "300.000 pesos", "500.000 pesos"),
+            listOf("100.000 pesos", "200.000 pesos", "300.000 pesos"),
             now.suggestions.map { it.spoken }
         )
+        assertEquals("100.000" to false, now.limitTotal?.amount?.digits to now.limitTotal?.changes)
         assertFalse(now.changed || now.canSubmit || now.limitLocked)
         assertTrue(now.canArchive)
         assertEquals(emptyList<CategoryCommand>(), commands.submitted)
@@ -749,5 +751,22 @@ class CategoryManagementViewModelTest {
         assertEquals(EditorResult.Discarded, untouched.now.result)
         assertTrue(changed.now.confirmDiscard)
         assertNull(changed.now.result)
+    }
+
+    @Test
+    fun aChangedLimitReplacesTheOldOneInTheMonthsTotalOfTheMonthBeingEdited() {
+        reads.categories = listOf(
+            stored(1, "Café", MonthBudgetState.Limited(finite(80_000), true)),
+            stored(3, "Comida", MonthBudgetState.Limited(finite(900_000), false)),
+            mercado
+        )
+        val form = form(opening(month = september))
+
+        form.limit("120000")
+
+        val total = form.now.limitTotal!!
+        assertEquals("1.020.000", total.amount.digits)
+        assertTrue(total.changes)
+        assertEquals(september, total.month)
     }
 }

@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryName
 import com.software.sello.domain.model.IconKey
-import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.TextError
@@ -16,6 +15,7 @@ import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.CategoryRejection
 import com.software.sello.domain.port.CreateCategory
+import com.software.sello.domain.port.MonthBudget
 import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.navigation.MonthSession
 import com.software.sello.presentation.category.CategoryIcons
@@ -40,6 +40,10 @@ class CategoryEditorViewModel(
     money: MoneyFormatter
 ) : ViewModel() {
     private var generation: Long? = null
+    private val figures = LimitFigures(money)
+
+    /** The month as last read: what the suggestions and the total are worked out from. */
+    private var budget: MonthBudget? = null
 
     /** What the existing categories are called, archived ones too, as names are compared. */
     private var takenNames: Set<String> = emptySet()
@@ -53,7 +57,7 @@ class CategoryEditorViewModel(
             // No limit is chosen, never assumed: a new draft starts asking for an amount.
             unlimited = saved[KEY_UNLIMITED] ?: false,
             limitText = saved[KEY_LIMIT] ?: "",
-            suggestions = limitSuggestions(money),
+            suggestions = LimitFigures(money).suggestions(null),
             result = saved.get<String>(KEY_CREATED)?.let(EditorResult::Created)
         )
     )
@@ -132,7 +136,14 @@ class CategoryEditorViewModel(
     private fun setLimit(unlimited: Boolean, text: String) {
         saved[KEY_UNLIMITED] = unlimited
         saved[KEY_LIMIT] = text
-        mutable.update { it.copy(unlimited = unlimited, limitText = text, limitError = null) }
+        mutable.update {
+            it.copy(
+                unlimited = unlimited,
+                limitText = text,
+                limitError = null,
+                limitTotal = figures.total(budget, null, unlimited, text)
+            )
+        }
     }
 
     /** Whether leaving would lose something the person entered or chose. */
@@ -153,6 +164,7 @@ class CategoryEditorViewModel(
 
                 is Outcome.Success -> {
                     generation = read.value.generation
+                    budget = read.value
                     takenNames =
                         read.value.categories.map { it.category.name.uniquenessKey }.toSet()
                     if (mutable.value.iconKey.isEmpty()) {
@@ -164,7 +176,12 @@ class CategoryEditorViewModel(
                     }
                     // A restored draft may hold a name that is taken.
                     mutable.update {
-                        it.copy(loading = false, nameError = it.nameError ?: takenError(it.name))
+                        it.copy(
+                            loading = false,
+                            nameError = it.nameError ?: takenError(it.name),
+                            suggestions = figures.suggestions(read.value),
+                            limitTotal = figures.total(read.value, null, it.unlimited, it.limitText)
+                        )
                     }
                     if (saved.get<String>(KEY_OPERATION) != null) recover()
                 }
@@ -277,15 +294,6 @@ class CategoryEditorViewModel(
     companion object {
         /** The route's argument: opened because an expense needs a category. */
         const val KEY_FOR_ENTRY = "forEntry"
-
-        /** Limits offered before the person has any of their own, in pesos. */
-        val SUGGESTED_LIMITS = listOf(200_000L, 300_000L, 500_000L)
-
-        /** [SUGGESTED_LIMITS] as chips, each read with its currency. */
-        fun limitSuggestions(money: MoneyFormatter) = SUGGESTED_LIMITS.map {
-            val amount = money.format(Money.cop(it))
-            LimitSuggestion(it, amount.digits, amount.spoken)
-        }
 
         private const val KEY_NAME = "category.name"
         private const val KEY_ICON = "category.icon"

@@ -1,5 +1,6 @@
 package com.software.sello.feature.category
 
+import com.software.sello.designsystem.component.MoneyTextValue
 import java.time.YearMonth
 
 /** Why the name cannot be used. */
@@ -49,6 +50,12 @@ data class ArchiveQuestion(
 /** A limit offered as a shortcut: drawn as [label], such as 200.000, and read as [spoken]. */
 data class LimitSuggestion(val pesos: Long, val label: String, val spoken: String)
 
+/**
+ * The month's total limit were the draft's limit saved: [changes] says whether that
+ * differs from the total the month has now.
+ */
+data class LimitTotal(val month: YearMonth, val amount: MoneyTextValue, val changes: Boolean)
+
 /** How the editor ended. Kept in state so a rotation cannot lose it. */
 sealed interface EditorResult {
     /** A receipt confirmed the category. [categoryId] is its real identifier. */
@@ -84,6 +91,8 @@ data class CategoryEditorState(
     val limitText: String = "",
     val limitError: LimitError? = null,
     val suggestions: List<LimitSuggestion> = emptyList(),
+    /** Shown under the limit; null while the draft's limit is not usable or cannot be added. */
+    val limitTotal: LimitTotal? = null,
     val busy: Boolean = false,
     val saveError: SaveError? = null,
     val confirmDiscard: Boolean = false,

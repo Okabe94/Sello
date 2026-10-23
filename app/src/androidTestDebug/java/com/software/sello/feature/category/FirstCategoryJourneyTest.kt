@@ -245,8 +245,8 @@ class FirstCategoryJourneyTest {
         assertEquals(0, TestData.financialRows())
 
         rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
-        rule.limitField().assertDoesNotExist()
-        rule.onNodeWithText("500.000").assertDoesNotExist()
+        rule.limitField().performScrollTo().assertIsNotEnabled()
+        rule.onNodeWithContentDescription("500.000 pesos").performScrollTo().assertIsNotEnabled()
         submit()
 
         rule.waitUntilExactlyOneExists(hasTestTag(RECIBO_CATEGORIES_TAG), 10_000)
@@ -266,7 +266,7 @@ class FirstCategoryJourneyTest {
         rule.limitField().performScrollTo().performTextInput("450000")
 
         rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
-        rule.limitField().assertDoesNotExist()
+        rule.limitField().performScrollTo().assertIsNotEnabled()
         rule.onNodeWithTag(EDITOR_UNLIMITED_TAG).performScrollTo().performClick()
         val back = rule.limitField().performScrollTo().fetchSemanticsNode().config
             .getOrNull(SemanticsProperties.EditableText)?.text

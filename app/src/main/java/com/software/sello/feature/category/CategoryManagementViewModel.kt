@@ -21,6 +21,7 @@ import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CategoryReads
 import com.software.sello.domain.port.CategoryRejection
 import com.software.sello.domain.port.ChangeCategoryIcon
+import com.software.sello.domain.port.MonthBudget
 import com.software.sello.domain.port.MonthlySnapshots
 import com.software.sello.domain.port.RecordIdSource
 import com.software.sello.domain.port.RenameCategory
@@ -95,6 +96,10 @@ class CategoryManagementViewModel(
 
     private var original: Original? = savedOriginal()
     private var generation: Long? = null
+    private val figures = LimitFigures(money)
+
+    /** The month being edited as last read: what the suggestions and the total come from. */
+    private var budget: MonthBudget? = null
 
     /** What other categories are called, as names are compared. */
     private var takenNames: Set<String> = emptySet()
@@ -107,7 +112,7 @@ class CategoryManagementViewModel(
             iconKey = saved[KEY_ICON] ?: "",
             unlimited = saved[KEY_UNLIMITED] ?: false,
             limitText = saved[KEY_LIMIT] ?: "",
-            suggestions = CategoryEditorViewModel.limitSuggestions(money),
+            suggestions = LimitFigures(money).suggestions(null),
             targetMonth = targetMonth,
             historical = targetMonth < currentMonth
         )
@@ -208,7 +213,8 @@ class CategoryManagementViewModel(
                 changed = stored != null && parts(after, stored).isNotEmpty(),
                 archived = stored?.archived ?: false,
                 // An archived category has no limit from this month onwards to change.
-                limitLocked = stored != null && stored.archived && targetMonth == currentMonth
+                limitLocked = stored != null && stored.archived && targetMonth == currentMonth,
+                limitTotal = figures.total(budget, categoryId, after.unlimited, after.limitText)
             )
         }
     }
@@ -314,6 +320,8 @@ class CategoryManagementViewModel(
             is Outcome.Success -> read.value
         }
         generation = read.generation
+        budget = read
+        mutable.update { it.copy(suggestions = figures.suggestions(read)) }
         takenNames = read.categories.filter { it.category.id != categoryId }
             .map { it.category.name.uniquenessKey }.toSet()
         val found = read.categories.firstOrNull { it.category.id == categoryId }

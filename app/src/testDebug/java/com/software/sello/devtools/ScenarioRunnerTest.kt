@@ -312,6 +312,22 @@ class ScenarioRunnerTest {
         )
         assertEquals(4, second.state.value.next)
     }
+
+    @Test
+    fun aStepTakenBeforeTheNewProcessHasListedItsHistoryKeepsItsOwnResult() = runTest {
+        val first = process()
+        repeat(4) { first.step() }
+        // Step 4 committed, but the process ended before its checkpoint.
+        store.session = store.session.copy(nextStep = 3)
+
+        val second = process()
+        second.recover()
+        second.step()
+        runCurrent()
+
+        assertEquals(listOf(0, 1, 2, 3), second.state.value.log.map { it.index })
+        assertEquals("Ya estaba guardado", second.state.value.log.last().result)
+    }
 }
 
 /** Snapshot ports the host runner tests never read. */

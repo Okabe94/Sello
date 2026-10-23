@@ -28,8 +28,9 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
+            // R8 shrinks and optimizes the customer build; see docs/testing/performance-profile.md.
             optimization {
-                enable = false
+                enable = true
             }
         }
     }

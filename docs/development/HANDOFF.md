@@ -101,12 +101,15 @@ tracks the remaining financial inputs.
   during SELLO-035 and SELLO-036 (counts without a thousands separator, Resumen's raw
   date, flaky sandbox replay tests, a failed backup reported as too large), logged by
   the owner on 2026-10-23.
-- Goal/investment features, recurrence and other deferred capabilities remain
-  outside MVP; signed carryover, legacy import and the assistive-technology pass
-  are on the post-MVP roadmap.
+- SELLO-079–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
+  the missing v2 parts of today's screens, then Metas, recurrence and Inversiones,
+  released together as `0.2.0`; decisions in [ADR 0017](../decisions/0017-goals-recurrence-investments.md).
+  Each epic starts by verifying what already exists.
+- Signed carryover (E09), legacy import (E10) and the assistive-technology pass (E14)
+  stay on the post-MVP roadmap.
 
 Every MVP ticket is Done. The post-MVP [roadmap](../planning/mvp/ROADMAP.md) holds
-E09, E10, E14 and E15.
+E09, E10 and E14–E19.
 
 ## Detail references
 

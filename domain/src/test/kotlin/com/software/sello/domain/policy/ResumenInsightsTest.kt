@@ -138,6 +138,24 @@ class ResumenInsightsTest {
     }
 
     @Test
+    fun the31stIsComparedWithThe30thOfAThirtyDayMonth() {
+        val snapshot = read(
+            listOf(
+                expense("2026-09-30", 60_000),
+                expense("2026-10-31", 45_000)
+            ),
+            today = "2026-10-31"
+        )
+
+        // October 1–31: 45.000. September 1–30: 60.000. 15.000 less; 15.000 / 60.000 = 25,0 %.
+        val comparison = snapshot.comparison!!
+        assertEquals(31 to 30, comparison.throughDay to comparison.previousThroughDay)
+        assertEquals(Money.cop(15_000), comparison.difference)
+        assertEquals(SpendingDirection.Less, comparison.direction)
+        assertEquals(BigInteger.valueOf(250), comparison.percentTenths)
+    }
+
+    @Test
     fun aFinishedMonthIsComparedWholeWithTheWholeMonthBefore() {
         val snapshot = read(
             listOf(

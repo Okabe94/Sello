@@ -74,7 +74,10 @@ those rules. This records the answers; [architecture](../../ARCHITECTURE.md) and
 
 - Recibo's **Ver cómo cerraste …** shows on days 1–7 when the previous month had
   expenses, and is gone for that month once opened or dismissed.
-- **¿Qué días gastas más?** averages spending per weekday within the selected month.
+- **¿Qué días gastas más?** averages spending per weekday over the last six months,
+  the selected one included, or from the first recorded day when that is later, and
+  says which (owner, 2026-10-23, replacing "within the selected month" after seeing
+  both on a phone).
 - A dismissed Resumen suggestion may return the next month if still true.
 
 ## Consequences

@@ -13,13 +13,17 @@ verification or release-acceptance claims.
 
 - Offline, local-only COP expenses/income, with Recibo and Resumen as working tabs.
 - Category creation/editing, archive/unarchive, monthly limits and past corrections.
+  The editor opens with the keyboard on the name, offers 24 icons and the person's
+  most used limits, and says what the month's total limit would become.
 - Category detail follows the owner's hero → latest expenses → En números → weekly
   spending → historical average order, with real insights and a searchable expense
   browser. Its current-month chart point shares the hero's live limit; the average
   still uses completed months. See [the detail guide](recibo-and-detail.md#category-detail).
 - Main and tools launchers now use the existing Marca artwork, including themed icons.
 - Expense/income history, editing, deletion and guarded six-second undo.
-- Exact totals, budget remaining/allowance, Resumen charts, net flow and allocation.
+- Exact totals, budget remaining/allowance, net flow and allocation. Resumen leads with
+  the same-days comparison, then income, "Un mes normal" over the monthly columns, the
+  ranking, the weekday averages (six months) and at most one dismissible suggestion.
 - Shared month, restored drafts/navigation, appearance and category-order settings.
 - Room schema 3 for finances; DataStore for nonfinancial preferences.
 - Backups save and restore through the system file picker, also from the start-up
@@ -89,6 +93,9 @@ tracks the remaining financial inputs.
 | [SELLO-071](../planning/mvp/epics/E13-v2-current-app.md#sello-071--bring-income-entry-edit-and-history-to-v2) | Income entry uses the v2 form in green, with Otro's name in the composer; income history is "Ingresos de octubre" with the hero, split bar and list, and its dock records income. |
 | [SELLO-072](../planning/mvp/epics/E13-v2-current-app.md#sello-072--bring-resumen-to-v2-for-todays-figures) | Resumen follows the v2 order: income receipt lines, month-by-month columns with the current month striped, categories ranked with a total, then the kept daily chart. No forecast or "Gasto real" stamp. |
 | [SELLO-073](../planning/mvp/epics/E13-v2-current-app.md#sello-073--retire-the-v1-components-v2-replaced) | One component set: `AmountField` and the v1 dock and tab bar are deleted, the v2 components lost their `V2` prefix and package, and the catalog lists each component once in ten groups. The prototype uses `EntryAmountSlip`. |
+| [SELLO-080](../planning/mvp/epics/E16-v2-today-gaps.md#sello-080--lead-resumen-with-the-same-days-comparison) | Resumen opens with "¿Cómo va este mes?" (or "¿Cómo cerró …?"): the difference with the same days of last month, or whole months, its rate and both months as one-line bars. The daily chart is gone. Built before the SELLO-079 audit by owner decision. |
+| [SELLO-081](../planning/mvp/epics/E16-v2-today-gaps.md#sello-081--show-the-average-month-and-the-weekday-answer-in-resumen) | "Un mes normal" averages complete months with spending; "¿Qué días gastas más?" averages each weekday over the last six months (ADR 0017 amended) and names the busiest day. |
+| [SELLO-082](../planning/mvp/epics/E16-v2-today-gaps.md#sello-082--offer-one-budget-suggestion-in-resumen) | One suggestion for a category over its limit two complete months in a row, the bigger limit first, with **Ajustar el presupuesto de …** to its editor; × hides it for that month. |
 
 ## Remaining work
 
@@ -101,8 +108,9 @@ tracks the remaining financial inputs.
   during SELLO-035 and SELLO-036 (counts without a thousands separator, Resumen's raw
   date, flaky sandbox replay tests, a failed backup reported as too large), logged by
   the owner on 2026-10-23.
-- SELLO-079–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
-  the missing v2 parts of today's screens, then Metas, recurrence and Inversiones,
+- SELLO-079 and SELLO-083–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
+  the rest of today's v2 screens (SELLO-080–082 are done; the SELLO-079 audit credits
+  them), then Metas, recurrence and Inversiones,
   released together as `0.2.0`; decisions in [ADR 0017](../decisions/0017-goals-recurrence-investments.md).
   Each epic starts by verifying what already exists.
 - Signed carryover (E09), legacy import (E10) and the assistive-technology pass (E14)

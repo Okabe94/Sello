@@ -1,6 +1,6 @@
 # SELLO-E15 — Fixes found during release work
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Increment:** Post-MVP
 - **Goal:** Fix the defects found while measuring and accepting the MVP, each with a test.
 - **Exit:** Every ticket below is Done: counts and dates read as the rest of the app writes them, a failed backup says why, and the sandbox scenario tests pass reliably.
@@ -99,7 +99,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-076 --retain`.
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-004
 - **Gate:** G2
 
@@ -141,6 +141,49 @@ runner from before the simulated restart still answering; see `ScenarioRunner`.
 
 ### Verification recipe
 Repeated focused runs, then `./scripts/verify-ticket SELLO-077 --retain`.
+
+### Execution progress
+
+- **Cause, 2026-10-23:** not the runner from before the restart. A new process's
+  `ScenarioRunner.recover()` runs in the background and, once it held the step lock,
+  replaced the whole log with the steps confirmed so far. A step taken before it ran
+  was then relisted from its receipt: "Guardado" instead of "Ya estaba guardado", and
+  a check as "Comprobado antes" instead of its figures, exactly the two CI failures.
+  Which came first depended on thread timing. The same could happen in the debug tools
+  when Paso is tapped right after a restart; no record or figure was ever affected.
+- **Fix:** `recover()` lists only the steps confirmed by earlier processes (the stored
+  progress the runner was built on) and puts them ahead of the steps this process has
+  already logged, whose results it keeps; running it twice lists them once. No test
+  waits, retries or sleeps were added.
+
+### Delivery evidence
+
+- **Revision:** the gate tested commit `a957cd7` on `sello-077-flaky-scenarios`, on
+  `main` at `f5864bf`; the only uncommitted file was the retained report. The status
+  and this section are added to that commit afterwards.
+- **Requirement mapping:** cause stated under Execution progress; the fix is in
+  `ScenarioRunner.recover()`, with no retry, wait or sleep; the sandbox and runner stay
+  debug-only and no command, record or figure changed.
+- **Red / Green:** host `aStepTakenBeforeTheNewProcessHasListedItsHistoryKeepsItsOwnResult`
+  fixes the order (step first, then the relisting) and failed first with CI's message,
+  `expected:<[Ya estaba g]uardado> but was:<[G]uardado>`; it passes with the fix.
+- **Working checkpoint:** `ScenarioReplayTest` and `TemporalScenarioCorpusTest` (8 tests)
+  ran 20 times in a row with no failure on the standard 320 × 640 API-30 AVD, and 20
+  more on an API-30 AVD with a Pixel 6a profile.
+- **Tests:** host `ScenarioRunnerTest` (+1).
+- **Gate results:** `./scripts/verify-ticket SELLO-077 --retain` passed all seven G2
+  checks, full coverage. Host: 695 tests; device: 729 tests (data 236, design-system
+  133, app 339, catalog 21); zero failures, errors or skips. Lint had zero errors and
+  the same 33 warnings as before. A first run on the Pixel 6a AVD failed five layout
+  tests that expect a scrolling or shorter screen (see Review); it was not the
+  required device and is not evidence.
+- **Quality run:** run 20261023T220913Z-55181658; SELLO-077 G2 passed; HEAD a957cd7, inputs sha256 7286a313035e; report docs/planning/mvp/quality-reports/SELLO-077.json sha256 7c05f53991cbbe69d5d6a6ac3c2c6b8ca6d3db07d8bf34811d060fd20d644008
+- **Device / Artifact:** the dedicated synthetic AVD `sello077_api30` (API 30), first
+  with a Pixel 6a profile, then recreated at the setup guide's default 320 × 640.
+- **Review:** executor self-review; owner review by merging. Not fixed here: on a tall
+  screen, `ExpenseEntryScreenTest` (two tests), `IncomeJourneyTest`,
+  `EntryCatalogInteractionTest` and `ReciboScreenTest.ajustarPresupuesto…` fail because
+  they assume the content scrolls; they pass on the gate's AVD.
 
 ## SELLO-078 — Say what failed when a backup does not pass its own check
 

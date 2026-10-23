@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 0/48 · **Epics Done:** 0/8
+**Tickets Done:** 1/48 · **Epics Done:** 0/8
 
-Backlog: 48 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 0
+Backlog: 47 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 1
 
 [Workflow, gates and definition of done](README.md)
 
@@ -15,7 +15,7 @@ Backlog: 48 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 0
 | [SELLO-E09](epics/E09-signed-carryover.md) | Preserve surplus and overspending across enabled budget periods without confusing plans with account balances. | Backlog | 0/7 |
 | [SELLO-E10](epics/E10-legacy-import.md) | Let someone bring their history from the previous app into Sello without weakening Sello's rules. | Backlog | 0/1 |
 | [SELLO-E14](epics/E14-assistive-technology.md) | Confirm that a person using TalkBack, Switch Access or a hardware keyboard can use the whole released app. | Backlog | 0/1 |
-| [SELLO-E15](epics/E15-release-fixes.md) | Fix the defects found while measuring and accepting the MVP, each with a test. | Backlog | 0/4 |
+| [SELLO-E15](epics/E15-release-fixes.md) | Fix the defects found while measuring and accepting the MVP, each with a test. | In Progress | 1/4 |
 | [SELLO-E16](epics/E16-v2-today-gaps.md) | Add the parts of the approved v2 Recibo, Resumen and income screens that the MVP left out, which need no new kind of data. | Backlog | 0/6 |
 | [SELLO-E17](epics/E17-goals.md) | Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2. | Backlog | 0/10 |
 | [SELLO-E18](epics/E18-recurrence.md) | Let a person schedule recurring payments and incomes that Sello records on their dates, reserving payments still to come. | Backlog | 0/10 |
@@ -52,7 +52,6 @@ No tickets.
 | [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard) | Review the app with TalkBack, Switch Access and a keyboard | SELLO-E14 | P1 | G2 | None |
 | [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows) | Group thousands in every count the app shows | SELLO-E15 | P2 | G2 | None |
 | [SELLO-076](epics/E15-release-fixes.md#sello-076--show-resumens-recorded-until-date-in-words) | Show Resumen's "recorded until" date in words | SELLO-E15 | P2 | G2 | None |
-| [SELLO-077](epics/E15-release-fixes.md#sello-077--make-the-sandbox-scenario-replay-tests-reliable) | Make the sandbox scenario replay tests reliable | SELLO-E15 | P1 | G2 | None |
 | [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check) | Say what failed when a backup does not pass its own check | SELLO-E15 | P2 | G2 | None |
 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) | Verify what exists for today's Recibo, Resumen and income screens and what is missing | SELLO-E16 | P1 | G1 | None |
 | [SELLO-080](epics/E16-v2-today-gaps.md#sello-080--lead-resumen-with-the-same-days-comparison) | Lead Resumen with the same-days comparison | SELLO-E16 | P1 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
@@ -92,8 +91,10 @@ No tickets.
 
 ## Done
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-077](epics/E15-release-fixes.md#sello-077--make-the-sandbox-scenario-replay-tests-reliable) | Make the sandbox scenario replay tests reliable | SELLO-E15 | P1 | G2 | None |
 
 ## Ready promotion candidates
 
-[SELLO-037](epics/E09-signed-carryover.md#sello-037--approve-signed-carryover-policy-and-independent-examples), [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path), [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard), [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows), [SELLO-076](epics/E15-release-fixes.md#sello-076--show-resumens-recorded-until-date-in-words), [SELLO-077](epics/E15-release-fixes.md#sello-077--make-the-sandbox-scenario-replay-tests-reliable), [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check), [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing), [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing), [SELLO-095](epics/E18-recurrence.md#sello-095--verify-what-exists-for-recurrence-and-reserved-payments-and-what-is-missing), [SELLO-105](epics/E19-investments.md#sello-105--verify-what-exists-for-inversiones-and-what-is-missing)
+[SELLO-037](epics/E09-signed-carryover.md#sello-037--approve-signed-carryover-policy-and-independent-examples), [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path), [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard), [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows), [SELLO-076](epics/E15-release-fixes.md#sello-076--show-resumens-recorded-until-date-in-words), [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check), [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing), [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing), [SELLO-095](epics/E18-recurrence.md#sello-095--verify-what-exists-for-recurrence-and-reserved-payments-and-what-is-missing), [SELLO-105](epics/E19-investments.md#sello-105--verify-what-exists-for-inversiones-and-what-is-missing)

@@ -215,9 +215,13 @@ fun KeyValue(
     modifier: Modifier = Modifier,
     icon: SelloIcon? = null,
     caption: String? = null,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     value: @Composable () -> Unit
 ) {
-    Column(modifier = modifier.semantics(mergeDescendants = true) {}) {
+    Column(
+        modifier = modifier.semantics(mergeDescendants = true) {},
+        horizontalAlignment = horizontalAlignment
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)

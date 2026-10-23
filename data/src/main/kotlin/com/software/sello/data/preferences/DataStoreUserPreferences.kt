@@ -12,11 +12,14 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.software.sello.domain.model.AppearancePreference
+import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryOrder
 import com.software.sello.domain.model.CategoryOrderDirection
 import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.CorrectionAnnouncementPreference
+import com.software.sello.domain.model.DismissedSuggestion
 import com.software.sello.domain.model.InkPreference
+import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.ThemePreference
 import com.software.sello.domain.port.AppearancePreferences
 import com.software.sello.domain.port.BackupRecord
@@ -29,8 +32,10 @@ import com.software.sello.domain.port.PreferenceFailure
 import com.software.sello.domain.port.PreferenceRead
 import com.software.sello.domain.port.PreferenceReset
 import com.software.sello.domain.port.PreferenceWrite
+import com.software.sello.domain.port.SuggestionPreferences
 import java.io.IOException
 import java.time.Instant
+import java.time.YearMonth
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,6 +58,7 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
     AppearancePreferences,
     CategoryOrderingPreferences,
     CorrectionAnnouncementPreferences,
+    SuggestionPreferences,
     BackupRecords,
     PreferenceReset {
     private val readAttempt = MutableStateFlow(0L)
@@ -97,6 +103,12 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
 
     override suspend fun dismissPastLimitAnnouncement(): PreferenceWrite =
         write { this[PAST_LIMIT_SEEN] = true }
+
+    override fun observeDismissedSuggestion(): Flow<PreferenceRead<DismissedSuggestion?>> =
+        observe(::dismissedSuggestion)
+
+    override suspend fun dismissSuggestion(dismissed: DismissedSuggestion): PreferenceWrite =
+        write { this[SUGGESTION_DISMISSED] = "${dismissed.month}|${dismissed.categoryId.value}" }
 
     override fun observeBackups(): Flow<PreferenceRead<BackupRecord>> = observe(::backups)
 
@@ -210,6 +222,16 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
         )
     )
 
+    /** Stored as `2026-10|<category id>`; anything else is damage, not "nothing dismissed". */
+    private fun dismissedSuggestion(stored: Preferences): Decoded<DismissedSuggestion?> {
+        val raw = stored[SUGGESTION_DISMISSED] ?: return Decoded.Value(null)
+        val parts = raw.split('|')
+        if (parts.size != 2) return Decoded.Invalid
+        val month = runCatching { YearMonth.parse(parts[0]) }.getOrNull() ?: return Decoded.Invalid
+        val id = (CategoryId.of(parts[1]) as? Outcome.Success)?.value ?: return Decoded.Invalid
+        return Decoded.Value(DismissedSuggestion(month, id))
+    }
+
     /** The last backup is all of its keys or none of them; anything between is damage. */
     private fun backups(stored: Preferences): Decoded<BackupRecord> {
         val unfinished = stored[BACKUP_UNFINISHED] ?: false
@@ -249,6 +271,7 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
         val CATEGORY_DIRECTION = stringPreferencesKey("recibo_category_direction_v1")
         val PAST_EXPENSE_SEEN = booleanPreferencesKey("past_expense_correction_seen_v1")
         val PAST_LIMIT_SEEN = booleanPreferencesKey("past_limit_correction_seen_v1")
+        val SUGGESTION_DISMISSED = stringPreferencesKey("resumen_suggestion_dismissed_v1")
         val BACKUP_UNFINISHED = booleanPreferencesKey("backup_unfinished_v1")
         val BACKUP_AT = longPreferencesKey("backup_last_at_v1")
         val BACKUP_NAME = stringPreferencesKey("backup_last_name_v1")

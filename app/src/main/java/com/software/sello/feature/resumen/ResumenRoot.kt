@@ -13,9 +13,10 @@ fun ResumenRoot(
     onIncome: () -> Unit,
     onCategory: (String) -> Unit,
     onExpense: () -> Unit,
-    padding: PaddingValues
+    padding: PaddingValues,
+    onAdjustLimit: (String) -> Unit
 ) {
     val model: ResumenViewModel = viewModel(factory = factory)
     val state by model.state.collectAsStateWithLifecycle()
-    ResumenScreen(state, model::onAction, onIncome, onCategory, onExpense, padding)
+    ResumenScreen(state, model::onAction, onIncome, onCategory, onExpense, padding, onAdjustLimit)
 }

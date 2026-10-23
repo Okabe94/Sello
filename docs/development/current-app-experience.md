@@ -159,21 +159,31 @@ category. Resumen uses a separate routed detail.
 
 **Entry:** second tab.
 
-**Behavior:** the v2 order for today's figures (SELLO-072). **Ingresos** as receipt
-lines (Ingresos anotados, Ingresos menos gastos, Sin asignar a categorías), the
-"Movimientos anotados hasta …" line and **Ver ingresos y su destino ›**; **Mes a mes**
-columns with past months in `pastBar`, the month in progress striped and marked `*`
-(read "mes en curso, hasta hoy", with a note under the chart), values printed on the
-highest and current columns and one dashed line for the month's limit; **¿Dónde se
+**Behavior:** the v2 order. First **¿Cómo va este mes?** (for a finished month, "¿Cómo
+cerró …?"): the difference with the month before over the same days, capped at the
+shorter month and naming both ranges when they differ, or whole months for a finished
+month, with its rate and both amounts as bars on one scale. With nothing recorded the
+month before there is no comparison: what was spent stands alone, and in the first
+month a line says another month is needed. Then **Ingresos** as receipt lines
+(Ingresos anotados, Ingresos menos gastos, Sin asignar a categorías), the "Movimientos
+anotados hasta 24 de octubre" line and **Ver ingresos y su destino ›**; **Mes a mes**
+with "Un mes normal" (the average of complete months with something recorded, half up)
+over columns with past months in `pastBar`, the month in progress striped and marked
+`*` (read "mes en curso, hasta hoy", with a note under the chart), values printed on
+the highest and current columns and one dashed line for the month's limit; **¿Dónde se
 va?** ranks categories by spending with share bars, exact amounts and a Total that is
-the month's spending; then the cumulative daily line chart, kept by owner decision
-until a v2 comparison replaces it. Nothing is projected: there is no forecast, and the
-"Gasto real" stamp is gone (Recibo shows the month's status). The income lines and
-the link open income history; each ranked category opens its detail. The v2 hero
-comparison, "¿Qué días gastas más?", "Un mes normal" and the suggestion need new
-calculations and are not built. An empty history offers "Anotar gasto". Selecting a chart
-mark shows its exact value; the selection is saved for recreation and expires after
-three seconds. Chart geometry may be approximate; selected and spoken amounts are exact.
+the month's spending; **¿Qué días gastas más?** averages each weekday over the last six
+months (this one included), or from the first recorded day when that is later, and
+says which; it shows once a week has passed and names the busiest day only when one
+stands out; and at most one
+**sugerencia** for a category over its limit in each of the two complete months
+before this one (the bigger limit wins), with **Ajustar el presupuesto de … ›** to
+its editor and × to dismiss it for the month. The daily line chart is gone: the
+comparison replaces it, as the owner decided for SELLO-072. Nothing is projected. The
+income lines and the link open income history; each ranked category opens its detail.
+An empty history offers "Anotar gasto". Selecting a chart mark shows its exact value;
+the selection is saved for recreation and expires after three seconds. Chart geometry
+may be approximate; selected and spoken amounts are exact.
 
 **States:** loading skeleton, failed with retry, ready, stale ready with retry, and an
 empty-data slip. With insufficient monthly history the screen says so instead of

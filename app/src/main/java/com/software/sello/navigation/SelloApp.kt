@@ -181,7 +181,9 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                     navigation.navigate(IncomeHistoryRoute)
                 }, { id -> navigation.navigate(ResumenCategoryRoute(id)) }, {
                     navigation.navigate(ExpenseEntryRoute())
-                }, padding)
+                }, padding) { id ->
+                    navigation.navigate(CategoryEditRoute(id, state.selectedMonth.toString()))
+                }
             }
             BackHandler(enabled = !state.monthPickerOpen) { tabs.onSelect("recibo") }
         }

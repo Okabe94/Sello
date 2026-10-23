@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 1/48 · **Epics Done:** 0/8
+**Tickets Done:** 4/48 · **Epics Done:** 0/8
 
-Backlog: 47 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 1
+Backlog: 44 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 4
 
 [Workflow, gates and definition of done](README.md)
 
@@ -16,7 +16,7 @@ Backlog: 47 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 1
 | [SELLO-E10](epics/E10-legacy-import.md) | Let someone bring their history from the previous app into Sello without weakening Sello's rules. | Backlog | 0/1 |
 | [SELLO-E14](epics/E14-assistive-technology.md) | Confirm that a person using TalkBack, Switch Access or a hardware keyboard can use the whole released app. | Backlog | 0/1 |
 | [SELLO-E15](epics/E15-release-fixes.md) | Fix the defects found while measuring and accepting the MVP, each with a test. | In Progress | 1/4 |
-| [SELLO-E16](epics/E16-v2-today-gaps.md) | Add the parts of the approved v2 Recibo, Resumen and income screens that the MVP left out, which need no new kind of data. | Backlog | 0/6 |
+| [SELLO-E16](epics/E16-v2-today-gaps.md) | Add the parts of the approved v2 Recibo, Resumen and income screens that the MVP left out, which need no new kind of data. | In Progress | 3/6 |
 | [SELLO-E17](epics/E17-goals.md) | Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2. | Backlog | 0/10 |
 | [SELLO-E18](epics/E18-recurrence.md) | Let a person schedule recurring payments and incomes that Sello records on their dates, reserving payments still to come. | Backlog | 0/10 |
 | [SELLO-E19](epics/E19-investments.md) | Let a person record investments in COP or USD with contributions, withdrawals, dividends and values, and see the portfolio and each investment's simple return; then release goals, recurrence and investments together. | Backlog | 0/9 |
@@ -54,9 +54,6 @@ No tickets.
 | [SELLO-076](epics/E15-release-fixes.md#sello-076--show-resumens-recorded-until-date-in-words) | Show Resumen's "recorded until" date in words | SELLO-E15 | P2 | G2 | None |
 | [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check) | Say what failed when a backup does not pass its own check | SELLO-E15 | P2 | G2 | None |
 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) | Verify what exists for today's Recibo, Resumen and income screens and what is missing | SELLO-E16 | P1 | G1 | None |
-| [SELLO-080](epics/E16-v2-today-gaps.md#sello-080--lead-resumen-with-the-same-days-comparison) | Lead Resumen with the same-days comparison | SELLO-E16 | P1 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
-| [SELLO-081](epics/E16-v2-today-gaps.md#sello-081--show-the-average-month-and-the-weekday-answer-in-resumen) | Show the average month and the weekday answer in Resumen | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
-| [SELLO-082](epics/E16-v2-today-gaps.md#sello-082--offer-one-budget-suggestion-in-resumen) | Offer one budget suggestion in Resumen | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
 | [SELLO-083](epics/E16-v2-today-gaps.md#sello-083--suggest-assigning-unassigned-income) | Suggest assigning unassigned income | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
 | [SELLO-084](epics/E16-v2-today-gaps.md#sello-084--invite-a-look-at-the-month-just-closed) | Invite a look at the month just closed | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
 | [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing) | Verify what exists for Metas and what is missing | SELLO-E17 | P1 | G1 | None |
@@ -94,6 +91,9 @@ No tickets.
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
 | [SELLO-077](epics/E15-release-fixes.md#sello-077--make-the-sandbox-scenario-replay-tests-reliable) | Make the sandbox scenario replay tests reliable | SELLO-E15 | P1 | G2 | None |
+| [SELLO-080](epics/E16-v2-today-gaps.md#sello-080--lead-resumen-with-the-same-days-comparison) | Lead Resumen with the same-days comparison | SELLO-E16 | P1 | G2 | None |
+| [SELLO-081](epics/E16-v2-today-gaps.md#sello-081--show-the-average-month-and-the-weekday-answer-in-resumen) | Show the average month and the weekday answer in Resumen | SELLO-E16 | P2 | G2 | None |
+| [SELLO-082](epics/E16-v2-today-gaps.md#sello-082--offer-one-budget-suggestion-in-resumen) | Offer one budget suggestion in Resumen | SELLO-E16 | P2 | G2 | None |
 
 ## Ready promotion candidates
 

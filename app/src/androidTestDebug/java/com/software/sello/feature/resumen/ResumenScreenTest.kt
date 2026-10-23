@@ -8,25 +8,35 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.software.sello.designsystem.theme.SelloInk
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.SpendingDirection
 import com.software.sello.presentation.money.MoneyFormatter
 import com.software.sello.presentation.money.MoneyLabels
+import kotlin.math.abs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -47,6 +57,7 @@ class ResumenScreenTest {
     private var incomeClicks = 0
     private var expenseClicks = 0
     private var category: String? = null
+    private var adjusted: String? = null
 
     private fun show(
         ink: SelloInk = SelloInk.Cobalto,
@@ -67,7 +78,7 @@ class ResumenScreenTest {
                             Modifier.requiredSize(width, height)
                         } else {
                             Modifier.fillMaxSize()
-                        }
+                        }.testTag("stage")
                     ) {
                         ResumenScreen(
                             state.value,
@@ -75,7 +86,8 @@ class ResumenScreenTest {
                             { incomeClicks++ },
                             { category = it },
                             { expenseClicks++ },
-                            PaddingValues()
+                            PaddingValues(),
+                            { adjusted = it }
                         )
                     }
                 }
@@ -112,12 +124,11 @@ class ResumenScreenTest {
     @Test
     fun chartsSelectSourceIdsAndSourceRowsOpenImplementedHistories() {
         show()
-        rule.onNodeWithTag("resumen.daily.chart").performScrollTo()
-        rule.onNodeWithContentDescription("2 oct, 25.000 pesos").performClick()
-        rule.runOnIdle { assertEquals(listOf(ResumenAction.SelectDaily("2026-10-02")), actions) }
-        rule.runOnIdle { state.value = resumenExample(money).copy(selectedDaily = "2026-10-02") }
-        rule.onNodeWithTag("resumen.daily.selected").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("Gasto de ese día").assertIsDisplayed()
+        rule.onNodeWithContentDescription("sábados, 42.700 pesos").performScrollTo().performClick()
+        rule.runOnIdle { assertEquals(listOf(ResumenAction.SelectWeekday("SATURDAY")), actions) }
+        rule.runOnIdle { state.value = resumenExample(money).copy(selectedWeekday = "SATURDAY") }
+        rule.onNodeWithTag("resumen.weekdays.selected").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Sábados").assertIsDisplayed()
         rule.onNodeWithTag("resumen.history.chart").performScrollTo()
         rule.onNodeWithContentDescription("oct, 30.000 pesos, mes en curso, hasta hoy")
             .performClick()
@@ -144,21 +155,21 @@ class ResumenScreenTest {
     fun successfulEmptyHistoryOffersOnlyAWorkingExpenseAction() {
         state.value = resumenExample(money).copy(
             empty = true,
-            daily = emptyList(),
             history = emptyList(),
             categories = emptyList()
         )
         show()
         rule.onNodeWithText("Anotar un gasto").performScrollTo().performClick()
         rule.runOnIdle { assertEquals(1, expenseClicks) }
-        rule.onNodeWithTag("resumen.daily").assertDoesNotExist()
+        rule.onNodeWithTag("resumen.weekdays").assertDoesNotExist()
+        rule.onNodeWithTag("resumen.suggestion").assertDoesNotExist()
     }
 
     @Test
     fun largeFontKeepsExactSelectedAmountsAndControlsReachable() {
-        state.value = resumenExample(money).copy(selectedDaily = "2026-10-02")
+        state.value = resumenExample(money).copy(selectedWeekday = "SATURDAY")
         show(font = 2f)
-        rule.onNodeWithTag("resumen.daily.selected").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("resumen.weekdays.selected").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("Ver ingresos y su destino").performScrollTo().performClick()
         rule.runOnIdle { assertEquals(1, incomeClicks) }
     }
@@ -168,7 +179,7 @@ class ResumenScreenTest {
         show(width = 500.dp, height = 400.dp)
 
         val summary = rule.onNodeWithTag("resumen.flow").getUnclippedBoundsInRoot()
-        val chart = rule.onNodeWithTag("resumen.daily").getUnclippedBoundsInRoot()
+        val chart = rule.onNodeWithTag("resumen.weekdays").getUnclippedBoundsInRoot()
 
         assertTrue(chart.top >= summary.bottom)
     }
@@ -178,7 +189,7 @@ class ResumenScreenTest {
         show(width = 840.dp, height = 900.dp, density = 1f)
 
         val summary = rule.onNodeWithTag("resumen.flow").getUnclippedBoundsInRoot()
-        val chart = rule.onNodeWithTag("resumen.daily").getUnclippedBoundsInRoot()
+        val chart = rule.onNodeWithTag("resumen.history").getUnclippedBoundsInRoot()
 
         assertTrue(chart.left > summary.left)
     }
@@ -187,10 +198,10 @@ class ResumenScreenTest {
     fun largeSignedFiguresAndSelectedChartValuesRemainExact() {
         val huge = money.format(Money.cop(9_007_199_254_740_993))
         val original = resumenExample(money)
-        val point = original.daily.last().copy(
-            chart = original.daily.last().chart.copy(
+        val point = original.history.last().copy(
+            chart = original.history.last().chart.copy(
                 value = 9_007_199_254_740_993,
-                spoken = "3 oct, ${huge.spoken}"
+                spoken = "oct, ${huge.spoken}"
             ),
             amount = huge,
             detail = huge
@@ -200,8 +211,8 @@ class ResumenScreenTest {
             spent = huge,
             netFlow = money.format(Money.cop(-9_007_199_254_740_993)),
             unallocated = money.format(Money.cop(-100_000)),
-            daily = listOf(point),
-            selectedDaily = point.chart.id
+            history = listOf(point),
+            selectedHistory = point.chart.id
         )
         show(font = 2f)
         rule.onNodeWithContentDescription("menos 9.007.199.254.740.993 pesos")
@@ -209,17 +220,25 @@ class ResumenScreenTest {
         rule.onNodeWithContentDescription(
             "menos 100.000 pesos"
         ).performScrollTo().assertIsDisplayed()
-        rule.onNodeWithTag("resumen.daily.selected").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithTag("resumen.daily.chart").performScrollTo()
-        rule.onNodeWithContentDescription("3 oct, 9.007.199.254.740.993 pesos").assertIsDisplayed()
+        rule.onNodeWithTag("resumen.history.selected").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("resumen.history.chart").performScrollTo()
+        rule.onNodeWithContentDescription(
+            "oct, 9.007.199.254.740.993 pesos, mes en curso, hasta hoy"
+        ).assertIsDisplayed()
     }
 
     @Test
     fun theSlipsComeInTheV2Order() {
         show(width = 360.dp, height = 3000.dp, density = 1f)
 
-        val tops = listOf("resumen.flow", "resumen.history", "resumen.categories", "resumen.daily")
-            .map { rule.onNodeWithTag(it).getUnclippedBoundsInRoot().top }
+        val tops = listOf(
+            "resumen.hero",
+            "resumen.flow",
+            "resumen.history",
+            "resumen.categories",
+            "resumen.weekdays",
+            "resumen.suggestion"
+        ).map { rule.onNodeWithTag(it).getUnclippedBoundsInRoot().top }
 
         assertEquals(tops.sorted(), tops)
     }
@@ -234,7 +253,8 @@ class ResumenScreenTest {
             .assertExists()
         rule.onNodeWithText("* Mes en curso: lo gastado hasta hoy.").performScrollTo()
             .assertIsDisplayed()
-        rule.onNodeWithText("Límite 100.000").assertExists()
+        // Short on the line; exact for a screen reader.
+        rule.onNodeWithText("Límite 100 mil").assertExists()
         rule.onNodeWithContentDescription("Límite 100.000 pesos").assertExists()
     }
 
@@ -248,5 +268,210 @@ class ResumenScreenTest {
         rule.onNodeWithText("Total").performScrollTo().assertIsDisplayed()
 
         rule.runOnIdle { assertEquals("00000000-0000-4000-8000-000000000001", category) }
+    }
+
+    // --- The comparison, a normal month, weekdays and the suggestion ---
+
+    private fun example() = resumenExample(money)
+
+    private fun comparison() = example().hero.comparison!!
+
+    @Test
+    fun theMonthInProgressLeadsWithTheSameDaysComparison() {
+        show()
+
+        rule.onNodeWithText("¿Cómo va este mes?").assertIsDisplayed()
+        rule.onNodeWithText("menos que en septiembre").assertIsDisplayed()
+        rule.onNodeWithText("↓ 14,3 % al mismo día del mes").assertIsDisplayed()
+        rule.onNodeWithText("Del 1 al 3 de cada mes").assertIsDisplayed()
+        rule.onNodeWithText("Octubre").assertIsDisplayed()
+        rule.onNodeWithText("Septiembre").assertIsDisplayed()
+        rule.onNodeWithContentDescription("35.000 pesos").assertIsDisplayed()
+    }
+
+    @Test
+    fun aShorterMonthBeforeNamesBothRanges() {
+        state.value = example().copy(
+            hero = example().hero.copy(
+                throughDay = 31,
+                monthName = "marzo",
+                comparison = comparison().copy(
+                    previousName = "febrero",
+                    throughDay = 31,
+                    previousThroughDay = 28
+                )
+            )
+        )
+        show()
+
+        rule.onNodeWithText("Del 1 al 31 de marzo · Del 1 al 28 de febrero").assertIsDisplayed()
+    }
+
+    @Test
+    fun aFinishedMonthComparesWholeMonths() {
+        state.value = example().copy(
+            hero = example().hero.copy(
+                inProgress = false,
+                monthName = "septiembre",
+                comparison = comparison().copy(
+                    previousName = "agosto",
+                    direction = SpendingDirection.More,
+                    percent = "21,1",
+                    throughDay = null,
+                    previousThroughDay = null
+                )
+            )
+        )
+        show()
+
+        rule.onNodeWithText("¿Cómo cerró septiembre?").assertIsDisplayed()
+        rule.onNodeWithText("más que en agosto").assertIsDisplayed()
+        rule.onNodeWithText("↑ 21,1 % que agosto completo").assertIsDisplayed()
+        rule.onNodeWithText("Meses completos").assertIsDisplayed()
+    }
+
+    @Test
+    fun againstNothingSpentThereIsNoPercent() {
+        state.value = example().copy(
+            hero = example().hero.copy(
+                comparison = comparison().copy(direction = SpendingDirection.More, percent = null)
+            )
+        )
+        show()
+
+        rule.onNodeWithText("más que en septiembre").assertIsDisplayed()
+        rule.onNodeWithText("%", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun theFirstMonthShowsWhatWasSpentAndWhatComparingNeeds() {
+        state.value = example().copy(
+            hero = example().hero.copy(comparison = null),
+            insufficientHistory = true
+        )
+        show()
+
+        rule.onNodeWithText("¿Cómo va este mes?").assertIsDisplayed()
+        rule.onNodeWithText("gastados del 1 al 3").assertIsDisplayed()
+        rule.onNodeWithText("Cuando completes otro mes podrás comparar los mismos días.")
+            .assertIsDisplayed()
+        rule.onNodeWithText("menos que en septiembre").assertDoesNotExist()
+    }
+
+    @Test
+    fun aNormalMonthIsGivenAboveTheColumns() {
+        show()
+
+        rule.onNodeWithText("Un mes normal").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Promedio de 1 mes completo").performScrollTo().assertIsDisplayed()
+        val normal = rule.onNodeWithTag("resumen.normal").getUnclippedBoundsInRoot()
+        val chart = rule.onNodeWithTag("resumen.history.chart").getUnclippedBoundsInRoot()
+        assertTrue(normal.bottom <= chart.top)
+    }
+
+    @Test
+    fun theBusiestDayIsTheAnswerAndEveryDayIsExact() {
+        show()
+
+        rule.onNodeWithTag(
+            "resumen.weekdays.answer"
+        ).performScrollTo().assertTextContains("Los sábados")
+        rule.onNodeWithText("42.700 en promedio · últimos 6 meses").performScrollTo()
+            .assertIsDisplayed()
+        rule.onNodeWithContentDescription("lunes, 18.200 pesos").assertExists()
+    }
+
+    @Test
+    fun withLessThanSixMonthsRecordedTheWeekdaysSayWhenTheyStart() {
+        state.value = example().copy(weekdays = example().weekdays!!.copy(lastSixMonths = false))
+        show()
+
+        rule.onNodeWithText("42.700 en promedio · desde el 1 de julio").performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun withNoBusiestDayThereIsNoAnswer() {
+        state.value = example().copy(
+            weekdays = example().weekdays!!.copy(busiest = null, busiestAverage = null)
+        )
+        show()
+
+        rule.onNodeWithTag("resumen.weekdays").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("resumen.weekdays.answer").assertDoesNotExist()
+    }
+
+    @Test
+    fun theSuggestionSaysWhyOffersTheAdjustmentAndCanBeDismissed() {
+        show()
+
+        rule.onNodeWithText(
+            "Comida superó su límite en agosto y septiembre: gastaste 74.000 en promedio " +
+                "y su límite es 50.000."
+        ).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Podrías ajustar su límite para que refleje lo que de verdad gastas.")
+            .performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("Ajustar el presupuesto de Comida").performScrollTo().performClick()
+        rule.runOnIdle { assertEquals("00000000-0000-4000-8000-000000000001", adjusted) }
+        rule.onNodeWithContentDescription("Descartar sugerencia").performClick()
+        rule.runOnIdle { assertEquals(ResumenAction.DismissSuggestion, actions.last()) }
+    }
+
+    // --- Layout against the v2 design ---
+
+    @Test
+    fun slipsUseOnlyTheScaffoldsSideMarginsAsOnRecibo() {
+        show(width = 360.dp, height = 3000.dp, density = 1f)
+
+        val hero = rule.onNodeWithTag("resumen.hero").getUnclippedBoundsInRoot()
+        val window = rule.onNodeWithTag("stage").getUnclippedBoundsInRoot()
+
+        // PaddingValues() here: nothing is added on either side.
+        assertEquals(window.left, hero.left)
+        assertEquals(window.right, hero.right)
+    }
+
+    @Test
+    fun eachComparisonBarIsOneLineWithTheAmountLast() {
+        show(width = 360.dp, height = 3000.dp, density = 1f)
+
+        val month = rule.onNodeWithText("Octubre").getUnclippedBoundsInRoot()
+        val before = rule.onNodeWithText("Septiembre").getUnclippedBoundsInRoot()
+        val amount = rule.onNode(
+            hasContentDescription("35.000 pesos") and hasAnyAncestor(hasTestTag("resumen.hero")),
+            useUnmergedTree = true
+        ).getUnclippedBoundsInRoot()
+
+        // Same line as its month, at the far right; the next month is below.
+        assertTrue(amount.top < before.bottom && amount.bottom > before.top)
+        assertTrue(amount.left > before.right + 100.dp)
+        assertTrue(before.top >= month.bottom)
+    }
+
+    @Test
+    fun aRankedAmountIsCentredOnTheNameAndItsBar() {
+        show(width = 360.dp, height = 3000.dp, density = 1f)
+
+        val row = rule.onNodeWithTag("resumen.category.00000000-0000-4000-8000-000000000001")
+            .getUnclippedBoundsInRoot()
+        val amount = rule.onNode(
+            hasContentDescription("30.000 pesos") and
+                hasAnyAncestor(hasTestTag("resumen.category.00000000-0000-4000-8000-000000000001")),
+            useUnmergedTree = true
+        ).getUnclippedBoundsInRoot()
+
+        val rowMiddle = (row.top + row.bottom) / 2
+        val amountMiddle = (amount.top + amount.bottom) / 2
+        assertTrue(abs((rowMiddle - amountMiddle).value) <= 1f)
+    }
+
+    @Test
+    fun theHeroSaysWhatTheDifferenceMeansAtTheDesignsSize() {
+        show()
+
+        val layouts = mutableListOf<TextLayoutResult>()
+        rule.onNodeWithText("menos que en septiembre")
+            .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        assertEquals(16.sp, layouts.single().layoutInput.style.fontSize)
     }
 }

@@ -196,6 +196,8 @@ class CategoryManagementJourneyTest {
         rule.awaitDescription("Anotar un gasto")
         rule.onNodeWithContentDescription("Anotar un gasto").performClick()
         rule.awaitTag(EDITOR_PREREQUISITE_TAG)
+        // The form opens with the keyboard up for the name; Back first puts it away.
+        Espresso.closeSoftKeyboard()
         Espresso.pressBack()
 
         // Unarchived in the same month, it takes expenses again and nothing else changed.

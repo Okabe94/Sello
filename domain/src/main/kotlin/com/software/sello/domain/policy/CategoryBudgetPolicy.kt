@@ -3,6 +3,7 @@ package com.software.sello.domain.policy
 import com.software.sello.domain.model.AutomaticBudget
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.DefaultLimit
+import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.MonthLimit
 import java.time.YearMonth
 
@@ -53,6 +54,31 @@ object CategoryBudgetPolicy {
         }
     }
 
+    /**
+     * The [count] limits offered as shortcuts, smallest first: the finite, non-zero
+     * limits the categories in use have most often, the smaller first when equally
+     * common, topped up from [fallback] while there are fewer than [count].
+     */
+    fun suggestedLimits(
+        categories: List<CategoryInMonth>,
+        fallback: List<Money>,
+        count: Int = 3
+    ): List<Money> {
+        val own = categories.asSequence()
+            .filter { !it.category.archived }
+            .mapNotNull { ((it.state as? MonthBudgetState.Limited)?.limit as? BudgetLimit.Finite) }
+            .map { it.amount }
+            .filter { it.minorUnits > 0 }
+            .groupingBy { it }
+            .eachCount()
+            .entries
+            .sortedWith(MostUsedFirst)
+            .map { it.key }
+            .take(count)
+        return (own + fallback.filter { it !in own }.take(count - own.size))
+            .sortedBy { it.minorUnits }
+    }
+
     /** Archiving keeps the current month as it is and pauses from the month after. */
     fun pausedFrom(archivedIn: YearMonth): YearMonth = archivedIn.plusMonths(1)
 
@@ -77,3 +103,7 @@ object CategoryBudgetPolicy {
         )
     }
 }
+
+/** More categories first; between equally common limits, the smaller first. */
+private val MostUsedFirst =
+    compareByDescending<Map.Entry<Money, Int>> { it.value }.thenBy { it.key.minorUnits }

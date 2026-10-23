@@ -2,14 +2,18 @@ package com.software.sello.domain.policy
 
 import com.software.sello.domain.model.AutomaticBudget
 import com.software.sello.domain.model.BudgetLimit
+import com.software.sello.domain.model.Category
 import com.software.sello.domain.model.CategoryId
+import com.software.sello.domain.model.CategoryName
 import com.software.sello.domain.model.DefaultLimit
+import com.software.sello.domain.model.IconKey
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.MonthLimit
 import com.software.sello.domain.policy.MonthBudgetState.Limited
 import com.software.sello.domain.policy.MonthBudgetState.Paused
 import com.software.sello.domain.policy.MonthBudgetState.Unconfigured
 import com.software.sello.domain.valueOrFail
+import java.time.Instant
 import java.time.YearMonth
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -146,6 +150,72 @@ class CategoryBudgetPolicyTest {
         assertEquals(
             UnarchiveChange(emptyList(), null),
             CategoryBudgetPolicy.unarchive(december, history)
+        )
+    }
+
+    private var nextCategory = 10
+
+    private fun inMonth(state: MonthBudgetState, archived: Boolean = false) = CategoryInMonth(
+        Category(
+            id = CategoryId.of("00000000-0000-4000-8000-%012d".format(nextCategory++))
+                .valueOrFail(),
+            name = CategoryName.of("Categoría $nextCategory").valueOrFail(),
+            icon = IconKey.of("home").valueOrFail(),
+            archived = archived,
+            version = 1,
+            createdAt = Instant.EPOCH,
+            updatedAt = Instant.EPOCH
+        ),
+        state
+    )
+
+    private fun limits(vararg amounts: Long) = amounts.map { inMonth(derived(it)) }
+
+    private val starting = listOf(200_000L, 300_000L, 500_000L).map(Money::cop)
+
+    private fun suggested(categories: List<CategoryInMonth>) =
+        CategoryBudgetPolicy.suggestedLimits(categories, starting).map { it.minorUnits }
+
+    @Test
+    fun withNoLimitsYetTheStartingSuggestionsAreOffered() {
+        assertEquals(listOf(200_000L, 300_000L, 500_000L), suggested(emptyList()))
+    }
+
+    @Test
+    fun theThreeMostCommonLimitsAreSuggestedSmallestFirst() {
+        val categories = limits(300_000, 300_000, 300_000, 900_000, 900_000) +
+            limits(150_000, 150_000, 50_000)
+
+        assertEquals(listOf(150_000L, 300_000L, 900_000L), suggested(categories))
+    }
+
+    @Test
+    fun equallyCommonLimitsFavourTheSmaller() {
+        val categories = limits(400_000, 100_000, 300_000, 200_000)
+
+        assertEquals(listOf(100_000L, 200_000L, 300_000L), suggested(categories))
+    }
+
+    @Test
+    fun archivedZeroUnlimitedAndUnsetCategoriesSuggestNothing() {
+        val categories = listOf(
+            inMonth(derived(80_000), archived = true),
+            inMonth(derived(80_000), archived = true),
+            inMonth(derived(0)),
+            inMonth(Limited(BudgetLimit.Unlimited, explicit = false)),
+            inMonth(Paused),
+            inMonth(Unconfigured)
+        )
+
+        assertEquals(listOf(200_000L, 300_000L, 500_000L), suggested(categories))
+    }
+
+    @Test
+    fun fewerThanThreeOwnLimitsAreToppedUpFromTheStartingOnes() {
+        assertEquals(listOf(200_000L, 250_000L, 300_000L), suggested(limits(250_000)))
+        assertEquals(
+            listOf(200_000L, 300_000L, 500_000L),
+            suggested(limits(300_000, 300_000))
         )
     }
 }

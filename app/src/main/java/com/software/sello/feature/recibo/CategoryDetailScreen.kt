@@ -303,7 +303,8 @@ private fun HeaderSlip(
                 figures.allowance?.let { perDay ->
                     KeyValue(
                         stringResource(R.string.category_detail_for),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             pluralStringResource(
@@ -316,7 +317,8 @@ private fun HeaderSlip(
                     }
                     KeyValue(
                         stringResource(R.string.category_detail_per_day),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         MoneyText(perDay.amount, textStyle = MaterialTheme.typography.titleMedium)
                     }
@@ -328,7 +330,8 @@ private fun HeaderSlip(
                             months.short(figures.comparisonMonth ?: state.month.minusMonths(1))
                                 .lowercase(Locale.forLanguageTag("es-CO"))
                         ),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         val color = when (figures.comparisonDirection) {
                             DetailComparisonDirection.Higher -> SelloTheme.colors.semantic.warn
@@ -405,7 +408,8 @@ private fun ExpenseList(
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.xs)
+            verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.xs),
+            itemVerticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 stringResource(R.string.category_detail_latest),

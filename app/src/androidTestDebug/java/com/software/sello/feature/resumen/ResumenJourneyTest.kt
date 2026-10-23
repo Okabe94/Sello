@@ -95,15 +95,8 @@ class ResumenJourneyTest {
         rule.onNodeWithContentDescription("50.000 pesos").performScrollTo().assertIsDisplayed()
         assertEquals(listOf("150000"), TestData.rows("SELECT SUM(amount_minor) FROM income"))
         assertEquals(listOf("30000"), TestData.rows("SELECT SUM(amount_minor) FROM expense"))
-        rule.onNodeWithTag("resumen.daily.chart").performScrollTo()
-        rule.onNode(
-            hasContentDescription("30.000 pesos", substring = true) and
-                hasAnyAncestor(hasTestTag("resumen.daily.chart"))
-        ).performSemanticsAction(SemanticsActions.OnClick)
-        rule.awaitTag("resumen.daily.selected")
-        rule.onNodeWithTag("resumen.daily.selected")
-            .assertIsDisplayed()
-            .assertContentDescriptionEquals("30.000 pesos")
+        // The month leads: nothing recorded before it, so what it spent stands alone.
+        rule.onNodeWithText("¿Cómo va este mes?").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("resumen.history.chart").performScrollTo()
         rule.onNode(
             hasContentDescription("30.000 pesos", substring = true) and

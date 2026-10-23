@@ -1,5 +1,7 @@
 package com.software.sello.domain.model
 
+import java.time.YearMonth
+
 /** The three display modes a person can select. `System` is the first-run default. */
 enum class ThemePreference { System, Light, Dark }
 
@@ -24,6 +26,12 @@ data class CategoryOrderingPreference(
     val order: CategoryOrder = CategoryOrder.MostUsed,
     val direction: CategoryOrderDirection = CategoryOrderDirection.Descending
 )
+
+/**
+ * The Resumen suggestion about [categoryId] was dismissed in [month]. It may come back in
+ * a later month while it still applies. Nonfinancial: it hides advice, never a figure.
+ */
+data class DismissedSuggestion(val month: YearMonth, val categoryId: CategoryId)
 
 /** Dismissal is nonfinancial and must never change the always-available correction help. */
 data class CorrectionAnnouncementPreference(

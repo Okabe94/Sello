@@ -277,6 +277,8 @@ class ShellOnDeviceTest {
         // There is nowhere to record an expense yet, so the person is told what to do first.
         rule.onNodeWithTag(EDITOR_PREREQUISITE_TAG).assertIsDisplayed()
         val waiting = shell().state.value.pendingEntry
+        // The form opens with the keyboard up for the name; Back first puts it away.
+        Espresso.closeSoftKeyboard()
         Espresso.pressBack()
 
         rule.awaitTag(RECIBO_FIRST_RUN_TAG)

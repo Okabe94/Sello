@@ -10,6 +10,7 @@ import com.software.sello.domain.model.OperationKind
 import com.software.sello.domain.model.OperationReceipt
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
+import com.software.sello.domain.policy.MonthBudgetState
 import com.software.sello.domain.port.CategoryCommand
 import com.software.sello.domain.port.CategoryCommandOutcome
 import com.software.sello.domain.port.CategoryCommands
@@ -137,7 +138,7 @@ class CategoryEditorViewModelTest {
         // No limit is something chosen, never where a new category starts.
         assertFalse(state.unlimited)
         assertEquals("directions_bus", state.iconKey)
-        assertEquals(14, state.iconKeys.size)
+        assertEquals(24, state.iconKeys.size)
         assertEquals(listOf("200.000", "300.000", "500.000"), state.suggestions.map { it.label })
         assertEquals(
             listOf("200.000 pesos", "300.000 pesos", "500.000 pesos"),
@@ -634,5 +635,78 @@ class CategoryEditorViewModelTest {
         editor.onAction(CategoryEditorAction.IconPicked("skull"))
 
         assertEquals(before, editor.state.value.iconKey)
+    }
+
+    // --- Suggestions and the month's total ---
+
+    private fun withLimit(number: Int, name: String, pesos: Long, archived: Boolean = false) =
+        reads.category(number, name, archived = archived)
+            .copy(state = MonthBudgetState.Limited(finite(pesos), explicit = false))
+
+    private val CategoryEditorViewModel.total get() = state.value.limitTotal
+
+    @Test
+    fun theSuggestionsAreThePersonsMostUsedLimitsToppedUpFromTheStartingOnes() {
+        reads.categories = listOf(
+            withLimit(1, "Comida", 900_000),
+            withLimit(2, "Café", 150_000),
+            withLimit(3, "Ropa", 150_000),
+            withLimit(4, "Viejo", 70_000, archived = true)
+        )
+
+        val state = editor().state.value
+
+        assertEquals(listOf("150.000", "200.000", "900.000"), state.suggestions.map { it.label })
+        assertEquals(
+            listOf("150.000 pesos", "200.000 pesos", "900.000 pesos"),
+            state.suggestions.map { it.spoken }
+        )
+    }
+
+    @Test
+    fun theMonthsTotalLimitIsShownWithTheNewCategorysAdded() {
+        reads.categories = listOf(withLimit(1, "Comida", 900_000), withLimit(2, "Café", 300_000))
+        val editor = editor()
+
+        editor.limit("200.000")
+
+        val total = editor.total!!
+        assertEquals("1.400.000" to "1.400.000 pesos", total.amount.digits to total.amount.spoken)
+        assertTrue(total.changes)
+        assertEquals(java.time.YearMonth.of(2026, 10), total.month)
+    }
+
+    @Test
+    fun withSinLimiteThereIsNoTotalToShow() {
+        reads.categories = listOf(withLimit(1, "Comida", 900_000), withLimit(2, "Café", 300_000))
+        val editor = editor()
+        editor.limit("200.000")
+
+        editor.withNoLimit("Ocio")
+
+        assertNull(editor.total)
+    }
+
+    @Test
+    fun noTotalIsShownForAnAmountNotTypedOrNotAnAmount() {
+        reads.categories = listOf(withLimit(1, "Comida", 900_000))
+        val editor = editor()
+
+        val untouched = editor.total
+        editor.limit("12abc")
+        val invalid = editor.total
+
+        assertNull(untouched)
+        assertNull(invalid)
+    }
+
+    @Test
+    fun aTotalTooLargeToHoldIsNotShown() {
+        reads.categories = listOf(withLimit(1, "Comida", Long.MAX_VALUE))
+        val editor = editor()
+
+        editor.limit("1")
+
+        assertNull(editor.total)
     }
 }

@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.software.sello.designsystem.theme.SelloTheme
@@ -61,9 +63,17 @@ fun FormField(
     }
     Column(modifier = modifier) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = colors.inkSoft)
+        // Text given to the field, such as a name being edited, puts the cursor after it,
+        // so what is typed next is added to the end. Typing keeps its own cursor.
+        var typed by remember { mutableStateOf(TextFieldValue()) }
+        val field =
+            if (typed.text == value) typed else TextFieldValue(value, TextRange(value.length))
         BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = field,
+            onValueChange = {
+                typed = it
+                if (it.text != value) onValueChange(it.text)
+            },
             enabled = enabled,
             singleLine = singleLine,
             textStyle = MaterialTheme.typography.titleMedium.copy(color = colors.ink),

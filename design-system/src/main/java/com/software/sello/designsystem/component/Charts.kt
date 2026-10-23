@@ -369,7 +369,8 @@ private fun ChartFrame(
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.inkSoft,
                     textAlign = TextAlign.Center,
-                    maxLines = 1,
+                    // Large text on a narrow column wraps "sem 2" rather than cutting it.
+                    maxLines = 2,
                     modifier = Modifier.weight(1f).padding(top = 4.dp)
                 )
             }

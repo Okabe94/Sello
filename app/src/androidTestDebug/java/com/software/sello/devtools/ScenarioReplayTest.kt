@@ -16,9 +16,12 @@ import com.software.sello.composition.openStorage
 import com.software.sello.composition.productionModules
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.OverallBudget
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.ResetOutcome
+import com.software.sello.domain.port.Resets
 import com.software.sello.domain.port.ResumenSnapshots
 import com.software.sello.platform.ProcessFinancialZone
 import com.software.sello.platform.SystemAuditClock
@@ -214,5 +217,27 @@ class ScenarioReplayTest {
         rule.waitUntil(5_000) { !runner.state.value.playing }
         // Paused between steps: what is shown is what is kept for the next process.
         assertEquals(runner.state.value.next, store.session.nextStep)
+    }
+
+    @Test
+    fun aResetBetweenStepsKeepsTheRunnerOutOfTheNewHistory() = runBlocking {
+        load(Scenarios.G01)
+        repeat(3) { runner.step() }
+        assertTrue(rows<String>("SELECT id FROM category").isNotEmpty())
+        val resets = checkNotNull(graph).koin.get<Resets>()
+        val preview = (resets.preview() as Outcome.Success).value
+        val erased = resets.reset(
+            preview,
+            (OperationId.of("00000000-0000-4000-8000-000000009001") as Outcome.Success).value
+        )
+        assertTrue("$erased", erased is ResetOutcome.Erased)
+
+        // The runner was built for the history before the reset; its next step is refused.
+        runner.step()
+
+        assertTrue("${runner.state.value}", runner.state.value.problem != null)
+        for (table in listOf("category", "expense", "income")) {
+            assertEquals(table, emptyList<String>(), rows<String>("SELECT * FROM $table"))
+        }
     }
 }

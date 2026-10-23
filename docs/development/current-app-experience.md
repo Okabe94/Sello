@@ -28,7 +28,7 @@ categories and monthly budgets.
 - The app uses the shared `:design-system`. The separate `:catalog` app renders those
   real components with synthetic data and no product repositories.
 
-Not present in customer navigation: reset, sandbox controls, goals,
+Not present in customer navigation: sandbox controls, goals,
 investments, recurrence, alerts, analytical export or batch entry. There are no
 placeholder destinations for them.
 
@@ -267,7 +267,8 @@ stack, selected month or drafts. Controls are disabled while a write runs. A rea
 write failure shows an error slip with retry and says financial data is unchanged.
 
 A "Tus datos" slip has the Respaldo row with the last backup's date, or "Nunca"; it
-opens Respaldo.
+opens Respaldo. Below it, "Borrar todos los datos" (Pide confirmación dos veces)
+opens Borrar datos.
 
 **Placement:** a shell route, so it keeps the month title, picker and dock even though
 its controls are not month settings. It has Back and no tab bar.
@@ -298,6 +299,26 @@ retry that never replaces the history again. "Restaurado" → "Ir al recibo" (or
 restarts the app. A preview or result scrolls into view at the top; once the history
 is replaced it is the only thing shown. The start-up failure screen offers the same
 restore (see Startup failure).
+
+### 11. Borrar datos
+
+**Entry:** "Borrar todos los datos" in Configuración → Tus datos.
+
+**Behavior:** first the counts read with the history's version ("Se borran 2
+categorías, 3 gastos y 1 ingreso, con sus límites y notas"), that appearance and
+order return to first-run, and that backup files outside Sello are not erased;
+"Continuar" or "Cancelar". Then the exact word: "Borrar todo" is enabled only for
+`BORRAR` (spaces around it allowed); "Cancelar" or Back returns to the counts. The
+open step and the typed word survive recreation. If the history changed meanwhile
+the counts are read again with "Tus datos cambiaron mientras confirmabas" and both
+confirmations are needed again. An erase removes every financial row, undo copy and
+receipt in one transaction, takes the device's zone and a new generation, deletes
+the kept unreadable copy and staged restores, compacts the file and resets every
+preference. "Borrado" → "Empezar de nuevo" (or Back) restarts into first-run Recibo.
+A preference reset that fails is named with its first-run values and a retry that
+erases nothing else; an unknown outcome is checked with the same operation.
+
+**Placement:** a shell route without the dock, like Respaldo.
 
 **Placement:** a shell route with Back and no Anotar dock: its own button is the only
 action.
@@ -393,7 +414,7 @@ beside each feature.
 - Category and transaction forms are full-screen flows, not sheets or side panels.
 - The month and date pickers are Material 3 dialogs and sheets with Sello colors, not
   custom calendar components.
-- Reset is planned but not routed. The debug sandbox is a separate
+- The debug sandbox is a separate
   debug-only activity, not a route in the app.
 - There is no production network permission, account, sync, notification or cloud UI.
 

@@ -23,6 +23,10 @@ data object SettingsRoute
 @Serializable
 data object BackupRoute
 
+/** Borrar todos los datos, reached from Configuración. */
+@Serializable
+data object ResetRoute
+
 @Serializable
 data class ResumenCategoryRoute(val categoryId: String)
 

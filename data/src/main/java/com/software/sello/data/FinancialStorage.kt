@@ -5,6 +5,7 @@ import com.software.sello.data.backup.BackupExport
 import com.software.sello.data.backup.RoomBackupSnapshots
 import com.software.sello.data.backup.RoomRestores
 import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.keptFiles
 import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.local.setAside
 import com.software.sello.data.preferences.PREFERENCES_FILE
@@ -20,6 +21,7 @@ import com.software.sello.data.repository.RoomResumenSnapshots
 import com.software.sello.data.repository.UndoWindow
 import com.software.sello.data.repository.discardKeptCopies
 import com.software.sello.data.repository.reading
+import com.software.sello.data.reset.RoomResets
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AppearancePreferences
@@ -37,10 +39,13 @@ import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonotonicClock
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.PreferenceReset
 import com.software.sello.domain.port.RecordIdSource
+import com.software.sello.domain.port.Resets
 import com.software.sello.domain.port.Restores
 import com.software.sello.domain.port.ResumenSnapshots
 import java.io.File
+import java.time.ZoneId
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -51,7 +56,9 @@ import kotlin.coroutines.CoroutineContext
 class FinancialStorage internal constructor(
     private val database: SelloDatabase,
     val profiles: FinancialProfileStore,
-    private val restoreFolder: File
+    private val restoreFolder: File,
+    private val resetFolder: File,
+    private val setAsideDatabase: File
 ) : AutoCloseable {
     /**
      * The expense workflow. It takes its clocks and identifier source here because the
@@ -104,6 +111,27 @@ class FinancialStorage internal constructor(
     ): Restores =
         RoomRestores(database, restoreFolder, appearance, ordering, ids, audit, dispatchers)
 
+    /**
+     * Erasing this storage on request: its rows, its restore folder, the copy set aside
+     * when it would not open, and the preferences [preferences] reset. A new history
+     * takes [deviceZone].
+     */
+    fun resets(
+        preferences: PreferenceReset,
+        deviceZone: () -> ZoneId,
+        audit: AuditClock,
+        dispatchers: DispatcherProvider
+    ): Resets = RoomResets(
+        database,
+        resetFolder,
+        restoreFolder,
+        keptFiles(setAsideDatabase),
+        preferences,
+        deviceZone,
+        audit,
+        dispatchers
+    )
+
     /** Backup files of this storage, with the portable preferences beside it. */
     fun backupExports(
         appearance: AppearancePreferences,
@@ -152,6 +180,9 @@ data class StorageNames(val database: String, val preferences: String) {
     /** The private folder a restore into [database] is staged in. */
     val restoreFolder: String get() = database.removeSuffix(".db") + "-restore"
 
+    /** The private folder an erase of [database] is tracked in until it is finished. */
+    val resetFolder: String get() = database.removeSuffix(".db") + "-reset"
+
     companion object {
         val Normal = StorageNames(SelloDatabase.FILE_NAME, PREFERENCES_FILE)
     }
@@ -172,7 +203,9 @@ fun openFinancialStorage(
     return FinancialStorage(
         database,
         RoomFinancialProfileStore(database, audit),
-        File(context.filesDir, names.restoreFolder)
+        File(context.filesDir, names.restoreFolder),
+        File(context.filesDir, names.resetFolder),
+        context.getDatabasePath(names.setAsideDatabase)
     )
 }
 

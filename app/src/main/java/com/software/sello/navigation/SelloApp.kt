@@ -73,6 +73,9 @@ import com.software.sello.feature.recibo.ReciboAction
 import com.software.sello.feature.recibo.ReciboScreen
 import com.software.sello.feature.recibo.ReciboState
 import com.software.sello.feature.recibo.ReciboViewModel
+import com.software.sello.feature.reset.ResetRoot
+import com.software.sello.feature.reset.ResetViewModel
+import com.software.sello.feature.reset.back
 import com.software.sello.feature.resumen.ResumenRoot
 import com.software.sello.feature.settings.SettingsRoot
 import com.software.sello.presentation.corrections.CorrectionAnnouncementState
@@ -218,9 +221,12 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 // Configuración shows nothing of the month.
                 pastMonthRibbon = false
             ) { padding ->
-                SettingsRoot(viewModels, padding) {
-                    navigation.navigate(BackupRoute) { launchSingleTop = true }
-                }
+                SettingsRoot(
+                    viewModels,
+                    padding,
+                    onOpenBackup = { navigation.navigate(BackupRoute) { launchSingleTop = true } },
+                    onOpenReset = { navigation.navigate(ResetRoute) { launchSingleTop = true } }
+                )
             }
             BackHandler(enabled = !state.monthPickerOpen) { navigation.popBackStack() }
         }
@@ -238,6 +244,22 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 BackupRoot(viewModels, padding)
             }
             BackHandler(enabled = !state.monthPickerOpen) { navigation.popBackStack() }
+        }
+        composable<ResetRoute> {
+            val reset: ResetViewModel = viewModel(factory = viewModels)
+            ShellScreen(
+                state = state,
+                names = monthNames(),
+                onAction = shell::onAction,
+                navigation = null,
+                onBack = { reset.back { navigation.popBackStack() } },
+                screenTitle = stringResource(R.string.reset_title),
+                pastMonthRibbon = false,
+                entryDock = false
+            ) { padding ->
+                // Back is the screen's own: once data is erased it restarts instead.
+                ResetRoot(viewModels, padding) { navigation.popBackStack() }
+            }
         }
         composable<IncomeHistoryRoute> {
             val model: IncomeHistoryViewModel = viewModel(factory = viewModels)

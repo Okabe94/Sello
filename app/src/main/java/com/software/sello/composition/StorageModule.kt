@@ -25,9 +25,11 @@ import com.software.sello.domain.port.FinancialProfileStore
 import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonthlySnapshots
+import com.software.sello.domain.port.Resets
 import com.software.sello.domain.port.RestoreRejection
 import com.software.sello.domain.port.Restores
 import com.software.sello.domain.port.ResumenSnapshots
+import com.software.sello.platform.deviceZone
 import java.time.ZoneId
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -93,6 +95,8 @@ fun storageModule(storage: FinancialStorage): Module = module {
     single<IncomeReads> { storage.incomeReads }
     single<BackupExports> { storage.backupExports(get(), get(), get(), get()) }
     single<Restores> { storage.restores(get(), get(), get(), get(), get()) }
+    // A new history after an erase takes the device's zone, read when the erase commits.
+    single<Resets> { storage.resets(get(), ::deviceZone, get(), get()) }
 }
 
 /**

@@ -19,6 +19,8 @@ import com.software.sello.feature.income.IncomeFormViewModel
 import com.software.sello.feature.income.IncomeHistoryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
 import com.software.sello.feature.recibo.ReciboViewModel
+import com.software.sello.feature.reset.ResetSession
+import com.software.sello.feature.reset.ResetViewModel
 import com.software.sello.feature.resumen.ResumenViewModel
 import com.software.sello.feature.settings.AppearanceViewModel
 import com.software.sello.feature.settings.SettingsViewModel
@@ -53,6 +55,8 @@ fun presentationModule(): Module = module {
     single(createdAtStart = true) {
         RestoreSession(get(), get(), get<CoroutineScope>(), BackupBounds().maxBytes)
     }
+    // Likewise an erase committed by an earlier process is finished at start.
+    single(createdAtStart = true) { ResetSession(get(), get(), get<CoroutineScope>()) }
 }
 
 /**
@@ -67,6 +71,7 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
         BackupViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get())
     }
     initializer { RestoreViewModel(koin.get(), koin.get(), koin.get()) }
+    initializer { ResetViewModel(createSavedStateHandle(), koin.get(), koin.get()) }
     initializer { ResumenViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get()) }
     initializer {
         IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())

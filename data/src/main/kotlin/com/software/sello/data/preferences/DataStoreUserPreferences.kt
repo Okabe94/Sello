@@ -27,6 +27,7 @@ import com.software.sello.domain.port.CorrectionAnnouncementPreferences
 import com.software.sello.domain.port.LastBackup
 import com.software.sello.domain.port.PreferenceFailure
 import com.software.sello.domain.port.PreferenceRead
+import com.software.sello.domain.port.PreferenceReset
 import com.software.sello.domain.port.PreferenceWrite
 import java.io.IOException
 import java.time.Instant
@@ -52,7 +53,8 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
     AppearancePreferences,
     CategoryOrderingPreferences,
     CorrectionAnnouncementPreferences,
-    BackupRecords {
+    BackupRecords,
+    PreferenceReset {
     private val readAttempt = MutableStateFlow(0L)
 
     /** [fileName] is the profile's preferences file; see `StorageNames`. */
@@ -111,6 +113,9 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
     }
 
     override suspend fun backupAbandoned(): PreferenceWrite = write { remove(BACKUP_UNFINISHED) }
+
+    /** Every key goes in one edit, so each reads its first-run default again. */
+    override suspend fun resetAll(): PreferenceWrite = write { clear() }
 
     /**
      * A failed DataStore collection ends, so keep the public flow alive around each attempt.

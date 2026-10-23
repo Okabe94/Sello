@@ -30,8 +30,8 @@ never touches financial data.
   (restore or reset). **Revision** starts at 0 and advances with every committed
   change. Both are created with the zone in one insert.
 - **Receipts** have no foreign key to the record they describe and hold no amount,
-  name or note. That is what lets them, and the profile row, outlive a replacement
-  of the financial rows without keeping erased content.
+  name or note. That is what lets them, and the profile row, outlive a restore
+  without keeping erased content. A reset removes them all and keeps only its own.
 - **`deleted_expense` and `deleted_income` are not financial facts.** A deleted
   record is gone from `expense` or `income`, so no read or total can count it; the
   row exists only so the deletion can be
@@ -39,8 +39,8 @@ never touches financial data.
   most one row. A later deletion of either kind replaces it, and opening storage
   removes it (`FinancialStorage.discardUndoCopies`, called by `openStorage`), because
   the time to undo is counted in the process that deleted. Like a receipt they have no foreign
-  key. They are not part of a portable backup (SELLO-028), and a reset must erase
-  them with the rest (SELLO-031).
+  key. They are not part of a portable backup (SELLO-028), and a reset erases them
+  with the rest.
 - A month with neither a `month_limit` nor an applicable `default_limit` is
   unconfigured. That is different from a finite limit of zero and from `unlimited`.
 
@@ -117,6 +117,16 @@ Setting an unreadable database aside also clears its restore folder: a staged fi
 or pending preferences belonged to the store that moved. A restore from the start-up
 failure screen then stages into the new store's folder as usual.
 
+Reset (`RoomResets`) writes `pending.properties` (the operation only) to the profile's
+`sello-reset/` folder (`sandbox-reset/`), then in one transaction deletes every
+financial row, kept undo copy and receipt, sets the device's zone, advances the
+generation and revision, and stores a `history.reset` receipt with no subject. After
+it, the restore folder and the set-aside `*-unreadable.db` files are deleted, the
+database is compacted (`VACUUM`, then the write-ahead log truncated) so no erased row
+survives in free pages, and every preference key is cleared in one DataStore edit.
+The pending file goes once all of that is done; at start-up a pending file whose
+receipt exists is finished, and one without a receipt is forgotten.
+
 ## Changing the schema
 
 1. Change the entities, raise `version` in `SelloDatabase` and build: KSP writes the
@@ -129,4 +139,4 @@ failure screen then stages into the new store's folder as usual.
 
 ## Not here yet
 
-- Backup files, restore and reset: SELLO-028 to SELLO-031.
+- Privacy and private-file verification: SELLO-032.

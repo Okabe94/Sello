@@ -28,6 +28,7 @@ flowchart LR
     recibo <-->|Recibo / Resumen tabs| resumen[ResumenRoute<br/>ResumenRoot → ResumenScreen]
     recibo -->|gear| settings[SettingsRoute<br/>SettingsRoot → SettingsScreen]
     settings -->|Respaldo| backup[BackupRoute<br/>BackupRoot → BackupScreen]
+    settings -->|Borrar todos los datos| reset[ResetRoute<br/>ResetRoot → ResetScreen]
     recibo -->|add category| categoryCreate[CategoryEditorRoute<br/>CategoryEditorRoot → CategoryEditorScreen]
     recibo -.->|open category| reciboDetail[Recibo category detail<br/>ShellState.detailCategoryId<br/>CategoryDetailScreen]
 
@@ -101,6 +102,7 @@ layout primitives are intentionally omitted.
 | Edit category | `CategoryEditRoute(categoryId, month)` → `CategoryManagementRoot` → `CategoryEditorScreen` | `Form`, `LimitFields`, `SectionLabel`, `ArchiveConfirmation` | Same category shared composables as above |
 | Configuración | `SettingsRoute` → `ShellScreen` → `SettingsRoot` → `SettingsScreen` | `AppearanceControls`, `CategoryOrderingControls`, `DataControls`, `SectionTitle`, `ControlLabel` | `Slip`, `ChipFlow`, `SelloChip`, `SegmentedSwitch`, `LeaderLine`, `SlipSkeleton`, `ErrorSlip` |
 | Respaldo | `BackupRoute` → `ShellScreen` (no dock) → `BackupRoot` → `BackupScreen` + `RestoreSection` | `LastBackupSlip`, `Disclosure`, restore `Preview`/`Counts`/`Restored`/`Pending`; system `CreateDocument` and `OpenDocument` pickers | `Slip`, `LeaderLine`, `Stamp`, `BulletList`, `SelloButton`, `ErrorSlip`, `SlipSkeleton` |
+| Borrar datos | `ResetRoute` → `ShellScreen` (no dock) → `ResetRoot` → `ResetScreen` | `Counts`, `Word`, `Erased`, `Pending` | `Slip`, `FormField`, `Stamp`, `BulletList`, `SelloButton`, `ErrorSlip`, `SlipSkeleton` |
 | Shared shell | `SelloAppRoot` → `ShellScreen` | `MonthPicker`, `CorrectionNoticeBar`; `ReciboDestination`, `EntryDestination` are private navigation hosts | `SelloScaffold`, `SelloNavigationBar` / `SelloNavigationRail`, `SelloDock`, `MonthSwitcher`, `MonthGrid`, `SelloNotice` |
 
 ## Navigation test coverage
@@ -116,6 +118,7 @@ contract without a real `NavHost`.
 | Recibo → Configuración → Back, without losing selected month or Recibo state | `SettingsJourneyTest.settingsPreserveTheSelectedMonthFinancialRowsAndTheReciboBackStack` | Journey |
 | Recibo → Configuración → Respaldo → save a document | `BackupFileJourneyTest` | Journey |
 | Respaldo → choose a file → preview → replace, or reject/cancel with no change | `RestoreJourneyTest` | Journey |
+| Configuración → Borrar todos los datos → counts → BORRAR → erased, then a new category and expense; cancel at either step | `ResetReuseJourneyTest`; `ResetScreenTest` | Journey + instrumented Compose UI |
 | Recibo category detail on compact and wide windows | `ShellScreenLayoutTest`; `ReciboListDetailWideTest`; `NavigationStateTest.aDetailGoesBesideItsListOnlyInATwoColumnWindowWideEnoughForBoth` | Device + unit/state |
 | Restoring the open Recibo category and keeping its identity while loading | `NavigationStateTest.anOpenedCategoryStaysOpenThroughProcessDeathUntilItIsClosed`; `DetailIdentityTest` | Unit/state |
 | Resumen → income history → new income → Back, and Resumen → routed category detail → Back | `ResumenJourneyTest.realEntrySummarySourceLinksAndRecreationReconcileWithStorage` | Journey |

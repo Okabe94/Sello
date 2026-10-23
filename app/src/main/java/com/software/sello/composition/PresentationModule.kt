@@ -6,6 +6,8 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.software.sello.domain.port.DispatcherProvider
+import com.software.sello.feature.backup.BackupSession
+import com.software.sello.feature.backup.BackupViewModel
 import com.software.sello.feature.category.CategoryEditorViewModel
 import com.software.sello.feature.category.CategoryManagementViewModel
 import com.software.sello.feature.expense.ExpenseEntryViewModel
@@ -41,6 +43,8 @@ fun presentationModule(): Module = module {
         )
         ExpenseCorrections(get(), get(), get(), get(), scope)
     }
+    // A save runs for as long as the process, not the screen that started it.
+    single { BackupSession(get(), get(), get(), get(), get<CoroutineScope>()) }
 }
 
 /**
@@ -50,7 +54,10 @@ fun presentationModule(): Module = module {
  */
 fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
     initializer { AppearanceViewModel(koin.get()) }
-    initializer { SettingsViewModel(koin.get(), koin.get()) }
+    initializer { SettingsViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
+    initializer {
+        BackupViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get())
+    }
     initializer { ResumenViewModel(createSavedStateHandle(), koin.get(), koin.get(), koin.get()) }
     initializer {
         IncomeHistoryViewModel(koin.get(), koin.get(), koin.get(), koin.get(), koin.get())

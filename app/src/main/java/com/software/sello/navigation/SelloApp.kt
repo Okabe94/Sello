@@ -59,6 +59,7 @@ import com.software.sello.designsystem.component.selloWindowLayout
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.feature.backup.BackupRoot
 import com.software.sello.feature.category.CategoryEditorRoot
 import com.software.sello.feature.category.CategoryManagementRoot
 import com.software.sello.feature.expense.ExpenseEntryRoot
@@ -217,7 +218,24 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 // Configuración shows nothing of the month.
                 pastMonthRibbon = false
             ) { padding ->
-                SettingsRoot(viewModels, padding)
+                SettingsRoot(viewModels, padding) {
+                    navigation.navigate(BackupRoute) { launchSingleTop = true }
+                }
+            }
+            BackHandler(enabled = !state.monthPickerOpen) { navigation.popBackStack() }
+        }
+        composable<BackupRoute> {
+            ShellScreen(
+                state = state,
+                names = monthNames(),
+                onAction = shell::onAction,
+                navigation = null,
+                onBack = { navigation.popBackStack() },
+                screenTitle = stringResource(R.string.backup_title),
+                pastMonthRibbon = false,
+                entryDock = false
+            ) { padding ->
+                BackupRoot(viewModels, padding)
             }
             BackHandler(enabled = !state.monthPickerOpen) { navigation.popBackStack() }
         }
@@ -517,7 +535,7 @@ internal fun PastMonthNotice(
  * window shows it instead of the content once it has been opened, under its own title
  * and with a way back. The picker is
  * a bottom sheet, or a side panel beside the content in a window wide enough for one.
- * There is no tab bar while there is one tab. The dock asks to record an expense.
+ * There is no tab bar while there is one tab. The dock asks to record an expense, unless [entryDock] is false.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -535,6 +553,7 @@ fun ShellScreen(
     pastMonthRibbon: Boolean = true,
     titleLabel: String? = null,
     dock: SelloDock? = null,
+    entryDock: Boolean = true,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
@@ -624,12 +643,17 @@ fun ShellScreen(
                     )
                 },
                 blotter = Blotter.Short,
-                // A screen can offer its own entry, as income history does.
-                dock = dock ?: SelloDock(
-                    label = stringResource(R.string.dock_entry_label),
-                    actionLabel = stringResource(R.string.dock_entry_action),
-                    onClick = { onAction(ShellAction.StartEntry) }
-                ),
+                // A screen can offer its own entry, as income history does, or none
+                // when its own action is the only one, as Respaldo's is.
+                dock = dock ?: if (entryDock) {
+                    SelloDock(
+                        label = stringResource(R.string.dock_entry_label),
+                        actionLabel = stringResource(R.string.dock_entry_action),
+                        onClick = { onAction(ShellAction.StartEntry) }
+                    )
+                } else {
+                    null
+                },
                 notice = notice,
                 secondaryPane = if (state.monthPickerOpen && sidePanel) {
                     { padding ->

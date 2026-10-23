@@ -17,9 +17,14 @@ import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AppearancePreferences
 import com.software.sello.domain.port.AuditClock
+import com.software.sello.domain.port.BackupExports
+import com.software.sello.domain.port.BackupPreparationFailure
+import com.software.sello.domain.port.BackupSummary
 import com.software.sello.domain.port.CategoryOrderingPreferences
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.PreferenceRead
+import com.software.sello.domain.port.PreparedBackup
+import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
@@ -27,6 +32,14 @@ import kotlinx.coroutines.withContext
 class RoomBackupSnapshots(private val database: SelloDatabase) {
     suspend fun read(): Outcome<FinancialSnapshot, StorageFailure> =
         reading { database.withTransaction { database.snapshot() } }
+
+    /** Just the financial zone, for naming a file before the data is read. */
+    suspend fun zone(): Outcome<ZoneId, StorageFailure> = reading {
+        when (val profile = profileFrom(database.profileDao().rows())) {
+            is Outcome.Success -> Outcome.Success(profile.value.zone)
+            is Outcome.Failure -> profile
+        }
+    }
 }
 
 private suspend fun SelloDatabase.snapshot(): Outcome<FinancialSnapshot, StorageFailure> {
@@ -95,7 +108,34 @@ class BackupExport(
     private val auditClock: AuditClock,
     private val dispatchers: DispatcherProvider,
     private val codec: BackupCodec = BackupCodec()
-) {
+) : BackupExports {
+    /** Named in the financial zone; if that cannot be read, a plain name will do. */
+    override suspend fun suggestedName(): String = when (val zone = snapshots.zone()) {
+        is Outcome.Success -> BackupFormat.fileName(auditClock.now(), zone.value)
+        is Outcome.Failure -> FALLBACK_NAME
+    }
+
+    override suspend fun prepare(): Outcome<PreparedBackup, BackupPreparationFailure> =
+        when (val file = create()) {
+            is Outcome.Success -> Outcome.Success(
+                PreparedBackup(
+                    bytes = file.value.bytes,
+                    summary = BackupSummary(
+                        categories = file.value.counts.categories,
+                        expenses = file.value.counts.expenses,
+                        incomes = file.value.counts.incomes
+                    )
+                )
+            )
+
+            is Outcome.Failure -> Outcome.Failure(
+                when (file.error) {
+                    is BackupExportFailure.Storage -> BackupPreparationFailure.StorageUnavailable
+                    is BackupExportFailure.Unrestorable -> BackupPreparationFailure.Unrestorable
+                }
+            )
+        }
+
     suspend fun create(): Outcome<BackupFile, BackupExportFailure> {
         val financial = when (val read = snapshots.read()) {
             is Outcome.Success -> read.value
@@ -125,5 +165,9 @@ class BackupExport(
         val ordering = ordering.observeCategoryOrdering().first()
         if (appearance !is PreferenceRead.Ready || ordering !is PreferenceRead.Ready) return null
         return PortablePreferences(appearance.value, ordering.value)
+    }
+
+    private companion object {
+        const val FALLBACK_NAME = "sello-respaldo.json"
     }
 }

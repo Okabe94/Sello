@@ -23,11 +23,12 @@ categories and monthly budgets.
   where a rail is present.
 - Recibo, Resumen, category detail and income history share one selected month.
 - Expenses, income, categories and limits are stored in Room. Appearance, Recibo
-  ordering and dismissed correction announcements are stored in DataStore.
+  ordering, dismissed correction announcements and the last backup are stored in
+  DataStore.
 - The app uses the shared `:design-system`. The separate `:catalog` app renders those
   real components with synthetic data and no product repositories.
 
-Not present in customer navigation: backup, restore, reset, sandbox controls, goals,
+Not present in customer navigation: restore, reset, sandbox controls, goals,
 investments, recurrence, alerts, analytical export or batch entry. There are no
 placeholder destinations for them.
 
@@ -260,8 +261,28 @@ immediately. Theme and ink update the root theme without replacing the navigatio
 stack, selected month or drafts. Controls are disabled while a write runs. A read or
 write failure shows an error slip with retry and says financial data is unchanged.
 
+A "Tus datos" slip has the Respaldo row with the last backup's date, or "Nunca"; it
+opens Respaldo.
+
 **Placement:** a shell route, so it keeps the month title, picker and dock even though
 its controls are not month settings. It has Back and no tab bar.
+
+### 10. Respaldo
+
+**Entry:** the Respaldo row in Configuración.
+
+**Behavior:** the last backup (date, counts, size, file name) and, always above the
+button, what a backup file is: readable by anyone, no password, the person's to keep,
+synced by a cloud provider on its own terms, untouched by deleting Sello's data.
+"Crear respaldo" opens the system save dialog; dismissing it changes nothing. Data is
+read and written off the main thread and the save continues if the screen is left.
+"Guardado" lands only after the document is written and closed. A failed save keeps
+the last good backup and warns about a possibly incomplete file; a save the app never
+finished (the process died) is reported as unknown, never as saved. Format:
+[backup format](../data/backup-format.md). There is no restore yet (SELLO-030).
+
+**Placement:** a shell route with Back and no Anotar dock: its own button is the only
+action.
 
 ## Appearance and motion
 
@@ -354,7 +375,7 @@ beside each feature.
 - Category and transaction forms are full-screen flows, not sheets or side panels.
 - The month and date pickers are Material 3 dialogs and sheets with Sello colors, not
   custom calendar components.
-- Backup/restore/reset are planned but not routed. The debug sandbox is a separate
+- Restore and reset are planned but not routed. The debug sandbox is a separate
   debug-only activity, not a route in the app.
 - There is no production network permission, account, sync, notification or cloud UI.
 

@@ -12,10 +12,14 @@ import com.software.sello.domain.model.CategoryOrderingPreference
 import com.software.sello.domain.model.CorrectionAnnouncementPreference
 import com.software.sello.domain.model.InkPreference
 import com.software.sello.domain.model.ThemePreference
+import com.software.sello.domain.port.BackupRecord
+import com.software.sello.domain.port.BackupSummary
+import com.software.sello.domain.port.LastBackup
 import com.software.sello.domain.port.PreferenceFailure
 import com.software.sello.domain.port.PreferenceRead
 import com.software.sello.domain.port.PreferenceWrite
 import java.io.IOException
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +67,74 @@ class DataStoreUserPreferencesTest {
         override suspend fun updateData(
             transform: suspend (t: Preferences) -> Preferences
         ): Preferences = transform(values.value).also { values.value = it }
+    }
+
+    private val lastBackup = LastBackup(
+        at = Instant.parse("2026-10-22T19:30:00.250Z"),
+        name = "sello-respaldo-2026-10-22-1430.json",
+        bytes = 4_096,
+        summary = BackupSummary(categories = 2, expenses = 3, incomes = 1)
+    )
+
+    @Test
+    fun noBackupIsRecordedUntilOneCompletes() = runTest {
+        val preferences = DataStoreUserPreferences(HandDataStore())
+
+        assertEquals(PreferenceRead.Ready(BackupRecord()), preferences.observeBackups().first())
+
+        preferences.backupStarted()
+        assertEquals(
+            PreferenceRead.Ready(BackupRecord(last = null, unfinished = true)),
+            preferences.observeBackups().first()
+        )
+
+        assertEquals(PreferenceWrite.Saved, preferences.backupCompleted(lastBackup))
+        assertEquals(
+            PreferenceRead.Ready(BackupRecord(last = lastBackup, unfinished = false)),
+            preferences.observeBackups().first()
+        )
+    }
+
+    @Test
+    fun anAbandonedSaveKeepsTheLastGoodBackup() = runTest {
+        val preferences = DataStoreUserPreferences(HandDataStore())
+        preferences.backupCompleted(lastBackup)
+
+        preferences.backupStarted()
+        preferences.backupAbandoned()
+
+        assertEquals(
+            PreferenceRead.Ready(BackupRecord(last = lastBackup, unfinished = false)),
+            preferences.observeBackups().first()
+        )
+    }
+
+    @Test
+    fun aPartlyStoredBackupRecordIsDamageNotADifferentBackup() = runTest {
+        val partial = mutablePreferencesOf(
+            stringPreferencesKey("backup_last_name_v1") to "sello-respaldo.json"
+        )
+        val preferences = DataStoreUserPreferences(HandDataStore(partial))
+
+        assertEquals(
+            PreferenceRead.Failed<BackupRecord>(PreferenceFailure.InvalidValue, null),
+            preferences.observeBackups().first()
+        )
+    }
+
+    @Test
+    fun theBackupRecordIsNeverPartOfTheAppearanceOrOrder() = runTest {
+        val preferences = DataStoreUserPreferences(HandDataStore())
+        preferences.backupCompleted(lastBackup)
+
+        assertEquals(
+            PreferenceRead.Ready(AppearancePreference()),
+            preferences.observeAppearance().first()
+        )
+        assertEquals(
+            PreferenceRead.Ready(CategoryOrderingPreference()),
+            preferences.observeCategoryOrdering().first()
+        )
     }
 
     @Test

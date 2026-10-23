@@ -114,8 +114,13 @@ record at version 1. Restoring it is SELLO-030.
 
 `BackupExport.create` reads every financial row in one Room transaction, then the
 preferences, encodes, and reads its own output back with the same rules, so the app
-never hands out a file it would refuse. It returns the name, bytes and counts;
-writing them to a document the person chose is SELLO-029.
+never hands out a file it would refuse. It returns the name, bytes and counts.
+
+In the app (`feature/backup`), the system's "Guardar como" offers the name;
+`AndroidDocumentWriter` writes, flushes and closes the chosen document, and only then
+is the backup "Guardado" and remembered (`BackupRecords`, in DataStore). A start is
+recorded before the first byte, so a process that dies mid-save leaves an unknown
+outcome, never a saved one. Sello never deletes a document it failed to complete.
 
 ## Changing the format
 

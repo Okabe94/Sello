@@ -4,6 +4,7 @@ import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryName
 import com.software.sello.domain.model.IconKey
+import com.software.sello.domain.model.IncomeSource
 import com.software.sello.domain.model.Money
 import com.software.sello.domain.model.Note
 import com.software.sello.domain.model.OperationId
@@ -13,9 +14,12 @@ import com.software.sello.domain.port.CategoryCommandOutcome
 import com.software.sello.domain.port.CategoryCommands
 import com.software.sello.domain.port.CreateCategory
 import com.software.sello.domain.port.CreateExpense
+import com.software.sello.domain.port.CreateIncome
 import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
+import com.software.sello.domain.port.IncomeCommandOutcome
+import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.SetMonthLimit
 import com.software.sello.navigation.MonthSession
 import java.time.LocalDate
@@ -96,4 +100,19 @@ object TestCommands {
             )
             assertTrue("$outcome", outcome is ExpenseCommandOutcome.Committed)
         }
+
+    /** A salary income of [pesos] on [date]. */
+    fun createIncome(date: LocalDate, pesos: Long) = runBlocking {
+        val outcome = koin.get<IncomeCommands>().create(
+            CreateIncome(
+                operation(),
+                1,
+                TransactionAmount.of(Money.cop(pesos)).value(),
+                IncomeSource.Salary,
+                date,
+                Note.of(null).value()
+            )
+        )
+        assertTrue("$outcome", outcome is IncomeCommandOutcome.Committed)
+    }
 }

@@ -156,7 +156,7 @@ class CategoryEditorScreenTest {
 
     @Test
     fun aTotalTheLimitDoesNotChangeIsSaidAsItIs() {
-        show(ready.copy(unlimited = true, limitTotal = total("1.200.000", changes = false)))
+        show(editing.copy(limitTotal = total("1.200.000", changes = false)))
 
         rule.onNodeWithTag(EDITOR_TOTAL_TAG).performScrollTo()
             .assertContentDescriptionEquals("Tu límite total de octubre es 1.200.000 pesos")

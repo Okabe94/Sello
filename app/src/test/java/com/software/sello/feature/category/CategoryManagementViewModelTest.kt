@@ -769,4 +769,15 @@ class CategoryManagementViewModelTest {
         assertTrue(total.changes)
         assertEquals(september, total.month)
     }
+
+    @Test
+    fun withSinLimiteOnTheTotalIsNotShown() {
+        reads.categories =
+            listOf(cafe, stored(3, "Comida", MonthBudgetState.Limited(finite(900_000), false)))
+        val form = form()
+
+        form.onAction(CategoryEditorAction.UnlimitedChanged(true))
+
+        assertNull(form.now.limitTotal)
+    }
 }

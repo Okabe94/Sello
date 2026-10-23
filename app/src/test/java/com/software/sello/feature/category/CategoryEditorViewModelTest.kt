@@ -677,15 +677,14 @@ class CategoryEditorViewModelTest {
     }
 
     @Test
-    fun withoutALimitTheTotalIsTheMonthsAsItIs() {
+    fun withSinLimiteThereIsNoTotalToShow() {
         reads.categories = listOf(withLimit(1, "Comida", 900_000), withLimit(2, "Café", 300_000))
         val editor = editor()
+        editor.limit("200.000")
 
         editor.withNoLimit("Ocio")
 
-        val total = editor.total!!
-        assertEquals("1.200.000", total.amount.digits)
-        assertFalse(total.changes)
+        assertNull(editor.total)
     }
 
     @Test

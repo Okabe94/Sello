@@ -26,9 +26,9 @@ class LimitFigures(private val money: MoneyFormatter) {
             }
 
     /**
-     * Null when nothing was read, while the draft's limit is empty or not an amount,
-     * when no category would have a limit, or when the total cannot be held exactly.
-     * [categoryId] is the category being edited, null for a new one.
+     * Null when nothing was read, with "Sin límite" chosen, while the draft's limit is
+     * empty or not an amount, when no category would have a limit, or when the total
+     * cannot be held exactly. [categoryId] is the category being edited, null for a new one.
      */
     fun total(
         budget: MonthBudget?,
@@ -36,14 +36,10 @@ class LimitFigures(private val money: MoneyFormatter) {
         unlimited: Boolean,
         limitText: String
     ): LimitTotal? {
-        budget ?: return null
-        val draft = when {
-            unlimited -> BudgetLimit.Unlimited
-
-            else -> (CopAmountInput.parse(limitText) as? Outcome.Success)?.value
-                ?.let { (BudgetLimit.finite(it) as? Outcome.Success)?.value }
-                ?: return null
-        }
+        if (budget == null || unlimited) return null
+        val draft = (CopAmountInput.parse(limitText) as? Outcome.Success)?.value
+            ?.let { (BudgetLimit.finite(it) as? Outcome.Success)?.value }
+            ?: return null
         val categories = budget.inMonth()
         val now = MonthlyBudgetPolicy.limitTotalWith(categories, null, null)
         val then = MonthlyBudgetPolicy.limitTotalWith(categories, categoryId, draft)

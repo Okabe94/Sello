@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -163,13 +162,13 @@ fun CategoryEditorScreen(
             }
         }
     ) { padding ->
+        // The scaffold's padding already keeps the keyboard clear.
         Column(
             verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scroll)
                 .padding(padding)
-                .imePadding()
         ) {
             when {
                 state.loading -> SlipSkeleton(Modifier.testTag(EDITOR_LOADING_TAG))
@@ -510,6 +509,7 @@ private fun LimitTotalLine(total: LimitTotal) {
     val style = MaterialTheme.typography.bodySmall
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .testTag(EDITOR_TOTAL_TAG)
             .clearAndSetSemantics { contentDescription = "$lead ${total.amount.spoken}" }
@@ -518,7 +518,7 @@ private fun LimitTotalLine(total: LimitTotal) {
             SelloIcon.Info.painter(),
             contentDescription = null,
             tint = colors.inkSoft,
-            modifier = Modifier.padding(top = 1.dp).size(16.dp)
+            modifier = Modifier.size(16.dp)
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(lead, style = style, color = colors.inkSoft)

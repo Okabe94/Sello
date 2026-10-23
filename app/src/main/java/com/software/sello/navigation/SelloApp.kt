@@ -60,6 +60,8 @@ import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.feature.backup.BackupRoot
+import com.software.sello.feature.backup.RestoreAction
+import com.software.sello.feature.backup.RestoreViewModel
 import com.software.sello.feature.category.CategoryEditorRoot
 import com.software.sello.feature.category.CategoryManagementRoot
 import com.software.sello.feature.expense.ExpenseEntryRoot
@@ -231,12 +233,21 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
             BackHandler(enabled = !state.monthPickerOpen) { navigation.popBackStack() }
         }
         composable<BackupRoute> {
+            val restore: RestoreViewModel = viewModel(factory = viewModels)
             ShellScreen(
                 state = state,
                 names = monthNames(),
                 onAction = shell::onAction,
                 navigation = null,
-                onBack = { navigation.popBackStack() },
+                // Once the history is or may be replaced, the arrow restarts as Back does:
+                // the screens behind it still show the history from before.
+                onBack = {
+                    if (restore.state.value.replaced) {
+                        restore.onAction(RestoreAction.Leave)
+                    } else {
+                        navigation.popBackStack()
+                    }
+                },
                 screenTitle = stringResource(R.string.backup_title),
                 pastMonthRibbon = false,
                 entryDock = false

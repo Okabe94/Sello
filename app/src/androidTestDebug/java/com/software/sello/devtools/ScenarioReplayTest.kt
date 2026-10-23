@@ -240,4 +240,29 @@ class ScenarioReplayTest {
             assertEquals(table, emptyList<String>(), rows<String>("SELECT * FROM $table"))
         }
     }
+
+    @Test
+    fun afterAResetANewProcessBringsBackNoneOfTheScenarioItErased() = runBlocking {
+        load(Scenarios.G01)
+        repeat(4) { runner.step() }
+        val resets = checkNotNull(graph).koin.get<Resets>()
+        resets.reset(
+            (resets.preview() as Outcome.Success).value,
+            (OperationId.of("00000000-0000-4000-8000-000000009002") as Outcome.Success).value
+        )
+
+        // A new process on the same session, which still names the scenario and its step.
+        open()
+        runner.recover().join()
+        runner.step()
+
+        // Its earlier steps find no receipt, and it does not move past the step it was on:
+        // nothing it wrote comes back.
+        assertEquals(listOf("history.reset"), rows<String>("SELECT kind FROM operation_receipt"))
+        assertTrue(runner.state.value.log.none { it.revision != null })
+        assertEquals(5, runner.state.value.next)
+        for (table in listOf("category", "default_limit", "expense", "income")) {
+            assertEquals(table, emptyList<String>(), rows<String>("SELECT * FROM $table"))
+        }
+    }
 }

@@ -5,6 +5,7 @@ import android.app.Instrumentation
 import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -105,6 +106,12 @@ class RestoreJourneyTest {
         picker?.let(instrumentation::removeMonitor)
         scenario?.close()
         koin.loadModules(listOf(module { single<AppRestart> { ProcessAppRestart(context) } }))
+        // The session lives as long as the process; each test starts it from nothing.
+        koin.get<RestoreSession>().run {
+            dismiss()
+            finish()
+            cancel()
+        }
         TestData.reset()
         // A restore advanced the generation; every other test prepares against 1.
         TestData.execute("UPDATE profile SET generation = 1, financial_zone = '$zone'")
@@ -280,5 +287,20 @@ class RestoreJourneyTest {
         assertEquals(before, financialRows())
         assertTrue(File(context.filesDir, "sello-restore").list().isNullOrEmpty())
         assertEquals(0, restarts)
+    }
+
+    @Test
+    fun theTopBarsBackArrowAfterARestoreStartsTheAppAgain() {
+        answerWith(backup())
+        openRespaldoAndChoose()
+        rule.awaitTag(RESTORE_PREVIEW_TAG)
+        rule.onNodeWithTag(RESTORE_CONFIRM_TAG).performScrollTo().performClick()
+        rule.awaitTag(RESTORE_DONE_TAG)
+
+        // The arrow, not the system Back: the screens behind it still show the old history.
+        rule.onNodeWithContentDescription("Volver").performClick()
+        rule.waitForIdle()
+
+        assertEquals(1, restarts)
     }
 }

@@ -2,6 +2,10 @@ package com.software.sello.devtools
 
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.software.sello.domain.model.Outcome
+import com.software.sello.domain.port.BackupExports
+import com.software.sello.domain.port.RestoreOutcome
+import com.software.sello.domain.port.Restores
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -13,7 +17,9 @@ import org.junit.runner.RunWith
  * The whole scenario corpus on real Room. Each scenario runs fresh, then again cut
  * off after a committed step whose checkpoint was lost and resumed in a new process;
  * both runs must leave the same history and every `Verify` must match. Each check's
- * line is written to the log under [TAG] as the run's evidence.
+ * line is written to the log under [TAG] as the run's evidence. Each finished scenario
+ * is also saved as a backup and restored into a new installation, where its last
+ * check must find the same figures.
  */
 @RunWith(AndroidJUnit4::class)
 class TemporalScenarioCorpusTest {
@@ -110,6 +116,74 @@ class TemporalScenarioCorpusTest {
         report.forEach { Log.i(TAG, it) }
         assertEquals(Scenarios.all.size, report.size)
     }
+
+    @Test
+    fun everyScenarioRestoredFromItsBackupKeepsItsRowsAndLastFigures() {
+        val report = mutableListOf<String>()
+        Scenarios.all.forEach { scenario ->
+            val last = scenario.steps.indexOfLast { it is ScenarioStep.Verify }
+            // Only a final check sees the whole history; earlier ones were taken mid-run. A
+            // later step that is meant to be refused changes nothing.
+            val checkable = last >= 0 && scenario.steps.drop(last + 1).none {
+                it.writes() && it.expect == Expect.Saved
+            }
+            val sandbox = graph(scenario)
+            sandbox.finish()
+            val expected = sandbox.runner.state.value.log.singleOrNull { it.index == last }?.result
+            val before = sandbox.figures()
+            val bytes = runBlocking {
+                (sandbox.koin.get<BackupExports>().prepare() as Outcome.Success).value.bytes
+            }
+
+            // A new installation at the same simulated day, holding nothing yet.
+            sandbox.erase()
+            sandbox.store.session = sandbox.store.session.copy(
+                nextStep = if (checkable) last else scenario.steps.size
+            )
+            sandbox.open()
+            val restores = sandbox.koin.get<Restores>()
+            val restored = runBlocking {
+                restores.replace((restores.stage(bytes) as Outcome.Success).value)
+            }
+            assertTrue("${scenario.key}: $restored", restored is RestoreOutcome.Restored)
+            assertEquals(scenario.key, before, sandbox.figures())
+
+            if (!checkable) {
+                report += "${scenario.key}: backup ${bytes.size} bytes restored; " +
+                    "same rows; no check follows its last saved change"
+                return@forEach
+            }
+            // After the restart a restore asks for, the last check runs on restored rows.
+            sandbox.open()
+            runBlocking { sandbox.runner.step() }
+            val again = sandbox.runner.state.value.log.single { it.index == last }.result
+
+            assertEquals(scenario.key, expected, again)
+            assertTrue(scenario.key, again.lines().none { it.startsWith("✗") })
+            report += "${scenario.key}: backup ${bytes.size} bytes restored; same rows; " +
+                "${again.lines().count { it.startsWith("✓") }} final figures match"
+        }
+        report.forEach { Log.i(TAG, it) }
+        assertEquals(Scenarios.all.size, report.size)
+    }
+
+    /** What the figures are computed from, by name: no identifiers, versions or receipts. */
+    private fun SandboxGraph.figures(): List<String> = rows(
+        "SELECT c.name, e.amount_minor, e.effective_date, e.note FROM expense e " +
+            "JOIN category c ON c.id = e.category_id ORDER BY e.effective_date, e.sequence"
+    ) +
+        rows(
+            "SELECT amount_minor, effective_date, source_key FROM income ORDER BY effective_date"
+        ) +
+        rows("SELECT name, archived FROM category ORDER BY name") +
+        rows(
+            "SELECT c.name, d.effective_month, d.kind, d.limit_minor FROM default_limit d " +
+                "JOIN category c ON c.id = d.category_id ORDER BY c.name, d.effective_month"
+        ) +
+        rows(
+            "SELECT c.name, m.month, m.kind, m.limit_minor FROM month_limit m " +
+                "JOIN category c ON c.id = m.category_id ORDER BY c.name, m.month"
+        )
 
     private fun ScenarioStep.writes() =
         this !is ScenarioStep.AdvanceTo && this !is ScenarioStep.Verify

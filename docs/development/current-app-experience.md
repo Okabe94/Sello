@@ -295,8 +295,8 @@ date and the replacement warning; nothing changes until "Reemplazar con el respa
 The replacement is one transaction with a new generation, so older drafts and undo
 offers are refused. The backup's zone, appearance and order follow; if a preference
 cannot be applied, D09's "Historial financiero restaurado" names only those, with a
-retry that never replaces the history again. "Restaurado" → "Ir al recibo" (or Back)
-restarts the app. A preview or result scrolls into view at the top; once the history
+retry that never replaces the history again. "Restaurado" → "Ir al recibo" (or Back,
+or the top bar's arrow) restarts the app. A preview or result scrolls into view at the top; once the history
 is replaced it is the only thing shown. The start-up failure screen offers the same
 restore (see Startup failure).
 

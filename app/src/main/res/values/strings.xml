@@ -313,6 +313,14 @@
     <string name="startup_start_over_word">Escribe BORRAR para confirmar</string>
     <string name="startup_start_over_confirm">Empezar de cero</string>
     <string name="startup_start_over_cancel">Cancelar</string>
+    <string name="startup_failure_restore">Restaurar un respaldo</string>
+    <string name="startup_restore_title">¿Restaurar este respaldo?</string>
+    <string name="startup_restore_counts">Tiene %1$s, %2$s y %3$s.</string>
+    <string name="startup_restore_warning">Lo que no se pudo abrir queda guardado aparte en este teléfono, como al empezar de cero, y Sello se llena con el respaldo. También se restauran la zona horaria, la apariencia y el orden del respaldo.</string>
+    <string name="startup_restore_confirm">Restaurar el respaldo</string>
+    <string name="startup_restore_interrupted_title">La restauración no terminó</string>
+    <string name="startup_restore_interrupted_body">Lo que no se pudo abrir quedó guardado aparte. Al continuar, Sello se abre de nuevo; si tus datos no aparecen, elige el respaldo otra vez en Configuración → Respaldo.</string>
+    <string name="startup_restore_continue">Continuar</string>
     <string name="entry_expense">Gasto</string>
     <string name="entry_income">Ingreso</string>
     <string name="income_entry_title">Anotar ingreso</string>

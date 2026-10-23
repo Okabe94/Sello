@@ -23,6 +23,7 @@ import com.software.sello.feature.startup.StartupFailureRoot
 import com.software.sello.navigation.SelloAppRoot
 import com.software.sello.navigation.ShellAction
 import com.software.sello.navigation.ShellViewModel
+import com.software.sello.platform.ProcessAppRestart
 
 class MainActivity : ComponentActivity() {
     private val startup get() = (application as SelloApplication).startup
@@ -52,7 +53,9 @@ class MainActivity : ComponentActivity() {
                 // The graph cannot be opened here, so its persisted preference is unavailable.
                 is StartupState.Failed -> SelloTheme {
                     StartupFailureRoot(
-                        viewModels = remember { startupFailureViewModels(startup) },
+                        viewModels = remember {
+                            startupFailureViewModels(startup, ProcessAppRestart(applicationContext))
+                        },
                         onStartedOver = ::startOver
                     )
                 }

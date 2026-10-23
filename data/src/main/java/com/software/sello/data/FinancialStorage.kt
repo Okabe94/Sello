@@ -181,7 +181,8 @@ fun openFinancialStorage(
  * its set-aside name (`sello-unreadable.db` for the app's own) in the same private
  * folder so the next open starts an empty one. The file is kept, not deleted, because
  * a file this build cannot read may be intact: one written by a newer version reads
- * again once the app is updated.
+ * again once the app is updated. A restore staged for the file that moved belongs to
+ * it, so its private folder is cleared; the next store starts with none.
  */
 fun setAsideFinancialStorage(
     context: Context,
@@ -189,4 +190,6 @@ fun setAsideFinancialStorage(
 ): Outcome<Unit, StorageFailure> = setAside(
     context.getDatabasePath(names.database),
     context.getDatabasePath(names.setAsideDatabase)
-)
+).also { moved ->
+    if (moved is Outcome.Success) File(context.filesDir, names.restoreFolder).deleteRecursively()
+}

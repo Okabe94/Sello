@@ -19,6 +19,7 @@ import com.software.sello.domain.port.AppearancePreferences
 import com.software.sello.domain.port.AuditClock
 import com.software.sello.domain.port.BackupSummary
 import com.software.sello.domain.port.CategoryOrderingPreferences
+import com.software.sello.domain.port.CheckedBackup
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.PendingPreferences
 import com.software.sello.domain.port.PreferenceWrite
@@ -390,6 +391,16 @@ class RoomRestores(
             }
     }
 }
+
+/** Checks [bytes] as a whole backup without any storage; see [CheckedBackup]. */
+fun BackupCodec.check(bytes: ByteArray): Outcome<CheckedBackup, RestoreRejection> =
+    when (val plan = read(bytes)) {
+        is Outcome.Success -> with(plan.value.contents) {
+            Outcome.Success(CheckedBackup(exportedAt, financial.zone, financial.summary()))
+        }
+
+        is Outcome.Failure -> Outcome.Failure(plan.error.reason())
+    }
 
 internal fun FinancialSnapshot.summary() =
     BackupSummary(categories.size, expenses.size, incomes.size)

@@ -87,7 +87,7 @@ layout primitives are intentionally omitted.
 
 | Screen or surface | Route and host composables | Feature-local composables | Main shared composables |
 | --- | --- | --- | --- |
-| Startup failure | Outside graph: `StartupFailureRoot` → `StartupFailureScreen` | `Explanation`, `Warning` | `SelloScaffold`, `Slip`, `FormField`, `FieldMessageText`, `SelloButton` |
+| Startup failure | Outside graph: `StartupFailureRoot` → `StartupFailureScreen` | `Explanation`, `Warning`, `RestoreFromBackup`, restore `Preview`, `RestoredSlip` (`presentation/restore`); system `OpenDocument` | `SelloScaffold`, `Slip`, `FormField`, `FieldMessageText`, `SelloButton`, `ErrorSlip` |
 | Recibo | `ReciboRoute` → `SelloAppRoot` → `ReciboDestination` → `ShellScreen` → `ReciboScreen` | `SummarySlip`, `CategoriesSlip`, `FigureHeader`, `StaleSlip` | `Slip`, `CategoryGrid`, `CategoryCell`, `MoneyText`, `LeaderLine`, `Stamp`, `SlipSkeleton`, `EmptySlip`, `ErrorSlip`, `SelloButton` |
 | Recibo category detail | No route; `ReciboDestination` supplies `ShellDetail` to `ShellScreen` → `CategoryDetailScreen` | `HeaderSlip`, `Expenses`, `ExpenseList`, plus shared `FigureHeader` and `StaleSlip` | `Slip`, `CategoryCircle`, `ActionLine`, `LeaderLine`, `MoneyText`, `SelloNotice`, `SlipSkeleton`, `EmptySlip`, `ErrorSlip`, `SelloButton` |
 | Resumen | `ResumenRoute` → `ShellScreen` → `ResumenRoot` → `ResumenScreen` | `ResumenPane`, `SummarySlips`, `ChartSlips`, `ResumenHeading`, `ChartWidth` | `Slip`, `MoneyText`, `LeaderLine`, `Stamp`, `LineChart`, `ColumnsChart`, `SlipSkeleton`, `EmptySlip`, `ErrorSlip`, `SelloButton` |
@@ -129,7 +129,7 @@ contract without a real `NavHost`.
 | Category detail → expense edit/delete → detail/list with undo | `ExpenseCorrectionJourneyTest` | Journey |
 | Stored expense → Recibo → category detail/list across restart | `WalkingSliceJourneyTest.aSavedExpenseReachesReciboItsCategoryAndItsListAndIsThereAfterStartingAgain` | Journey |
 | Month picker open/select/restore and Back precedence | `ShellOnDeviceTest`; `ShellScreenLayoutTest`; `WideWindowBackTest`; `MonthPickerShortcutTest`; `MonthSwitcherLabelTest`; `MonthSessionTest` | Device + unit/state |
-| Startup failure actions | `StartupFailureScreenTest` | Instrumented Compose UI; outside normal graph |
+| Startup failure actions, including restore preview and outcomes | `StartupFailureScreenTest` | Instrumented Compose UI; outside normal graph |
 
 ### Known coverage limits
 

@@ -113,6 +113,10 @@ their identifiers and order, sets the backup's zone, advances the generation and
 revision, and stores a `history.restore` receipt with no subject. Preferences are
 applied afterwards from the staged file, which stays until each group is applied.
 
+Setting an unreadable database aside also clears its restore folder: a staged file
+or pending preferences belonged to the store that moved. A restore from the start-up
+failure screen then stages into the new store's folder as usual.
+
 ## Changing the schema
 
 1. Change the entities, raise `version` in `SelloDatabase` and build: KSP writes the

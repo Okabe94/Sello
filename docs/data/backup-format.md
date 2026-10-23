@@ -136,6 +136,11 @@ happened, so asking again after an unknown outcome or a crash replays instead of
 replacing twice. Afterwards the backup's appearance and order are applied; a group
 that fails stays pending, with the file, and is retried at start-up and on request.
 
+From the start-up failure screen there is no store to stage into, so the file is
+checked whole with `BackupCodec.check` and held in memory for the preview. Confirming
+sets the unreadable database aside, opens a new empty store and stages and replaces
+there as above.
+
 ## Changing the format
 
 Any change to keys, meanings or rules is a new `version`. Version 1 stays readable

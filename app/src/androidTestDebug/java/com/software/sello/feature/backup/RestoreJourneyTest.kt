@@ -51,6 +51,8 @@ import com.software.sello.feature.settings.SETTINGS_TAG
 import com.software.sello.navigation.SETTINGS_ACTION_TAG
 import com.software.sello.platform.ProcessAppRestart
 import com.software.sello.platform.TestDocuments
+import com.software.sello.presentation.restore.RESTORE_DONE_TAG
+import com.software.sello.presentation.restore.RESTORE_LEAVE_TAG
 import java.io.File
 import java.time.Instant
 import java.time.YearMonth

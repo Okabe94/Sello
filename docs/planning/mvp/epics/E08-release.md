@@ -348,6 +348,13 @@ measurements/thresholds and artifact exclusions. Never write secrets in commands
   #88, every target is met; Resumen has the least margin (535 ms of 700). Remaining: R8 shrinking and keep rules with the
   journeys re-measured (part 2); production signing, artifact inspection and G3
   (part 3).
+- **Part 2 of 3, shrinking** (`sello-035-shrink`). R8 shrinks and optimizes the
+  release build with the libraries' keep rules and none of Sello's: on the optimized
+  build, saving, editing, deleting with undo, an income, a new category, a theme kept
+  across a restart, a draft across process death, a past month, backup, restore and
+  erasing all worked against the expected figures, with no crash. APK 28.9 MB → 4.5 MB;
+  every target met with more room (Resumen 402 ms of 700). Remaining: production
+  signing, artifact inspection and G3 (part 3).
 - **Status stays Backlog until G3 exists.** The runner verifies an In Progress ticket
   at its own gate, and G3 is what this ticket delivers; a lower gate may not stand in.
   Parts 1 and 2 are verified as merge candidates (G2); part 3

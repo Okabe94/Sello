@@ -76,11 +76,58 @@ The restore journey opens the first file in the picker's Downloads.
 ## Results
 
 Taken on 2026-10-23 on the isolated emulator `sello022_api30`: API 30 Google APIs
-x86_64, 4 cores, 2 GB, 1080 × 2340 at 440 dpi, host GPU, on a 16-core desktop. Build:
-the release build type, not yet shrunk, not debuggable, signed with a throwaway
-measurement key outside the repository; built from the part 1 commit on top of
-`main` with #88. Each history was
-restored once and the app opened before timing.
+x86_64, 4 cores, 2 GB, 1080 × 2340 at 440 dpi, host GPU, on a 16-core desktop. Builds:
+the release build type, not debuggable, signed with a throwaway measurement key
+outside the repository. Each history was restored once and the app opened before
+timing.
+
+### Optimized release (part 2)
+
+R8 shrinks and optimizes the release build (`optimization { enable = true }` in
+`app/build.gradle.kts`) with the libraries' own keep rules and none of Sello's: no
+journey below needed one. The APK went from 28.9 MB to 4.5 MB, and the build's
+developer-tools check still finds none of them in it. Large history:
+
+| Journey | Target | Median (range) | Before shrinking |
+| --- | --- | --- | --- |
+| Cold start, figures shown | ≤ 1.5 s | **314 ms** (294–327) | 353 ms |
+| Cold start, first frame | — | 257 ms (247–272) | 281 ms |
+| Warm start | ≤ 0.5 s | **68 ms** (59–71) | 79 ms |
+| Scrolling Recibo, slow frames | < 5% | **0%** in all 5 runs; 90th percentile 6 ms | 0% |
+| Opening Resumen | ≤ 700 ms | **402 ms** (385–439) | 535 ms |
+| Opening a category's detail | — | 151 ms (151–152) | 218 ms |
+| Backup | ≤ 5 s | **1.25 s** (1.24–1.52) | 1.47 s |
+| Restore: checking the file | — | 0.87 s (0.85–0.89) | 0.99 s |
+| Restore: replacing | — | 1.35 s (1.32–1.37) | 1.38 s |
+| Restore, total | ≤ 10 s | **2.22 s** | 2.37 s |
+
+Every target is met with more room than before. The app used 59 MB (total PSS) after
+opening Resumen, 11 MB of it Java heap, against 78 MB unshrunk. The first opening of
+Resumen just after a restore took about 1 s once (figures after 700 ms, then two frames
+of about 300 ms); the six openings after it took 385 to 573 ms.
+
+The optimized build was then walked through what shrinking could break, each checked on
+screen against the expected figures:
+
+| Journey | Result |
+| --- | --- |
+| Save an expense with the keypad and a note | 12.345 in Mercado; its overspend and the month's remainder moved by exactly 12.345 |
+| Edit it | 12.346; the category's total moved by 1 |
+| Delete it, then delete another and undo | The first gone; the second back after "Deshacer" ([screenshot 2](evidence/SELLO-035/2-borrado-deshacer.png)) |
+| Save an income | Resumen's recorded income rose from 7.540.000 to 7.540.125 |
+| Create a category with a limit | "Parqueadero", 200.000 of 200.000 left; the month's remainder rose by 200.000 |
+| Change the theme, force-stop, start | Still dark |
+| Draft an expense, kill the process, return | A new process shows the same 456 in Mercado ([screenshot 3](evidence/SELLO-035/3-borrador-tras-proceso.png)) |
+| Open September from the month picker | Its finished-month stamps and leftovers |
+| Back up and restore the large history | As timed above: 20 categories, 10,000 expenses, 2,000 incomes |
+| Erase all data, start again | "Borrado", then the first-run screen after a restart |
+
+No crash was logged. Not walked: the start-up failure screen, which needs an unreadable
+database that a non-debuggable build gives no way to plant.
+
+### Before shrinking (part 1)
+
+Built from the part 1 commit on top of `main` with #88.
 
 | Journey | Target | Large: median (range) | Typical: median |
 | --- | --- | --- | --- |
@@ -104,8 +151,8 @@ Resumen's. After opening Resumen with the large history the app used 78 MB (tota
 database read and the arithmetic run off the main thread. Then two frames take about
 200 ms each to draw the 20 categories, the 12 months and the daily line, against 100 to
 130 ms with 8 categories. It reads the expense rows of the 12 months it charts, so its
-cost follows the months shown, not the whole history. Part 2 measures it again on the
-shrunk build before deciding whether drawing needs work.
+cost follows the months shown, not the whole history. Shrinking took it to 402 ms, so
+drawing needs no work for the targets.
 
 **Starting** waits on the main thread for the database to open and the financial zone
 to be read (`openStorage`, on purpose: no date may be computed before the zone is
@@ -125,7 +172,8 @@ Findings outside performance, reported and not fixed here:
 
 ## Not covered yet
 
-- The optimized release: R8 shrinking arrives in part 2 of SELLO-035 and is measured
-  again then. These results are the unshrunk release build.
+- Production signing: these builds carry a throwaway measurement key; signing with the
+  owner's key and inspecting that artifact are part 3, as is keeping R8's mapping file
+  beside a released APK so that a stack trace from it can be read.
 - A physical phone: the emulator runs on a fast desktop and flatters every number.
   The owner may run the same script on a phone; acceptance on a device is SELLO-036.

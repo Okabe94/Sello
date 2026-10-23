@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.width
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
@@ -48,6 +50,22 @@ import org.junit.Test
 class ComponentContractsTest {
     @get:Rule
     val rule = createComposeRule()
+
+    @Test
+    fun customMoneyTypographyKeepsTheReferencesTabularDigitsAndSize() {
+        val layouts = mutableListOf<TextLayoutResult>()
+        rule.inEveryScheme(content = {
+            MoneyText(
+                MoneyTextValue(MoneySign.None, "", "612.400", "612.400 pesos"),
+                textStyle = MaterialTheme.typography.labelMedium,
+                onTextLayout = { layouts += it }
+            )
+        }) { scheme ->
+            rule.onNodeWithContentDescription("612.400 pesos").assertIsDisplayed()
+            assertEquals(scheme, "tnum", layouts.last().layoutInput.style.fontFeatureSettings)
+            assertEquals(scheme, 12.5.sp, layouts.last().layoutInput.style.fontSize)
+        }
+    }
 
     @Test
     fun compactPadHasFour48dpRowsAndClearAllIsAccessible() {

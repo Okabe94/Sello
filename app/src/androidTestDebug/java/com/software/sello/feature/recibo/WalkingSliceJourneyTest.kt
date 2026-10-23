@@ -19,6 +19,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
@@ -185,7 +186,7 @@ class WalkingSliceJourneyTest {
         rule.onNode(hasText("Pan") and hasAnyAncestor(hasTestTag(first)), useUnmergedTree = true)
             .assertExists()
         inDetail(first, "48.700 pesos").assertExists()
-        rule.onNodeWithText("1 gasto").assertExists()
+        rule.onNodeWithText("Ver el gasto").assertExists()
 
         // From the category's own screen the entry starts in that category.
         record("1", "3", "0", "0")
@@ -194,7 +195,7 @@ class WalkingSliceJourneyTest {
         rule.awaitTag(CATEGORY_DETAIL_HEADER_TAG)
         rule.await(saying("Te quedan aquí 250.000 pesos."))
         inDetail(CATEGORY_DETAIL_SPENT_TAG, "50.000 pesos").assertExists()
-        rule.awaitText("2 gastos")
+        rule.awaitText("Ver los 2")
         val second = categoryExpenseTag(expenseIds().last())
         rule.awaitTag(second)
         inDetail(second, "1.300 pesos").assertExists()
@@ -278,25 +279,36 @@ class WalkingSliceJourneyTest {
         rule.onNodeWithTag(RECIBO_PER_DAY_TAG).assertDoesNotExist()
     }
 
+    private fun awaitBrowserCount(text: String) {
+        rule.await(
+            hasTestTag("category.expenses") and
+                SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, text)
+        )
+    }
+
+    private fun scrollBrowserTo(tag: String) {
+        rule.onNodeWithTag("category.expenses").performScrollToNode(hasTestTag(tag))
+    }
+
     @Test
     fun aLongListIsShownInPartsWhileTheFiguresCountAllOfIt() {
         startWithMercado()
         repeat(25) { TestCommands.createExpense("Mercado", TestCommands.today, 1_000) }
-
-        // 25 expenses of 1.000: 25.000 of 300.000.
         rule.await(saying("Restante del presupuesto: 275.000 pesos."))
         openMercado()
-
-        rule.awaitText("Se muestran 20 de 25")
-        rule.onNodeWithText("25 gastos").assertExists()
+        rule.awaitText("Ver los 25")
         inDetail(CATEGORY_DETAIL_SPENT_TAG, "25.000 pesos").assertExists()
-        assertEquals(20, listed())
-
+        assertEquals(4, listed())
         rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().performClick()
-
-        rule.waitUntil(15_000) { listed() == 25 }
-        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).assertDoesNotExist()
-        rule.onNodeWithText("Se muestran 20 de 25").assertDoesNotExist()
+        awaitBrowserCount("Se muestran 20 de 25")
+        scrollBrowserTo("category.expenses.more")
+        rule.onNodeWithTag("category.expenses.more").performClick()
+        awaitBrowserCount("25 gastos")
+        scrollBrowserTo(categoryExpenseTag(expenseIds().first()))
+        rule.onNodeWithTag(categoryExpenseTag(expenseIds().first())).assertIsDisplayed()
+        rule.onNodeWithTag("category.expenses.more").assertDoesNotExist()
+        Espresso.pressBack()
+        rule.awaitTag(CATEGORY_DETAIL_SPENT_TAG)
         inDetail(CATEGORY_DETAIL_SPENT_TAG, "25.000 pesos").assertExists()
     }
 
@@ -306,22 +318,25 @@ class WalkingSliceJourneyTest {
         repeat(45) { TestCommands.createExpense("Mercado", TestCommands.today, 1_000) }
         rule.await(saying("Restante del presupuesto: 255.000 pesos."))
         openMercado()
-        rule.awaitText("Se muestran 20 de 45")
+        rule.awaitText("Ver los 45")
         rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().performClick()
-        rule.awaitText("Se muestran 40 de 45")
-        // At the foot of the forty, where someone reading down the list would be.
-        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).performScrollTo().assertIsDisplayed()
+        awaitBrowserCount("Se muestran 20 de 45")
+        scrollBrowserTo("category.expenses.more")
+        rule.onNodeWithTag("category.expenses.more").performClick()
+        awaitBrowserCount("Se muestran 40 de 45")
+        scrollBrowserTo("category.expenses.more")
+        rule.onNodeWithTag("category.expenses.more").assertIsDisplayed()
 
-        // 46 expenses of 1.000 and one of 2.500: 47.500 of 300.000.
+        // 45 × 1.000 + 2.500 = 47.500; the open browser keeps its 40 loaded rows.
         TestCommands.createExpense("Mercado", TestCommands.today, 2_500, "Nuevo")
-
-        rule.awaitText("Se muestran 40 de 46")
-        rule.awaitText("Nuevo")
+        awaitBrowserCount("Se muestran 40 de 46")
+        rule.onNodeWithTag("category.expenses.more").assertIsDisplayed()
+        scrollBrowserTo(categoryExpenseTag(expenseIds().last()))
+        rule.onNodeWithText("Nuevo").assertIsDisplayed()
+        Espresso.pressBack()
+        rule.await(saying("Te quedan aquí 252.500 pesos."))
         inDetail(CATEGORY_DETAIL_SPENT_TAG, "47.500 pesos").assertExists()
-        assertEquals(40, listed())
-        // The place in the list is kept: a list that had shrunk to its first page on the
-        // way would have left the reader back near the top.
-        rule.onNodeWithTag(CATEGORY_DETAIL_MORE_TAG).assertIsDisplayed()
+        rule.onNodeWithText("Ver los 46").assertExists()
     }
 
     @Test
@@ -363,7 +378,7 @@ class WalkingSliceJourneyTest {
         rule.onNodeWithTag(RECIBO_STALE_TAG).assertDoesNotExist()
         rule.onNodeWithTag(RECIBO_FAILED_TAG).assertDoesNotExist()
         openMercado()
-        rule.awaitText("2 gastos")
+        rule.awaitText("Ver los 2")
         inDetail(CATEGORY_DETAIL_SPENT_TAG, "45.000 pesos").assertExists()
     }
 }

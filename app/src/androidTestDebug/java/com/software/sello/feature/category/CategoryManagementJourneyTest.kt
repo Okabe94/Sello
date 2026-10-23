@@ -106,7 +106,7 @@ class CategoryManagementJourneyTest {
 
     private fun edit() {
         rule.awaitTag(CATEGORY_DETAIL_EDIT_TAG)
-        rule.onNodeWithTag(CATEGORY_DETAIL_EDIT_TAG).performScrollTo().performClick()
+        rule.onNodeWithTag(CATEGORY_DETAIL_EDIT_TAG).assertIsDisplayed().performClick()
         rule.awaitText("Editar categoría")
         rule.awaitDescription("Nombre")
     }

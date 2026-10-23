@@ -1,5 +1,7 @@
 package com.software.sello.devtools
 
+import com.software.sello.domain.model.CategoryId
+import com.software.sello.domain.model.CategoryInsights
 import com.software.sello.domain.model.MonthlySnapshot
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.ResumenSnapshot
@@ -8,6 +10,8 @@ import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.CategoryCommand
 import com.software.sello.domain.port.CategoryCommandOutcome
 import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CategoryInsightsSnapshots
+import com.software.sello.domain.port.CategoryInsightsState
 import com.software.sello.domain.port.CreateExpense
 import com.software.sello.domain.port.CreateIncome
 import com.software.sello.domain.port.DeleteExpense
@@ -202,4 +206,24 @@ class FaultyResumenSnapshots(
             send(state)
         }
     }
+}
+
+/** Category statistics share the sandbox's read-failure control. */
+class FaultyCategoryInsightsSnapshots(
+    private val snapshots: CategoryInsightsSnapshots,
+    private val faults: DebugFaults
+) : CategoryInsightsSnapshots by snapshots {
+    override fun observe(categoryId: CategoryId, month: YearMonth): Flow<CategoryInsightsState> =
+        channelFlow {
+            var lastGood: CategoryInsights? = null
+            launch {
+                faults.readFailures.collect {
+                    send(CategoryInsightsState.Failed(SimulatedReadFailure, lastGood))
+                }
+            }
+            snapshots.observe(categoryId, month).collect { state ->
+                if (state is CategoryInsightsState.Ready) lastGood = state.snapshot
+                send(state)
+            }
+        }
 }

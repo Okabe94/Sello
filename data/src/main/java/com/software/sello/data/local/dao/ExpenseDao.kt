@@ -7,6 +7,36 @@ import com.software.sello.data.local.entity.ExpenseEntity
 
 @Dao
 interface ExpenseDao {
+    @Query(
+        "SELECT COUNT(*) FROM expense WHERE category_id = :categoryId " +
+            "AND effective_date >= :from AND effective_date < :until " +
+            "AND instr(lower(COALESCE(note, '')), lower(:query)) > 0"
+    )
+    suspend fun countSearchInCategory(
+        categoryId: String,
+        from: String,
+        until: String,
+        query: String
+    ): Long
+
+    @Query(
+        "SELECT * FROM expense WHERE category_id = :categoryId " +
+            "AND effective_date >= :from AND effective_date < :until " +
+            "AND instr(lower(COALESCE(note, '')), lower(:query)) > 0 " +
+            "ORDER BY CASE WHEN :sort = 'amount' THEN amount_minor END DESC, " +
+            "CASE WHEN :sort = 'name' THEN COALESCE(note, '') END COLLATE NOCASE ASC, " +
+            "effective_date DESC, sequence DESC LIMIT :limit OFFSET :offset"
+    )
+    suspend fun searchInCategory(
+        categoryId: String,
+        from: String,
+        until: String,
+        sort: String,
+        query: String,
+        offset: Int,
+        limit: Int
+    ): List<ExpenseEntity>
+
     @Insert
     suspend fun insert(expense: ExpenseEntity)
 

@@ -68,9 +68,15 @@ import com.software.sello.feature.expense.ExpenseEntryRoot
 import com.software.sello.feature.income.IncomeFormRoot
 import com.software.sello.feature.income.IncomeHistoryScreen
 import com.software.sello.feature.income.IncomeHistoryViewModel
+import com.software.sello.feature.recibo.CATEGORY_DETAIL_EDIT_TAG
 import com.software.sello.feature.recibo.CategoryDetailAction
 import com.software.sello.feature.recibo.CategoryDetailScreen
+import com.software.sello.feature.recibo.CategoryDetailState
 import com.software.sello.feature.recibo.CategoryDetailViewModel
+import com.software.sello.feature.recibo.CategoryExpensesAction
+import com.software.sello.feature.recibo.CategoryExpensesScreen
+import com.software.sello.feature.recibo.CategoryExpensesState
+import com.software.sello.feature.recibo.CategoryExpensesViewModel
 import com.software.sello.feature.recibo.ReciboAction
 import com.software.sello.feature.recibo.ReciboScreen
 import com.software.sello.feature.recibo.ReciboState
@@ -155,6 +161,7 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                     navigation.navigate(ExpenseEditRoute(id)) { launchSingleTop = true }
                 },
                 // Opened from the month on screen: that is the month whose limit it edits.
+                onShowAllExpenses = { id -> navigation.navigate(CategoryExpensesRoute(id)) },
                 onEditCategory = { id ->
                     navigation.navigate(CategoryEditRoute(id, state.selectedMonth.toString())) {
                         launchSingleTop = true
@@ -188,13 +195,26 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 monthNames(),
                 shell::onAction,
                 onBack = { navigation.popBackStack() },
-                screenTitle = stringResource(R.string.category_detail_title_fallback),
+                screenTitle = (detailState as? CategoryDetailState.Ready)?.category?.name
+                    ?: stringResource(R.string.category_detail_title_fallback),
+                showMonthAsSubtitle = true,
+                dock = SelloDock(
+                    label = stringResource(R.string.dock_entry_label),
+                    actionLabel = stringResource(R.string.dock_entry_action),
+                    onClick = { navigation.navigate(ExpenseEntryRoute(id)) }
+                ),
+                actions = {
+                    CategoryEditAction(detailState is CategoryDetailState.Ready) {
+                        navigation.navigate(CategoryEditRoute(id, state.selectedMonth.toString()))
+                    }
+                },
                 notice = notice?.let { { CorrectionNoticeBar(it, corrections::undo) } }
             ) { padding ->
                 CategoryDetailScreen(
                     state = detailOf(id, detailState), months = monthNames(), dates = dateLabels(),
-                    showName = true, onAction = detail::onAction,
+                    showName = false, onAction = detail::onAction,
                     onRecordHere = { navigation.navigate(ExpenseEntryRoute(id)) },
+                    onShowAllExpenses = { navigation.navigate(CategoryExpensesRoute(id)) },
                     contentPadding = padding,
                     onEditExpense = { navigation.navigate(ExpenseEditRoute(it)) },
                     onEditCategory = {
@@ -209,6 +229,38 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                     },
                     announcementBusy = announcementState.busy,
                     announcementFailed = announcementState.failure != null
+                )
+            }
+        }
+        composable<CategoryExpensesRoute> { entry ->
+            val id = entry.toRoute<CategoryExpensesRoute>().categoryId
+            val model: CategoryExpensesViewModel = viewModel(factory = viewModels)
+            val expenses by model.state.collectAsStateWithLifecycle()
+            val query by model.query.collectAsStateWithLifecycle()
+            val order by model.order.collectAsStateWithLifecycle()
+            LaunchedEffect(id) { model.onAction(CategoryExpensesAction.Show(id)) }
+            ShellScreen(
+                state,
+                monthNames(),
+                shell::onAction,
+                onBack = { navigation.popBackStack() },
+                screenTitle = (expenses as? CategoryExpensesState.Ready)?.categoryName
+                    ?: stringResource(R.string.category_expenses_title),
+                showMonthAsSubtitle = true,
+                dock = SelloDock(
+                    label = stringResource(R.string.dock_entry_label),
+                    actionLabel = stringResource(R.string.dock_entry_action),
+                    onClick = { navigation.navigate(ExpenseEntryRoute(id)) }
+                ),
+                notice = notice?.let { { CorrectionNoticeBar(it, corrections::undo) } }
+            ) { padding ->
+                CategoryExpensesScreen(
+                    expenses,
+                    query,
+                    order,
+                    model::onAction,
+                    { navigation.navigate(ExpenseEditRoute(it)) },
+                    padding
                 )
             }
         }
@@ -436,6 +488,7 @@ private fun ReciboDestination(
     onOpenSettings: () -> Unit,
     onEditExpense: (String) -> Unit,
     onEditCategory: (String) -> Unit,
+    onShowAllExpenses: (String) -> Unit,
     onCreateCategory: () -> Unit
 ) {
     val recibo: ReciboViewModel = viewModel(factory = viewModels)
@@ -471,7 +524,11 @@ private fun ReciboDestination(
                 }
             },
             detail = shownId?.let { id ->
-                ShellDetail(title) { padding ->
+                ShellDetail(title, actions = {
+                    CategoryEditAction(shownDetail is CategoryDetailState.Ready) {
+                        onEditCategory(id)
+                    }
+                }) { padding ->
                     CategoryDetailScreen(
                         state = shownDetail,
                         months = names,
@@ -482,6 +539,7 @@ private fun ReciboDestination(
                         contentPadding = padding,
                         onEditExpense = onEditExpense,
                         onEditCategory = { onEditCategory(id) },
+                        onShowAllExpenses = { onShowAllExpenses(id) },
                         showPastLimitAnnouncement = !announcements.loading &&
                             !announcements.preference.pastLimitSeen,
                         onDismissPastLimitAnnouncement = onDismissPastLimit,
@@ -526,7 +584,18 @@ fun showsDetailBeside(width: Dp, height: Dp): Boolean =
 private val SideBySideWidth = 600.dp
 
 /** The detail of what the content lists: its [title] and how to draw it. */
-class ShellDetail(val title: String, val content: @Composable (PaddingValues) -> Unit)
+class ShellDetail(
+    val title: String,
+    val actions: @Composable RowScope.() -> Unit = {},
+    val content: @Composable (PaddingValues) -> Unit
+)
+
+@Composable
+private fun CategoryEditAction(enabled: Boolean, onClick: () -> Unit) {
+    IconButton(onClick, enabled = enabled, modifier = Modifier.testTag(CATEGORY_DETAIL_EDIT_TAG)) {
+        Icon(SelloIcon.EditNote.painter(), stringResource(R.string.category_detail_edit))
+    }
+}
 
 /**
  * "Estás viendo septiembre" and "Volver a octubre". The year is added to the month
@@ -582,6 +651,7 @@ fun ShellScreen(
     navigation: SelloNavigation? = null,
     onBack: (() -> Unit)? = null,
     screenTitle: String? = null,
+    showMonthAsSubtitle: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
     pastMonthRibbon: Boolean = true,
     titleLabel: String? = null,
@@ -606,6 +676,7 @@ fun ShellScreen(
             SelloScaffold(
                 title = detail.title,
                 subtitle = title,
+                actions = detail.actions,
                 blotter = Blotter.Short,
                 navigationIcon = {
                     IconButton(
@@ -634,6 +705,7 @@ fun ShellScreen(
             val bar = monthBarLabel(state, names)
             SelloScaffold(
                 title = screenTitle ?: title,
+                subtitle = if (showMonthAsSubtitle) title else null,
                 topBar = if (tab) {
                     {
                         MonthBar(
@@ -661,19 +733,23 @@ fun ShellScreen(
                     }
                 },
                 actions = actions,
-                titleContent = {
-                    val label = when {
-                        titleLabel != null -> titleLabel
-                        screenTitle == null -> title
-                        else -> stringResource(R.string.screen_title_month, screenTitle, title)
+                titleContent = if (showMonthAsSubtitle) {
+                    null
+                } else {
+                    {
+                        val label = when {
+                            titleLabel != null -> titleLabel
+                            screenTitle == null -> title
+                            else -> stringResource(R.string.screen_title_month, screenTitle, title)
+                        }
+                        MonthSwitcher(
+                            label = label,
+                            onClick = { onAction(ShellAction.OpenMonthPicker) },
+                            modifier = Modifier
+                                .testTag(MONTH_SWITCHER_TAG)
+                                .semantics { contentDescription = bar.spoken }
+                        )
                     }
-                    MonthSwitcher(
-                        label = label,
-                        onClick = { onAction(ShellAction.OpenMonthPicker) },
-                        modifier = Modifier
-                            .testTag(MONTH_SWITCHER_TAG)
-                            .semantics { contentDescription = bar.spoken }
-                    )
                 },
                 blotter = Blotter.Short,
                 // A screen can offer its own entry, as income history does, or none

@@ -1,7 +1,9 @@
 package com.software.sello.feature.recibo
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,16 +13,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -31,19 +38,25 @@ import com.software.sello.designsystem.component.ButtonKind
 import com.software.sello.designsystem.component.CategoryCircle
 import com.software.sello.designsystem.component.EmptySlip
 import com.software.sello.designsystem.component.ErrorSlip
+import com.software.sello.designsystem.component.FittedMoneyText
+import com.software.sello.designsystem.component.KeyValue
 import com.software.sello.designsystem.component.LeaderLine
 import com.software.sello.designsystem.component.LineAction
-import com.software.sello.designsystem.component.MoneyStyle
 import com.software.sello.designsystem.component.MoneyText
 import com.software.sello.designsystem.component.SelloButton
 import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
+import com.software.sello.designsystem.component.Stamp
+import com.software.sello.designsystem.component.TearLine
+import com.software.sello.designsystem.icon.SelloIcon
+import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.category.CategoryIcons
 import com.software.sello.presentation.date.DateLabels
 import com.software.sello.presentation.month.MonthNames
 import java.time.YearMonth
+import java.util.Locale
 
 /**
  * One category in the selected month: what is left of its limit, what was spent, and
@@ -65,7 +78,8 @@ fun CategoryDetailScreen(
     showPastLimitAnnouncement: Boolean = false,
     onDismissPastLimitAnnouncement: () -> Unit = {},
     announcementBusy: Boolean = false,
-    announcementFailed: Boolean = false
+    announcementFailed: Boolean = false,
+    onShowAllExpenses: () -> Unit = {}
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md),
@@ -101,7 +115,7 @@ fun CategoryDetailScreen(
                         Modifier.testTag(CATEGORY_DETAIL_STALE_TAG)
                     )
                 }
-                HeaderSlip(state.category, showName, onEditCategory)
+                HeaderSlip(state, months, showName, onEditCategory)
                 // A month that is over can still have its limit corrected; said where
                 // that month is being looked at, every time.
                 if (state.month < YearMonth.from(state.today)) {
@@ -136,73 +150,200 @@ fun CategoryDetailScreen(
                         )
                     }
                 }
-                Expenses(state, months, dates, onAction, onRecordHere, onEditExpense)
+                Expenses(
+                    state,
+                    months,
+                    dates,
+                    onAction,
+                    onRecordHere,
+                    onEditExpense,
+                    onShowAllExpenses
+                )
+                CategoryInsightSections(state, months, dates, onAction)
             }
         }
     }
 }
 
 @Composable
-private fun HeaderSlip(category: ReciboCategory, showName: Boolean, onEditCategory: () -> Unit) {
-    Slip(Modifier.testTag(CATEGORY_DETAIL_HEADER_TAG)) {
+private fun HeaderSlip(
+    state: CategoryDetailState.Ready,
+    months: MonthNames,
+    showName: Boolean,
+    onEditCategory: () -> Unit
+) {
+    val category = state.category
+    val figures = (state.insights as? DetailInsightsState.Ready)?.figures
+    Slip(Modifier.fillMaxWidth().testTag(CATEGORY_DETAIL_HEADER_TAG)) {
         if (showName) {
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.semantics { heading() }
-            )
-            Spacer(Modifier.height(SelloTheme.spacing.xs))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    category.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f).semantics { heading() }
+                )
+                IconButton(
+                    onClick = onEditCategory,
+                    modifier = Modifier.testTag(CATEGORY_DETAIL_EDIT_TAG)
+                ) {
+                    Icon(
+                        SelloIcon.EditNote.painter(),
+                        stringResource(R.string.category_detail_edit)
+                    )
+                }
+            }
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md)
-        ) {
-            CategoryCircle(
-                icon = CategoryIcons.iconFor(category.iconKey),
-                fraction = category.fraction,
-                size = 56.dp,
-                over = category.over
+        val headline = detailHeadline(category.figure.headline)
+        val stamp = stampText(category.figure.stamp)
+        val spoken =
+            stringResource(
+                R.string.recibo_summary_description,
+                headline,
+                category.figure.amount.spoken,
+                stamp
             )
-            FigureHeader(
-                headline = detailHeadline(category.figure.headline),
-                figure = category.figure,
-                style = MoneyStyle.Total,
-                // Without a limit there is nothing to judge; the line below says why.
-                showStamp = category.limit != null,
-                modifier = Modifier.weight(1f)
-            )
+        Column(Modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = spoken }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    headline,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = SelloTheme.colors.inkSoft,
+                    modifier = Modifier.weight(1f)
+                )
+                if (category.limit !=
+                    null
+                ) {
+                    Stamp(
+                        stamp,
+                        stampInk(category.figure.stamp),
+                        Modifier.padding(vertical = 6.dp)
+                    )
+                }
+            }
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val stacked = LocalDensity.current.fontScale > 1.3f || maxWidth < 240.dp
+                val circle: @Composable () -> Unit = {
+                    CategoryCircle(
+                        CategoryIcons.iconFor(category.iconKey),
+                        category.fraction,
+                        size = 56.dp,
+                        over = category.over
+                    )
+                }
+                val amount: @Composable () -> Unit = {
+                    FittedMoneyText(
+                        category.figure.amount,
+                        startSize = 44,
+                        color = if (category.over) {
+                            SelloTheme.colors.semantic.loss
+                        } else {
+                            SelloTheme.colors.ink
+                        }
+                    )
+                }
+                if (stacked) {
+                    Column {
+                        circle()
+                        amount()
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.md)
+                    ) {
+                        circle()
+                        Column(Modifier.weight(1f)) { amount() }
+                    }
+                }
+            }
         }
         Spacer(Modifier.height(SelloTheme.spacing.sm))
-        LeaderLine(
-            stringResource(R.string.category_detail_spent),
-            Modifier.testTag(CATEGORY_DETAIL_SPENT_TAG)
-        ) { MoneyText(category.spent) }
-        if (category.limit != null) {
-            LeaderLine(
-                stringResource(R.string.category_detail_limit),
-                Modifier.testTag(CATEGORY_DETAIL_LIMIT_TAG)
-            ) { MoneyText(category.limit) }
-        } else {
-            LeaderLine(
-                stringResource(R.string.category_detail_limit),
-                stampText(category.figure.stamp),
-                Modifier.testTag(CATEGORY_DETAIL_LIMIT_TAG)
-            )
+        FlowRow(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.testTag(CATEGORY_DETAIL_SPENT_TAG)
+            ) {
+                Text(
+                    stringResource(R.string.category_detail_spent),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = SelloTheme.colors.inkSoft
+                )
+                MoneyText(category.spent, textStyle = MaterialTheme.typography.labelMedium)
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.testTag(CATEGORY_DETAIL_LIMIT_TAG)
+            ) {
+                category.limit?.let {
+                    Text(
+                        stringResource(R.string.category_detail_of),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = SelloTheme.colors.inkSoft
+                    )
+                    MoneyText(it, textStyle = MaterialTheme.typography.labelMedium)
+                }
+                    ?: Text(stamp, color = SelloTheme.colors.inkSoft)
+            }
         }
         if (category.archived) {
             Text(
-                text = stringResource(R.string.recibo_category_archived),
-                style = MaterialTheme.typography.bodyMedium,
+                stringResource(R.string.recibo_category_archived),
                 color = SelloTheme.colors.inkSoft
             )
         }
-        Spacer(Modifier.height(SelloTheme.spacing.sm))
-        SelloButton(
-            text = stringResource(R.string.category_detail_edit),
-            onClick = onEditCategory,
-            kind = ButtonKind.Outlined,
-            modifier = Modifier.testTag(CATEGORY_DETAIL_EDIT_TAG)
-        )
+        if (figures?.allowance != null || figures?.comparison != null) {
+            TearLine()
+            Row(
+                modifier = Modifier.fillMaxWidth().testTag("detail:planning"),
+                horizontalArrangement = Arrangement.spacedBy(SelloTheme.spacing.sm)
+            ) {
+                figures.allowance?.let { perDay ->
+                    KeyValue(
+                        stringResource(R.string.category_detail_for),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            pluralStringResource(
+                                R.plurals.category_detail_days,
+                                perDay.days,
+                                perDay.days
+                            ),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    KeyValue(
+                        stringResource(R.string.category_detail_per_day),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        MoneyText(perDay.amount, textStyle = MaterialTheme.typography.titleMedium)
+                    }
+                }
+                figures.comparison?.let { comparison ->
+                    KeyValue(
+                        stringResource(
+                            R.string.category_detail_compared_to,
+                            months.short(figures.comparisonMonth ?: state.month.minusMonths(1))
+                                .lowercase(Locale.forLanguageTag("es-CO"))
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        val color = when (figures.comparisonDirection) {
+                            DetailComparisonDirection.Higher -> SelloTheme.colors.semantic.warn
+                            DetailComparisonDirection.Lower -> SelloTheme.colors.semantic.gain
+                            DetailComparisonDirection.Equal -> SelloTheme.colors.ink
+                        }
+                        Text(
+                            comparison,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = color
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -213,7 +354,8 @@ private fun Expenses(
     dates: DateLabels,
     onAction: (CategoryDetailAction) -> Unit,
     onRecordHere: () -> Unit,
-    onEditExpense: (String) -> Unit
+    onEditExpense: (String) -> Unit,
+    onShowAllExpenses: () -> Unit
 ) {
     when (val list = state.expenses) {
         ExpenseListState.Loading -> SlipSkeleton(Modifier.testTag(CATEGORY_DETAIL_LIST_LOADING_TAG))
@@ -236,7 +378,14 @@ private fun Expenses(
             onAction = onRecordHere.takeIf { state.canRecord }
         )
 
-        is ExpenseListState.Rows -> ExpenseList(state, list, dates, onAction, onEditExpense)
+        is ExpenseListState.Rows -> ExpenseList(
+            state,
+            list,
+            dates,
+            onAction,
+            onEditExpense,
+            onShowAllExpenses
+        )
     }
 }
 
@@ -246,17 +395,38 @@ private fun ExpenseList(
     list: ExpenseListState.Rows,
     dates: DateLabels,
     onAction: (CategoryDetailAction) -> Unit,
-    onEditExpense: (String) -> Unit
+    onEditExpense: (String) -> Unit,
+    onShowAllExpenses: () -> Unit
 ) {
     val count = state.category.expenseCount
     val edit = stringResource(R.string.category_detail_expense_edit)
     val delete = stringResource(R.string.category_detail_expense_delete)
     Slip(Modifier.testTag(CATEGORY_DETAIL_LIST_TAG), pinked = false) {
-        LeaderLine(
-            stringResource(R.string.category_detail_expenses),
-            pluralStringResource(R.plurals.category_detail_expense_count, count, count),
-            Modifier.semantics { heading() }
-        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(SelloTheme.spacing.xs)
+        ) {
+            Text(
+                stringResource(R.string.category_detail_latest),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(vertical = SelloTheme.spacing.sm).semantics {
+                    heading()
+                }
+            )
+            SelloButton(
+                text = if (list.rows.any { it.notCountedYet }) {
+                    stringResource(R.string.category_detail_view_every_expense)
+                } else {
+                    pluralStringResource(R.plurals.category_detail_view_all, count, count)
+                },
+                onClick = onShowAllExpenses,
+                kind = ButtonKind.Text,
+                // Ends at the slip's content edge, over the amounts, as in v1.1.
+                contentPadding = PaddingValues(start = SelloTheme.spacing.md),
+                modifier = Modifier.testTag(CATEGORY_DETAIL_MORE_TAG)
+            )
+        }
         // Always there, so how to correct an expense never has to be remembered.
         Text(
             text = stringResource(R.string.category_detail_hint),
@@ -274,7 +444,7 @@ private fun ExpenseList(
                     .semantics { liveRegion = LiveRegionMode.Polite }
             )
         }
-        list.rows.forEach { row ->
+        list.rows.take(4).forEach { row ->
             // Each row is its expense, not its place in the list: a new expense at the
             // top is one row added, instead of every row below it drawn again.
             key(row.id) {
@@ -294,37 +464,10 @@ private fun ExpenseList(
                 ) { MoneyText(row.amount) }
             }
         }
-        if (list.more) {
-            Spacer(Modifier.height(SelloTheme.spacing.sm))
-            if (list.rows.size < count) {
-                Text(
-                    text = stringResource(R.string.category_detail_listed, list.rows.size, count),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SelloTheme.colors.inkSoft
-                )
-            }
-            if (list.moreFailed) {
-                Text(
-                    text = stringResource(R.string.category_detail_more_failed),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SelloTheme.colors.semantic.loss,
-                    modifier = Modifier
-                        .testTag(CATEGORY_DETAIL_MORE_FAILED_TAG)
-                        .semantics { liveRegion = LiveRegionMode.Polite }
-                )
-            }
-            SelloButton(
-                text = stringResource(R.string.category_detail_more),
-                onClick = { onAction(CategoryDetailAction.ShowMore) },
-                modifier = Modifier.testTag(CATEGORY_DETAIL_MORE_TAG),
-                kind = ButtonKind.Outlined,
-                loading = list.loadingMore
-            )
-        }
     }
 }
 
-private fun DeleteProblem.text() = when (this) {
+internal fun DeleteProblem.text() = when (this) {
     DeleteProblem.Gone -> R.string.category_detail_delete_gone
     DeleteProblem.Changed -> R.string.category_detail_delete_changed
     DeleteProblem.DataChanged -> R.string.category_detail_delete_data_changed

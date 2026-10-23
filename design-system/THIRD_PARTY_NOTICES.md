@@ -12,6 +12,13 @@ APK under `res/raw` so it travels with the asset. Reviewed for SELLO-006 on 2026
 Nine category icons were added for SELLO-016 on 2026-10-10 from the same revision and
 path, treated the same way.
 
+Category detail's `sell` and `arrow_upward` icons use the same revision, weight,
+filled style and license to match the v1.1 statistics reference.
+
+The debug-only Sello Herramientas launcher in `:app` (`src/debug/res/drawable/ic_tools_launcher_*.xml`)
+embeds the `build` (wrench) path from the same revision, weight and filled style, scaled
+and cut out of its badge. It ships only in debug builds, which include this module's licence text.
+
 The fonts are unmodified. Icons are the upstream `wght500fill1` (filled) and `wght500`
 (outlined) 24px vectors with the AppCompat `android:tint` attribute removed; Compose
 supplies the tint. Sello does not use the fonts' reserved names for any derivative.

@@ -27,6 +27,7 @@ data only: no scenario needs personal data or a local setting.
 | ID | Steps | Start · zone | What it covers | Expected (source) | Test |
 | --- | --- | --- | --- | --- | --- |
 | `g01@2` | 8 | 2026-10-01 · Bogotá | Three expenses and an income | Oct spent 30.000, remaining 70.000, net 170.000, unassigned 100.000 (G01) | `ScenarioReplayTest`, corpus |
+| `detalle-categoria@1` | 13 | 2026-08-01 · Bogotá | Category detail, a known empty month, weekly buckets and latest expenses | Oct spent/remaining 100.000; weekly allowance 70.000; average expense 20.000; Aug/Sep historical average 10.000 (ADR 0015) | `CategoryDetailJourneyTest`, corpus |
 | `fin-de-mes@2` | 13 | 2026-10-30 · Bogotá | Over-limit category, no-limit category, 31 Oct → 1 Nov, 31 Dec → 1 Jan | Oct spent 85.000, remaining −35.000; Nov 40.000; Dec 38.000; Jan 2027 42.000 (by hand, B01/B04/H05 rules) | corpus |
 | `seis-meses@1` | 67 | 2026-05-01 · Bogotá, seed 20261001 | Graph growth, May–Oct | Each month's history total equals the sum of that month's expense steps; six expenses a month | `ScenarioReplayTest` |
 | `bordes@1` | 10 | 2026-10-10 · Bogotá | Double submit, stale edit, undo replaced by a later deletion, amount over the maximum | Already saved; `VersionConflict`; `UndoExpired`; `AboveMaximum` before any command; no expense left | `ReceiptRecoveryDiagnosticJourneyTest`, corpus |
@@ -39,6 +40,13 @@ data only: no scenario needs personal data or a local setting.
 Restart and undo under financial time are covered outside the corpus:
 `TimeControlsJourneyTest` steps the financial day a year forward with an undo offer
 open, and undo still ends six real seconds after the deletion.
+
+For `detalle-categoria@1`, finish replaying, open Alimentación and change its limit
+from 200.000 to 500.000. The current October point in **Un mes normal aquí** must
+immediately show 500.000; August and September stay at 200.000, and the average is
+still 10.000 from two completed months. Advance to November 1: October closes with
+its 500.000 limit and November starts at 500.000. The real editor/Room/observer path
+is exercised by `CategoryDetailJourneyTest.editingTheCurrentLimitRefreshesItsChartPointBeforeRollover`.
 
 `TemporalScenarioCorpusTest` runs every scenario fresh, then again interrupted after
 a committed step whose checkpoint was lost, and requires the same receipts, expenses,

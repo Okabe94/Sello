@@ -24,7 +24,8 @@ sealed interface CategoryDetailState {
         val canRecord: Boolean,
         val expenses: ExpenseListState,
         /** Why the last deletion asked for from this list did not happen, until the next one. */
-        val deleteProblem: DeleteProblem? = null
+        val deleteProblem: DeleteProblem? = null,
+        val insights: DetailInsightsState = DetailInsightsState.Loading
     ) : CategoryDetailState
 
     /** The month was read and this category has nothing in it. */

@@ -7,6 +7,7 @@ import com.software.sello.data.StorageNames
 import com.software.sello.devtools.ControlledFinancialClock
 import com.software.sello.devtools.DebugFaults
 import com.software.sello.devtools.FaultyCategoryCommands
+import com.software.sello.devtools.FaultyCategoryInsightsSnapshots
 import com.software.sello.devtools.FaultyExpenseCommands
 import com.software.sello.devtools.FaultyIncomeCommands
 import com.software.sello.devtools.FaultyMonthlySnapshots
@@ -31,6 +32,7 @@ import com.software.sello.devtools.WriteFence
 import com.software.sello.devtools.restartApp
 import com.software.sello.domain.model.FinancialProfile
 import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CategoryInsightsSnapshots
 import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
@@ -151,6 +153,15 @@ class DebugComposition(
                 }
                 if (time != null) {
                     single<FinancialClock> { time.clock }
+                    single<CategoryInsightsSnapshots> {
+                        FaultyCategoryInsightsSnapshots(
+                            get<FinancialStorage>().categoryInsights(
+                                get(),
+                                get<DispatcherProvider>().default
+                            ),
+                            faults
+                        )
+                    }
                     single<MonthlySnapshots> {
                         FaultyMonthlySnapshots(
                             get<FinancialStorage>().monthlySnapshots(

@@ -169,6 +169,11 @@ deferred beyond MVP. Remaining implementation inputs are listed in the
   spending, not an individual category's deficit. Preserve category overruns without
   zeroing a still-positive overall allowance or silently reallocating category limits;
   see approved B08 in the financial example corpus.
+- Category detail's own planning figures and historical statistics follow
+  [ADR 0015](docs/decisions/0015-category-detail-insights.md): exact actuals,
+  day-of-month week buckets, a bounded remaining-week allowance and averages of
+  completed configured months. These category figures never replace the overall
+  allowance or allocate other categories' limits.
 - **MUST** distinguish Ingresos menos gastos, Restante del presupuesto and Por
   asignar al presupuesto (MVP income minus configured limits), replacing ambiguous
   Sin destinar wording. Do not subtract expenses again from allocation or call any

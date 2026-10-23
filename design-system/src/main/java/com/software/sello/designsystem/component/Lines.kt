@@ -21,7 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -144,7 +147,7 @@ private fun LeaderLayout(
         modifier = modifier,
         content = {
             start()
-            Canvas(Modifier) {
+            Canvas(Modifier.testTag(LEADER_DOTS_TAG)) {
                 val stroke = 2.dp.toPx()
                 drawLine(
                     color = dots,
@@ -169,22 +172,41 @@ private fun LeaderLayout(
         val leader = measurables[1].measure(
             androidx.compose.ui.unit.Constraints.fixed(leaderWidth, 2.dp.roundToPx())
         )
-        val height = maxOf(startPlaceable.height, valuePlaceable.height, constraints.minHeight)
+        // Like v1.1 `.ln`, the row sits on the label's first baseline: the value shares
+        // that line and the dots run just above it, even with a caption under the label.
+        val startBaseline = startPlaceable[FirstBaseline]
+            .takeIf { it != AlignmentLine.Unspecified } ?: (startPlaceable.height / 2)
+        val valueBaseline = valuePlaceable[FirstBaseline].takeIf { it != AlignmentLine.Unspecified }
+        val baseline = maxOf(startBaseline, valueBaseline ?: 0)
+        val startTop = baseline - startBaseline
+        val valueTop = valueBaseline?.let { baseline - it }
+        val content = maxOf(
+            startTop + startPlaceable.height,
+            (valueTop ?: 0) + valuePlaceable.height
+        )
+        val height = maxOf(content, constraints.minHeight)
+        val top = (height - content) / 2
         layout(constraints.maxWidth, height) {
-            startPlaceable.placeRelative(0, (height - startPlaceable.height) / 2)
+            startPlaceable.placeRelative(0, top + startTop)
             valuePlaceable.placeRelative(
                 constraints.maxWidth - valuePlaceable.width,
-                (height - valuePlaceable.height) / 2
+                valueTop?.let { top + it } ?: ((height - valuePlaceable.height) / 2)
             )
             if (leaderWidth > 0) {
-                leader.placeRelative(startPlaceable.width + gap, height / 2 + 4.dp.roundToPx())
+                val dotsCentre = top + baseline - LeaderRise.roundToPx()
+                leader.placeRelative(startPlaceable.width + gap, dotsCentre - leader.height / 2)
             }
         }
     }
 }
 
+internal const val LEADER_DOTS_TAG = "sello:leader-dots"
+
 private val LeaderGap = 6.dp
 private val LeaderMinWidth = 12.dp
+
+/** Centre of the dots above the baseline: v1.1's 2 px border raised 4 px. */
+private val LeaderRise = 5.dp
 
 /** A small label with a larger value under it, used in twos and threes under a tear line. */
 @Composable

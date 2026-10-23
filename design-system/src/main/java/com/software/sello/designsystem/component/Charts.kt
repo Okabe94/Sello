@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -60,7 +61,11 @@ data class ChartPoint(
     val value: Long,
     val spoken: String,
     val period: ChartPeriod = ChartPeriod.Past,
-    val valueLabel: String? = null
+    val valueLabel: String? = null,
+    /** Solid recorded part below this value, striped planning part above it. Geometry only. */
+    val stripedFromValue: Long? = null,
+    /** Optional reference for this period, such as a historical monthly limit. */
+    val referenceValue: Long? = null
 )
 
 /**
@@ -140,17 +145,32 @@ fun ColumnsChart(
                                 }
                             )
                         )
-                        if (stripedCurrent && point.period == ChartPeriod.Current) {
+                        if ((stripedCurrent && point.period == ChartPeriod.Current) ||
+                            point.stripedFromValue != null
+                        ) {
                             clipPath(bar) {
-                                var x = -size.height
-                                while (x < size.width) {
-                                    drawLine(
-                                        ink,
-                                        Offset(x, size.height),
-                                        Offset(x + size.height, 0f),
-                                        2.dp.toPx()
-                                    )
-                                    x += 7.dp.toPx()
+                                val topHeight =
+                                    size.height *
+                                        (
+                                            1f -
+                                                chartFraction(
+                                                    point.stripedFromValue ?: 0,
+                                                    point.value
+                                                )
+                                            )
+                                clipRect(bottom = topHeight) {
+                                    drawRect(colors.paper)
+                                    drawRect(ink.copy(alpha = 0.15f))
+                                    var x = -size.height
+                                    while (x < size.width) {
+                                        drawLine(
+                                            ink,
+                                            Offset(x, size.height),
+                                            Offset(x + size.height, 0f),
+                                            2.dp.toPx()
+                                        )
+                                        x += 7.dp.toPx()
+                                    }
                                 }
                             }
                         }
@@ -214,8 +234,10 @@ fun LineChart(
     }
 }
 
-private fun scaleMax(points: List<ChartPoint>, reference: ChartReference?): Long =
-    maxOf(points.maxOfOrNull { it.value } ?: 0L, reference?.value ?: 0L)
+private fun scaleMax(points: List<ChartPoint>, reference: ChartReference?): Long = maxOf(
+    points.maxOfOrNull { maxOf(it.value, it.referenceValue ?: 0) } ?: 0L,
+    reference?.value ?: 0L
+)
 
 @Composable
 private fun ChartFrame(
@@ -258,6 +280,25 @@ private fun ChartFrame(
         BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(chartHeight)) {
             val barArea = maxHeight - LabelRoom
             behind(LabelRoom)
+            if (points.any { it.referenceValue != null }) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val step = size.width / points.size
+                    val area = size.height - LabelRoom.toPx()
+                    val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+                    points.forEachIndexed { index, point ->
+                        point.referenceValue?.let { value ->
+                            val y = LabelRoom.toPx() + area * (1f - chartFraction(value, max))
+                            drawLine(
+                                colors.inkSoft,
+                                Offset(step * index, y),
+                                Offset(step * (index + 1), y),
+                                strokeWidth = 1.dp.toPx(),
+                                pathEffect = dash
+                            )
+                        }
+                    }
+                }
+            }
             Row(modifier = Modifier.fillMaxSize().selectableGroup()) {
                 points.forEach { point ->
                     val selected = point.id == selectedId
@@ -328,7 +369,8 @@ private fun ChartFrame(
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.inkSoft,
                     textAlign = TextAlign.Center,
-                    maxLines = 1,
+                    // Large text on a narrow column wraps "sem 2" rather than cutting it.
+                    maxLines = 2,
                     modifier = Modifier.weight(1f).padding(top = 4.dp)
                 )
             }

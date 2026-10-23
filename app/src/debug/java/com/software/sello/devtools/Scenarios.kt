@@ -329,7 +329,46 @@ object Scenarios {
         )
     )
 
+    /** ADR 0015: exact category insight examples, using the real command paths. */
+    val CategoryDetail = Scenario(
+        id = "detalle-categoria",
+        version = 1,
+        seed = 1,
+        zone = Bogota,
+        start = LocalDate.of(2026, 8, 1),
+        title = "Detalle de categoría",
+        summary = "22 oct: 100.000 gastados, 100.000 restantes; 70.000 por gastar esta semana. " +
+            "Agosto 20.000 y septiembre 0: promedio histórico 10.000.",
+        steps = listOf(
+            Category("comida", "Alimentación", "restaurant", 200_000),
+            Expense("comida", 20_000, "Mercado de agosto"),
+            AdvanceTo(LocalDate.of(2026, 10, 1)),
+            Expense("comida", 40_000, "Mercado"),
+            AdvanceTo(LocalDate.of(2026, 10, 8)),
+            Expense("comida", 30_000, "Almuerzo"),
+            AdvanceTo(LocalDate.of(2026, 10, 15)),
+            Expense("comida", 15_000, "Panadería"),
+            AdvanceTo(LocalDate.of(2026, 10, 21)),
+            Expense("comida", 10_000, "Fruta"),
+            AdvanceTo(LocalDate.of(2026, 10, 22)),
+            Expense("comida", 5_000, "Café"),
+            Verify(
+                listOf(
+                    Check(
+                        Oct,
+                        Figure.Spent,
+                        100_000,
+                        "ADR 0015: 40.000 + 30.000 + 15.000 + 10.000 + 5.000"
+                    ),
+                    Check(Oct, Figure.Remaining, 100_000, "ADR 0015: 200.000 − 100.000"),
+                    Check(Sep, Figure.Spent, 0, "ADR 0015: configured month with no expenses")
+                )
+            )
+        )
+    )
+
     val all: List<Scenario> = listOf(
+        CategoryDetail,
         G01,
         MonthAndYearEnds,
         SixMonths,

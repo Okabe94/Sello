@@ -132,6 +132,45 @@
     <string name="category_detail_spent">Gastado</string>
     <string name="category_detail_limit">Límite</string>
     <string name="category_detail_expenses">Gastos</string>
+    <string name="category_detail_latest">Últimos gastos</string>
+    <string name="category_detail_view_every_expense">Ver todos</string>
+    <plurals name="category_detail_view_all"><item quantity="one">Ver el gasto</item><item quantity="other">Ver los %d</item></plurals>
+    <string name="category_detail_of">de</string>
+    <string name="category_detail_for">Para</string>
+    <string name="category_detail_per_day">Al día</string>
+    <plurals name="category_detail_days"><item quantity="one">%d día</item><item quantity="other">%d días</item></plurals>
+    <string name="category_detail_compared_to">Frente a %1$s</string>
+    <string name="category_detail_numbers">En números</string>
+    <plurals name="category_detail_count_days"><item quantity="one">%1$d en %2$d día</item><item quantity="other">%1$d en %2$d días</item></plurals>
+    <string name="category_detail_each_time">En promedio</string>
+    <string name="category_detail_largest">El mayor</string>
+    <string name="category_detail_costliest_day">Tu día más caro</string>
+    <string name="category_detail_weekly">Cada semana gastas</string>
+    <string name="category_detail_no_complete_week">Aún no hay una semana completa</string>
+    <string name="category_detail_this_week">esta</string>
+    <string name="category_detail_week_number">sem %1$d</string>
+    <string name="category_detail_day_range">Del %1$d al %2$d</string>
+    <string name="category_detail_week_spoken">%1$s: gastado %2$s.</string>
+    <string name="category_detail_week_allowance_spoken">%1$s Aún puedes gastar %2$s esta semana.</string>
+    <string name="category_detail_week_chart">Gastos por semana de este mes</string>
+    <string name="category_detail_week_legend">Rayado: lo que aún puedes gastar esta semana</string>
+    <string name="category_detail_week_available">Por gastar esta semana</string>
+    <string name="category_detail_normal_month">Un mes normal aquí</string>
+    <plurals name="category_detail_history_average"><item quantity="one">Promedio de %1$d mes completo</item><item quantity="other">Promedio de %1$d meses completos</item></plurals>
+    <string name="category_detail_history_chart">Gastos por mes</string>
+    <string name="category_detail_history_current">%1$s, hasta hoy</string>
+    <string name="category_detail_history_spoken">%1$s: %2$s.</string>
+    <string name="category_detail_history_limit_spoken">%1$s Límite: %2$s.</string>
+    <string name="category_detail_history_limit_legend">Línea punteada: límite de cada mes</string>
+    <string name="category_detail_chart_limit">Límite</string>
+    <string name="category_detail_insights_failed">No pudimos leer las cifras de esta categoría.</string>
+    <string name="category_expenses_title">Todos los gastos</string>
+    <string name="category_expenses_search">Buscar por nota</string>
+    <string name="category_expenses_sort_date">Fecha</string>
+    <string name="category_expenses_sort_amount">Valor</string>
+    <string name="category_expenses_sort_name">Nombre</string>
+    <string name="category_expenses_empty">Sin coincidencias</string>
+    <string name="category_expenses_empty_body">Prueba otra búsqueda o anota un gasto en esta categoría.</string>
     <plurals name="category_detail_expense_count">
         <item quantity="one">%1$d gasto</item>
         <item quantity="other">%1$d gastos</item>

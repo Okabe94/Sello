@@ -63,45 +63,95 @@ usadas.
 
 ## Category detail
 
-The header is Recibo's rules for one category ("Te quedan aquí"), with what was
-spent and the limit. A category without a limit shows what was spent and why there
-is nothing to judge: Sin límite, En pausa or Sin configurar.
+### Owner-approved revision — 2026-10-22
 
-Its expenses are listed newest day first and, within a day, the one added last
-first, through `ExpenseReads.inCategory`: a bounded page (20 on screen, at most 200
-per read) and a cursor for the next. Rules:
+The current task expands the original budget-and-list detail to the reference's
+real category insights. Reading order is **hero → latest expenses → En números →
+Cada semana gastas → Un mes normal aquí**. The owner explicitly changed the
+reference's section order. The immutable v1.1 snapshot is not edited.
 
-- A page is only ever a list. The figures and the count ("13 gastos") come from the
-  snapshot, so listing part never changes a total, and the list says "Se muestran 20
-  de 45" with "Ver más" while there is more.
-- No expenses and a list that could not be read are different states: "Sin gastos en
-  octubre" with "Anotar aquí", or an error with retry. A later page that fails keeps
-  the rows already listed and asks for that same page again.
-- Each new snapshot lists again everything that was listed, in as few reads as
-  `ExpenseReads.MAX_PAGE` allows, keeping the rows on screen meanwhile. A saved
-  expense therefore appears by itself; nothing on screen is adjusted by hand.
-- The rows kept on screen during that read are marked `Rows.refreshing`: they are of
-  an earlier snapshot than the figures above them. They are replaced whole when the
-  read finishes, so the list never drops to its first page and grows back, and "Ver
-  más" asks nothing meanwhile. Nothing is drawn for `refreshing`: the read takes
-  milliseconds and an indicator would flicker.
-- Every listed row is drawn, on screen or not, inside one slip; there is no lazy list,
-  because the slip is one surface and a lazy list would mean splitting it. Each row is keyed by its expense identifier, so a new expense at the top adds
-  one row instead of redrawing all of them. Measured on the API 30 emulator, debug
-  build, including about 80 ms of test overhead: one new expense at the top of 40 /
-  200 / 500 rows took 100 / 250 / 400 ms before the key and 46 / 66 / 100 ms with it;
-  drawing 200 / 500 / 1,000 rows from nothing takes 316 / 750 / 1,333 ms. A category
-  opens on 20 rows and "Ver más" adds 20, so the long case needs many presses.
-- Kept rows are reused only for the same month, category and generation. If the read
-  fails the list is `Failed`, not the old rows, and retry reads all of it again.
-- The header and the rows are two reads. A save between them can leave them one
-  revision apart until that save's own snapshot lists the rows again.
-- "Anotar aquí" and the dock open [Anotar](expense-entry.md) with the category
-  chosen. A finished month or an archived category does not offer "Anotar aquí".
+Latest expenses is a four-row preview with a separate searchable, sortable,
+bounded full list. Editing moves to the toolbar. Exact financial rules and
+worked examples are recorded in [ADR 0015](../decisions/0015-category-detail-insights.md).
+This is owner-authorized unticketed work; no ticket or status is created or changed.
+
+The hero follows Recibo's financial rules, scoped to the category. Its label and
+stamp sit above the category circle and exact amount; spent/limit share a line.
+Below the tear line are the category daily allowance (current finite budget only)
+and a same-days comparison when a previous positive baseline is known.
+They use equal-width columns: **Para / 9 días**, **Al día / amount**, and
+**Frente a sep / percentage**. The day count includes today in the approved
+calculation, but its visible text has no extra phrase. A higher recorded comparison
+uses the warning ink, a lower one the gain ink, and zero the ordinary ink. The
+direction comes from the domain comparison, never by parsing the displayed text.
+
+The category-detail type audit follows the v1.1 CSS, using the bundled Schibsted
+font and Android sp at the system's selected scale:
+
+| Use | Reference size | App role |
+| --- | --- | --- |
+| Category toolbar title | 19 | titleLarge |
+| Hero amount | 44, fitted only when required by width | displayMedium |
+| Spent/limit and lower hero labels | 12.5 | labelMedium |
+| Lower hero values | 16, weight 800 | titleMedium |
+| Latest-expense and En números headings | 16, weight 800 | titleMedium |
+| En números values | 17, weight 800 | labelLarge |
+| Chart headings | 12.5 | labelMedium |
+| Weekly/historical totals | 23, weight 800 | headlineSmall |
+| Expense rows / dates | 14 / 12 | bodyLarge / labelSmall |
+| Chart legends / axis labels | 12 | labelSmall |
+
+Global type definitions already match their reference roles. Feature roles are
+verified separately; system font scaling remains enabled.
+`MoneyText` retains tabular digits even with a caller-supplied text style, as the
+reference's `.mny` rule requires; custom label sizing must not crowd group separators.
+
+`CategoryInsightsPolicy` owns the statistics, week buckets, planning allowance and
+completed-month history under ADR 0015. `RoomCategoryInsightsSnapshots` reads seven
+months of category budget states and bounded expense pages in one transaction and
+computes off main. Historical months retain their own limits. The feature only
+attaches insights to a hero with the same month, generation, revision, date and
+zone; an unmatched refresh remains loading. A statistics failure is explicit and
+retryable, rather than zero or missing-success content.
+
+The owner-approved section order is:
+
+1. Hero.
+2. **Últimos gastos**: four newest expenses, with tap to edit, swipe/accessible
+   actions to delete and the existing durable undo. **Ver los N** opens the complete
+   expense browser; the preview does not expand in place.
+3. **En números**: a two-column grid of count/days and **En promedio** (average
+   expense), then largest expense and weekday with the highest recorded total.
+   Each label sits above its value; the largest expense's note/date sits below its
+   amount. It uses the reference's receipt, price-tag, upward-arrow and calendar icons.
+4. **Cada semana gastas**: completed-bucket average, actual weekly spending and the
+   current bucket's still-available allowance drawn as a separate striped portion.
+5. **Un mes normal aquí**: average of up to six completed configured months,
+   including known zeros, and a chart with each month's own limit. When the selected
+   month is current, append its actual spending and live limit from the same snapshot
+   as the hero; edits refresh that point without changing completed months. This point
+   is marked current and does not enter the average or its completed-month count.
+   Hidden until two completed months are known; no extrapolation before configuration.
+
+The preview's rows still come from `ExpenseReads.inCategory`; neither its totals
+nor its count come from a page. A finished month or archived category offers no
+“Anotar aquí”. Empty, failed, loading and stale reads retain their distinct states.
+
+The full browser uses `CategoryExpenseSearch`: search by note and date/value/name
+ordering apply in storage **before** bounded pagination. The query (at most 60
+characters) and order survive process recreation through SavedStateHandle. A new
+filter starts a new page; a failure never reuses rows from another filter, category,
+month or generation. Pages whose revision no longer matches the observed budget
+are withheld until refreshed. The list is lazy, and more-page failures retain the
+already listed rows with retry. Deletion carries the listed generation and record
+version through the same `ExpenseCorrections` recovery/undo path as the preview.
+The matching record count is read in the same transaction as each search page;
+the footer and accessibility state say how many are loaded. Stable lazy-list keys
+retain the reading position while a new save refreshes the loaded rows.
 
 ## Changing the category
 
-"Editar categoría" in the detail's header opens
+The edit icon in the detail's toolbar (or its heading in a two-pane layout) opens
 [the form on that category](category-editor.md#changing-an-existing-category) for the
 month on screen. A long press on a category's cell in Recibo offers the same in a
 menu, and a screen reader is offered it by name; pressing a cell still only opens it.
@@ -166,6 +216,6 @@ side of the screen, as it already did at the top and bottom.
 
 ## Not here yet
 
-The comparison with last month, swiping between months, and the count-up and
-stamp-landing motion. The charts are on
-[Resumen](current-app-experience.md#4-resumen).
+Swiping between months and the count-up and stamp-landing motion remain deferred.
+Category comparison, weekly spending and historical charts are described above;
+[Resumen](current-app-experience.md#4-resumen) retains its own overview charts.

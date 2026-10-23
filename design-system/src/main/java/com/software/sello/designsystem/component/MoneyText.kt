@@ -78,11 +78,17 @@ fun MoneyText(
         text = AnnotatedString(moneyPlainText(value, style))
     }
     if (textStyle != null) {
+        val tabularStyle = textStyle.copy(
+            fontFeatureSettings = listOfNotNull(
+                textStyle.fontFeatureSettings?.takeIf { it.isNotBlank() },
+                "tnum"
+            ).distinct().joinToString(",")
+        )
         Text(
-            moneyAnnotatedString(value, style, textStyle, ink),
+            moneyAnnotatedString(value, style, tabularStyle, ink),
             semantics,
             ink,
-            style = textStyle,
+            style = tabularStyle,
             softWrap = !singleLine,
             maxLines = if (singleLine) 1 else Int.MAX_VALUE,
             onTextLayout = onTextLayout

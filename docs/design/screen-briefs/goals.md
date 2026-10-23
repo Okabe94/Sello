@@ -62,10 +62,10 @@ example corpus.
 
 ## Open
 
-- Correcting a contribution or withdrawal, and the crossings a correction causes.
-- Target edits and their effect on earned stamps.
-- The Home-pin lifecycle when the featured goal is completed or deleted.
-- Pausing a goal.
+Corrections, target edits, the Home goal after completion or deletion, pausing (not in
+the first version), past-dated movements and the number of goals were decided in
+[ADR 0017](../../decisions/0017-goals-recurrence-investments.md). Still open, for the rules ticket (SELLO-086) to settle with examples:
+
 - Exact milestone replay safeguards.
 
 Metas belongs to the Next increment ([architecture](../../../ARCHITECTURE.md) §1), outside the MVP.

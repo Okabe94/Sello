@@ -65,6 +65,13 @@ the owner on 2026-10-23: counts without a thousands separator, Resumen's date in
 storage form, the intermittent sandbox scenario replay tests and a failed backup
 reported as too large.
 
+SELLO-E16–E19 (SELLO-079–113), logged by the owner on 2026-10-23 with the decisions
+in [ADR 0017](../../decisions/0017-goals-recurrence-investments.md): the v2 parts of
+today's screens the MVP left out (E16), Metas (E17), recurring payments, incomes and
+reservations (E18) and Inversiones with the combined `0.2.0` release (E19). Each opens
+by verifying what already exists, since these screens were worked on outside the
+board.
+
 Canonical epic files share this directory for stable IDs/cross-links. `Increment`
 metadata is `MVP` (default for the existing eight epics) or explicit `Post-MVP`.
 The generator validates both increments together, rejects MVP dependencies on

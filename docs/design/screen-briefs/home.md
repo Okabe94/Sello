@@ -45,9 +45,10 @@ understandable and reachable.
 
 ## Open
 
-- Review-invitation timing and dismissal.
-- Featured-goal ties and selections that become invalid.
-- The recurring-payment reservation lifecycle.
+Review-invitation timing and dismissal, the featured goal after completion or deletion,
+and the recurring-payment lifecycle (recorded automatically on opening, reserved until
+then) were decided in [ADR 0017](../../decisions/0017-goals-recurrence-investments.md). Still open:
+
 - Independent examples for the ADR 0012 rows not yet separately reviewed
   (BG-E01, BG-E04, BG-E12).
 

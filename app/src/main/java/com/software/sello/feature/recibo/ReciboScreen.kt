@@ -1,5 +1,6 @@
 package com.software.sello.feature.recibo
 
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -83,6 +84,8 @@ fun ReciboScreen(
     modifier: Modifier = Modifier,
     selectedCategoryId: String? = null
 ) {
+    // The start is complete once the month was read: its figures, a first run or a failure.
+    ReportDrawnWhen { state !is ReciboState.Loading }
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     val reducedMotion = SelloTheme.reducedMotion

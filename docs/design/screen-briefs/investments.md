@@ -56,13 +56,11 @@ for unfamiliar concepts. No universal investment target or investment recommenda
 
 ## Open
 
-- Return periods beyond “since the first contribution”, and annual-rate or
-  benchmark conventions.
-- Dated cash flows and their full examples.
-- Valuation dates and sources, and any stale threshold.
-- Movement corrections.
-- Dividend handling in each readout.
-- Currency and exchange-rate policy.
+The return (simple, since the first contribution), COP and USD with one dated
+app-wide manual rate, USD returns kept in USD, values never marked stale, dividends in
+the gain and corrections with undo were decided in [ADR 0017](../../decisions/0017-goals-recurrence-investments.md). Still open, for the rules
+ticket (SELLO-106): dated cash flows' full examples, rate validation bounds and any
+later return periods.
 
 Inversiones belongs to the Later increment ([architecture](../../../ARCHITECTURE.md)
 §1), separate from goals in Next. These notes authorize no routes, investment ledger,

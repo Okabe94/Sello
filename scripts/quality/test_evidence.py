@@ -117,6 +117,27 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(0, code)
         self.check(field=evidence.retain(self.root, path))
 
+    def release_evidence(self):
+        write(self.root, EPIC, epic(
+            ticket("SELLO-003", status="Done"),
+            ticket("SELLO-004", status="In Progress", dependencies="SELLO-003", gate="G3"),
+        ))
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-q", "-m", "release ticket")
+        code, path = self.verify()
+        self.assertEqual(0, code)
+        return evidence.retain(self.root, path)
+
+    def test_a_release_report_with_the_owners_signing_completes_a_release_ticket(self):
+        field = self.release_evidence()
+        self.check(gate="G3", field=field)
+
+    def test_a_release_report_without_the_owners_signing_cannot_complete_a_release_ticket(self):
+        self.release_evidence()
+        field = self.rewrite(lambda report: report.update(
+            checks=[check for check in report["checks"] if check["name"] != "release-production"]))
+        self.assert_rejected("owner's production signing", gate="G3", field=field)
+
     def test_code_change_after_the_run_is_stale(self):
         write(self.root, "app/src/Main.kt", "fun main() = println(3)\n")
         self.assert_rejected("stale")

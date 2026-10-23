@@ -4,8 +4,8 @@
 > Project permissions and working rules live in [AGENTS.md](../../AGENTS.md),
 > subject to the user's current instructions.
 
-**Snapshot:** 2026-10-23 · **Product baseline:** `1159f8a`, plus the category-detail branch.
-SELLO-001–034, SELLO-061–073 and epics E01–E07, E12 and E13 are recorded Done in the canonical tickets.
+**Snapshot:** 2026-10-23 · **Product baseline:** the MVP candidate `0.1.0` ([checklist](../release/mvp-checklist.md)).
+SELLO-001–036, SELLO-061–073 and epics E01–E08, E12 and E13 are recorded Done in the canonical tickets.
 The links below contain their full delivery evidence; this summary adds no new
 verification or release-acceptance claims.
 
@@ -74,6 +74,8 @@ tracks the remaining financial inputs.
 | [SELLO-032](../planning/mvp/epics/E07-recovery-privacy.md#sello-032--verify-privacy-file-boundaries-and-developer-data-isolation) | Build-time checks on the merged manifests (backup off, allowed permissions and exported parts only), the release libraries and the release APK; the picker adapters accept only provider documents; device tests for file boundaries and a log free of synthetic markers; [MVP data handling](../privacy/mvp-data-handling.md). E07 is done. |
 | [SELLO-033](../planning/mvp/epics/E08-release.md#sello-033--execute-accessibility-adaptive-and-process-restoration-journeys) | Every daily-use screen checked in five windows, three text sizes and four themes, plus process-death, rotation and cold-start walks on an emulator. Large text now wraps titles, chips and rail labels; limit amounts are read with "pesos"; the note composer clears a side navigation bar. [UI acceptance matrix](../testing/ui-acceptance-matrix.md). |
 | [SELLO-034](../planning/mvp/epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) | A v1 history survives upgrade, backup, restore, reset and restore again on real files; all nine sandbox scenarios round-trip through a backup with their last figures; after a reset nothing comes back in a new process; Respaldo's top-bar arrow restarts after a restore. [Recovery matrix](../testing/recovery-matrix.md). |
+| [SELLO-035](../planning/mvp/epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) | A synthetic year (10,000 expenses) meets the approved start, scroll, Resumen, backup and restore targets; the release build is shrunk by R8 and signed with the owner's key from their own Gradle properties; G3 now runs (ADR 0016). [Performance profile](../testing/performance-profile.md), [release](../release/README.md). Open for the owner: an in-app licence notice. |
+| [SELLO-036](../planning/mvp/epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | The signed `0.1.0` candidate passed the full customer flow on a Samsung phone (Android 16) after a fix there: backups failed on Android 16 because the clock's microseconds reached the file. [MVP checklist](../release/mvp-checklist.md); the owner's merge is the go/no-go. E08 is done. |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-062](../planning/mvp/epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Recibo's answer slip reads "Restante del presupuesto" with a signed remainder, the per-day figure under a tear line and a closing line for past months. The Ajustar presupuesto link is SELLO-067. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
@@ -90,17 +92,24 @@ tracks the remaining financial inputs.
 
 ## Remaining work
 
-- SELLO-035–036: performance and signed release acceptance. The current app is not
-  a completed MVP release.
+- Distributing the `0.1.0` APK is a separate, owner-authorized action; nothing was
+  published or tagged.
 - SELLO-074 ([E14](../planning/mvp/epics/E14-assistive-technology.md)): the manual
   TalkBack, Switch Access and keyboard pass, moved post-MVP by the owner on
   2026-10-23. E13 is done without it.
-- Goal/investment features, recurrence and other deferred capabilities remain
-  outside MVP; signed carryover, legacy import and the assistive-technology pass
-  are on the post-MVP roadmap.
+- SELLO-075–078 ([E15](../planning/mvp/epics/E15-release-fixes.md)): defects found
+  during SELLO-035 and SELLO-036 (counts without a thousands separator, Resumen's raw
+  date, flaky sandbox replay tests, a failed backup reported as too large), logged by
+  the owner on 2026-10-23.
+- SELLO-079–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
+  the missing v2 parts of today's screens, then Metas, recurrence and Inversiones,
+  released together as `0.2.0`; decisions in [ADR 0017](../decisions/0017-goals-recurrence-investments.md).
+  Each epic starts by verifying what already exists.
+- Signed carryover (E09), legacy import (E10) and the assistive-technology pass (E14)
+  stay on the post-MVP roadmap.
 
-The [board](../planning/mvp/BOARD.md) currently lists E08's SELLO-035 without unmet
-ticket dependencies. Its other prerequisites remain in the ticket brief.
+Every MVP ticket is Done. The post-MVP [roadmap](../planning/mvp/ROADMAP.md) holds
+E09, E10 and E14–E19.
 
 ## Detail references
 

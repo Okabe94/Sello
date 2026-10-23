@@ -76,7 +76,8 @@ Every key is required, even when its value is `null`, and no other key is allowe
   from that month, as after archiving.
 - **Dates and months:** `yyyy-MM-dd` and `yyyy-MM`, real calendar values.
 - **Moments:** UTC as `Instant.toString` writes them: `2026-10-22T14:30:00Z`, or
-  with milliseconds `…:30.250Z`. Finer precision or an offset is refused.
+  with milliseconds `…:30.250Z`. Finer precision or an offset is refused. `exportedAt`
+  is the export's time rounded down to the millisecond: newer Android clocks give finer.
 - **Text:** stored form only: names 1–24 code points and unique ignoring case and
   accents, notes up to 60, other-income names up to 24, no surrounding spaces or
   control characters. A note is either text or `null`, never empty.

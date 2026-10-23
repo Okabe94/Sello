@@ -60,6 +60,18 @@ SELLO-E14/074 holds the manual TalkBack, Switch Access and hardware keyboard pas
 over the released app. The owner moved it out of the MVP on 2026-10-23; the MVP
 keeps the automated accessibility semantics in SELLO-033 and D10.
 
+SELLO-E15/075–078 holds the defects found during SELLO-035 and SELLO-036, logged by
+the owner on 2026-10-23: counts without a thousands separator, Resumen's date in
+storage form, the intermittent sandbox scenario replay tests and a failed backup
+reported as too large.
+
+SELLO-E16–E19 (SELLO-079–113), logged by the owner on 2026-10-23 with the decisions
+in [ADR 0017](../../decisions/0017-goals-recurrence-investments.md): the v2 parts of
+today's screens the MVP left out (E16), Metas (E17), recurring payments, incomes and
+reservations (E18) and Inversiones with the combined `0.2.0` release (E19). Each opens
+by verifying what already exists, since these screens were worked on outside the
+board.
+
 Canonical epic files share this directory for stable IDs/cross-links. `Increment`
 metadata is `MVP` (default for the existing eight epics) or explicit `Post-MVP`.
 The generator validates both increments together, rejects MVP dependencies on
@@ -178,10 +190,13 @@ Use the environment from [setup](../../development/setup.md).
   suite must execute freshly without skips. Reports name full versus affected
   coverage; a targeted run is not full G2. See [ADR 0014](../../decisions/0014-change-aware-quality-gates.md).
   Assembling test APKs is not device acceptance.
-- **G3 — release:** G2 across agreed API/window/font configurations, optimized
-  production composition/artifact inspection, performance evidence, and signed
-  release installation/backup smoke. MVP delivers a private APK, not a store/AAB upload.
-  Separate ephemeral CI signing from the customer-distribution signing identity.
+- **G3 — release:** full G2, then the release checks: every release library has a
+  reviewed licence, the optimized APK is signed by the owner's pinned certificate and
+  passes artifact inspection, and it installs and starts on the emulator. CI runs it
+  with a throwaway key; only the owner's run completes the ticket
+  ([ADR 0016](../../decisions/0016-release-gate-signing-split.md)). Release tickets also
+  record configuration, performance and signed backup smoke evidence. MVP delivers a
+  private APK, not a store/AAB upload.
 
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.

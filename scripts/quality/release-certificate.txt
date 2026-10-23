@@ -1,0 +1,2 @@
+# SHA-256 digest of the owner's release signing certificate. Public; see docs/release/README.md.
+abf6ccf5b58de43626daea387d5c18c67981e42c302f8a1c7e16ad5cf0b4d952

@@ -93,7 +93,7 @@ class RunnerTests(unittest.TestCase):
         self.assertFalse(report["snapshot"]["dirty"])
         self.assertEqual(fingerprint.input_fingerprint(self.root), report["snapshot"]["fingerprint"])
         self.assertEqual(
-            ["board-check", "board-tests", "quality-tests", "architecture", "gradle-host"],
+            ["board-check", "board-tests", "quality-tests", "performance-tests", "architecture", "gradle-host"],
             [check["name"] for check in report["checks"]],
         )
         host = report["checks"][-1]
@@ -154,10 +154,10 @@ class RunnerTests(unittest.TestCase):
                       ticket("SELLO-004", dependencies="SELLO-003", gate="G2"))
         self.assert_refused(self.run_ticket(), "no connected device")
 
-    def test_release_gate_is_refused_until_its_checks_exist(self):
+    def test_release_gate_without_device_is_refused(self):
         self.set_epic(ticket("SELLO-003", status="Done"),
                       ticket("SELLO-004", dependencies="SELLO-003", gate="G3"))
-        self.assert_refused(self.run_ticket(), "not available")
+        self.assert_refused(self.run_ticket(), "no connected device")
 
     def test_missing_toolchain_is_refused(self):
         def missing(root):
@@ -171,7 +171,7 @@ class RunnerTests(unittest.TestCase):
         report = self.report(path)
         self.assertNotEqual(0, code)
         self.assertEqual("failed", report["outcome"])
-        self.assertEqual(5, len(self.harness.executed))
+        self.assertEqual(6, len(self.harness.executed))
         self.assertIn("board-tests exited 1", report["failures"])
 
     def test_host_gate_without_test_results_fails(self):

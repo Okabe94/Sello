@@ -59,26 +59,41 @@ def validate_device_groups():
         raise Unavailable("device groups must cover every device task exactly once")
 
 
-def plan(gate):
+def release_checks(ci=False):
+    """G3's checks after G2, on the release APK the host step built (ADR 0016).
+
+    Locally the owner's key signs it: its certificate must be the pinned one, and the
+    signed APK must install and start on the emulator. CI holds no customer key, so it
+    signs with a throwaway one and leaves the production proof to the owner's report.
+    """
+    licenses = Check("release-licenses", ("python3", "scripts/quality/licenses.py", "check"))
+    if ci:
+        return [licenses, Check("release-ephemeral", ("python3", "scripts/quality/release.py", "ephemeral"))]
+    return [
+        licenses,
+        Check("release-production", ("python3", "scripts/quality/release.py", "production")),
+        Check("release-launch", ("python3", "scripts/quality/release.py", "launch"), needs_device=True),
+    ]
+
+
+def plan(gate, ci=False):
     if gate not in GATES:
         raise Unavailable(f"Unknown gate {gate}")
-    if gate == "G3":
-        raise Unavailable(
-            "G3 release checks (signed release, artifact inspection, performance) are delivered by "
-            "SELLO-035 and are not available; a lower gate cannot stand in for them"
-        )
     checks = [
         # Structure and generated views only: a run cannot depend on its own final evidence.
         Check("board-check", ("python3", "docs/planning/mvp/board.py", "--check", "--skip-evidence")),
         Check("board-tests", ("python3", "-m", "unittest", "discover", "-s", "docs/planning/mvp", "-p", "test_board.py")),
         Check("quality-tests", ("python3", "-m", "unittest", "discover", "-s", "scripts/quality", "-p", "test_*.py")),
+        Check("performance-tests", ("python3", "-m", "unittest", "discover", "-s", "scripts/performance", "-p", "test_*.py")),
         Check("architecture", ("python3", "scripts/quality/architecture.py")),
         Check("gradle-host", ("./gradlew", *HOST_TASKS, "--continue"), results=HOST_RESULTS, lint=True),
     ]
     if gate == "G0":
         return checks[:-1]
-    if gate == "G2":
+    if gate in ("G2", "G3"):
         checks.append(device_check())
+    if gate == "G3":
+        checks.extend(release_checks(ci))
     return checks
 
 

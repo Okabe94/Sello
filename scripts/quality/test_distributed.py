@@ -244,7 +244,7 @@ class DistributedGateTests(unittest.TestCase):
         write(self.root, 'app/src/Main.kt', 'fun main() = println(1)\n')
         self.assertEqual(0, self.part('host', event='push')[0])
         self.assertEqual(0, self.collect(event='push')[0])
-        self.assertEqual(['board-check', 'board-tests', 'quality-tests', 'architecture', 'gradle-host'], self.harness.executed)
+        self.assertEqual(['board-check', 'board-tests', 'quality-tests', 'performance-tests', 'architecture', 'gradle-host'], self.harness.executed)
 
     def test_incompatible_toolchains_are_rejected(self):
         self.all_parts()
@@ -282,6 +282,30 @@ class DistributedGateTests(unittest.TestCase):
         for report in reports:
             self.assertEqual('G2', report['gate']['executed'])
             self.assertEqual(fingerprint.ticket_acceptance(self.root, report['ticket']), report['snapshot']['acceptance'])
+
+    def release_ticket(self):
+        write(self.root, EPIC, epic(ticket('SELLO-003', status='Done'),
+                                   ticket('SELLO-004', status='In Progress', dependencies='SELLO-003', gate='G3')))
+        write(self.root, 'app/src/Main.kt', 'fun main() = println(35)\n')
+
+    def test_a_release_ticket_runs_g3_on_ci_with_throwaway_signing_and_every_device_suite(self):
+        self.release_ticket()
+        plan = distributed.context(self.root, self.base, 'pull_request')
+        self.assertEqual('G3', plan['gate'])
+        self.assertEqual({'SELLO-004': 'G3'}, plan['tickets'])
+        self.assertEqual(['data', 'design-system', 'app', 'catalog'], plan['coverage']['device_modules'])
+        host = [check.name for check in distributed.checks_for('host', plan)]
+        self.assertEqual(['release-licenses', 'release-ephemeral'], host[-2:])
+        self.assertNotIn('release-production', host)
+        for part in ('host', 'app', 'support'):
+            self.assertEqual(0, self.part(part, event='pull_request')[0], self.stream.getvalue())
+        code, report = self.collect(event='pull_request', jobs={'plan': 'success', 'host': 'success', 'device': 'success'})
+        self.assertEqual(0, code, self.stream.getvalue())
+        self.assertEqual({'required': 'G3', 'executed': 'G3'}, report['gate'])
+
+    def test_a_release_gate_needs_its_device_jobs_on_ci(self):
+        self.assertEqual(['device job was skipped, expected success'],
+                         distributed.job_failures('G3', {'plan': 'success', 'host': 'success', 'device': 'skipped'}))
 
     def test_input_change_during_collection_fails_the_command_and_report(self):
         self.all_parts()

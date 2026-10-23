@@ -58,6 +58,14 @@ class SelectionTests(unittest.TestCase):
         scope['mode']='full'
         self.assertIsNotNone(selection.problem(scope,'G2','SELLO-004'))
 
+    def test_the_release_gate_always_covers_every_device_module(self):
+        scope=selection.coverage('a'*40,['app/src/main/X.kt'],gate='G3')
+        self.assertEqual(('full',['data','design-system','app','catalog']),(scope['mode'],scope['device_modules']))
+        self.assertIsNone(selection.problem(scope,'G3','SELLO-004'))
+        scope['device_modules']=['app']
+        self.assertIsNotNone(selection.problem(scope,'G3','SELLO-004'))
+        self.assertIsNotNone(selection.problem(dict(scope,device_modules=[]),'G3','SELLO-004'))
+
 
 class LocalSelectionTests(unittest.TestCase):
     def setUp(self):

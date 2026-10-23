@@ -25,6 +25,7 @@ import com.software.sello.domain.port.DispatcherProvider
 import com.software.sello.domain.port.PreferenceRead
 import com.software.sello.domain.port.PreparedBackup
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
@@ -142,7 +143,9 @@ class BackupExport(
             is Outcome.Failure -> return Outcome.Failure(BackupExportFailure.Storage(read.error))
         }
         val preferences = portablePreferences()
-        val contents = BackupContents(auditClock.now(), financial, preferences)
+        // The format keeps milliseconds; newer Android clocks give finer time.
+        val contents =
+            BackupContents(auditClock.now().truncatedTo(ChronoUnit.MILLIS), financial, preferences)
         return withContext(dispatchers.default) {
             when (val encoded = codec.encode(contents)) {
                 is Outcome.Success -> Outcome.Success(

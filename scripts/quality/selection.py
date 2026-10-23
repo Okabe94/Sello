@@ -22,6 +22,9 @@ def coverage(base, paths=(), gate="G2", full=False):
         if any(not is_document(path) for path in paths):
             raise ValueError("G0 requires documentation-only inputs")
         return dict(result, mode="documents")
+    if gate == "G3":
+        # A release candidate is verified whole, whatever changed.
+        return dict(result, device_modules=list(MODULES))
     if gate != "G2":
         return result
     if full:
@@ -61,6 +64,9 @@ def problem(scope, gate, ticket):
         expected = coverage(scope["base"], scope["changed_paths"], full=scope["mode"] == "full")
         if scope != expected:
             return "device modules do not cover the dependency closure of changed paths"
+    elif gate == "G3":
+        if scope["mode"] != "full" or modules != list(MODULES):
+            return "G3 needs every device module"
     elif scope["mode"] != "full" or modules:
         return "host coverage must be full without device modules"
     return None

@@ -34,6 +34,24 @@ class SignersTest(unittest.TestCase):
              "certificates": ["abf6ccf5b58de43626daea387d5c18c67981e42c302f8a1c7e16ad5cf0b4d952"]},
             release.signers(APKSIGNER))
 
+    def test_a_signer_named_by_its_sdk_range_counts_once(self):
+        output = APKSIGNER.replace("Signer #1 certificate SHA-256", "Signer (minSdkVersion=30, maxSdkVersion=2147483647) certificate SHA-256")
+        output += "Signer (minSdkVersion=33, maxSdkVersion=2147483647) certificate SHA-256 digest: " + "abf6ccf5b58de43626daea387d5c18c67981e42c302f8a1c7e16ad5cf0b4d952\n"
+        self.assertEqual(["abf6ccf5b58de43626daea387d5c18c67981e42c302f8a1c7e16ad5cf0b4d952"],
+                         release.signers(output)["certificates"])
+
+    def test_apksigner_37_names_the_signer_by_scheme(self):
+        output = (
+            "Verifies\nVerified using v3 scheme (APK Signature Scheme v3): true\n"
+            "Verified using v3.2 scheme (APK Signature Scheme v3.2): false\nNumber of signers: 1\n"
+            "V3.0 Signer: certificate DN: CN=Sello CI ephemeral\n"
+            "V3.0 Signer: certificate SHA-256 digest: " + "6f" * 32 + "\n"
+            "V3.0 Signer: certificate SHA-1 digest: c9a9239e98891c5dfb789df384935b35c45814c2\n"
+            "V3.0 Signer: public key SHA-256 digest: " + "39" * 32 + "\n"
+            "Source Stamp Signer: certificate SHA-256 digest: " + "aa" * 32 + "\n"
+        )
+        self.assertEqual({"verifies": True, "schemes": ["v3"], "certificates": ["6f" * 32]}, release.signers(output))
+
     def test_an_unsigned_or_failing_apk_does_not_verify(self):
         self.assertEqual({"verifies": False, "schemes": [], "certificates": []},
                          release.signers("DOES NOT VERIFY\nERROR: Missing META-INF/MANIFEST.MF\n"))

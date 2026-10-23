@@ -54,9 +54,12 @@ def pinned_certificate(path=PINNED):
 def signers(output):
     """`apksigner verify --verbose --print-certs`: whether it verifies, its schemes and certificates."""
     schemes = re.findall(r"^Verified using (v[\d.]+) scheme \([^)]*\): true$", output, re.MULTILINE)
-    digests = re.findall(r"^Signer #\d+ certificate SHA-256 digest: ([0-9a-f]{64})$", output, re.MULTILINE)
+    # apksigner writes the signer as "Signer #1", "Signer (minSdkVersion=…)" or, from 37,
+    # "V3.0 Signer:", and may repeat one certificate per scheme or SDK range.
+    digests = re.findall(r"^(?!Source Stamp)\S*[ ]?Signer(?: #\d+| \([^)]*\))?:? certificate SHA-256 digest: "
+                         r"([0-9a-f]{64})$", output, re.MULTILINE)
     return {"verifies": re.search(r"^Verifies$", output, re.MULTILINE) is not None,
-            "schemes": schemes, "certificates": digests}
+            "schemes": schemes, "certificates": sorted(set(digests))}
 
 
 def badging(output):
@@ -100,7 +103,9 @@ def run(argv, **options):
 
 def inspect(apk, tools):
     facts = badging(run([tools / "aapt2", "dump", "badging", apk]))
-    facts["signature"] = signers(run([tools / "apksigner", "verify", "--verbose", "--print-certs", apk]))
+    verified = run([tools / "apksigner", "verify", "--verbose", "--print-certs", apk])
+    facts["signature"] = signers(verified)
+    facts["build_tools"] = tools.name
     facts["apk_sha256"] = sha256(apk)
     facts["apk_bytes"] = Path(apk).stat().st_size
     problems = []
@@ -109,7 +114,8 @@ def inspect(apk, tools):
     if facts["debuggable"]:
         problems.append("the release APK is debuggable")
     if not facts["signature"]["verifies"] or len(facts["signature"]["certificates"]) != 1:
-        problems.append("the APK does not verify with exactly one signer")
+        problems.append("the APK does not verify with exactly one signer certificate; apksigner "
+                        f"{tools.name} printed:\n{verified.strip()[-1500:]}")
     if not facts["signature"]["schemes"]:
         problems.append("no APK signature scheme verified")
     return facts, problems

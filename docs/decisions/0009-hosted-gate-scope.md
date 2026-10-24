@@ -2,7 +2,7 @@
 
 **Owner:** project owner (user) · **Updated:** 2026-10-22
 **Status:** approved hosted gate policy, amended by [ADR 0014](0014-change-aware-quality-gates.md)
-and, on 2026-10-24, by the merge queue decision below.
+and, on 2026-10-24, by the merge queue decision below (queue live the same day).
 
 The required `quality` check always reports; the workflow has no path filter.
 `scripts/verify-ticket` owns selection, execution and evidence:
@@ -67,14 +67,14 @@ for administrators too, with squash merges of the checked candidate. Decision of
 2026-10-24: with several open pull requests, every merge invalidated every other
 branch and forced a rebase, a local rerun and a hosted rerun, growing with the
 square of the number of open pull requests. The workflow verifies `merge_group`
-entries, and ruleset 25780776 on `main` requires the quality check, squash merges
-and pull requests. GitHub offers merge queues only in organization-owned
-repositories, so while Sello is owned by a personal account the classic protection
-keeps "require branches to be up to date": a pull request behind `main` is updated
-on GitHub and reruns the hosted check, with no local rerun, because evidence is
-bound to the change set. Moving the repository to an organization enables the queue
-rule and removes that step. If the queue is enabled, drop the up-to-date requirement;
-if these conditions change otherwise, restore device checks on main pushes.
+entries, and ruleset 25780776 on `main` requires the quality check, squash merges,
+pull requests and the merge queue (squash, all-green grouping, up to five entries
+per group). GitHub offers merge queues only in organization-owned repositories, so
+on 2026-10-24 the repository moved from the owner's personal account to the
+`okabe-sello-organization` organization; the old URL redirects. The classic
+"require branches to be up to date" rule is off: the queue builds the real merge
+result and runs this check on it right before merging. If the queue is ever
+disabled, restore the up-to-date requirement or device checks on main pushes.
 Nightly runs cover the full device graph even when PRs use a narrower scope.
 
 Code pushes deliberately keep G1: PR caches are read-only, so trusted main builds

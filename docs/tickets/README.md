@@ -80,11 +80,10 @@ they change the ticket's own change set does the gate run again. The full rules 
 the CI contract are in the [quality gates guide](../development/quality-gates.md).
 
 **Update with `main` once, before the final gate.** Resolve conflicts there, run
-`--retain`, open the PR. After that the branch needs no local rerun: evidence is
-bound to the PR's own change set and the hosted run on the merge result verifies
-the combination. If GitHub asks for an up-to-date branch, "Update branch" and the
-unattended hosted rerun are enough. Only a conflict GitHub reports needs a manual
-merge and `--affected origin/main --retain`.
+`--retain`, open the PR. After that leave the branch alone: evidence is bound to the
+PR's own change set, and the merge queue builds the real merge result and runs the
+gate on it before merging. Only a conflict GitHub reports needs a manual merge and
+`--affected origin/main --retain`.
 
 ## Definition of done — every ticket
 

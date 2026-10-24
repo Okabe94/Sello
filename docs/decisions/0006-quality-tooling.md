@@ -13,7 +13,7 @@
 | Formatting | ktlint 1.8.0 through ktlint-gradle 14.2.0; `.editorconfig`, Android Studio style |
 | Static analysis | Android Lint and ktlint; Detekt deferred pending stable toolchain compatibility |
 | Dependency versions | Strict Gradle locking, one `gradle.lockfile` per module |
-| Hosted checks | GitHub Actions for the public `Okabe94/Sello` repository |
+| Hosted checks | GitHub Actions for the public `okabe-sello-organization/Sello` repository (`Okabe94/Sello` until 2026-10-24; the old URL redirects) |
 
 Committed ticket reports keep completed work verifiable after CI artifacts expire.
 Reports contain tool versions, revision hashes and file names, excluding machine

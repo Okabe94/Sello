@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 10/48 · **Epics Done:** 1/8
+**Tickets Done:** 11/48 · **Epics Done:** 1/8
 
-Backlog: 37 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 10
+Backlog: 37 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 11
 
 [Workflow, gates and definition of done](README.md)
 
@@ -17,7 +17,7 @@ Backlog: 37 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 10
 | [SELLO-E14](epics/E14-assistive-technology.md) | Confirm that a person using TalkBack, Switch Access or a hardware keyboard can use the whole released app. | Backlog | 0/1 |
 | [SELLO-E15](epics/E15-release-fixes.md) | Fix the defects found while measuring and accepting the MVP, each with a test. | Done | 4/4 |
 | [SELLO-E16](epics/E16-v2-today-gaps.md) | Add the parts of the approved v2 Recibo, Resumen and income screens that the MVP left out, which need no new kind of data. | In Progress | 3/6 |
-| [SELLO-E17](epics/E17-goals.md) | Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2. | In Progress | 3/10 |
+| [SELLO-E17](epics/E17-goals.md) | Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2. | In Progress | 4/10 |
 | [SELLO-E18](epics/E18-recurrence.md) | Let a person schedule recurring payments and incomes that Sello records on their dates, reserving payments still to come. | Backlog | 0/10 |
 | [SELLO-E19](epics/E19-investments.md) | Let a person record investments in COP or USD with contributions, withdrawals, dividends and values, and see the portfolio and each investment's simple return; then release goals, recurrence and investments together. | Backlog | 0/9 |
 
@@ -27,9 +27,7 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-088](epics/E17-goals.md#sello-088--carry-goals-through-backup-restore-and-erase) | Carry goals through backup, restore and erase | SELLO-E17 | P1 | G2 | None |
+No tickets.
 
 ## Review
 
@@ -95,6 +93,7 @@ No tickets.
 | [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing) | Verify what exists for Metas and what is missing | SELLO-E17 | P1 | G1 | None |
 | [SELLO-086](epics/E17-goals.md#sello-086--approve-goal-rules-and-worked-examples) | Approve goal rules and worked examples | SELLO-E17 | P1 | G1 | None |
 | [SELLO-087](epics/E17-goals.md#sello-087--store-goals-and-their-movements) | Store goals and their movements | SELLO-E17 | P1 | G2 | None |
+| [SELLO-088](epics/E17-goals.md#sello-088--carry-goals-through-backup-restore-and-erase) | Carry goals through backup, restore and erase | SELLO-E17 | P1 | G2 | None |
 
 ## Ready promotion candidates
 

@@ -96,7 +96,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-085 --retain`.
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-085, SELLO-004
 - **Gate:** G1
 
@@ -130,6 +130,16 @@ The approved examples exist and later tickets cite them.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-086 --retain`.
+
+### Execution progress
+
+- **Owner decisions, 2026-10-23:** a percentage may pass 100 %; a correction that would
+  leave less than zero saved is refused and names the withdrawal that depends on it; a
+  goal marked achieved below 100 % gets all four stamps; a stamp newly reached by
+  lowering the target is earned with the modest celebration.
+- [Goal rules and worked examples](../../../testing/goal-examples.md): 14 rules and 38
+  examples (MT01–MT38), each figure checked by hand; four further points are proposed
+  there and approved by merging.
 
 ## SELLO-087 — Store goals and their movements
 

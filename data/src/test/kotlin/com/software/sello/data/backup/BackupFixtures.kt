@@ -155,7 +155,10 @@ fun g01() = BackupContents(
             ),
             expense(103, 1, "2026-10-03", 3, 5_000)
         ),
-        incomes = listOf(income(201, "2026-10-01", 1, 200_000))
+        incomes = listOf(income(201, "2026-10-01", 1, 200_000)),
+        goals = emptyList(),
+        featuredGoal = null
+
     ),
     preferences = darkVioletaAlphabetical
 )

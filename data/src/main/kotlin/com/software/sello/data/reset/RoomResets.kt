@@ -65,7 +65,8 @@ class RoomResets(
                         BackupSummary(
                             categories = database.categoryDao().count(),
                             expenses = database.expenseDao().count(),
-                            incomes = database.incomeDao().count()
+                            incomes = database.incomeDao().count(),
+                            goals = database.goalDao().count()
                         ),
                         profile.value.generation,
                         profile.value.revision
@@ -176,6 +177,10 @@ class RoomResets(
         with(database) {
             deletedExpenseDao().clear()
             deletedIncomeDao().clear()
+            deletedGoalEventDao().clear()
+            goalDao().deleteFeatured()
+            goalDao().deleteAllEvents()
+            goalDao().deleteAll()
             expenseDao().deleteAll()
             incomeDao().deleteAll()
             limitDao().deleteAllMonthLimits()

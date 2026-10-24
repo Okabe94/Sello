@@ -1,4 +1,4 @@
-# Backup file format, version 1
+# Backup file format, version 2
 
 Rules: [architecture](../../ARCHITECTURE.md) §7, [D05, D08 and D09](../decisions/0001-mvp-contract.md#d08--privacy-and-portable-files),
 [ADR 0003](../decisions/0003-mvp-transaction-amount-range.md). Code: `data/.../backup`.
@@ -14,10 +14,14 @@ its financial zone (`BackupFormat.fileName`). MIME type: `application/json`.
 
 ## Shape
 
+Sello writes version 2 (SELLO-088) and reads versions 1 and 2. Version 2 is version 1
+plus `financial.goals` and `financial.featuredGoal`; a version 1 file reads as having no
+goals. A backup with no goals is still version 2, so the MVP (0.1.0) cannot read it.
+
 ```json
 {
   "format": "sello-backup",
-  "version": 1,
+  "version": 2,
   "exportedAt": "2026-10-22T14:30:00Z",
   "financial": {
     "sourceRevision": 9,
@@ -26,23 +30,29 @@ its financial zone (`BackupFormat.fileName`). MIME type: `application/json`.
     "defaultLimits": [ … ],
     "monthLimits": [ … ],
     "expenses": [ … ],
-    "incomes": [ … ]
+    "incomes": [ … ],
+    "goals": [ … ],
+    "featuredGoal": "…" | null
   },
   "preferences": { … } | null
 }
 ```
 
 [`valid-g01.json`](../../data/src/test/resources/backup/valid-g01.json) is a complete
-synthetic example: G01's three expenses and one income, plus an archived category.
-The `invalid-*.json` files beside it each break one rule.
+synthetic version 1 example: G01's three expenses and one income, plus an archived
+category. [`valid-g01-v2.json`](../../data/src/test/resources/backup/valid-g01-v2.json) is
+the same data as Sello writes it now, and
+[`valid-goals-v2.json`](../../data/src/test/resources/backup/valid-goals-v2.json) adds one
+goal (approved example MT07). The `invalid-*.json` files beside them each break one rule.
 
 | Key | Value |
 | --- | --- |
 | `format` | Always `"sello-backup"`. |
-| `version` | `1`. Any other number is refused as a version this app cannot read. |
+| `version` | `1` or `2`. Any other number is refused as a version this app cannot read. |
 | `exportedAt` | When the backup was made, UTC. |
 | `financial.sourceRevision` | The revision all financial rows were read at: one transaction, one revision. Informative; a restore does not reuse it. |
 | `financial.zone` | The financial zone, an IANA identifier such as `America/Bogota`. |
+| `financial.featuredGoal` | Version 2: the `id` of the goal chosen for Recibo, one of `goals`, or `null`. |
 | `preferences` | Read separately from the financial rows, after them; they never shared a transaction. `null` when they could not be read: the money is backed up regardless. |
 
 ### Records
@@ -54,6 +64,8 @@ The `invalid-*.json` files beside it each break one rule.
 | `monthLimits` | `categoryId`, `month`, `kind`, `amount`, `currency` |
 | `expenses` | `id`, `categoryId`, `date`, `sequence`, `amount`, `currency`, `note`, `createdAt`, `updatedAt` |
 | `incomes` | `id`, `date`, `sequence`, `amount`, `currency`, `source`, `sourceName`, `note`, `createdAt`, `updatedAt` |
+| `goals` (v2) | `id`, `name`, `icon`, `targetMonth`, `completedOn`, `createdAt`, `updatedAt`, `history` |
+| `history` (each goal) | `id`, `sequence`, `kind`, `amount`, `currency`, `date`, `recordedOn`, `note`, `createdAt`, `updatedAt` |
 
 `preferences` has `theme` (`system`, `light`, `dark`), `ink` (`cobalto`, `violeta`),
 `categoryOrder` (`most_used`, `alphabetical`, `amount_spent`, `limit`,
@@ -81,14 +93,25 @@ Every key is required, even when its value is `null`, and no other key is allowe
 - **Text:** stored form only: names 1–24 code points and unique ignoring case and
   accents, notes up to 60, other-income names up to 24, no surrounding spaces or
   control characters. A note is either text or `null`, never empty.
+- **Goals:** a name is 1–40 code points in stored form; `targetMonth` a month or
+  `null`; `completedOn` a date or `null`. `history` is the goal's targets and
+  movements in recording order: `sequence` strictly increasing (gaps are kept), the
+  first entry a `target`. A `target` has `id`, `date`, `note`, `createdAt` and
+  `updatedAt` all `null`; a `contribution` or `withdrawal` has them all, with the
+  amount rules of an expense. The history must work out with the
+  [goal rules](../testing/goal-examples.md): a withdrawal above what was saved at its
+  point rejects the file. Stamps and percentages are not in the file; they are worked
+  out from the history.
 - **Order:** `sequence` is kept as written, so history keeps its order. Files are
   written categories by creation then ID, limits by category then month, records
-  by date then sequence; the same data always makes the same bytes.
+  by date then sequence, goals by creation then ID with each history by sequence;
+  the same data always makes the same bytes.
 
 ## Not in a backup
 
-Record and category versions, the profile generation, operation receipts, the
-copies kept for undo (`deleted_expense`, `deleted_income`), jobs, sandbox or debug
+Record, category and goal versions, a goal's next recording position, the profile
+generation, operation receipts, the copies kept for undo (`deleted_expense`,
+`deleted_income`, `deleted_goal_event`), a goal's stamps and percentage, jobs, sandbox or debug
 state, one-time notice dismissals, permissions, URIs, paths and credentials.
 
 ## Reading a file
@@ -103,13 +126,13 @@ problem, rejecting the whole file with a `BackupRejection` that names where it i
    as one); no key twice in one object; not cut short.
 3. **Header:** `format` and `version`, so a newer file is named as such even when
    the rest of it has changed shape.
-4. **Shape:** the version 1 keys exactly.
+4. **Shape:** that version's keys exactly.
 5. **Values and links:** every rule above, then duplicate IDs, category names,
    sequences and category/month entries; every `categoryId` must be a category in
    the file; at most 1,200 default-limit entries per category.
 
 The result is a `BackupPlan`: the validated contents and their counts, with every
-record at version 1. Restoring it is SELLO-030.
+record and goal at version 1. Restoring it is SELLO-030.
 
 ## Making a file
 
@@ -134,7 +157,8 @@ history position (generation, revision) it was previewed at, and the time. A sta
 file survives a restart, but is forgotten after a day or once the generation changes.
 
 The replacement refuses a history that moved since the preview; the person previews
-again. Inside one transaction a receipt for the same operation means it already
+again. Goals and Recibo's choice are replaced with the rest, never merged: each goal's
+next recording position follows its last event, and each target gets a new identifier. Inside one transaction a receipt for the same operation means it already
 happened, so asking again after an unknown outcome or a crash replays instead of
 replacing twice. Afterwards the backup's appearance and order are applied; a group
 that fails stays pending, with the file, and is retried at start-up and on request.
@@ -146,6 +170,6 @@ there as above.
 
 ## Changing the format
 
-Any change to keys, meanings or rules is a new `version`. Version 1 stays readable
-for as long as the app supports restoring it; nothing translates older Sello
+Any change to keys, meanings or rules is a new `version`. Versions 1 and 2 stay
+readable for as long as the app supports restoring them; nothing translates older Sello
 databases or other apps' files.

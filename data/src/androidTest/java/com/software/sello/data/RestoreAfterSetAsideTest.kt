@@ -111,7 +111,10 @@ class RestoreAfterSetAsideTest {
                     expense(102, 1, "2026-10-02", 2, 15_000),
                     expense(103, 1, "2026-10-03", 3, 5_000)
                 ),
-                incomes = listOf(income(201, "2026-10-01", 1, 200_000, IncomeSource.Salary))
+                incomes = listOf(income(201, "2026-10-01", 1, 200_000, IncomeSource.Salary)),
+                goals = emptyList(),
+                featuredGoal = null
+
             ),
             preferences = PortablePreferences(
                 AppearancePreference(ThemePreference.Dark, InkPreference.Violeta),
@@ -141,7 +144,7 @@ class RestoreAfterSetAsideTest {
                 CheckedBackup(
                     Instant.parse("2026-10-22T14:30:00Z"),
                     ZoneId.of("America/Lima"),
-                    BackupSummary(categories = 1, expenses = 3, incomes = 1)
+                    BackupSummary(categories = 1, expenses = 3, incomes = 1, 0)
                 )
             ),
             BackupCodec().check(g01)
@@ -176,9 +179,9 @@ class RestoreAfterSetAsideTest {
         val staged = restores.stage(g01).valueOrFail()
         val outcome = restores.replace(staged)
 
-        assertEquals(BackupSummary(0, 0, 0), staged.current)
+        assertEquals(BackupSummary(0, 0, 0, 0), staged.current)
         assertEquals(
-            RestoreOutcome.Restored(BackupSummary(1, 3, 1), PendingPreferences(null, null)),
+            RestoreOutcome.Restored(BackupSummary(1, 3, 1, 0), PendingPreferences(null, null)),
             outcome
         )
         storage.close()

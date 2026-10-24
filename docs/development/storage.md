@@ -143,8 +143,8 @@ receipt exists is finished, and one without a receipt is forgotten.
 
 Goals (SELLO-087) are stored as their history: stamps and percentages are worked out
 from it by `GoalPolicy` and never stored ([goal rules](../testing/goal-examples.md)).
-Until SELLO-088, backups, restore and erase-all do not include the goal tables; no
-screen can create a goal before then.
+Backups (format version 2), restore and erase-all carry the goal tables with the rest
+(SELLO-088).
 
 ## Not here yet
 

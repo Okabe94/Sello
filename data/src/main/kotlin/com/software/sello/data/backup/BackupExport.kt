@@ -10,9 +10,11 @@ import com.software.sello.data.local.entity.MonthLimitEntity
 import com.software.sello.data.mapper.decodeAll
 import com.software.sello.data.mapper.profileFrom
 import com.software.sello.data.mapper.toDomain
+import com.software.sello.data.mapper.toHistory
 import com.software.sello.data.repository.PAGE
 import com.software.sello.data.repository.pages
 import com.software.sello.data.repository.reading
+import com.software.sello.domain.model.GoalId
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.StorageFailure
 import com.software.sello.domain.port.AppearancePreferences
@@ -62,6 +64,16 @@ private suspend fun SelloDatabase.snapshot(): Outcome<FinancialSnapshot, Storage
     val incomes = pages<IncomeEntity> {
         incomeDao().all(it?.effectiveDate.orEmpty(), it?.sequence ?: 0, PAGE)
     }.decodeAll { it.toDomain() }
+    val events = goalDao().allEvents().groupBy { it.goalId }
+    val goals = goalDao().all().decodeAll { it.toHistory(events[it.id].orEmpty()) }
+    val featured = goalDao().featured()?.let { row ->
+        when (val id = GoalId.of(row.goalId)) {
+            is Outcome.Success -> id.value
+
+            is Outcome.Failure ->
+                return Outcome.Failure(StorageFailure.Integrity("featured_goal", null, "goal_id"))
+        }
+    }
     return Outcome.Success(
         FinancialSnapshot(
             zone = profile.zone,
@@ -70,7 +82,9 @@ private suspend fun SelloDatabase.snapshot(): Outcome<FinancialSnapshot, Storage
             defaultLimits = defaults.orReturn { return it },
             monthLimits = monthLimits.orReturn { return it },
             expenses = expenses.orReturn { return it },
-            incomes = incomes.orReturn { return it }
+            incomes = incomes.orReturn { return it },
+            goals = goals.orReturn { return it },
+            featuredGoal = featured
         )
     )
 }
@@ -124,7 +138,8 @@ class BackupExport(
                     summary = BackupSummary(
                         categories = file.value.counts.categories,
                         expenses = file.value.counts.expenses,
-                        incomes = file.value.counts.incomes
+                        incomes = file.value.counts.incomes,
+                        goals = file.value.counts.goals
                     )
                 )
             )

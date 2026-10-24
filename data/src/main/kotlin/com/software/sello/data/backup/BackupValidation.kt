@@ -14,6 +14,15 @@ import com.software.sello.domain.model.Currency
 import com.software.sello.domain.model.DefaultLimit
 import com.software.sello.domain.model.Expense
 import com.software.sello.domain.model.ExpenseId
+import com.software.sello.domain.model.Goal
+import com.software.sello.domain.model.GoalHistory
+import com.software.sello.domain.model.GoalHistoryError
+import com.software.sello.domain.model.GoalId
+import com.software.sello.domain.model.GoalMovement
+import com.software.sello.domain.model.GoalMovementId
+import com.software.sello.domain.model.GoalMovementKind
+import com.software.sello.domain.model.GoalName
+import com.software.sello.domain.model.GoalTargetChange
 import com.software.sello.domain.model.IconKey
 import com.software.sello.domain.model.Income
 import com.software.sello.domain.model.IncomeId
@@ -27,6 +36,7 @@ import com.software.sello.domain.model.ThemePreference
 import com.software.sello.domain.model.TransactionAmount
 import com.software.sello.domain.model.TransactionAmountError
 import com.software.sello.domain.policy.EffectiveDates
+import com.software.sello.domain.policy.GoalPolicy
 import java.time.DateTimeException
 import java.time.Instant
 import java.time.YearMonth
@@ -44,6 +54,9 @@ internal object WireNames {
     const val FINITE = "finite"
     const val UNLIMITED = "unlimited"
     const val PAUSED = "paused"
+    const val TARGET = "target"
+    const val CONTRIBUTION = "contribution"
+    const val WITHDRAWAL = "withdrawal"
 
     val themes = mapOf(
         ThemePreference.System to "system",
@@ -96,14 +109,17 @@ private fun flag(element: JsonElement, path: String): Boolean {
     }
 }
 
-/** Checks a decoded version 1 file completely; the first problem rejects all of it. */
-internal fun validate(file: BackupFileV1): Outcome<BackupContents, BackupRejection> = try {
+/**
+ * Checks a decoded file completely, a version 1 file read as version 2 included; the
+ * first problem rejects all of it.
+ */
+internal fun validate(file: BackupFileV2): Outcome<BackupContents, BackupRejection> = try {
     Outcome.Success(contentsOf(file))
 } catch (rejected: Rejected) {
     Outcome.Failure(rejected.rejection)
 }
 
-private fun contentsOf(file: BackupFileV1): BackupContents {
+private fun contentsOf(file: BackupFileV2): BackupContents {
     val financial = file.financial
     val revision = whole(financial.sourceRevision, "financial.sourceRevision")
     val zone = try {
@@ -113,6 +129,14 @@ private fun contentsOf(file: BackupFileV1): BackupContents {
     }
     val categories = categories(financial.categories)
     val known = categories.mapTo(HashSet()) { it.id }
+    val goals = goals(financial.goals)
+    val featured = financial.featuredGoal?.let { text ->
+        val id = GoalId.of(text).or("financial.featuredGoal")
+        if (goals.none { it.goal.id == id }) {
+            reject(BackupRejection.DanglingReference("financial.featuredGoal"))
+        }
+        id
+    }
     return BackupContents(
         exportedAt = instant(file.exportedAt, "exportedAt"),
         financial = FinancialSnapshot(
@@ -122,7 +146,9 @@ private fun contentsOf(file: BackupFileV1): BackupContents {
             defaultLimits = defaultLimits(financial.defaultLimits, known),
             monthLimits = monthLimits(financial.monthLimits, known),
             expenses = expenses(financial.expenses, known),
-            incomes = incomes(financial.incomes)
+            incomes = incomes(financial.incomes),
+            goals = goals,
+            featuredGoal = featured
         ),
         preferences = file.preferences?.let(::preferences)
     )
@@ -316,6 +342,106 @@ private fun incomes(wire: List<IncomeV1>): List<Income> {
             createdAt = instant(row.createdAt, "$path.createdAt"),
             updatedAt = instant(row.updatedAt, "$path.updatedAt")
         )
+    }
+}
+
+/**
+ * Each goal and its history as the app stores them: names in stored form, the history
+ * in recording order and starting with the target, every amount in range, and a
+ * history that works out, so a withdrawal never takes more than was saved (rule 1 of
+ * docs/testing/goal-examples.md). Versions start again at 1.
+ */
+private fun goals(wire: List<GoalV2>): List<GoalHistory> {
+    val goalIds = HashSet<GoalId>()
+    val eventIds = HashSet<GoalMovementId>()
+    return wire.mapIndexed { index, row ->
+        val path = "financial.goals[$index]"
+        val id = GoalId.of(row.id).or("$path.id")
+        if (!goalIds.add(id)) reject(BackupRejection.DuplicateId("$path.id"))
+        val name = GoalName.of(row.name).or("$path.name")
+        if (name.value != row.name) invalid("$path.name")
+        val goal = Goal(
+            id = id,
+            name = name,
+            icon = IconKey.of(row.icon).or("$path.icon"),
+            targetMonth = row.targetMonth?.let { month(it, "$path.targetMonth") },
+            completedOn = row.completedOn?.let {
+                EffectiveDates.parseDate(it).or("$path.completedOn")
+            },
+            version = 1,
+            createdAt = instant(row.createdAt, "$path.createdAt"),
+            updatedAt = instant(row.updatedAt, "$path.updatedAt")
+        )
+        if (row.history.isEmpty()) invalid("$path.history")
+        var previous = -1L
+        val events = row.history.mapIndexed { position, event ->
+            val at = "$path.history[$position]"
+            val sequence = whole(event.sequence, "$at.sequence")
+            if (sequence <= previous) reject(BackupRejection.DuplicateEntry("$at.sequence"))
+            previous = sequence
+            val amount = amount(event.amount, event.currency, at)
+            val recordedOn = EffectiveDates.parseDate(event.recordedOn).or("$at.recordedOn")
+            if (position == 0 && event.kind != WireNames.TARGET) invalid("$at.kind")
+            when (event.kind) {
+                WireNames.TARGET -> {
+                    if (event.id != null) invalid("$at.id")
+                    if (event.date != null) invalid("$at.date")
+                    if (event.note != null) invalid("$at.note")
+                    if (event.createdAt != null) invalid("$at.createdAt")
+                    if (event.updatedAt != null) invalid("$at.updatedAt")
+                    GoalTargetChange(amount, sequence, recordedOn)
+                }
+
+                WireNames.CONTRIBUTION, WireNames.WITHDRAWAL -> {
+                    val movementId = GoalMovementId.of(event.id ?: invalid("$at.id")).or("$at.id")
+                    if (!eventIds.add(movementId)) reject(BackupRejection.DuplicateId("$at.id"))
+                    GoalMovement(
+                        id = movementId,
+                        kind = if (event.kind == WireNames.CONTRIBUTION) {
+                            GoalMovementKind.Contribution
+                        } else {
+                            GoalMovementKind.Withdrawal
+                        },
+                        amount = amount,
+                        date = EffectiveDates.parseDate(event.date ?: invalid("$at.date"))
+                            .or("$at.date"),
+                        sequence = sequence,
+                        recordedOn = recordedOn,
+                        note = note(event.note, "$at.note"),
+                        version = 1,
+                        createdAt = instant(
+                            event.createdAt ?: invalid("$at.createdAt"),
+                            "$at.createdAt"
+                        ),
+                        updatedAt = instant(
+                            event.updatedAt ?: invalid("$at.updatedAt"),
+                            "$at.updatedAt"
+                        )
+                    )
+                }
+
+                else -> invalid("$at.kind")
+            }
+        }
+        val history = GoalHistory(goal, events)
+        when (val worked = GoalPolicy.progress(history)) {
+            is Outcome.Success -> Unit
+
+            is Outcome.Failure -> when (val error = worked.error) {
+                is GoalHistoryError.WithdrawalAboveSaved -> {
+                    val position = events.indexOfFirst {
+                        (it as? GoalMovement)?.id ==
+                            error.withdrawal
+                    }
+                    invalid("$path.history[$position].amount")
+                }
+
+                GoalHistoryError.Unrepresentable -> invalid("$path.history")
+
+                GoalHistoryError.NoTarget -> invalid("$path.history[0].kind")
+            }
+        }
+        history
     }
 }
 

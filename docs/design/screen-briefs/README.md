@@ -17,9 +17,9 @@ it and the policy it leaves open.
 
 | Screen | Boundary before affected implementation |
 | --- | --- |
-| Home and recurring payments | Reservation lifecycle; independent examples for the ADR 0012 rows not yet separately reviewed (BG-E01, BG-E04, BG-E12); review-invitation timing; featured-goal ties. |
+| Home and recurring payments | Independent examples for the ADR 0012 rows not yet separately reviewed (BG-E01, BG-E04, BG-E12); review-invitation timing; featured-goal ties. |
 | Entry | Resolve note-composer Back/dismissal/restoration and validate actual pad/IME/inset/accessibility behavior. |
-| Resumen and income | Expected-income lifecycle and matching (post-MVP, with recurring income). |
+| Resumen and income | None for expected income: settled in the [recurrence examples](../../testing/recurrence-examples.md). |
 | Metas | v2 settles thresholds (25 / 50 / 75 % and Meta), withdrawal bounds, manual completion with Deshacer and read-only completed goals (ADR 0013). Still open: corrections, target edits, the Home-pin lifecycle, pausing and milestone replay safeguards. |
 | Inversiones | Return periods, dated cash flows, valuation dates/sources, movement corrections, dividends and currency/rate policy. Visible valuation age does not settle those mechanics. |
 

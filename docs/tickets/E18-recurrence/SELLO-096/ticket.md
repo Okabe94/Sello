@@ -2,7 +2,7 @@
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-095, SELLO-004
 - **Gate:** G1
 
@@ -39,3 +39,15 @@ Approved examples exist and later tickets cite them.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-096 --retain`.
+
+### Execution progress
+
+- **Owner decisions, 2026-10-24:** twice a month uses two days the person picks, each
+  clamped like monthly, both recorded when they clamp to one date; catch-up runs on
+  start, on return and when the financial day changes while open; it records every
+  missed occurrence with no age limit; archiving a category pauses its payment schedules
+  and unarchiving does not resume them.
+- [Recurrence rules and worked examples](../../../testing/recurrence-examples.md): 15 rules
+  and 40 examples (RE01–RE40), each figure checked by hand and with a throwaway
+  calculation outside the repository; seven further points are marked Proposed there and
+  approved by merging. Architecture §8 now names the origin's slot and drops WorkManager.

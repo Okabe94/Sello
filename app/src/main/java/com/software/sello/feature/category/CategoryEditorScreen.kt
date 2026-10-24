@@ -75,6 +75,7 @@ import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.model.CategoryName
 import com.software.sello.presentation.category.CategoryIcons
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.month.monthNames
 
 /**
@@ -237,7 +238,7 @@ private fun ArchiveConfirmation(
                     pluralStringResource(
                         R.plurals.category_archive_keeps_count,
                         count,
-                        count,
+                        countText(count),
                         thisMonth
                     )
                 }

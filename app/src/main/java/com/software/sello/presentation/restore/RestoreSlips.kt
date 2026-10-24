@@ -43,6 +43,7 @@ import com.software.sello.domain.port.PendingPreferences
 import com.software.sello.domain.port.RestoreOutcome
 import com.software.sello.domain.port.RestoreRejection
 import com.software.sello.domain.port.StagedRestore
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.date.dateLabels
 
 /**
@@ -86,14 +87,18 @@ private fun Restored(summary: BackupSummary, onLeave: () -> Unit) {
                 pluralStringResource(
                     R.plurals.restore_categories,
                     summary.categories,
-                    summary.categories
+                    countText(summary.categories)
                 ),
                 pluralStringResource(
                     R.plurals.restore_expenses,
                     summary.expenses,
-                    summary.expenses
+                    countText(summary.expenses)
                 ),
-                pluralStringResource(R.plurals.restore_incomes, summary.incomes, summary.incomes)
+                pluralStringResource(
+                    R.plurals.restore_incomes,
+                    summary.incomes,
+                    countText(summary.incomes)
+                )
             )
         )
         GoToRecibo(onLeave)

@@ -30,6 +30,7 @@ import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.port.ExpenseOrder
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.date.dateLabels
 
 @Composable
@@ -44,12 +45,16 @@ fun CategoryExpensesScreen(
     val dates = dateLabels()
     val loadedLabel = (state as? CategoryExpensesState.Ready)?.let {
         if (it.rows.size.toLong() < it.totalCount) {
-            stringResource(R.string.category_detail_listed, it.rows.size, it.totalCount)
+            stringResource(
+                R.string.category_detail_listed,
+                countText(it.rows.size),
+                countText(it.totalCount)
+            )
         } else {
             pluralStringResource(
                 R.plurals.category_detail_expense_count,
                 it.rows.size,
-                it.rows.size
+                countText(it.rows.size)
             )
         }
     }

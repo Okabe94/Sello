@@ -80,6 +80,7 @@ tracks the remaining financial inputs.
 | [SELLO-034](../planning/mvp/epics/E08-release.md#sello-034--prove-integrated-data-retention-and-recovery-failure-safety) | A v1 history survives upgrade, backup, restore, reset and restore again on real files; all nine sandbox scenarios round-trip through a backup with their last figures; after a reset nothing comes back in a new process; Respaldo's top-bar arrow restarts after a restore. [Recovery matrix](../testing/recovery-matrix.md). |
 | [SELLO-035](../planning/mvp/epics/E08-release.md#sello-035--validate-performance-and-optimized-release-composition) | A synthetic year (10,000 expenses) meets the approved start, scroll, Resumen, backup and restore targets; the release build is shrunk by R8 and signed with the owner's key from their own Gradle properties; G3 now runs (ADR 0016). [Performance profile](../testing/performance-profile.md), [release](../release/README.md). Open for the owner: an in-app licence notice. |
 | [SELLO-036](../planning/mvp/epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | The signed `0.1.0` candidate passed the full customer flow on a Samsung phone (Android 16) after a fix there: backups failed on Android 16 because the clock's microseconds reached the file. [MVP checklist](../release/mvp-checklist.md); the owner's merge is the go/no-go. E08 is done. |
+| [SELLO-075](../planning/mvp/epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows) | Every count of 1,000 or more groups its thousands ("10.000 gastos"): restore preview and result, erase confirmation, start-up restore, last backup and category detail. E15 is done. |
 | [SELLO-076](../planning/mvp/epics/E15-release-fixes.md#sello-076--show-resumens-recorded-until-date-in-words) | Resumen says "Movimientos anotados hasta el 3 de octubre", with the year only for a day from another year; so does its "could not refresh" line. |
 | [SELLO-077](../planning/mvp/epics/E15-release-fixes.md#sello-077--make-the-sandbox-scenario-replay-tests-reliable) | The sandbox replay tests no longer fail intermittently: a restarted runner relisting its history overwrote the result of a step already taken. Both tests passed 20 runs in a row. |
 | [SELLO-078](../planning/mvp/epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check) | A backup that fails the app's own check for a reason other than size now says it is a fault in Sello ("Falla de Sello al armar el respaldo …") instead of "Tus datos superan lo que cabe". |
@@ -107,8 +108,6 @@ tracks the remaining financial inputs.
 - SELLO-074 ([E14](../planning/mvp/epics/E14-assistive-technology.md)): the manual
   TalkBack, Switch Access and keyboard pass, moved post-MVP by the owner on
   2026-10-23. E13 is done without it.
-- SELLO-075 ([E15](../planning/mvp/epics/E15-release-fixes.md)): counts without a
-  thousands separator, found during SELLO-035 and logged by the owner on 2026-10-23.
 - SELLO-079 and SELLO-083–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
   the rest of today's v2 screens (SELLO-080–082 are done; the SELLO-079 audit credits
   them), then Metas, recurrence and Inversiones,

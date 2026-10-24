@@ -145,14 +145,14 @@
     <string name="category_detail_expenses">Gastos</string>
     <string name="category_detail_latest">Últimos gastos</string>
     <string name="category_detail_view_every_expense">Ver todos</string>
-    <plurals name="category_detail_view_all"><item quantity="one">Ver el gasto</item><item quantity="other">Ver los %d</item></plurals>
+    <plurals name="category_detail_view_all"><item quantity="one">Ver el gasto</item><item quantity="other">Ver los %s</item></plurals>
     <string name="category_detail_of">de</string>
     <string name="category_detail_for">Para</string>
     <string name="category_detail_per_day">Al día</string>
     <plurals name="category_detail_days"><item quantity="one">%d día</item><item quantity="other">%d días</item></plurals>
     <string name="category_detail_compared_to">Frente a %1$s</string>
     <string name="category_detail_numbers">En números</string>
-    <plurals name="category_detail_count_days"><item quantity="one">%1$d en %2$d día</item><item quantity="other">%1$d en %2$d días</item></plurals>
+    <plurals name="category_detail_count_days"><item quantity="one">%1$s en %2$d día</item><item quantity="other">%1$s en %2$d días</item></plurals>
     <string name="category_detail_each_time">En promedio</string>
     <string name="category_detail_largest">El mayor</string>
     <string name="category_detail_costliest_day">Tu día más caro</string>
@@ -183,10 +183,10 @@
     <string name="category_expenses_empty">Sin coincidencias</string>
     <string name="category_expenses_empty_body">Prueba otra búsqueda o anota un gasto en esta categoría.</string>
     <plurals name="category_detail_expense_count">
-        <item quantity="one">%1$d gasto</item>
-        <item quantity="other">%1$d gastos</item>
+        <item quantity="one">%1$s gasto</item>
+        <item quantity="other">%1$s gastos</item>
     </plurals>
-    <string name="category_detail_listed">Se muestran %1$d de %2$d</string>
+    <string name="category_detail_listed">Se muestran %1$s de %2$s</string>
     <string name="category_detail_more">Ver más</string>
     <string name="category_detail_more_failed">No pudimos leer más gastos. Inténtalo de nuevo.</string>
     <string name="category_detail_no_note">Sin nota</string>
@@ -248,8 +248,8 @@
     <string name="category_unarchive_title">¿Desarchivar %1$s?</string>
     <string name="category_archive_effect">Deja de aceptar gastos nuevos. %1$s conserva su límite; desde %2$s queda sin presupuesto hasta que la desarchives.</string>
     <plurals name="category_archive_keeps_count">
-        <item quantity="one">Su %1$d gasto de %2$s y los de meses anteriores se conservan.</item>
-        <item quantity="other">Sus %1$d gastos de %2$s y los de meses anteriores se conservan.</item>
+        <item quantity="one">Su %1$s gasto de %2$s y los de meses anteriores se conservan.</item>
+        <item quantity="other">Sus %1$s gastos de %2$s y los de meses anteriores se conservan.</item>
     </plurals>
     <string name="category_archive_keeps">Sus gastos se conservan.</string>
     <string name="category_archive_discards">Los cambios sin guardar se descartan.</string>
@@ -605,16 +605,16 @@
     <string name="restore_apply_ordering">Aplicar orden</string>
     <string name="restore_pending_note">Solo se aplicarán las preferencias indicadas. Tu historial no se reemplazará otra vez.</string>
     <plurals name="restore_categories">
-        <item quantity="one">%d categoría</item>
-        <item quantity="other">%d categorías</item>
+        <item quantity="one">%s categoría</item>
+        <item quantity="other">%s categorías</item>
     </plurals>
     <plurals name="restore_expenses">
-        <item quantity="one">%d gasto</item>
-        <item quantity="other">%d gastos</item>
+        <item quantity="one">%s gasto</item>
+        <item quantity="other">%s gastos</item>
     </plurals>
     <plurals name="restore_incomes">
-        <item quantity="one">%d ingreso</item>
-        <item quantity="other">%d ingresos</item>
+        <item quantity="one">%s ingreso</item>
+        <item quantity="other">%s ingresos</item>
     </plurals>
     <string name="past_expense_announcement">Puedes corregir un gasto de meses anteriores.</string>
     <string name="past_limit_announcement">Puedes corregir el límite de este mes anterior.</string>

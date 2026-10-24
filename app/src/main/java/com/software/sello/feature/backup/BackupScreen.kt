@@ -44,6 +44,7 @@ import com.software.sello.designsystem.component.SlipSkeleton
 import com.software.sello.designsystem.component.Stamp
 import com.software.sello.designsystem.component.StampInk
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.date.dateLabels
 
 /** Backups are plain JSON; the picker offers this type and the suggested name. */
@@ -234,9 +235,9 @@ private fun LastBackupSlip(state: BackupState, onAction: (BackupAction) -> Unit)
             stringResource(R.string.backup_date),
             labels.moment(last.at, state.zone, stringResource(R.string.backup_moment))
         )
-        LeaderLine(stringResource(R.string.backup_categories), last.summary.categories.toString())
-        LeaderLine(stringResource(R.string.backup_expenses), last.summary.expenses.toString())
-        LeaderLine(stringResource(R.string.backup_incomes), last.summary.incomes.toString())
+        LeaderLine(stringResource(R.string.backup_categories), countText(last.summary.categories))
+        LeaderLine(stringResource(R.string.backup_expenses), countText(last.summary.expenses))
+        LeaderLine(stringResource(R.string.backup_incomes), countText(last.summary.incomes))
         LeaderLine(
             stringResource(R.string.backup_size),
             Formatter.formatShortFileSize(context, last.bytes)

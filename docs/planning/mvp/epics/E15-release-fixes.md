@@ -12,7 +12,7 @@ logged here rather than fixed in them. None changes money, stored data or the re
 
 - **Type:** Task
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004
 - **Gate:** G2
 
@@ -54,6 +54,17 @@ group thousands through the presentation money formatter.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-075 --retain`.
+
+### Execution progress
+
+- **Counts listed, 2026-10-23:** expenses in category detail ("Ver los …", "… en N
+  días", "N gastos", "Se muestran N de M"), the archive notice, the restore preview
+  table and its spoken cells, the restore result, the erase confirmation, the start-up
+  failure restore and the last backup's counts. Days, weeks, months, years and the
+  name and note counters stay as they are: none reaches 1,000, and a year must not be
+  grouped.
+- `presentation/count/countText` groups thousands with a point whatever the phone's
+  language; the plurals take it as text (`%s`) and are still chosen by the number.
 
 ## SELLO-076 — Show Resumen's "recorded until" date in words
 

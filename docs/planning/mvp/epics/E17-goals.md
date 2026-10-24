@@ -168,7 +168,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-086 --retain`.
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-086, SELLO-004
 - **Gate:** G2
 
@@ -202,6 +202,19 @@ ARCHITECTURE §4–5; approved goal examples (SELLO-086).
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-087 --retain`.
+
+### Execution progress
+
+- **Plan approved by the owner, 2026-10-23:** three pull requests: the domain policy,
+  schema 4, then commands and reads. Stamps are worked out from the recorded history,
+  not stored; movements take an optional 60-character note; goal names need not be
+  unique.
+- **Part 1, domain:** `Goal`, `GoalMovement`, `GoalTargetChange`, `GoalName` (1–40),
+  `GoalId`, `GoalMovementId` and `GoalPolicy` (progress, stamp changes, dates, Recibo's
+  goal, pace). `GoalPolicyTest` follows the approved examples by ID; ten deliberate
+  breaks of the policy each failed at least one of them. MT39 was added to the examples
+  (a later aporte does not cover an earlier withdrawal once its aporte is deleted).
+  Remaining: schema 4 and its migration, then commands, undo and reads.
 
 ## SELLO-088 — Carry goals through backup, restore and erase
 

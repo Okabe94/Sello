@@ -221,7 +221,13 @@ Focused tests, then `./scripts/verify-ticket SELLO-087 --retain`.
   Breaking the migration or the mapper on purpose failed the tests. No command writes
   goals yet, and backup, restore and erase-all do not know them (SELLO-088); no screen
   can create one.
-  Remaining: commands, undo and reads.
+- **Part 3, commands and reads:** `GoalCommands` (`RoomGoalCommands`) with the
+  `goal.*` receipts and `GoalReads` (`RoomGoalReads`); `FinancialStorage` offers both,
+  and nothing composes them yet. `GoalCommandContractTest` runs MT01, MT07, MT08, MT13–
+  MT15, MT17, MT18, MT21, MT23–MT28 and MT30 through the real commands, with replay,
+  conflict, stale generation and version, the shared six-second undo and a cancelled
+  caller recovering its outcome. Four deliberate breaks of the commands were each
+  caught.
 
 ## SELLO-088 — Carry goals through backup, restore and erase
 

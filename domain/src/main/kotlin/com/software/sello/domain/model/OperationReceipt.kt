@@ -19,6 +19,17 @@ enum class OperationKind(val key: String) {
     UnarchiveCategory("category.unarchive"),
     SetDefaultLimit("category.set_default_limit"),
     SetMonthLimit("category.set_month_limit"),
+    CreateGoal("goal.create"),
+    EditGoal("goal.edit"),
+    ChangeGoalTarget("goal.change_target"),
+    RecordGoalMovement("goal.record_movement"),
+    EditGoalMovement("goal.edit_movement"),
+    DeleteGoalMovement("goal.delete_movement"),
+    RestoreGoalMovement("goal.restore_movement"),
+    CompleteGoal("goal.complete"),
+    UndoGoalCompletion("goal.undo_completion"),
+    DeleteGoal("goal.delete"),
+    FeatureGoal("goal.feature"),
 
     /** The whole financial history replaced by a backup. It has no single subject. */
     RestoreHistory("history.restore"),

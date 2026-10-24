@@ -16,6 +16,8 @@ import com.software.sello.data.repository.RoomCategoryReads
 import com.software.sello.data.repository.RoomExpenseCommands
 import com.software.sello.data.repository.RoomExpenseReads
 import com.software.sello.data.repository.RoomFinancialProfileStore
+import com.software.sello.data.repository.RoomGoalCommands
+import com.software.sello.data.repository.RoomGoalReads
 import com.software.sello.data.repository.RoomIncomeCommands
 import com.software.sello.data.repository.RoomIncomeReads
 import com.software.sello.data.repository.RoomMonthlySnapshots
@@ -39,6 +41,8 @@ import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialClock
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.GoalCommands
+import com.software.sello.domain.port.GoalReads
 import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonotonicClock
@@ -87,6 +91,21 @@ class FinancialStorage internal constructor(
     ): IncomeCommands = RoomIncomeCommands(database, audit, clock, ids, undoWindow(monotonic))
 
     val incomeReads: IncomeReads = RoomIncomeReads(database)
+
+    /**
+     * Goals. A deleted movement shares the one offer to undo with expenses and income.
+     * Nothing composes this yet: goals reach backups, restore and erase-all in
+     * SELLO-088, before any screen can create one.
+     */
+    fun goalCommands(
+        audit: AuditClock,
+        clock: FinancialClock,
+        ids: RecordIdSource,
+        monotonic: MonotonicClock
+    ): GoalCommands =
+        RoomGoalCommands(database, audit, clock, ids, undoWindow(monotonic), monotonic)
+
+    val goalReads: GoalReads = RoomGoalReads(database)
 
     /** One offer to undo for the whole storage, whichever workflow asks for it first. */
     private var undo: UndoWindow? = null

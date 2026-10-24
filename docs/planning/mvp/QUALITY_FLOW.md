@@ -50,11 +50,14 @@ never says Done for work that was not approved.
 - **Changes requested** are pushed to the same pull request. If they change the
   ticket's own change set, run the ticket gate again and update `Quality run`; the
   board check rejects a stale report.
-- **`main` moving after the run costs nothing.** The retained report is bound to the
-  pull request's own change set, not to the whole tree, and the merge queue runs the
-  gate on the real merge result before merging. Do not update the branch again
-  unless GitHub reports a conflict; then merge `main`, resolve, and rerun with
+- **`main` moving after the run costs no local work.** The retained report is bound
+  to the pull request's own change set, not to the whole tree, and the hosted run on
+  the merge result verifies the combination. Do not rerun the local gate unless
+  GitHub reports a conflict; then merge `main`, resolve, and rerun with
   `--affected origin/main --retain`, because the change set itself changed.
+  GitHub offers merge queues only in organization-owned repositories; while Sello is owned by a personal account, GitHub still asks for an up-to-date branch before merging: press "Update branch" (or `gh pr update-branch`) and let
+  the hosted check rerun unattended. Once the repository is organization-owned, the
+  merge queue replaces that step.
 - **Not approved or abandoned:** close the pull request. `main` still shows the
   ticket as it was, so there is nothing to revert.
 - **Why:** one pull request needs one hosted run; writing Done in a second commit
@@ -140,10 +143,11 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
   documentation advancing no ticket gets G0. Other PRs get G2 with dependency-aware
   device scope; shared/unknown changes get full devices. Code pushes to main keep
   G1 for trusted cache publication; eligible documentation pushes get G0. Nightly
-  and manual runs execute full G2. Candidates reach `main` through the merge queue,
-  which runs the same check on the real merge result (`merge_group`) right before
-  merging, so branches need not be up to date; there is no path filter and the
-  check always reports.
+  and manual runs execute full G2. The workflow also verifies merge queue entries
+  (`merge_group`) like pull requests, from the group's base. Until the repository is
+  organization-owned (GitHub offers merge queues only there), the classic protection
+  keeps requiring an up-to-date branch and the hosted run on the merge result is the
+  integration check; there is no path filter and the check always reports.
   Host checks execute once. Only selected app/support device groups start; support
   runs only its selected data/design-system/catalog suites. The final quality job
   validates every required part and completion evidence. See the [local and CI

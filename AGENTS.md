@@ -50,9 +50,12 @@ even where its text says otherwise. MUST/SHOULD/COULD have the meanings defined 
   `main` through PRs and the merge queue; merge only with explicit owner
   authorization, passing required checks and a squash merge.
 - **SHOULD** update the branch with `main` once, before the final gate. After that,
-  leave it: evidence is bound to the PR's own change set and the merge queue verifies
-  the real merge result. Only a conflict GitHub reports needs another update, a
-  resolution and a rerun with `--affected origin/main --retain`.
+  never rerun the local gate because `main` moved: evidence is bound to the PR's own
+  change set and the hosted run on the merge result verifies the combination. If
+  GitHub asks for an up-to-date branch before merging, use "Update branch" or
+  `gh pr update-branch` and let CI rerun unattended. Only a conflict GitHub reports
+  needs a manual merge of `main`, a resolution and a rerun with
+  `--affected origin/main --retain`.
 - **MUST** report and resolve a failed check on `main` before another PR merges.
   Work on the next ticket may proceed while the check runs.
 

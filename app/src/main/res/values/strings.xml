@@ -557,6 +557,7 @@
     <string name="backup_failed_title">No se pudo guardar el respaldo</string>
     <string name="backup_failed_write">Tus datos en Sello no cambiaron. Puede haber quedado un archivo incompleto donde lo guardabas: no lo uses para restaurar.</string>
     <string name="backup_failed_storage">No pudimos leer tus datos para el respaldo. Tus datos en Sello no cambiaron. Puede haber quedado un archivo vacío donde lo guardabas: no lo uses para restaurar.</string>
+    <string name="backup_failed_self_check">Falla de Sello al armar el respaldo; tus datos no cambiaron. No uses el archivo vacío que pudo quedar.</string>
     <string name="backup_failed_too_large">Tus datos superan lo que cabe en un respaldo. Tus datos en Sello no cambiaron. Puede haber quedado un archivo vacío donde lo guardabas: no lo uses para restaurar.</string>
     <string name="backup_retry">Intentar de nuevo</string>
     <string name="backup_unknown_title">No sabemos si el respaldo terminó</string>

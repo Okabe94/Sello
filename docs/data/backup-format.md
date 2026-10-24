@@ -115,7 +115,9 @@ record at version 1. Restoring it is SELLO-030.
 
 `BackupExport.create` reads every financial row in one Room transaction, then the
 preferences, encodes, and reads its own output back with the same rules, so the app
-never hands out a file it would refuse. It returns the name, bytes and counts.
+never hands out a file it would refuse. It returns the name, bytes and counts. A
+refusal for size (bytes, records or default-limit entries) tells the person their data
+is more than a backup holds; any other refusal is a fault in Sello and says so.
 
 In the app (`feature/backup`), the system's "Guardar como" offers the name;
 `AndroidDocumentWriter` writes, flushes and closes the chosen document, and only then

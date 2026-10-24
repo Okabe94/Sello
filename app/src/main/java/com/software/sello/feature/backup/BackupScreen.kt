@@ -142,6 +142,7 @@ fun BackupScreen(
                         BackupFailure.Write -> R.string.backup_failed_write
                         BackupFailure.Storage -> R.string.backup_failed_storage
                         BackupFailure.TooLarge -> R.string.backup_failed_too_large
+                        BackupFailure.SelfCheck -> R.string.backup_failed_self_check
                     }
                 ),
                 retryLabel = stringResource(R.string.backup_retry),

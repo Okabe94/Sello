@@ -82,6 +82,7 @@ tracks the remaining financial inputs.
 | [SELLO-036](../planning/mvp/epics/E08-release.md#sello-036--accept-the-complete-mvp-and-prepare-release-handoff) | The signed `0.1.0` candidate passed the full customer flow on a Samsung phone (Android 16) after a fix there: backups failed on Android 16 because the clock's microseconds reached the file. [MVP checklist](../release/mvp-checklist.md); the owner's merge is the go/no-go. E08 is done. |
 | [SELLO-076](../planning/mvp/epics/E15-release-fixes.md#sello-076--show-resumens-recorded-until-date-in-words) | Resumen says "Movimientos anotados hasta el 3 de octubre", with the year only for a day from another year; so does its "could not refresh" line. |
 | [SELLO-077](../planning/mvp/epics/E15-release-fixes.md#sello-077--make-the-sandbox-scenario-replay-tests-reliable) | The sandbox replay tests no longer fail intermittently: a restarted runner relisting its history overwrote the result of a step already taken. Both tests passed 20 runs in a row. |
+| [SELLO-078](../planning/mvp/epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check) | A backup that fails the app's own check for a reason other than size now says it is a fault in Sello ("Falla de Sello al armar el respaldo …") instead of "Tus datos superan lo que cabe". |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-062](../planning/mvp/epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Recibo's answer slip reads "Restante del presupuesto" with a signed remainder, the per-day figure under a tear line and a closing line for past months. The Ajustar presupuesto link is SELLO-067. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
@@ -106,9 +107,8 @@ tracks the remaining financial inputs.
 - SELLO-074 ([E14](../planning/mvp/epics/E14-assistive-technology.md)): the manual
   TalkBack, Switch Access and keyboard pass, moved post-MVP by the owner on
   2026-10-23. E13 is done without it.
-- SELLO-075 and SELLO-078 ([E15](../planning/mvp/epics/E15-release-fixes.md)):
-  defects found during SELLO-035 and SELLO-036 (counts without a thousands separator,
-  a failed backup reported as too large), logged by the owner on 2026-10-23.
+- SELLO-075 ([E15](../planning/mvp/epics/E15-release-fixes.md)): counts without a
+  thousands separator, found during SELLO-035 and logged by the owner on 2026-10-23.
 - SELLO-079 and SELLO-083–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
   the rest of today's v2 screens (SELLO-080–082 are done; the SELLO-079 audit credits
   them), then Metas, recurrence and Inversiones,

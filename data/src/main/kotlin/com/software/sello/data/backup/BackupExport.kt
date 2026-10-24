@@ -130,9 +130,9 @@ class BackupExport(
             )
 
             is Outcome.Failure -> Outcome.Failure(
-                when (file.error) {
+                when (val failure = file.error) {
                     is BackupExportFailure.Storage -> BackupPreparationFailure.StorageUnavailable
-                    is BackupExportFailure.Unrestorable -> BackupPreparationFailure.Unrestorable
+                    is BackupExportFailure.Unrestorable -> preparationFailure(failure.rejection)
                 }
             )
         }
@@ -174,3 +174,13 @@ class BackupExport(
         const val FALLBACK_NAME = "sello-respaldo.json"
     }
 }
+
+/** Why the screen is told a backup could not be made, from why its own check refused it. */
+internal fun preparationFailure(rejection: BackupRejection): BackupPreparationFailure =
+    when (rejection) {
+        is BackupRejection.TooLarge,
+        is BackupRejection.TooManyRecords,
+        is BackupRejection.HistoryTooLong -> BackupPreparationFailure.TooLarge
+
+        else -> BackupPreparationFailure.Unrestorable
+    }

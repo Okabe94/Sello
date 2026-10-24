@@ -63,11 +63,18 @@ reported as executed. Historical schema-v1 full reports remain valid evidence.
 
 The lighter push check relies on main taking candidates only through the merge
 queue, which runs this check on the real merge result right before merging, enforced
-for administrators too, with squash merges of the checked candidate. Branches no
-longer need to be up to date (decision of 2026-10-24: with several open pull
-requests, every merge invalidated every other branch and forced a rebase, a local
-rerun and a hosted rerun, growing with the square of the number of open pull
-requests). If those conditions change, restore device checks on main pushes.
+for administrators too, with squash merges of the checked candidate. Decision of
+2026-10-24: with several open pull requests, every merge invalidated every other
+branch and forced a rebase, a local rerun and a hosted rerun, growing with the
+square of the number of open pull requests. The workflow verifies `merge_group`
+entries, and ruleset 25780776 on `main` requires the quality check, squash merges
+and pull requests. GitHub offers merge queues only in organization-owned
+repositories, so while Sello is owned by a personal account the classic protection
+keeps "require branches to be up to date": a pull request behind `main` is updated
+on GitHub and reruns the hosted check, with no local rerun, because evidence is
+bound to the change set. Moving the repository to an organization enables the queue
+rule and removes that step. If the queue is enabled, drop the up-to-date requirement;
+if these conditions change otherwise, restore device checks on main pushes.
 Nightly runs cover the full device graph even when PRs use a narrower scope.
 
 Code pushes deliberately keep G1: PR caches are read-only, so trusted main builds

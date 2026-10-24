@@ -69,9 +69,11 @@ exclusions, since no check reads it. Schema-v2 reports gain an optional
 `snapshot.changes`; a ticket entering Review or Done needs it, earlier Done tickets
 keep their historical reports.
 
-Consequences: a branch behind `main` needs no update and no rerun unless GitHub
-reports a conflict, in which case the change set really changed. Executors update
-with `main` once before the final gate. A combination that only fails when two
+Consequences: a branch behind `main` needs no local rerun unless GitHub reports a
+conflict, in which case the change set really changed. Executors update with `main`
+once before the final gate. While GitHub still asks for an up-to-date branch (see
+ADR 0009: the merge queue needs an organization-owned repository), "Update branch"
+plus the unattended hosted rerun is the whole cost. A combination that only fails when two
 tickets meet is caught by the hosted run on the merge result instead of by a local
 rerun; that run already existed and is the one that protects `main`. Tests cover
 the same edit on a moved `main`, the same file edited elsewhere, a different edit,

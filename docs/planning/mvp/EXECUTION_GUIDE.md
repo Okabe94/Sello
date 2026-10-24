@@ -210,7 +210,9 @@ Flow for a ticket:
    candidates advancing no ticket use G0 without Java/SDK setup. PR module changes
    use dependency-aware G2; shared/build/unknown changes use full devices. Merge
    queue entries (`merge_group`) are verified like pull requests from the group's
-   base, so a branch behind `main` needs no update unless GitHub reports a conflict. Main
+   base. A branch behind `main` needs no local rerun; if GitHub asks for an
+   up-to-date branch before merging, "Update branch" and the unattended hosted
+   rerun are enough, and only a reported conflict needs a manual merge. Main
    code pushes keep G1 for trusted cache warming; documentation pushes can use G0.
    Nightly/manual runs remain full G2. Reports are retained for 90 days:
    `gh run download <run id> -n quality-reports`.

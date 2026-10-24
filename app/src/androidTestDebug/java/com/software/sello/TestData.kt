@@ -12,8 +12,17 @@ object TestData {
     private val context: Context
         get() = InstrumentationRegistry.getInstrumentation().targetContext
 
-    private val tables =
-        listOf("expense", "income", "month_limit", "default_limit", "category", "operation_receipt")
+    private val tables = listOf(
+        "featured_goal",
+        "goal_event",
+        "goal",
+        "expense",
+        "income",
+        "month_limit",
+        "default_limit",
+        "category",
+        "operation_receipt"
+    )
 
     private fun <T> database(flags: Int, use: (SQLiteDatabase) -> T): T =
         SQLiteDatabase.openDatabase(context.getDatabasePath("sello.db").path, null, flags)
@@ -27,6 +36,7 @@ object TestData {
             // Not a financial record: only what an undo would put back.
             database.execSQL("DELETE FROM deleted_expense")
             database.execSQL("DELETE FROM deleted_income")
+            database.execSQL("DELETE FROM deleted_goal_event")
             database.execSQL("UPDATE profile SET revision = 0")
             database.setTransactionSuccessful()
         } finally {

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
@@ -25,6 +26,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -535,6 +537,27 @@ class ComponentContractsTest {
         }) {
             rule.onNodeWithContentDescription("2.460.000 pesos").assertIsDisplayed()
             rule.onNodeWithText("350.000 en octubre").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun goalsBandTotalWithoutAportesThisMonthLeavesOutItsSecondLine() {
+        val saved = MoneyTextValue(MoneySign.None, "", "100.000", "100.000 pesos")
+        rule.inEveryScheme(content = {
+            Column {
+                GoalsBandTotal(
+                    "Guardado en metas",
+                    saved,
+                    "350.000 en octubre",
+                    Modifier.testTag("with")
+                )
+                GoalsBandTotal("Guardado en metas", saved, null, Modifier.testTag("without"))
+            }
+        }) {
+            val with = rule.onNodeWithTag("with").getUnclippedBoundsInRoot()
+            val without = rule.onNodeWithTag("without").getUnclippedBoundsInRoot()
+            assertTrue("$without is shorter than $with", without.height + 12.dp < with.height)
+            rule.onAllNodesWithContentDescription("100.000 pesos").assertCountEquals(2)
         }
     }
 

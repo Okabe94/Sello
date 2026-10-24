@@ -344,7 +344,11 @@ fun GoalCard(
     }
 }
 
-/** A completed goal: its icon in ink, name and detail, and the stamp on the trailing edge. */
+/**
+ * A completed goal: its icon in ink, name and detail, and the stamp on the trailing edge.
+ * With [land] the stamp comes down once as the row appears, as when revisiting Metas;
+ * a revisit is no new result, so it makes no haptic.
+ */
 @Composable
 fun CompletedGoalRow(
     name: String,
@@ -352,7 +356,8 @@ fun CompletedGoalRow(
     icon: SelloIcon,
     stamp: String,
     onOpen: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    land: Boolean = false
 ) {
     Slip(modifier.fillMaxWidth(), onClick = onOpen) {
         Row(
@@ -368,7 +373,7 @@ fun CompletedGoalRow(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-            Stamp(stamp, StampInk.Good)
+            Stamp(stamp, StampInk.Good, land = land, haptic = false)
         }
     }
 }

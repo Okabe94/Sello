@@ -39,7 +39,8 @@ object StampDefaults {
  * sentence case and is what a screen reader says; it is drawn in capitals.
  *
  * With [land] the stamp comes down once when it first appears. Pass it only when the
- * verdict has just been confirmed. Reduced motion shows the stamp at rest.
+ * verdict has just been confirmed, or with [haptic] false for a verdict revisited.
+ * Reduced motion shows the stamp at rest.
  */
 @Composable
 fun Stamp(
@@ -49,7 +50,8 @@ fun Stamp(
     size: StampSize = StampSize.Small,
     angle: Float = StampDefaults.angle(size),
     land: Boolean = false,
-    inkRing: Boolean = false
+    inkRing: Boolean = false,
+    haptic: Boolean = true
 ) {
     val colors = SelloTheme.colors
     val color = when (ink) {
@@ -86,7 +88,7 @@ fun Stamp(
     val ring = remember { Animatable(0f) }
     val haptics = LocalHapticFeedback.current
     LaunchedEffect(Unit) {
-        if (land) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+        if (land && haptic) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
         if (animate) {
             progress.animateTo(1f, SelloMotion.stamp())
             if (inkRing) ring.animateTo(1f, SelloMotion.emphasized())

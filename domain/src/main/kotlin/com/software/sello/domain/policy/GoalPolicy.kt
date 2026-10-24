@@ -9,11 +9,13 @@ import com.software.sello.domain.model.GoalHistoryError
 import com.software.sello.domain.model.GoalId
 import com.software.sello.domain.model.GoalMovement
 import com.software.sello.domain.model.GoalMovementKind
+import com.software.sello.domain.model.GoalOverview
 import com.software.sello.domain.model.GoalPace
 import com.software.sello.domain.model.GoalPlace
 import com.software.sello.domain.model.GoalProgress
 import com.software.sello.domain.model.GoalTargetChange
 import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.MonthContribution
 import com.software.sello.domain.model.NextPlace
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.PlaceProgress
@@ -33,7 +35,18 @@ object GoalPolicy {
     private val hundred: BigInteger = BigInteger.valueOf(100)
     private val stampPlaces = listOf(GoalPlace.Quarter, GoalPlace.Half, GoalPlace.ThreeQuarters)
 
-    fun progress(history: GoalHistory): Outcome<GoalProgress, GoalHistoryError> {
+    /** How many months Aportes por mes shows at most. */
+    const val CHART_MONTHS = 6
+
+    /** The history replayed in recording order, and the event that first reached each place. */
+    private class Replay(
+        val saved: BigInteger,
+        val target: TransactionAmount,
+        val contributions: Int,
+        val earned: Map<GoalPlace, GoalEvent>
+    )
+
+    private fun replay(history: GoalHistory): Outcome<Replay, GoalHistoryError> {
         val events = history.events.sortedBy(GoalEvent::sequence)
         if (events.firstOrNull() !is GoalTargetChange) {
             return Outcome.Failure(GoalHistoryError.NoTarget)
@@ -41,7 +54,7 @@ object GoalPolicy {
         var saved = BigInteger.ZERO
         var target = (events.first() as GoalTargetChange).target
         var contributions = 0
-        val earned = mutableMapOf<GoalPlace, LocalDate>()
+        val earned = mutableMapOf<GoalPlace, GoalEvent>()
         for (event in events) {
             when (event) {
                 is GoalTargetChange -> target = event.target
@@ -68,8 +81,19 @@ object GoalPolicy {
                 }
             }
             stampPlaces.filter { it !in earned && reached(saved, target, it) }
-                .forEach { earned[it] = event.recordedOn }
+                .forEach { earned[it] = event }
         }
+        return Outcome.Success(Replay(saved, target, contributions, earned))
+    }
+
+    fun progress(history: GoalHistory): Outcome<GoalProgress, GoalHistoryError> {
+        val replay = when (val replayed = replay(history)) {
+            is Outcome.Success -> replayed.value
+            is Outcome.Failure -> return replayed
+        }
+        val saved = replay.saved
+        val target = replay.target
+        val earned = replay.earned.mapValues { (_, event) -> event.recordedOn }
         val total = money(saved) ?: return Outcome.Failure(GoalHistoryError.Unrepresentable)
         val completedOn = history.goal.completedOn
         val places = GoalPlace.entries.map { place ->
@@ -100,7 +124,7 @@ object GoalPolicy {
                 percentage = (saved * hundred / units(target)).toLong(),
                 places = places,
                 next = next,
-                contributions = contributions,
+                contributions = replay.contributions,
                 completed = completedOn != null
             )
         )
@@ -120,6 +144,96 @@ object GoalPolicy {
             reachedMeta = before?.state(GoalPlace.Meta) != PlaceState.Ready &&
                 after.state(GoalPlace.Meta) == PlaceState.Ready
         )
+    }
+
+    /**
+     * The [GoalEvent.sequence] of the event that first earned each place, as the goal's
+     * history now stands: a movement list shows the stamp beside that aporte. The Meta
+     * stamp, and any stamp given only at completion (MT26), belong to no event.
+     */
+    fun earnedBy(history: GoalHistory): Outcome<Map<GoalPlace, Long>, GoalHistoryError> =
+        when (val replayed = replay(history)) {
+            is Outcome.Success ->
+                Outcome.Success(replayed.value.earned.mapValues { (_, event) -> event.sequence })
+
+            is Outcome.Failure -> replayed
+        }
+
+    /**
+     * Metas' order: active goals by highest exact completion (saved ÷ target, not the
+     * rounded percentage), the earlier created on a tie; then completed goals, the most
+     * recently completed first, the earlier created on a tie.
+     */
+    fun <T> ordered(goals: List<T>, goal: (T) -> Goal, progress: (T) -> GoalProgress): List<T> {
+        val (active, completed) = goals.partition { goal(it).completedOn == null }
+        val byCompletion = Comparator<T> { a, b ->
+            val aProgress = progress(a)
+            val bProgress = progress(b)
+            (units(bProgress.saved) * units(aProgress.target))
+                .compareTo(units(aProgress.saved) * units(bProgress.target))
+        }.thenBy { goal(it).createdAt }
+        val byCompletedOn = compareByDescending<T> { goal(it).completedOn }
+            .thenBy { goal(it).createdAt }
+        return active.sortedWith(byCompletion) + completed.sortedWith(byCompletedOn)
+    }
+
+    /**
+     * Metas' band for [month]: active goals only, exact; a total that does not fit an
+     * amount is reported, never clipped.
+     */
+    fun overview(
+        goals: List<Pair<GoalHistory, GoalProgress>>,
+        month: YearMonth
+    ): Outcome<GoalOverview, GoalHistoryError> {
+        val active = goals.filter { (history, _) -> history.goal.completedOn == null }
+        val saved = active.sumOf { (_, progress) -> units(progress.saved) }
+        val contributed = active.sumOf { (history, _) ->
+            history.events.filterIsInstance<GoalMovement>()
+                .filter {
+                    it.kind == GoalMovementKind.Contribution && YearMonth.from(it.date) == month
+                }
+                .sumOf { units(it.amount) }
+        }
+        val savedMoney = money(saved) ?: return Outcome.Failure(GoalHistoryError.Unrepresentable)
+        val contributedMoney =
+            money(contributed) ?: return Outcome.Failure(GoalHistoryError.Unrepresentable)
+        return Outcome.Success(GoalOverview(savedMoney, contributedMoney))
+    }
+
+    /** What is still missing to the target; nothing once it is reached or passed. */
+    fun missing(progress: GoalProgress): Money =
+        Money.cop(maxOf(units(progress.target) - units(progress.saved), BigInteger.ZERO).toLong())
+
+    /**
+     * Aportes por mes: the aportes dated in each month, withdrawals not subtracted, for
+     * up to [CHART_MONTHS] months ending in [today]'s month, or in the month a completed
+     * goal was completed. The first month is never earlier than the goal's first: the
+     * month it was created in, or an earlier aporte's date.
+     */
+    fun monthlyContributions(
+        history: GoalHistory,
+        today: LocalDate
+    ): Outcome<List<MonthContribution>, GoalHistoryError> {
+        val last = YearMonth.from(history.goal.completedOn ?: today)
+        val movements = history.events.filterIsInstance<GoalMovement>()
+        val first = (
+            history.events.map { YearMonth.from(it.recordedOn) } +
+                movements.map { YearMonth.from(it.date) }
+            ).minOrNull() ?: last
+        val start = maxOf(first, last.minusMonths(CHART_MONTHS - 1L)).coerceAtMost(last)
+        val contributions = mutableListOf<MonthContribution>()
+        var month = start
+        while (month <= last) {
+            val sum = movements
+                .filter {
+                    it.kind == GoalMovementKind.Contribution && YearMonth.from(it.date) == month
+                }
+                .sumOf { units(it.amount) }
+            val amount = money(sum) ?: return Outcome.Failure(GoalHistoryError.Unrepresentable)
+            contributions += MonthContribution(month, amount)
+            month = month.plusMonths(1)
+        }
+        return Outcome.Success(contributions)
     }
 
     /** A movement may be dated [today] or earlier, never later (rule 9). */

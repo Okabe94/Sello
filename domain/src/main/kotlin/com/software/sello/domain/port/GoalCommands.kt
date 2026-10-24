@@ -18,6 +18,7 @@ import com.software.sello.domain.model.TransactionAmount
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.time.Duration
+import kotlinx.coroutines.flow.Flow
 
 /**
  * A change to goals (docs/testing/goal-examples.md). Every command names its attempt
@@ -232,9 +233,24 @@ data class GoalBoard(
     val featured: GoalId?
 )
 
+/** The board as [GoalReads.observeBoard] sees it. A failed read keeps the last good board. */
+sealed interface GoalBoardState {
+    data object Loading : GoalBoardState
+
+    data class Ready(val board: GoalBoard) : GoalBoardState
+
+    data class Failed(val failure: StorageFailure, val lastGood: GoalBoard?) : GoalBoardState
+}
+
 interface GoalReads {
     /** One damaged goal fails the read: it is never left out. */
     suspend fun board(): Outcome<GoalBoard, StorageFailure>
+
+    /**
+     * [board], read again after every committed change: Loading first, then each read.
+     * A failure is a state with the last good board, never an empty one.
+     */
+    fun observeBoard(): Flow<GoalBoardState>
 
     suspend fun goal(id: GoalId): Outcome<GoalSummary?, StorageFailure>
 }

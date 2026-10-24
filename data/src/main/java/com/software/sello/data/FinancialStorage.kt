@@ -92,10 +92,7 @@ class FinancialStorage internal constructor(
 
     val incomeReads: IncomeReads = RoomIncomeReads(database)
 
-    /**
-     * Goals. A deleted movement shares the one offer to undo with expenses and income.
-     * Nothing composes this yet; the Metas screens do (SELLO-089).
-     */
+    /** Goals. A deleted movement shares the one offer to undo with expenses and income. */
     fun goalCommands(
         audit: AuditClock,
         clock: FinancialClock,

@@ -61,14 +61,21 @@ class SelloNavigation(
 /**
  * The action that starts an entry from anywhere: the dock above the tabs, or the "+" on
  * a rail. [label] is also what it is called by a screen reader; the dock shows
- * [actionLabel].
+ * [actionLabel]. [tone] and [icon] tell a tab's own action apart, as Metas' green flag
+ * does; both the dock and the rail's button take them.
  */
 @Immutable
-class SelloDock(val label: String, val actionLabel: String, val onClick: () -> Unit)
+class SelloDock(
+    val label: String,
+    val actionLabel: String,
+    val onClick: () -> Unit,
+    val tone: ButtonTone = ButtonTone.Brand,
+    val icon: SelloIcon = SelloIcon.Add
+)
 
 /**
  * The rail that replaces the tab bar in short and expanded windows. With a [dock] its
- * "+" button replaces the dock.
+ * button, in the dock's tone and with its icon, replaces the dock.
  */
 @Composable
 fun SelloNavigationRail(
@@ -89,13 +96,14 @@ fun SelloNavigationRail(
             .padding(vertical = 8.dp)
     ) {
         if (dock != null) {
+            val (container, content) = dock.tone.inks()
             IconButton(
                 onClick = dock.onClick,
                 modifier = Modifier
                     .size(SelloTheme.spacing.minTouchTarget)
-                    .background(colors.brand, SelloTheme.shapes.button)
+                    .background(container, SelloTheme.shapes.button)
             ) {
-                Icon(SelloIcon.Add.painter(), dock.label, tint = colors.onBrand)
+                Icon(dock.icon.painter(), dock.label, tint = content)
             }
         }
         Column(modifier = Modifier.fillMaxWidth().selectableGroup()) {

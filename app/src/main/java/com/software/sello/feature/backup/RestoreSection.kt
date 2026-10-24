@@ -177,7 +177,7 @@ private fun Preview(
     }
 }
 
-/** Now and backup, side by side: categories, expenses, incomes. */
+/** Now and backup, side by side: categories, expenses, incomes, and goals when either has any. */
 @Composable
 private fun Counts(current: BackupSummary, replacement: BackupSummary) {
     val now = stringResource(R.string.restore_preview_now)
@@ -190,8 +190,10 @@ private fun Counts(current: BackupSummary, replacement: BackupSummary) {
     listOf(
         Triple(R.string.backup_categories, current.categories, replacement.categories),
         Triple(R.string.backup_expenses, current.expenses, replacement.expenses),
-        Triple(R.string.backup_incomes, current.incomes, replacement.incomes)
-    ).forEach { (label, before, after) ->
+        Triple(R.string.backup_incomes, current.incomes, replacement.incomes),
+        Triple(R.string.backup_goals, current.goals, replacement.goals)
+            .takeIf { current.goals > 0 || replacement.goals > 0 }
+    ).filterNotNull().forEach { (label, before, after) ->
         val name = stringResource(label)
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -19,6 +19,24 @@ interface GoalDao {
     @Query("SELECT * FROM goal WHERE id = :id")
     suspend fun byId(id: String): GoalEntity?
 
+    @Query("SELECT COUNT(*) FROM goal")
+    suspend fun count(): Int
+
+    @Query("DELETE FROM goal_event")
+    suspend fun deleteAllEvents()
+
+    @Query("DELETE FROM featured_goal")
+    suspend fun deleteFeatured()
+
+    @Query("DELETE FROM goal")
+    suspend fun deleteAll()
+
+    @Insert
+    suspend fun insertAll(goals: List<GoalEntity>)
+
+    @Insert
+    suspend fun insertAllEvents(events: List<GoalEventEntity>)
+
     /** Every goal, the earliest created first. */
     @Query("SELECT * FROM goal ORDER BY created_at, id")
     suspend fun all(): List<GoalEntity>

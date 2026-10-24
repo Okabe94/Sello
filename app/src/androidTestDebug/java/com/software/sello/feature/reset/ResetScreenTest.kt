@@ -35,7 +35,7 @@ class ResetScreenTest {
     private val word get() = rule.onNodeWithContentDescription("Escribe BORRAR para confirmar")
     private val actions = mutableListOf<ResetAction>()
     private var closes = 0
-    private val preview = ResetPreview(BackupSummary(3, 42, 1), generation = 1, revision = 9)
+    private val preview = ResetPreview(BackupSummary(3, 42, 1, 0), generation = 1, revision = 9)
     private val operation =
         (OperationId.of("00000000-0000-4000-8000-000000007000") as Outcome.Success).value
 
@@ -73,10 +73,22 @@ class ResetScreenTest {
 
     @Test
     fun largeCountsGroupTheirThousands() {
-        show(ResetState(ResetStep.Ready(preview.copy(current = BackupSummary(20, 10_000, 2_000)))))
+        show(
+            ResetState(ResetStep.Ready(preview.copy(current = BackupSummary(20, 10_000, 2_000, 0))))
+        )
 
         rule.onNodeWithText(
             "Se borran 20 categorías, 10.000 gastos y 2.000 ingresos, con sus límites y notas.",
+            substring = true
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun goalsAreCountedOnlyWhenThereAreAny() {
+        show(ResetState(ResetStep.Ready(preview.copy(current = BackupSummary(2, 10, 1, 3)))))
+
+        rule.onNodeWithText(
+            "Se borran 2 categorías, 10 gastos, 1 ingreso y 3 metas, con sus límites y notas.",
             substring = true
         ).assertIsDisplayed()
     }

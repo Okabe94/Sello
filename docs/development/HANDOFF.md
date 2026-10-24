@@ -87,6 +87,7 @@ tracks the remaining financial inputs.
 | [SELLO-085](../planning/mvp/epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing) | Metas [gap list](../design/v2/gaps/metas.md): the goal visuals exist in the design system and catalog; data, rules, the tab and screens do not. SELLO-089–094 now reuse those components. |
 | [SELLO-086](../planning/mvp/epics/E17-goals.md#sello-086--approve-goal-rules-and-worked-examples) | [Goal rules and examples](../testing/goal-examples.md): saved, percentage (may pass 100 %), stamps worked out from the recorded history so nothing is earned twice, corrections, target changes, completion and Recibo's goal. |
 | [SELLO-087](../planning/mvp/epics/E17-goals.md#sello-087--store-goals-and-their-movements) | Goals are stored (schema 4) as their recorded history, with commands, receipts, the shared undo, a 10-second Deshacer after completion and reads; `GoalPolicy` works out saved, %, stamps and pace. No screen uses them, and backups, restore and erase-all do not include goals until SELLO-088. |
+| [SELLO-088](../planning/mvp/epics/E17-goals.md#sello-088--carry-goals-through-backup-restore-and-erase) | Backups are format version 2 with goals and Recibo's choice (version 1 still restores); restore replaces goals and erase-all removes them; the counts add Metas only when there are goals. |
 | [SELLO-061](../planning/mvp/epics/E12-v2-recibo.md#sello-061--replace-the-pace-verdict-with-the-factual-budget-status) | Recibo and category detail judge recorded spending, not pace: Al día, Al límite, Excedido; past months Cumplido or Excedido. Resumen keeps its words. |
 | [SELLO-062](../planning/mvp/epics/E12-v2-recibo.md#sello-062--rebuild-the-recibo-answer-slip-to-v2) | Recibo's answer slip reads "Restante del presupuesto" with a signed remainder, the per-day figure under a tear line and a closing line for past months. The Ajustar presupuesto link is SELLO-067. |
 | [SELLO-063](../planning/mvp/epics/E12-v2-recibo.md#sello-063--update-the-recibo-categories-card-and-first-use-and-failed-states) | Recibo's categories card has a header **+**; first use and a failed read use the v2 copy and centred slips. |
@@ -111,7 +112,7 @@ tracks the remaining financial inputs.
 - SELLO-074 ([E14](../planning/mvp/epics/E14-assistive-technology.md)): the manual
   TalkBack, Switch Access and keyboard pass, moved post-MVP by the owner on
   2026-10-23. E13 is done without it.
-- SELLO-079, SELLO-083, SELLO-084 and SELLO-088–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
+- SELLO-079, SELLO-083, SELLO-084 and SELLO-089–113 ([E16](../planning/mvp/epics/E16-v2-today-gaps.md)–[E19](../planning/mvp/epics/E19-investments.md)):
   the rest of today's v2 screens (SELLO-080–082 are done; the SELLO-079 audit credits
   them), then Metas, recurrence and Inversiones,
   released together as `0.2.0`; decisions in [ADR 0017](../decisions/0017-goals-recurrence-investments.md).

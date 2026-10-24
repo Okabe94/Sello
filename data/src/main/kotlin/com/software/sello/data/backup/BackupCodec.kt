@@ -2,6 +2,11 @@ package com.software.sello.data.backup
 
 import com.software.sello.domain.model.AutomaticBudget
 import com.software.sello.domain.model.BudgetLimit
+import com.software.sello.domain.model.GoalEvent
+import com.software.sello.domain.model.GoalHistory
+import com.software.sello.domain.model.GoalMovement
+import com.software.sello.domain.model.GoalMovementKind
+import com.software.sello.domain.model.GoalTargetChange
 import com.software.sello.domain.model.IncomeSource
 import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.policy.EffectiveDates
@@ -21,7 +26,12 @@ import kotlinx.serialization.json.JsonPrimitive
 /** The fixed parts of the format; see docs/data/backup-format.md. */
 object BackupFormat {
     const val FORMAT = "sello-backup"
-    const val VERSION = 1L
+
+    /** What this app writes. */
+    const val VERSION = 2L
+
+    /** What it reads: version 1 files, which hold no goals, and its own. */
+    val READABLE = 1L..VERSION
     const val MIME_TYPE = "application/json"
 
     private val stamp = DateTimeFormatter.ofPattern("uuuu-MM-dd-HHmm")
@@ -32,8 +42,8 @@ object BackupFormat {
 }
 
 /**
- * Writes and reads version 1 backups. Reading never touches storage: a file either
- * becomes a [BackupPlan] or is rejected whole with the first problem found.
+ * Writes version 2 backups and reads versions 1 and 2. Reading never touches storage:
+ * a file either becomes a [BackupPlan] or is rejected whole with the first problem found.
  */
 class BackupCodec(private val bounds: BackupBounds = BackupBounds()) {
     /**
@@ -41,7 +51,7 @@ class BackupCodec(private val bounds: BackupBounds = BackupBounds()) {
      * out a backup it would itself refuse to restore.
      */
     fun encode(contents: BackupContents): Outcome<ByteArray, BackupRejection> {
-        val text = writer.encodeToString(BackupFileV1.serializer(), contents.toWire())
+        val text = writer.encodeToString(BackupFileV2.serializer(), contents.toWire())
         val bytes = "$text\n".toByteArray(Charsets.UTF_8)
         return when (val check = read(bytes)) {
             is Outcome.Success -> Outcome.Success(bytes)
@@ -70,9 +80,16 @@ class BackupCodec(private val bounds: BackupBounds = BackupBounds()) {
         }
         val text = utf8(bytes) ?: return Outcome.Failure(BackupRejection.Malformed(null))
         scanStructure(text, bounds)?.let { return Outcome.Failure(it) }
-        header(text)?.let { return Outcome.Failure(it) }
+        val version = when (val header = header(text)) {
+            is Outcome.Success -> header.value
+            is Outcome.Failure -> return header
+        }
         val file = try {
-            reader.decodeFromString(BackupFileV1.serializer(), text)
+            if (version == 1L) {
+                reader.decodeFromString(BackupFileV1.serializer(), text).asVersion2()
+            } else {
+                reader.decodeFromString(BackupFileV2.serializer(), text)
+            }
         } catch (failure: SerializationException) {
             return Outcome.Failure(BackupRejection.Malformed(pathOf(failure)))
         } catch (failure: IllegalArgumentException) {
@@ -84,27 +101,25 @@ class BackupCodec(private val bounds: BackupBounds = BackupBounds()) {
         }
     }
 
-    /** A file says what it is before the rest of it is held to version 1's shape. */
-    private fun header(text: String): BackupRejection? {
+    /** A file says what it is, and which version, before the rest of it is held to that shape. */
+    private fun header(text: String): Outcome<Long, BackupRejection> {
         val header = try {
             headerReader.decodeFromString(BackupHeaderWire.serializer(), text)
         } catch (_: SerializationException) {
-            return BackupRejection.NotSelloBackup
+            return Outcome.Failure(BackupRejection.NotSelloBackup)
         } catch (_: IllegalArgumentException) {
-            return BackupRejection.NotSelloBackup
+            return Outcome.Failure(BackupRejection.NotSelloBackup)
         }
         val format = header.format as? JsonPrimitive
         if (format == null || !format.isString || format.content != BackupFormat.FORMAT) {
-            return BackupRejection.NotSelloBackup
+            return Outcome.Failure(BackupRejection.NotSelloBackup)
         }
         val version = header.version?.wholeNumberOrNull()
-            ?: return BackupRejection.NotSelloBackup
-        return if (version ==
-            BackupFormat.VERSION
-        ) {
-            null
+            ?: return Outcome.Failure(BackupRejection.NotSelloBackup)
+        return if (version in BackupFormat.READABLE) {
+            Outcome.Success(version)
         } else {
-            BackupRejection.UnsupportedVersion(version)
+            Outcome.Failure(BackupRejection.UnsupportedVersion(version))
         }
     }
 
@@ -147,13 +162,14 @@ private fun BudgetLimit.kind() = when (this) {
 /**
  * Records are written in a fixed order, so the same data always makes the same file:
  * categories by creation then identifier, limits by category then month, records by
- * date then sequence.
+ * date then sequence, goals by creation then identifier, each goal's history by
+ * recording position.
  */
-internal fun BackupContents.toWire(): BackupFileV1 = BackupFileV1(
+internal fun BackupContents.toWire(): BackupFileV2 = BackupFileV2(
     format = BackupFormat.FORMAT,
     version = JsonPrimitive(BackupFormat.VERSION),
     exportedAt = exportedAt.toString(),
-    financial = FinancialV1(
+    financial = FinancialV2(
         sourceRevision = JsonPrimitive(financial.revision),
         zone = financial.zone.id,
         categories = financial.categories
@@ -221,7 +237,11 @@ internal fun BackupContents.toWire(): BackupFileV1 = BackupFileV1(
                     createdAt = it.createdAt.toString(),
                     updatedAt = it.updatedAt.toString()
                 )
-            }
+            },
+        goals = financial.goals
+            .sortedWith(compareBy({ it.goal.createdAt }, { it.goal.id.value }))
+            .map { history -> history.toWire() },
+        featuredGoal = financial.featuredGoal?.value
     ),
     preferences = preferences?.let {
         PreferencesV1(
@@ -230,5 +250,47 @@ internal fun BackupContents.toWire(): BackupFileV1 = BackupFileV1(
             categoryOrder = WireNames.orders.getValue(it.ordering.order),
             categoryDirection = WireNames.directions.getValue(it.ordering.direction)
         )
+    }
+)
+
+private fun GoalHistory.toWire(): GoalV2 = GoalV2(
+    id = goal.id.value,
+    name = goal.name.value,
+    icon = goal.icon.value,
+    targetMonth = goal.targetMonth?.let(EffectiveDates::storedText),
+    completedOn = goal.completedOn?.let(EffectiveDates::storedText),
+    createdAt = goal.createdAt.toString(),
+    updatedAt = goal.updatedAt.toString(),
+    history = events.sortedBy(GoalEvent::sequence).map { event ->
+        when (event) {
+            is GoalTargetChange -> GoalEventV2(
+                id = null,
+                sequence = JsonPrimitive(event.sequence),
+                kind = WireNames.TARGET,
+                amount = JsonPrimitive(event.target.money.minorUnits),
+                currency = event.target.money.currency.code,
+                date = null,
+                recordedOn = EffectiveDates.storedText(event.recordedOn),
+                note = null,
+                createdAt = null,
+                updatedAt = null
+            )
+
+            is GoalMovement -> GoalEventV2(
+                id = event.id.value,
+                sequence = JsonPrimitive(event.sequence),
+                kind = when (event.kind) {
+                    GoalMovementKind.Contribution -> WireNames.CONTRIBUTION
+                    GoalMovementKind.Withdrawal -> WireNames.WITHDRAWAL
+                },
+                amount = JsonPrimitive(event.amount.money.minorUnits),
+                currency = event.amount.money.currency.code,
+                date = EffectiveDates.storedText(event.date),
+                recordedOn = EffectiveDates.storedText(event.recordedOn),
+                note = event.note?.value,
+                createdAt = event.createdAt.toString(),
+                updatedAt = event.updatedAt.toString()
+            )
+        }
     }
 )

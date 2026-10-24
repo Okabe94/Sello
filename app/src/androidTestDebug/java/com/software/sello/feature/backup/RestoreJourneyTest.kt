@@ -178,7 +178,9 @@ class RestoreJourneyTest {
                             ).value(),
                             day, 1, amount(200_000), IncomeSource.Salary, null, 1, at, at
                         )
-                    )
+                    ),
+                    goals = emptyList(),
+                    featuredGoal = null
                 ),
                 preferences = PortablePreferences(
                     AppearancePreference(ThemePreference.Dark, InkPreference.Violeta),

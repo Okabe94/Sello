@@ -94,8 +94,7 @@ class FinancialStorage internal constructor(
 
     /**
      * Goals. A deleted movement shares the one offer to undo with expenses and income.
-     * Nothing composes this yet: goals reach backups, restore and erase-all in
-     * SELLO-088, before any screen can create one.
+     * Nothing composes this yet; the Metas screens do (SELLO-089).
      */
     fun goalCommands(
         audit: AuditClock,

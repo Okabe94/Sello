@@ -121,6 +121,7 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
         this[BACKUP_CATEGORIES] = last.summary.categories
         this[BACKUP_EXPENSES] = last.summary.expenses
         this[BACKUP_INCOMES] = last.summary.incomes
+        this[BACKUP_GOALS] = last.summary.goals
         remove(BACKUP_UNFINISHED)
     }
 
@@ -250,11 +251,14 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
         val counts =
             listOf(stored[BACKUP_CATEGORIES]!!, stored[BACKUP_EXPENSES]!!, stored[BACKUP_INCOMES]!!)
         if (bytes < 0 || counts.any { it < 0 }) return Decoded.Invalid
+        // Absent in a record kept before goals existed (0.1.0), when there were none.
+        val goals = stored[BACKUP_GOALS] ?: 0
+        if (goals < 0) return Decoded.Invalid
         val last = LastBackup(
             at = Instant.ofEpochMilli(stored[BACKUP_AT]!!),
             name = stored[BACKUP_NAME]!!,
             bytes = bytes,
-            summary = BackupSummary(counts[0], counts[1], counts[2])
+            summary = BackupSummary(counts[0], counts[1], counts[2], goals)
         )
         return Decoded.Value(BackupRecord(last, unfinished))
     }
@@ -279,6 +283,7 @@ class DataStoreUserPreferences internal constructor(private val data: DataStore<
         val BACKUP_CATEGORIES = intPreferencesKey("backup_last_categories_v1")
         val BACKUP_EXPENSES = intPreferencesKey("backup_last_expenses_v1")
         val BACKUP_INCOMES = intPreferencesKey("backup_last_incomes_v1")
+        val BACKUP_GOALS = intPreferencesKey("backup_last_goals_v1")
 
         val ThemePreference.stored: String
             get() = when (this) {

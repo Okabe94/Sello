@@ -17,7 +17,9 @@ and [ADR 0008](../decisions/0008-unreadable-storage-start-over.md) define the ru
 | Database schema 3 | 4 | Upgraded on open; rows kept, empty goal tables added | `ExportedSchemaOnDeviceTest` |
 | Database schema 4 | 4 | Opens and keeps its rows | `ExportedSchemaOnDeviceTest` |
 | A newer schema than 4 | — | Not opened: the start-up failure screen; the file is kept whole | `UnreadableFileSetAsideTest.aFileFromANewerVersionIsStillWholeAndReadableWhereItWasKept` |
-| Backup format 1 | schema 4 | Restored, every record at version 1 (versions are not in a backup) | `RecoveryRetentionTest`, `RestoreCommandContractTest` |
+| Backup format 1 | schema 4 | Restored, every record at version 1 (versions are not in a backup); no goals | `RecoveryRetentionTest`, `RestoreCommandContractTest`, `GoalBackupTest` |
+| Backup format 2 | schema 4 | Restored with its goals and Recibo's choice, replacing the goals there; same figures on a fresh installation | `GoalBackupRestoreTest`, `GoalBackupTest` |
+| Erase all with goals | schema 4 | Every goal, its history, the undo copy and the choice removed | `GoalBackupRestoreTest` |
 | A newer backup format | — | Refused as "Lo hizo una versión más nueva de Sello"; nothing changes | `RestoreCommandContractTest.aFileThatCannotBeRestoredChangesNothingAndIsNotKept` |
 
 There is no schema before 1 and no migration from it. The earlier FinanceTracker

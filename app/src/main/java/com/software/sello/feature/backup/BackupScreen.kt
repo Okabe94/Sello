@@ -238,6 +238,9 @@ private fun LastBackupSlip(state: BackupState, onAction: (BackupAction) -> Unit)
         LeaderLine(stringResource(R.string.backup_categories), countText(last.summary.categories))
         LeaderLine(stringResource(R.string.backup_expenses), countText(last.summary.expenses))
         LeaderLine(stringResource(R.string.backup_incomes), countText(last.summary.incomes))
+        if (last.summary.goals > 0) {
+            LeaderLine(stringResource(R.string.backup_goals), countText(last.summary.goals))
+        }
         LeaderLine(
             stringResource(R.string.backup_size),
             Formatter.formatShortFileSize(context, last.bytes)

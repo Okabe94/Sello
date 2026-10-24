@@ -84,21 +84,7 @@ private fun Restored(summary: BackupSummary, onLeave: () -> Unit) {
         RestoreBody(
             stringResource(
                 R.string.restore_done_body,
-                pluralStringResource(
-                    R.plurals.restore_categories,
-                    summary.categories,
-                    countText(summary.categories)
-                ),
-                pluralStringResource(
-                    R.plurals.restore_expenses,
-                    summary.expenses,
-                    countText(summary.expenses)
-                ),
-                pluralStringResource(
-                    R.plurals.restore_incomes,
-                    summary.incomes,
-                    countText(summary.incomes)
-                )
+                contentsText(summary, withGoals = summary.goals > 0)
             )
         )
         GoToRecibo(onLeave)
@@ -235,3 +221,49 @@ const val RESTORE_DONE_TAG = "restore:done"
 const val RESTORE_PENDING_TAG = "restore:pending"
 const val RESTORE_APPLY_TAG = "restore:apply"
 const val RESTORE_LEAVE_TAG = "restore:leave"
+
+/**
+ * What a backup or the phone holds, in words: "2 categorías, 3 gastos y 1 ingreso",
+ * with "y 3 metas" at the end only when [withGoals], so nothing changes for a history
+ * without goals.
+ */
+@Composable
+fun contentsText(summary: BackupSummary, withGoals: Boolean): String {
+    val items = buildList {
+        add(
+            pluralStringResource(
+                R.plurals.restore_categories,
+                summary.categories,
+                countText(summary.categories)
+            )
+        )
+        add(
+            pluralStringResource(
+                R.plurals.restore_expenses,
+                summary.expenses,
+                countText(summary.expenses)
+            )
+        )
+        add(
+            pluralStringResource(
+                R.plurals.restore_incomes,
+                summary.incomes,
+                countText(summary.incomes)
+            )
+        )
+        if (withGoals) {
+            add(
+                pluralStringResource(
+                    R.plurals.restore_goals,
+                    summary.goals,
+                    countText(summary.goals)
+                )
+            )
+        }
+    }
+    var joined = stringResource(R.string.restore_list_two, items[items.size - 2], items.last())
+    for (item in items.dropLast(2).reversed()) {
+        joined = stringResource(R.string.restore_list_more, item, joined)
+    }
+    return joined
+}

@@ -53,6 +53,7 @@ import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.restore.RestoreBody
 import com.software.sello.presentation.restore.RestoreHeading
 import com.software.sello.presentation.restore.RestoredSlip
+import com.software.sello.presentation.restore.contentsText
 import com.software.sello.presentation.restore.message
 
 /**
@@ -248,21 +249,7 @@ private fun Preview(
         RestoreBody(
             stringResource(
                 R.string.startup_restore_counts,
-                pluralStringResource(
-                    R.plurals.restore_categories,
-                    contents.categories,
-                    countText(contents.categories)
-                ),
-                pluralStringResource(
-                    R.plurals.restore_expenses,
-                    contents.expenses,
-                    countText(contents.expenses)
-                ),
-                pluralStringResource(
-                    R.plurals.restore_incomes,
-                    contents.incomes,
-                    countText(contents.incomes)
-                )
+                contentsText(contents, withGoals = contents.goals > 0)
             )
         )
         RestoreBody(stringResource(R.string.startup_restore_warning))

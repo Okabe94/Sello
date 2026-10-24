@@ -365,7 +365,7 @@
     <string name="startup_start_over_cancel">Cancelar</string>
     <string name="startup_failure_restore">Restaurar un respaldo</string>
     <string name="startup_restore_title">¿Restaurar este respaldo?</string>
-    <string name="startup_restore_counts">Tiene %1$s, %2$s y %3$s.</string>
+    <string name="startup_restore_counts">Tiene %1$s.</string>
     <string name="startup_restore_warning">Lo que no se pudo abrir queda guardado aparte en este teléfono, como al empezar de cero, y Sello se llena con el respaldo. También se restauran la zona horaria, la apariencia y el orden del respaldo.</string>
     <string name="startup_restore_confirm">Restaurar el respaldo</string>
     <string name="startup_restore_interrupted_title">La restauración no terminó</string>
@@ -506,7 +506,7 @@
     <string name="reset_retry">Intentar de nuevo</string>
     <string name="reset_refreshed">Tus datos cambiaron mientras confirmabas. Estas son las cifras de ahora.</string>
     <string name="reset_counts_title">¿Borrar todos tus datos?</string>
-    <string name="reset_counts_body">Se borran %1$s, %2$s y %3$s, con sus límites y notas. La apariencia y el orden vuelven a los de inicio.</string>
+    <string name="reset_counts_body">Se borran %1$s, con sus límites y notas. La apariencia y el orden vuelven a los de inicio.</string>
     <string name="reset_backups_stay">Los respaldos que guardaste fuera de Sello no se borran: siguen donde los guardaste.</string>
     <string name="reset_continue">Continuar</string>
     <string name="reset_cancel">Cancelar</string>
@@ -539,6 +539,7 @@
     <string name="backup_categories">Categorías</string>
     <string name="backup_expenses">Gastos</string>
     <string name="backup_incomes">Ingresos</string>
+    <string name="backup_goals">Metas</string>
     <string name="backup_size">Archivo</string>
     <string name="backup_moment">%1$s, %2$s</string>
     <string name="backup_record_failed">No pudimos leer cuándo fue tu último respaldo. Puedes crear uno igual.</string>
@@ -592,7 +593,7 @@
     <string name="restore_unknown_action">Comprobar</string>
     <string name="restore_done_title">Tus datos</string>
     <string name="restore_done_stamp">Restaurado</string>
-    <string name="restore_done_body">Se restauró el respaldo: %1$s, %2$s y %3$s.</string>
+    <string name="restore_done_body">Se restauró el respaldo: %1$s.</string>
     <string name="restore_go_to_recibo">Ir al recibo</string>
     <string name="restore_pending_title">Historial financiero restaurado</string>
     <string name="restore_pending_body">Tus gastos, ingresos, categorías y presupuestos ya se restauraron. No pudimos aplicar estas preferencias del respaldo:</string>
@@ -612,6 +613,13 @@
         <item quantity="one">%s gasto</item>
         <item quantity="other">%s gastos</item>
     </plurals>
+    <plurals name="restore_goals">
+        <item quantity="one">%s meta</item>
+        <item quantity="other">%s metas</item>
+    </plurals>
+    <!-- Joins what a backup holds: "2 categorías, 3 gastos y 1 ingreso". -->
+    <string name="restore_list_two">%1$s y %2$s</string>
+    <string name="restore_list_more">%1$s, %2$s</string>
     <plurals name="restore_incomes">
         <item quantity="one">%s ingreso</item>
         <item quantity="other">%s ingresos</item>

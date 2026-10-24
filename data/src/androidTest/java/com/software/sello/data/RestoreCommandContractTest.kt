@@ -143,7 +143,10 @@ class RestoreCommandContractTest {
                     expense(102, 1, "2026-10-02", 2, 15_000, note = "Plaza"),
                     expense(103, 1, "2026-10-03", 3, 5_000)
                 ),
-                incomes = listOf(income(201, "2026-10-01", 1, 200_000, IncomeSource.Salary))
+                incomes = listOf(income(201, "2026-10-01", 1, 200_000, IncomeSource.Salary)),
+                goals = emptyList(),
+                featuredGoal = null
+
             ),
             preferences = preferences
         )
@@ -178,11 +181,14 @@ class RestoreCommandContractTest {
         val staged = stage()
         val outcome = restores().replace(staged)
 
-        assertEquals(BackupSummary(categories = 1, expenses = 2, incomes = 0), staged.current)
-        assertEquals(BackupSummary(categories = 2, expenses = 3, incomes = 1), staged.replacement)
+        assertEquals(BackupSummary(categories = 1, expenses = 2, incomes = 0, 0), staged.current)
+        assertEquals(
+            BackupSummary(categories = 2, expenses = 3, incomes = 1, 0),
+            staged.replacement
+        )
         assertEquals(
             RestoreOutcome.Restored(
-                BackupSummary(2, 3, 1),
+                BackupSummary(2, 3, 1, 0),
                 PendingPreferences(null, null)
             ),
             outcome
@@ -228,7 +234,7 @@ class RestoreCommandContractTest {
 
         val truncated = restores().stage(bytes.copyOf(bytes.size / 2))
         val newer = restores().stage(
-            String(bytes).replaceFirst("\"version\": 1", "\"version\": 2").toByteArray()
+            String(bytes).replaceFirst("\"version\": 2", "\"version\": 3").toByteArray()
         )
 
         assertEquals(Outcome.Failure(StageFailure.Rejected(RestoreRejection.Damaged)), truncated)
@@ -273,7 +279,7 @@ class RestoreCommandContractTest {
         assertEquals(before, everyRow())
 
         val fresh = restores().staged()!!
-        assertEquals(BackupSummary(1, 3, 0), fresh.current)
+        assertEquals(BackupSummary(1, 3, 0, 0), fresh.current)
         assertTrue(restores().replace(fresh) is RestoreOutcome.Restored)
     }
 
@@ -328,7 +334,7 @@ class RestoreCommandContractTest {
 
         assertEquals(
             RestoreOutcome.Restored(
-                BackupSummary(2, 3, 1),
+                BackupSummary(2, 3, 1, 0),
                 PendingPreferences(appearance = null, ordering = wanted.ordering)
             ),
             outcome

@@ -159,7 +159,10 @@ class BackupSnapshotConsistencyTest {
                 defaultLimits = 3,
                 monthLimits = 1,
                 expenses = 3,
-                incomes = 1
+                incomes = 1,
+                goals = 0,
+                goalEvents = 0
+
             ),
             snapshot.counts
         )

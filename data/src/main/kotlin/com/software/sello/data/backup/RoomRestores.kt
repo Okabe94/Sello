@@ -2,6 +2,7 @@ package com.software.sello.data.backup
 
 import androidx.room.withTransaction
 import com.software.sello.data.local.SelloDatabase
+import com.software.sello.data.local.entity.FeaturedGoalEntity
 import com.software.sello.data.local.entity.OperationReceiptEntity
 import com.software.sello.data.local.entity.ProfileEntity
 import com.software.sello.data.mapper.profileFrom
@@ -11,6 +12,9 @@ import com.software.sello.data.repository.CommandRun
 import com.software.sello.data.repository.nextCounter
 import com.software.sello.data.repository.reading
 import com.software.sello.data.repository.runCommand
+import com.software.sello.domain.model.GoalHistory
+import com.software.sello.domain.model.GoalMovement
+import com.software.sello.domain.model.GoalTargetChange
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.OperationKind
 import com.software.sello.domain.model.Outcome
@@ -230,6 +234,10 @@ class RoomRestores(
         with(database) {
             deletedExpenseDao().clear()
             deletedIncomeDao().clear()
+            deletedGoalEventDao().clear()
+            goalDao().deleteFeatured()
+            goalDao().deleteAllEvents()
+            goalDao().deleteAll()
             expenseDao().deleteAll()
             incomeDao().deleteAll()
             limitDao().deleteAllMonthLimits()
@@ -240,6 +248,10 @@ class RoomRestores(
             limitDao().insertMonthLimits(financial.monthLimits.map { it.toEntity() })
             expenseDao().insertAll(financial.expenses.map { it.toEntity() })
             incomeDao().insertAll(financial.incomes.map { it.toEntity() })
+            for (history in financial.goals) insertGoal(history)
+            financial.featuredGoal?.let {
+                goalDao().feature(FeaturedGoalEntity(FeaturedGoalEntity.SINGLE_ID, it.value))
+            }
         }
         val generation = nextCounter(profile.generation, ProfileEntity.TABLE, null, "generation")
         val revision = nextCounter(profile.revision, ProfileEntity.TABLE, null, "revision")
@@ -263,6 +275,23 @@ class RoomRestores(
             )
         )
         return Replacement.Done
+    }
+
+    /**
+     * A goal as the file has it: the next recording position follows its last event,
+     * and each target, which a file does not name, gets a new identifier.
+     */
+    private suspend fun SelloDatabase.insertGoal(history: GoalHistory) {
+        val goal = history.goal
+        goalDao().insert(goal.toEntity(nextSequence = history.events.maxOf { it.sequence } + 1))
+        goalDao().insertAllEvents(
+            history.events.map { event ->
+                when (event) {
+                    is GoalTargetChange -> event.toEntity(ids.next(), goal.id, goal.createdAt)
+                    is GoalMovement -> event.toEntity(goal.id)
+                }
+            }
+        )
     }
 
     /** Where the history stands and what it holds, read together. */
@@ -289,7 +318,8 @@ class RoomRestores(
                         BackupSummary(
                             categories = database.categoryDao().count(),
                             expenses = database.expenseDao().count(),
-                            incomes = database.incomeDao().count()
+                            incomes = database.incomeDao().count(),
+                            goals = database.goalDao().count()
                         )
                     )
                 )
@@ -403,7 +433,7 @@ fun BackupCodec.check(bytes: ByteArray): Outcome<CheckedBackup, RestoreRejection
     }
 
 internal fun FinancialSnapshot.summary() =
-    BackupSummary(categories.size, expenses.size, incomes.size)
+    BackupSummary(categories.size, expenses.size, incomes.size, goals.size)
 
 /** How a person is told why a file cannot be restored; the detail stays in the rejection. */
 internal fun BackupRejection.reason(): RestoreRejection = when (this) {

@@ -46,6 +46,7 @@ import com.software.sello.domain.port.ResetPreview
 import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.restore.RestoreBody
 import com.software.sello.presentation.restore.RestoreHeading
+import com.software.sello.presentation.restore.contentsText
 
 /**
  * Owns the view model and leaving the screen: [onClose] when nothing was erased.
@@ -161,21 +162,7 @@ private fun Counts(
         RestoreBody(
             stringResource(
                 R.string.reset_counts_body,
-                pluralStringResource(
-                    R.plurals.restore_categories,
-                    current.categories,
-                    countText(current.categories)
-                ),
-                pluralStringResource(
-                    R.plurals.restore_expenses,
-                    current.expenses,
-                    countText(current.expenses)
-                ),
-                pluralStringResource(
-                    R.plurals.restore_incomes,
-                    current.incomes,
-                    countText(current.incomes)
-                )
+                contentsText(current, withGoals = current.goals > 0)
             )
         )
         RestoreBody(stringResource(R.string.reset_backups_stay))

@@ -262,7 +262,7 @@ Focused tests, then `./scripts/verify-ticket SELLO-087 --retain`.
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-087, SELLO-004
 - **Gate:** G2
 
@@ -295,6 +295,17 @@ A backup with goals restores on a fresh install with the same figures.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-088 --retain`.
+
+### Execution progress
+
+- **Owner decisions, 2026-10-24:** every backup is version 2, even with no goals (0.1.0
+  cannot read it); the counts before restoring and erasing, after restoring and under
+  the last backup add Metas only when either side has goals.
+- Format version 2 (`goals`, `featuredGoal`) written, versions 1 and 2 read; a goal's
+  history is validated with `GoalPolicy`, and a target carries no identifier in the
+  file. Export, restore (replacing, never merging) and erase-all include the goal
+  tables; `BackupSummary` counts goals, and the stored last backup keeps the count
+  (absent in a 0.1.0 record, where it was 0).
 
 ## SELLO-089 — Add the Metas tab and goal detail
 

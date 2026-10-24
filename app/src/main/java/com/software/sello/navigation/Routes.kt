@@ -23,6 +23,10 @@ data object MetasRoute
 @Serializable
 data class GoalRoute(val goalId: String)
 
+/** Nueva meta, or with [goalId] Editar meta. The form reads the goal itself. */
+@Serializable
+data class GoalEditorRoute(val goalId: String? = null)
+
 /** Nonfinancial controls reachable from Recibo's settings action. */
 @Serializable
 data object SettingsRoute

@@ -10,11 +10,11 @@
 Backups include schedules; restore and erase handle them without replaying occurrences twice.
 
 ### Deliverables
-Format additions with docs, restore and reset updates.
+Backup format version 3 (version 2 holds goals, SELLO-088): schedules and the origin of each recorded occurrence, with docs, restore and reset updates.
 
 ### Acceptance criteria
 - Restored schedules do not re-record occurrences already in the backup.
-- Older files still restore.
+- Versions 1 and 2 still restore, as having no schedules.
 
 ### Tests
 Codec and round-trip tests; G2.

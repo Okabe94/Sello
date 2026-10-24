@@ -2,7 +2,7 @@
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-004
 - **Gate:** G1
 
@@ -38,3 +38,15 @@ The screens have been worked on outside these tickets (owner, 2026-10-23); [ADR 
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-095 --retain`.
+
+### Execution progress
+
+- **Audit, 2026-10-24:** [gap list](../../../design/v2/gaps/recurrence.md) at `main` `4d16b58`,
+  each element checked in the code and, where drawn, in the app (sandbox scenarios
+  `detalle-categoria@1`, `ingresos@1`) and the catalog on a dedicated API-30 emulator
+  ([screenshots](artifacts)). The reserved-state parts exist in the design system and
+  catalog; nothing else does, and no branch or open pull request holds recurrence work.
+- **Owner decisions, 2026-10-24:** one design pass for the screens v2 does not show, as
+  the new SELLO-114 before SELLO-100, SELLO-101 and SELLO-103; SELLO-101 waits for
+  SELLO-100 so each upcoming payment opens its schedule; SELLO-096 and SELLO-098 to
+  SELLO-104 revised to the list. No ticket was removed.

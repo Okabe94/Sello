@@ -80,12 +80,12 @@ def plan(gate, ci=False):
     if gate not in GATES:
         raise Unavailable(f"Unknown gate {gate}")
     checks = [
-        # Structure and generated views only: a run cannot depend on its own final evidence.
-        Check("board-check", ("python3", "docs/planning/mvp/board.py", "--check", "--skip-evidence")),
-        Check("board-tests", ("python3", "-m", "unittest", "discover", "-s", "docs/planning/mvp", "-p", "test_board.py")),
+        # Structure only: a run cannot depend on its own final evidence.
+        Check("tickets-check", ("python3", "scripts/quality/tickets.py", "check", "--skip-evidence")),
         Check("quality-tests", ("python3", "-m", "unittest", "discover", "-s", "scripts/quality", "-p", "test_*.py")),
         Check("performance-tests", ("python3", "-m", "unittest", "discover", "-s", "scripts/performance", "-p", "test_*.py")),
         Check("architecture", ("python3", "scripts/quality/architecture.py")),
+        Check("links", ("python3", "scripts/quality/links.py")),
         Check("gradle-host", ("./gradlew", *HOST_TASKS, "--continue"), results=HOST_RESULTS, lint=True),
     ]
     if gate == "G0":

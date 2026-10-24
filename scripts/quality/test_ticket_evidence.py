@@ -1,4 +1,4 @@
-"""board.py completion validation against real retained reports in a throwaway repository."""
+"""tickets.py completion validation against real retained reports in a throwaway repository."""
 import io
 import sys
 import tempfile
@@ -8,13 +8,12 @@ from unittest.mock import patch
 
 import evidence
 import runner
-from support import EPIC, epic, git, make_repo, ticket, write
+import tickets
+from support import epic, git, make_repo, ticket, write, write_epic
 from test_runner import Harness
 
-board = runner.board
-EVIDENCE = "\n### Delivery evidence\n" + "".join(f"- **{name}:** verified evidence\n" for name in board.DELIVERY_FIELDS)
+EVIDENCE = "\n### Delivery evidence\n" + "".join(f"- **{name}:** verified evidence\n" for name in tickets.DELIVERY_FIELDS)
 DONE_PREDECESSOR = ticket("SELLO-003", status="Done") + EVIDENCE
-README = "## Definition of done — every ticket\nShared gates\n## Milestones and safe integration\n"
 
 
 class BoardEvidenceTests(unittest.TestCase):
@@ -22,19 +21,17 @@ class BoardEvidenceTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         self.root = make_repo(directory.name)
-        write(self.root, "docs/planning/mvp/README.md", README)
-        write(self.root, EPIC, epic(DONE_PREDECESSOR, ticket("SELLO-004", status="In Progress", dependencies="SELLO-003")))
-        self.assertEqual(0, self.board()[0])
+        write_epic(self.root, epic(DONE_PREDECESSOR, ticket("SELLO-004", status="In Progress", dependencies="SELLO-003")))
+        self.assertEqual(0, self.board("--skip-evidence")[0])
         git(self.root, "add", "-A")
-        git(self.root, "commit", "-qm", "readme")
+        git(self.root, "commit", "-qm", "tickets")
         self.harness = Harness(self.root)
 
     def board(self, *arguments):
-        """Run board.py's main against the throwaway repository; return (exit code, stderr)."""
-        location = str(self.root / "docs/planning/mvp/board.py")
-        with patch.object(board, "__file__", location), patch("sys.argv", ["board.py", *arguments]), \
-                patch("sys.stdout", new_callable=io.StringIO), patch("sys.stderr", new_callable=io.StringIO) as errors:
-            return board.main(), errors.getvalue()
+        """Run tickets.py check against the throwaway repository; return (exit code, stderr)."""
+        arguments = [argument for argument in arguments if argument != "--check"]
+        with patch("sys.stdout", new_callable=io.StringIO), patch("sys.stderr", new_callable=io.StringIO) as errors:
+            return tickets.main(["check", *arguments], root=self.root), errors.getvalue()
 
     def verify(self):
         code, path = runner.run(
@@ -48,7 +45,7 @@ class BoardEvidenceTests(unittest.TestCase):
         body = ticket("SELLO-004", status=status, dependencies="SELLO-003")
         if quality_run:
             body += f"{EVIDENCE}- **Quality run:** {quality_run}\n"
-        write(self.root, EPIC, epic(DONE_PREDECESSOR, body))
+        write_epic(self.root, epic(DONE_PREDECESSOR, body))
         self.assertEqual(0, self.board("--skip-evidence")[0])
 
     def commit(self, message):
@@ -126,9 +123,8 @@ class BoardEvidenceTests(unittest.TestCase):
     def test_done_ticket_is_rejected_when_its_acceptance_is_rewritten(self):
         self.set_status("Done", self.verify())
         self.commit("complete SELLO-004")
-        text = (self.root / EPIC).read_text(encoding="utf-8")
-        head, tail = text.split("## SELLO-004", 1)
-        write(self.root, EPIC, head + "## SELLO-004" + tail.replace("keeps working", "mostly works"))
+        path = self.root / "docs/tickets/E01-foundation/SELLO-004/ticket.md"
+        write(self.root, str(path.relative_to(self.root)), path.read_text(encoding="utf-8").replace("keeps working", "mostly works"))
         self.board("--skip-evidence")
         self.assertIn("SELLO-004: ticket acceptance text changed", self.board("--check")[1])
 

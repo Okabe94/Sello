@@ -158,7 +158,7 @@ jobs:
           script: ./scripts/verify-ticket --merge-candidate "$BASE" --ci-part "$DEVICE_GROUP" --ci-event "$EVENT"
 
       - name: Validate completion evidence before cache publication
-        run: python3 docs/planning/mvp/board.py --check --base "$BASE"
+        run: python3 scripts/quality/tickets.py check --base "$BASE"
 
       - name: Identify installed Android system image
         if: matrix.group == 'support' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -214,7 +214,7 @@ jobs:
         run: ./scripts/verify-ticket --merge-candidate "$BASE" --ci-collect build/ci-parts --ci-event "$EVENT"
 
       - name: Validate completion evidence
-        run: python3 docs/planning/mvp/board.py --check --base "$BASE"
+        run: python3 scripts/quality/tickets.py check --base "$BASE"
 
       - name: Keep full gate reports
         if: always()

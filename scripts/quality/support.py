@@ -1,6 +1,13 @@
-"""Shared fixtures for quality-tool tests: a throwaway Git repository with a board."""
+"""Shared fixtures for quality-tool tests: a throwaway Git repository with ticket folders.
+
+`epic(...)`/`ticket(...)` still build one epic text in the old section form; `write_epic`
+splits it into docs/tickets/<epic>/<ticket>/ folders exactly as the migration did.
+"""
+import shutil
 import subprocess
 from pathlib import Path
+
+import tickets as ticket_tool
 
 SECTIONS = """### Outcome
 A complete, independently verifiable task.
@@ -30,7 +37,16 @@ Reject incomplete outcomes.
 Run focused tests and the assigned integrated gate.
 """
 
-EPIC = "docs/planning/mvp/epics/E01-foundation.md"
+EPIC_FOLDER = "docs/tickets/E01-foundation"
+EPIC = EPIC_FOLDER + "/README.md"
+
+
+def ticket_file(identifier):
+    return f"{EPIC_FOLDER}/{identifier}/ticket.md"
+
+
+def evidence_file(identifier):
+    return f"{EPIC_FOLDER}/{identifier}/evidence.md"
 
 
 def ticket(identifier, status="Backlog", dependencies="None", gate="G1"):
@@ -60,14 +76,33 @@ def write(root, relative, text):
     path.write_text(text, encoding="utf-8")
 
 
+def write_epic(root, text):
+    """Write one epic text as ticket folders; ticket folders no longer in the text are removed."""
+    readme, parts = ticket_tool.split_epic_text(text)
+    folder = Path(root) / EPIC_FOLDER
+    keep = {identifier for identifier, _, _ in parts}
+    if folder.is_dir():
+        for child in folder.iterdir():
+            if child.is_dir() and child.name not in keep:
+                shutil.rmtree(child)
+    write(root, EPIC, readme)
+    for identifier, ticket_md, evidence in parts:
+        write(root, ticket_file(identifier), ticket_md)
+        evidence_path = Path(root) / evidence_file(identifier)
+        if evidence:
+            write(root, evidence_file(identifier), f"# {identifier}\n\n" + evidence.split("\n", 1)[1].lstrip("\n"))
+            write(root, f"{EPIC_FOLDER}/{identifier}/handoff.md", f"# {identifier}\n\nDelivered.\n")
+        elif evidence_path.exists():
+            evidence_path.unlink()
+
+
 def make_repo(root, epic_text=None):
     git(root, "init", "-q", "-b", "main")
     git(root, "config", "user.name", "Test")
     git(root, "config", "user.email", "test@example.invalid")
     write(root, ".gitignore", "build/\n")
     write(root, "app/src/Main.kt", "fun main() = Unit\n")
-    write(root, "docs/planning/mvp/BOARD.md", "generated\n")
-    write(root, EPIC, epic_text or epic(
+    write_epic(root, epic_text or epic(
         ticket("SELLO-003", status="Done"),
         ticket("SELLO-004", status="In Progress", dependencies="SELLO-003"),
     ))

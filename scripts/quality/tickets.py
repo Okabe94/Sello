@@ -1,0 +1,319 @@
+#!/usr/bin/env python3
+"""Canonical tickets: one folder per ticket under docs/tickets/<epic>/<SELLO-0NN>/.
+
+ticket.md is the only file the tools parse for status, acceptance and dependencies.
+evidence.md holds the delivery evidence fields, handoff.md the short handoff,
+quality-report.json the retained gate report and artifacts/ any screenshots. Nothing
+generated is committed: `tickets.py status` prints the board on demand.
+"""
+import argparse
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+TICKETS_DIR = "docs/tickets"
+TEMPLATE_DIR = "TEMPLATE"
+STATUSES = ("Backlog", "Ready", "In Progress", "Review", "Blocked", "Done")
+REQUIRED_SECTIONS = (
+    "Outcome", "Deliverables", "Acceptance criteria", "Tests", "Working checkpoint",
+    "Context and starting points", "Implementation plan", "Concrete cases and pitfalls",
+    "Verification recipe",
+)
+PRIORITIES = {"P0": "Highest", "P1": "High", "P2": "Medium"}
+DELIVERY_FIELDS = ("Revision", "Requirement mapping", "Red / Green", "Gate results", "Device / Artifact", "Review")
+TICKET_ID = re.compile(r"SELLO-\d{3}")
+EPIC_FOLDER = re.compile(r"E\d{2}-[a-z0-9-]+")
+PLACEHOLDER = re.compile(r"\b(TODO|TBD|Pending)\b|<[^>]+>", re.IGNORECASE)
+
+
+@dataclass
+class Ticket:
+    identifier: str
+    title: str
+    epic_id: str
+    source: Path
+    issue_type: str
+    priority: str
+    status: str
+    dependencies: tuple
+    gate: str
+    body: str
+
+    @property
+    def folder(self):
+        return self.source.parent
+
+
+@dataclass
+class Epic:
+    identifier: str
+    title: str
+    source: Path
+    status: str
+    goal: str
+    exit_criteria: str
+    tickets: list
+    increment: str = "MVP"
+
+    @property
+    def folder(self):
+        return self.source.parent
+
+
+def metadata(text):
+    entries = re.findall(r"^- \*\*([^*]+):\*\* (.+)$", text, re.MULTILINE)
+    result = dict(entries)
+    if len(result) != len(entries):
+        raise ValueError("Duplicate metadata field")
+    return result
+
+
+def sections(text):
+    return dict(re.findall(r"^### ([^\n]+)\n([\s\S]*?)(?=^### |\Z)", text, re.MULTILINE))
+
+
+def require_fields(fields, required, identifier):
+    for name in required:
+        if not fields.get(name, "").strip():
+            raise ValueError(f"{identifier}: missing {name}")
+
+
+def parse_epic_readme(source, text):
+    heading = re.search(r"^# (SELLO-E\d{2}) — (.+)$", text, re.MULTILINE)
+    if not heading:
+        raise ValueError(f"{source}: invalid epic heading")
+    epic_id, title = heading.groups()
+    fields = metadata(text)
+    require_fields(fields, ("Status", "Goal", "Exit"), epic_id)
+    if int(epic_id.removeprefix("SELLO-E")) >= 9:
+        require_fields(fields, ("Increment",), epic_id)
+    return Epic(epic_id, title, source, fields["Status"], fields["Goal"], fields["Exit"], [],
+                fields.get("Increment", "MVP"))
+
+
+def parse_ticket(source, text, epic_id):
+    heading = re.search(r"^# (SELLO-\d{3}) — (.+)$", text, re.MULTILINE)
+    if not heading:
+        raise ValueError(f"{source}: invalid ticket heading")
+    identifier, title = heading.groups()
+    body = text[heading.end():].strip()
+    fields = metadata(body.split("###", 1)[0])
+    require_fields(fields, ("Type", "Priority", "Status", "Depends on", "Gate"), identifier)
+    content = sections(body)
+    if "Delivery evidence" in content:
+        raise ValueError(f"{identifier}: Delivery evidence belongs in evidence.md, not ticket.md")
+    require_fields(content, REQUIRED_SECTIONS, identifier)
+    raw = fields["Depends on"]
+    dependencies = () if raw == "None" else tuple(dependency.strip() for dependency in raw.split(","))
+    if len(set(dependencies)) != len(dependencies) or any(not TICKET_ID.fullmatch(d) for d in dependencies):
+        raise ValueError(f"{identifier}: malformed or duplicate dependencies")
+    return Ticket(identifier, title, epic_id, source, fields["Type"], fields["Priority"], fields["Status"],
+                  dependencies, fields["Gate"], body)
+
+
+def ticket_folders(root):
+    """Every ticket folder, sorted, as (epic folder, ticket folder)."""
+    base = Path(root) / TICKETS_DIR
+    found = []
+    for epic_dir in sorted(path for path in base.iterdir() if path.is_dir() and EPIC_FOLDER.fullmatch(path.name)):
+        for ticket_dir in sorted(path for path in epic_dir.iterdir() if path.is_dir() and TICKET_ID.fullmatch(path.name)):
+            found.append((epic_dir, ticket_dir))
+    return found
+
+
+def ticket_folder(root, identifier):
+    """The folder of one ticket, or None when no such ticket exists."""
+    for _, ticket_dir in ticket_folders(root):
+        if ticket_dir.name == identifier:
+            return ticket_dir
+    return None
+
+
+def load(root):
+    """Parse every epic README and ticket file under docs/tickets; raise ValueError on structure errors."""
+    base = Path(root) / TICKETS_DIR
+    if not base.is_dir():
+        raise ValueError(f"No ticket folders under {TICKETS_DIR}")
+    epics = []
+    for epic_dir in sorted(path for path in base.iterdir() if path.is_dir() and EPIC_FOLDER.fullmatch(path.name)):
+        readme = epic_dir / "README.md"
+        if not readme.is_file():
+            raise ValueError(f"{epic_dir.relative_to(root)}: missing README.md")
+        epic = parse_epic_readme(readme, readme.read_text(encoding="utf-8"))
+        for ticket_dir in sorted(path for path in epic_dir.iterdir() if path.is_dir() and TICKET_ID.fullmatch(path.name)):
+            source = ticket_dir / "ticket.md"
+            if not source.is_file():
+                raise ValueError(f"{ticket_dir.relative_to(root)}: missing ticket.md")
+            ticket = parse_ticket(source, source.read_text(encoding="utf-8"), epic.identifier)
+            if ticket.identifier != ticket_dir.name:
+                raise ValueError(f"{ticket_dir.relative_to(root)}: folder {ticket_dir.name} holds {ticket.identifier}")
+            epic.tickets.append(ticket)
+        if not epic.tickets:
+            raise ValueError(f"{epic.identifier}: no tickets")
+        epics.append(epic)
+    if not epics:
+        raise ValueError("No epic folders")
+    return epics
+
+
+def evidence_fields(ticket):
+    path = ticket.folder / "evidence.md"
+    return metadata(path.read_text(encoding="utf-8")) if path.is_file() else {}
+
+
+def validate(epics, verify_report=None):
+    if not epics:
+        raise ValueError("No epic sources")
+    epic_ids = [epic.identifier for epic in epics]
+    if len(set(epic_ids)) != len(epic_ids):
+        raise ValueError("Duplicate epic ID")
+    tickets, increments = {}, {}
+    for epic in epics:
+        if epic.increment not in ("MVP", "Post-MVP"):
+            raise ValueError(f"{epic.identifier}: invalid increment")
+        if epic.status not in STATUSES:
+            raise ValueError(f"{epic.identifier}: unknown status")
+        if epic.status == "Done" and any(ticket.status != "Done" for ticket in epic.tickets):
+            raise ValueError(f"{epic.identifier}: unfinished children")
+        for ticket in epic.tickets:
+            if ticket.identifier in tickets:
+                raise ValueError(f"Duplicate ticket ID: {ticket.identifier}")
+            tickets[ticket.identifier] = ticket
+            increments[ticket.identifier] = epic.increment
+            if ticket.status not in STATUSES or ticket.priority not in PRIORITIES:
+                raise ValueError(f"{ticket.identifier}: invalid status/priority")
+            if ticket.issue_type not in ("Task", "Story") or ticket.gate not in ("G0", "G1", "G2", "G3"):
+                raise ValueError(f"{ticket.identifier}: invalid type/gate")
+    for ticket in tickets.values():
+        number = int(ticket.identifier.removeprefix("SELLO-"))
+        if number > 4 and "SELLO-004" not in ticket.dependencies:
+            raise ValueError(f"{ticket.identifier}: must depend on SELLO-004")
+        for dependency in ticket.dependencies:
+            if dependency not in tickets:
+                raise ValueError(f"{ticket.identifier}: Unknown dependency {dependency}")
+            if increments[ticket.identifier] == "MVP" and increments[dependency] == "Post-MVP":
+                raise ValueError(f"{ticket.identifier}: MVP depends on Post-MVP {dependency}")
+        if ticket.status in ("Ready", "In Progress", "Review", "Done") and any(
+            tickets[dependency].status != "Done" for dependency in ticket.dependencies
+        ):
+            raise ValueError(f"{ticket.identifier}: unfinished dependencies for {ticket.status}")
+        if number >= 4 and ticket.status in ("Review", "Done"):
+            fields = evidence_fields(ticket)
+            require_fields(fields, ("Quality run",), ticket.identifier)
+            if PLACEHOLDER.search(fields["Quality run"]):
+                raise ValueError(f"{ticket.identifier}: placeholder Delivery evidence in Quality run")
+            if verify_report:
+                verify_report(ticket, fields["Quality run"])
+        if ticket.status == "Done":
+            fields = evidence_fields(ticket)
+            if not fields:
+                raise ValueError(f"{ticket.identifier}: missing Delivery evidence (evidence.md)")
+            require_fields(fields, DELIVERY_FIELDS, ticket.identifier)
+            for name in DELIVERY_FIELDS:
+                if PLACEHOLDER.search(fields[name]):
+                    raise ValueError(f"{ticket.identifier}: placeholder Delivery evidence in {name}")
+            handoff = ticket.folder / "handoff.md"
+            if not handoff.is_file() or not re.sub(r"^#.*$", "", handoff.read_text(encoding="utf-8"), flags=re.MULTILINE).strip():
+                raise ValueError(f"{ticket.identifier}: missing handoff.md")
+    visited, active = set(), set()
+
+    def visit(identifier):
+        if identifier in active:
+            raise ValueError(f"Dependency cycle at {identifier}")
+        if identifier in visited:
+            return
+        active.add(identifier)
+        for dependency in tickets[identifier].dependencies:
+            visit(dependency)
+        active.remove(identifier)
+        visited.add(identifier)
+
+    for identifier in tickets:
+        visit(identifier)
+
+
+def status_table(epics, epic_filter=None):
+    """A status view printed on demand; it is never committed, so it never conflicts."""
+    selected = [epic for epic in epics if not epic_filter or epic_filter in epic.identifier or epic_filter in epic.folder.name]
+    lookup = {ticket.identifier: ticket for epic in epics for ticket in epic.tickets}
+    tickets = [ticket for epic in selected for ticket in epic.tickets]
+    lines = [" · ".join(f"{status}: {sum(t.status == status for t in tickets)}" for status in STATUSES), ""]
+    for epic in selected:
+        done = sum(ticket.status == "Done" for ticket in epic.tickets)
+        lines += [f"## {epic.identifier} — {epic.title} ({epic.status}, {done}/{len(epic.tickets)} done)", "",
+                  "| Ticket | Deliverable | Status | Gate | Unmet dependencies |", "| --- | --- | --- | --- | --- |"]
+        for ticket in epic.tickets:
+            unmet = ", ".join(d for d in ticket.dependencies if lookup.get(d) and lookup[d].status != "Done") or "None"
+            lines.append(f"| {ticket.identifier} | {ticket.title} | {ticket.status} | {ticket.gate} | {unmet} |")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def split_epic_text(text):
+    """Split one old epic file into (README text, [(ticket id, ticket.md, evidence.md or None)]).
+
+    The ticket text keeps every byte of the old section except the heading level and
+    the Delivery evidence block, so acceptance fingerprints stay identical.
+    """
+    matches = list(re.finditer(r"^## (SELLO-\d{3}) — .+$", text, re.MULTILINE))
+    if not matches:
+        raise ValueError("no tickets in epic text")
+    readme = text[: matches[0].start()].rstrip() + "\n"
+    parts = []
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        section = text[match.start(): end]
+        evidence = None
+        found = re.search(r"^### Delivery evidence\n[\s\S]*?(?=^###? |\Z)", section, re.MULTILINE)
+        if found:
+            evidence = found.group(0)
+            section = section[: found.start()] + section[found.end():]
+        ticket_md = "# " + section[len("## "):]
+        ticket_md = ticket_md.rstrip() + "\n"
+        parts.append((match.group(1), ticket_md, evidence))
+    return readme, parts
+
+
+def report_evidence(root, base):
+    """Validate retained quality reports for Review/Done tickets from SELLO-004 onward."""
+    def check(ticket, quality_run):
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import evidence
+        # A ticket already Done at the base revision keeps its historical tested snapshot.
+        fresh = ticket.status != "Done" or evidence.status_at(root, base, ticket.identifier) != "Done"
+        try:
+            evidence.check(root, ticket.identifier, ticket.gate, quality_run, fresh, base=None if base == "HEAD" else base)
+        except evidence.EvidenceError as error:
+            raise ValueError(f"{ticket.identifier}: {error}") from None
+    return check
+
+
+def main(argv=None, root=None):
+    parser = argparse.ArgumentParser(description="Validate the ticket folders or print their status.")
+    commands = parser.add_subparsers(dest="command", required=True)
+    check = commands.add_parser("check", help="Validate structure, dependencies and completion evidence.")
+    check.add_argument("--skip-evidence", action="store_true",
+                       help="Structure only. Used inside a quality run; never completion validation.")
+    check.add_argument("--base", default="HEAD",
+                       help="Candidate base: tickets not Done there need a report bound to a change set between it and HEAD.")
+    status = commands.add_parser("status", help="Print the status table on demand.")
+    status.add_argument("epic", nargs="?", help="Epic folder or ID filter, for example E17.")
+    arguments = parser.parse_args(argv)
+    root = Path(root) if root else Path(__file__).resolve().parents[2]
+    try:
+        epics = load(root)
+        if arguments.command == "status":
+            print(status_table(epics, arguments.epic))
+            return 0
+        validate(epics, None if arguments.skip_evidence else report_evidence(root, arguments.base))
+    except (ValueError, OSError) as error:
+        print(f"Ticket validation failed: {error}", file=sys.stderr)
+        return 1
+    count = sum(len(epic.tickets) for epic in epics)
+    print(f"PASS: {len(epics)} epics, {count} tickets")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

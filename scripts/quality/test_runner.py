@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import fingerprint
 import runner
-from support import EPIC, epic, git, make_repo, ticket, write
+from support import epic, git, make_repo, ticket, write, write_epic
 
 SUITE = '<testsuite name="s" tests="{tests}" failures="{failures}" errors="0" skipped="0"/>'
 LINT = '<issues><issue severity="Warning"/><issue severity="Warning"/></issues>'
@@ -70,8 +70,9 @@ class RunnerTests(unittest.TestCase):
         return json.loads(Path(path).read_text(encoding="utf-8"))
 
     def set_epic(self, *tickets):
-        write(self.root, EPIC, epic(*tickets))
-        git(self.root, "commit", "-qam", "tickets")
+        write_epic(self.root, epic(*tickets))
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "tickets")
 
     def assert_refused(self, result, message):
         code, path = result
@@ -93,7 +94,7 @@ class RunnerTests(unittest.TestCase):
         self.assertFalse(report["snapshot"]["dirty"])
         self.assertEqual(fingerprint.input_fingerprint(self.root), report["snapshot"]["fingerprint"])
         self.assertEqual(
-            ["board-check", "board-tests", "quality-tests", "performance-tests", "architecture", "gradle-host"],
+            ["tickets-check", "quality-tests", "performance-tests", "architecture", "links", "gradle-host"],
             [check["name"] for check in report["checks"]],
         )
         host = report["checks"][-1]
@@ -166,13 +167,13 @@ class RunnerTests(unittest.TestCase):
         self.assert_refused(self.run_ticket(), "ANDROID_HOME is not set")
 
     def test_failed_check_fails_the_run_and_still_runs_the_rest(self):
-        self.harness.exit_codes["board-tests"] = 1
+        self.harness.exit_codes["quality-tests"] = 1
         code, path = self.run_ticket()
         report = self.report(path)
         self.assertNotEqual(0, code)
         self.assertEqual("failed", report["outcome"])
         self.assertEqual(6, len(self.harness.executed))
-        self.assertIn("board-tests exited 1", report["failures"])
+        self.assertIn("quality-tests exited 1", report["failures"])
 
     def test_host_gate_without_test_results_fails(self):
         self.harness.host_tests = 0

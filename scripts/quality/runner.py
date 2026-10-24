@@ -20,16 +20,15 @@ import evidence
 import fingerprint
 import gates
 import selection
+import tickets
 import hashlib
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPOSITORY / "docs/planning/mvp"))
-import board  # noqa: E402
 
 SCHEMA_VERSION = 2
 UNTICKETED = "UNTICKETED"  # a merge candidate that advances no ticket
 REPORT_DIR = "build/reports/quality"
-EPICS = "docs/planning/mvp/epics"
+TICKETS = tickets.TICKETS_DIR
 
 
 class Refusal(Exception):
@@ -41,11 +40,7 @@ def now():
 
 
 def load_tickets(root):
-    tickets = {}
-    for path in sorted((Path(root) / EPICS).glob("*.md")):
-        for ticket in board.parse_epic(path, path.read_text(encoding="utf-8")).tickets:
-            tickets[ticket.identifier] = ticket
-    return tickets
+    return {ticket.identifier: ticket for epic in tickets.load(root) for ticket in epic.tickets}
 
 
 def resolve_gate(tickets, ticket_id, requested_gate):
@@ -56,7 +51,7 @@ def resolve_gate(tickets, ticket_id, requested_gate):
         required = gates.MINIMUM_GATE
         return required, max(requested_gate or required, required, key=rank)
     if ticket_id not in tickets:
-        raise Refusal(f"Unknown ticket {ticket_id}; canonical tickets live in {EPICS}")
+        raise Refusal(f"Unknown ticket {ticket_id}; canonical tickets live in {TICKETS}<epic>/<ticket>/ticket.md")
     ticket = tickets[ticket_id]
     for dependency in ticket.dependencies:
         status = tickets[dependency].status if dependency in tickets else "missing"
@@ -308,7 +303,7 @@ def finish_run(root, ticket_id, required, executed, before, tools, attached, rec
     print(f"Report: {path.relative_to(root)}", file=stream)
     if retain and not failures:
         line = evidence.retain(root, path)
-        print(f"Retained: {evidence.RETAINED_DIR}/{ticket_id}.json", file=stream)
+        print(f"Retained: {evidence.retained_path(root, ticket_id).relative_to(root).as_posix()}", file=stream)
         print(f"- **Quality run:** {line}", file=stream)
     elif retain:
         print("Not retained: only a passed run is completion evidence", file=stream)

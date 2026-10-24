@@ -39,13 +39,10 @@ reaches `main` without their go-ahead and passing required checks.
   ticket from an unmerged branch.
 - **Changes requested** go to the same PR. If they change the ticket's own change
   set, run the gate again and update `Quality run`; the check rejects a stale report.
-- **`main` moving after the run costs no local work.** The report is bound to the
-  PR's own change set, and the hosted run on the merge result verifies the
-  combination. GitHub offers merge queues only in organization-owned repositories;
-  while Sello is owned by a personal account GitHub still asks for an up-to-date
-  branch: press "Update branch" (or `gh pr update-branch`) and let the hosted check
-  rerun unattended. Only a conflict GitHub reports needs a manual merge and
-  `--affected origin/main --retain`.
+- **`main` moving after the run costs nothing.** The report is bound to the PR's
+  own change set, and the merge queue builds the real merge result and runs the gate
+  on it (`merge_group`) right before merging; branches need not be up to date. Only
+  a conflict GitHub reports needs a manual merge and `--affected origin/main --retain`.
 - **Not approved or abandoned:** close the PR; `main` still shows the ticket as it was.
 - After merging, the executor may start the next ticket while the hosted run on
   `main` finishes, and must fix a failure there before anything else merges.
@@ -108,8 +105,8 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
   PRs get G2 with dependency-aware device scope; shared/unknown changes get full
   devices. Code pushes to main keep G1 for trusted cache publication; documentation
   pushes get G0. Nightly and manual runs execute full G2. Merge queue entries
-  (`merge_group`) are planned like pull requests from the group's base, once the
-  repository is organization-owned. There is no path filter; the check always reports.
+  (`merge_group`) are planned like pull requests from the group's base. There is no
+  path filter; the check always reports.
 
 These tools prove that checks ran on a known snapshot. They do not judge whether
 acceptance is met; the designated review does. A committed report can be hand-edited,

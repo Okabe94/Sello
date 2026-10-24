@@ -42,7 +42,7 @@ clears any restore staged for it, opens the new store without showing it, and
 restores into it under a new operation; the app then starts again in a new task and
 process. A failure after the set-aside says the restore did not finish; on restart
 the staged file or receipt shows what happened, and Respaldo can restore again. See the
-[recovery epic](../planning/mvp/epics/E07-recovery-privacy.md).
+[recovery epic](../tickets/E07-recovery-privacy/README.md).
 
 ## Verification
 

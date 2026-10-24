@@ -15,7 +15,7 @@ import evidence
 import gates
 import runner
 import fingerprint
-from support import EPIC, epic, git, make_repo, ticket, write
+from support import epic, git, make_repo, ticket, write, write_epic
 from test_runner import DEVICE, Harness
 
 
@@ -255,7 +255,7 @@ class DistributedGateTests(unittest.TestCase):
         write(self.root, 'app/src/Main.kt', 'fun main() = println(1)\n')
         self.assertEqual(0, self.part('host', event='push')[0])
         self.assertEqual(0, self.collect(event='push')[0])
-        self.assertEqual(['board-check', 'board-tests', 'quality-tests', 'performance-tests', 'architecture', 'gradle-host'], self.harness.executed)
+        self.assertEqual(['tickets-check', 'quality-tests', 'performance-tests', 'architecture', 'links', 'gradle-host'], self.harness.executed)
 
     def test_incompatible_toolchains_are_rejected(self):
         self.all_parts()
@@ -275,14 +275,14 @@ class DistributedGateTests(unittest.TestCase):
         self.assertEqual(2, self.part('host')[0])
 
     def test_all_ticket_prerequisites_are_checked_before_any_execution(self):
-        write(self.root, EPIC, epic(ticket('SELLO-003', status='Done'), ticket('SELLO-004'),
+        write_epic(self.root, epic(ticket('SELLO-003', status='Done'), ticket('SELLO-004'),
                                    ticket('SELLO-005', status='In Progress', dependencies='SELLO-004', gate='G2')))
         self.assertEqual(2, self.part('host')[0])
         self.assertEqual([], self.harness.executed)
         self.assertIn('prerequisite SELLO-004 is Backlog', self.stream.getvalue())
 
     def test_multi_ticket_collection_binds_each_ticket_after_complete_candidate_execution(self):
-        write(self.root, EPIC, epic(ticket('SELLO-003', status='Done'), ticket('SELLO-004', status='Done'),
+        write_epic(self.root, epic(ticket('SELLO-003', status='Done'), ticket('SELLO-004', status='Done'),
                                    ticket('SELLO-005', status='In Progress', dependencies='SELLO-004', gate='G2')))
         self.all_parts()
         code, paths = distributed.collect(self.root, self.base, 'workflow_dispatch', self.parts, stream=self.stream)
@@ -295,7 +295,7 @@ class DistributedGateTests(unittest.TestCase):
             self.assertEqual(fingerprint.ticket_acceptance(self.root, report['ticket']), report['snapshot']['acceptance'])
 
     def release_ticket(self):
-        write(self.root, EPIC, epic(ticket('SELLO-003', status='Done'),
+        write_epic(self.root, epic(ticket('SELLO-003', status='Done'),
                                    ticket('SELLO-004', status='In Progress', dependencies='SELLO-003', gate='G3')))
         write(self.root, 'app/src/Main.kt', 'fun main() = println(35)\n')
 

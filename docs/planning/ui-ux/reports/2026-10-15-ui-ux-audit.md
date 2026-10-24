@@ -2,7 +2,7 @@
 
 **Status (2026-10-19):** the redesign epic proposed with this audit was not adopted.
 [ADR 0013](../../../decisions/0013-sello-v2-design.md) made Sello v2 the design, and
-[E12](../../mvp/epics/E12-v2-recibo.md) and [E13](../../mvp/epics/E13-v2-current-app.md)
+[E12](../../../tickets/E12-v2-recibo/README.md) and [E13](../../../tickets/E13-v2-current-app/README.md)
 replaced that plan, reusing ticket IDs SELLO-061–069 for different work. The findings
 and evidence below are kept as they were observed; only the last column of the matrix
 is updated to show where each finding stands in the current plan.
@@ -75,8 +75,8 @@ that an intentional feature exists while the owner requests different behavior.
 ## Finding matrix
 
 Evidence links point to both the visual capture and its UI hierarchy when one exists.
-The last column refers to [E12](../../mvp/epics/E12-v2-recibo.md) and
-[E13](../../mvp/epics/E13-v2-current-app.md) as of 2026-10-19.
+The last column refers to [E12](../../../tickets/E12-v2-recibo/README.md) and
+[E13](../../../tickets/E13-v2-current-app/README.md) as of 2026-10-19.
 
 | ID | Owner report | Classification | Evidence and observation | Governing contract / disposition | Current plan |
 | --- | --- | --- | --- | --- | --- |

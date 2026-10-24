@@ -87,4 +87,4 @@ is AndroidX's signature-protected one for private dynamic receivers.
 | `ResetGenerationContractTest` (device) | Nothing erased survives in the database bytes or private folders |
 
 Inventories from the SELLO-032 run are kept in
-[evidence](../testing/evidence/SELLO-032).
+[evidence](../tickets/E07-recovery-privacy/SELLO-032/artifacts).

@@ -347,7 +347,7 @@ action.
 ## Component families used together
 
 Reusable components live under
-[`designsystem/component`](../../design-system/src/main/java/com/software/sello/designsystem/component).
+[`designsystem/component`](../../design-system/src/main/java/com/software/sello/designsystem/component/).
 
 | Family | Components normally composed together | Main consumers and coupling |
 | --- | --- | --- |

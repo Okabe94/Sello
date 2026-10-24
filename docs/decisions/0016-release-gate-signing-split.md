@@ -38,7 +38,7 @@ properties; without them it stays unsigned and `release-production` fails: G3 is
 blocked, never satisfied by a debug or throwaway key. Completion evidence for a G3
 ticket must contain a passed `release-production` check (`evidence.check`); CI's report
 never completes one. CI accepts the owner's retained report only for the exact inputs
-under review, through `board.py --check --base` as for every ticket.
+under review, through `tickets.py check --base` as for every ticket.
 
 ## Consequences
 

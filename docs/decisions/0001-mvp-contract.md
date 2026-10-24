@@ -19,9 +19,9 @@ remaining decisions. Changes to financial rules need approved worked examples
 and scoped implementation before replacing current calculations.
 
 Use the [financial examples](../testing/mvp-financial-examples.md) and their
-[technical review](../testing/reviews/SELLO-001-independent-review.md) for calculation
+[technical review](../tickets/E01-foundation/SELLO-001/artifacts/SELLO-001-independent-review.md) for calculation
 and recovery cases. Feature delivery and verification belong to the
-[canonical tickets](../planning/mvp/README.md).
+[canonical tickets](../tickets/README.md).
 
 ## D01 — Scope and first release
 

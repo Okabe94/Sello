@@ -39,7 +39,7 @@ SELLO-037 must settle these with reviewed multi-month and correction examples:
 
 Follow [architecture](../../ARCHITECTURE.md) for module and financial boundaries.
 Preserve dated transactions, category identities and past limits. Delivery belongs
-to [SELLO-E09](../planning/mvp/epics/E09-signed-carryover.md), SELLO-037–043, after
+to [SELLO-E09](../tickets/E09-signed-carryover/README.md), SELLO-037–043, after
 SELLO-036 release acceptance. After policy approval, verify real-Room atomicity,
 replay/restart, backup/migrations, sandbox time scenarios and accessible capacity
 breakdowns. Cover skipped months, late corrections, mode transitions and overflow.

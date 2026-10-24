@@ -389,13 +389,13 @@ Integration references: [build variants/source sets][build-variants] and
 
 ## 10. Enforcement and evolution
 
-- **MUST** make SELLO-004's [quality flow](docs/planning/mvp/QUALITY_FLOW.md)
+- **MUST** make SELLO-004's [quality flow](docs/development/quality-gates.md)
   a prerequisite for subsequent implementation: one ticket-derived gate runner,
   validated evidence bound to the verified change set before Review/Done, and
   trusted CI enforcement on the real merge result before protected merges. Passing
   automation never substitutes for acceptance review.
-- **MUST** follow the repository-owned [MVP board](docs/planning/mvp/README.md)
-  for execution/dependencies and ticket delivery evidence. It operationalizes
+- **MUST** follow the repository-owned [ticket folders](docs/tickets/README.md)
+  for execution/dependencies and ticket delivery evidence. They operationalize
   these guardrails; it does not override financial contracts or expand MVP scope.
 - **MUST** use meaningful red→green behavior tests, controlled clocks/virtual time,
   external fakes, and real Room for transactions/migrations. No arbitrary sleeps,

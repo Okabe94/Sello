@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 import runner
-from support import EPIC, epic, git, make_repo, ticket, write
+from support import EPIC, epic, git, make_repo, ticket, write, write_epic
 from test_runner import DEVICE, Harness
 
 
@@ -31,9 +31,9 @@ class CandidateGateTests(unittest.TestCase):
 
     def test_documents_are_what_lives_under_docs_and_markdown_at_the_top(self):
         documents = [
-            "docs/development/storage.md", "docs/planning/mvp/epics/E11-bug-stabilization.md",
-            "docs/planning/mvp/BOARD.md", "docs/planning/mvp/jira-import.csv",
-            "docs/planning/mvp/quality-reports/SELLO-045.json", "docs/testing/evidence/SELLO-045/a.png",
+            "docs/development/storage.md", "docs/tickets/E11-bug-stabilization/README.md",
+            "docs/tickets/E11-bug-stabilization/SELLO-045/ticket.md", "docs/tickets/E11-bug-stabilization/SELLO-045/handoff.md",
+            "docs/tickets/E11-bug-stabilization/SELLO-045/quality-report.json", "docs/tickets/E11-bug-stabilization/SELLO-045/artifacts/a.png",
             "docs/design/sello-spec.html", "ARCHITECTURE.md", "AGENTS.md", "README.md",
         ]
         other = [
@@ -43,7 +43,7 @@ class CandidateGateTests(unittest.TestCase):
             ".github/workflows/quality.yml", ".github/pull_request_template.md",
             "scripts/verify-ticket", "scripts/quality/runner.py", "scripts/quality/notes.md",
             # Code that happens to live beside the documents is still code.
-            "docs/planning/mvp/board.py", "docs/planning/mvp/test_board.py",
+            "scripts/quality/tickets.py", "docs/tickets/tool.py",
             "app/README.md", "docs.md/Main.kt", "docsx/a.md",
         ]
         self.assertEqual([], [path for path in documents if not runner.is_document(path)])
@@ -63,25 +63,27 @@ class CandidateGateTests(unittest.TestCase):
 
     def test_the_workflow_the_tools_and_the_build_are_not_documents(self):
         for relative in (".github/workflows/quality.yml", "scripts/quality/x.py", "build.gradle.kts",
-                         "docs/planning/mvp/board.py"):
+                         "scripts/quality/tickets.py"):
             with self.subTest(relative):
                 self.commit(**{relative: "changed\n"})
                 self.assertEqual("G2", self.gate())
                 git(self.root, "reset", "-q", "--hard", self.base)
 
     def test_a_document_change_that_advances_a_ticket_still_needs_the_device_gate(self):
-        self.commit(**{EPIC: epic(
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="Done", dependencies="SELLO-003", gate="G2"),
-        )})
+        ))
+        self.commit()
         self.assertEqual(["SELLO-004"], runner.merge_candidate_tickets(self.root, self.base))
         self.assertEqual("G2", self.gate())
 
     def test_a_ticket_note_that_advances_nothing_is_a_document_change(self):
-        self.commit(**{EPIC: epic(
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="Backlog", dependencies="SELLO-003", gate="G2") + "\nA note.\n",
-        )})
+        ))
+        self.commit()
         self.assertEqual("G0", self.gate())
 
     def test_a_file_deleted_or_moved_out_of_the_code_counts_as_a_code_change(self):
@@ -130,12 +132,13 @@ class LandedTests(unittest.TestCase):
         )
 
     def complete_the_device_ticket(self):
-        write(self.root, EPIC, epic(
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="Done", dependencies="SELLO-003", gate="G2"),
         ))
         write(self.root, "app/src/Main.kt", "fun main() = println()\n")
-        git(self.root, "commit", "-qam", "ticket")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "ticket")
 
     def test_a_merged_device_ticket_is_checked_on_the_host_without_a_device(self):
         self.complete_the_device_ticket()

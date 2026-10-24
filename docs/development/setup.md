@@ -1,7 +1,7 @@
 # Reproducible Sello setup
 
 Versions and their limits: [ADR 0005](../decisions/0005-toolchain.md). Gates and the
-quality runner: the [execution guide](../planning/mvp/EXECUTION_GUIDE.md#quality-runner).
+quality runner: the [execution guide](quality-gates.md#quality-runner).
 
 ## Prerequisites
 
@@ -106,7 +106,7 @@ Inspect the graph and built identities:
 ## Build and focused inspection
 
 The host gate runs every module's tests, ktlint, lint and the assemblies; its exact
-task list is in the [board README](../planning/mvp/README.md):
+task list is in the [board README](../tickets/README.md):
 
 ```bash
 ./scripts/verify-ticket SELLO-0XX             # the ticket's own gate

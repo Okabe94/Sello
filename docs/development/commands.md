@@ -123,7 +123,7 @@ category.
 - **There is one offer to undo, not one per kind.** `UndoWindow` holds it for both
   workflows. Deleting an income makes an earlier deletion of an expense final and the
   other way round, and each workflow's `undoOffer()` answers only for its own kind.
-  Everything under [the six seconds](#the-six-seconds) holds for income as written.
+  Everything under [the six seconds](commands.md#the-six-seconds) holds for income as written.
 
 `IncomeReads` lists a month's income newest first in bounded pages, reads one income,
 and gives a month's exact total and count at one revision (`month`, and `observeMonth`

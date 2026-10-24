@@ -4,7 +4,7 @@ Which windows, text sizes and themes the assembled daily-use app was checked in,
 each check proves, and the test or walk that proves it. SELLO-033 assembled this
 matrix under [D10](../decisions/0001-mvp-contract.md#d10--release-acceptance-and-review).
 Manual TalkBack, Switch Access and hardware keyboard walks are post-MVP
-([SELLO-074](../planning/mvp/epics/E14-assistive-technology.md)); the accessibility
+([SELLO-074](../tickets/E14-assistive-technology/README.md)); the accessibility
 checks a test can read are here. Synthetic data only.
 
 ## Configurations
@@ -30,7 +30,7 @@ The walks ran on the isolated API 30 phone emulator `sello022_api30` (1080 × 23
 440 dpi, three-button navigation, `emulator-5584`) with a debug build of the code under
 test, driven through `adb` and `uiautomator`: P1 and P2 as the device is; M2 and E2 by
 overriding its display (`wm size` 1925 × 2475 at 440 dpi; 2160 × 1512 at 320 dpi).
-Each screenshot is in [evidence](evidence/SELLO-033).
+Each screenshot is in [evidence](../tickets/E08-release/SELLO-033/artifacts).
 
 Every theme appears once in the sweep; colour contrast for all four is checked
 separately, token by token, by `SelloColorsTest` (WCAG AA: 4.5:1 for text, 3:1 for

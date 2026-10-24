@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import evidence
 import runner
-from support import EPIC, epic, git, make_repo, ticket, write
+from support import epic, evidence_file, git, make_repo, ticket, ticket_file, write, write_epic
 from test_runner import DEVICE, Harness
 
 
@@ -61,7 +61,7 @@ class EvidenceTests(unittest.TestCase):
         report = json.loads(self.retained().read_text(encoding="utf-8"))
         self.assertIn(report["run_id"], self.field)
         self.assertIn("SELLO-004 G1 passed", self.field)
-        self.assertIn("docs/planning/mvp/quality-reports/SELLO-004.json", self.field)
+        self.assertIn("docs/tickets/E01-foundation/SELLO-004/quality-report.json", self.field)
 
     def test_missing_report_is_rejected(self):
         self.retained().unlink()
@@ -88,7 +88,7 @@ class EvidenceTests(unittest.TestCase):
         self.assert_rejected("outcome is failed", field=field)
 
     def test_failed_run_cannot_be_retained(self):
-        self.harness.exit_codes["board-tests"] = 1
+        self.harness.exit_codes["quality-tests"] = 1
         code, path = self.verify()
         self.assertNotEqual(0, code)
         with self.assertRaisesRegex(evidence.EvidenceError, "only a passed run"):
@@ -96,10 +96,10 @@ class EvidenceTests(unittest.TestCase):
 
     def test_passed_report_with_a_failed_check_is_rejected(self):
         field = self.rewrite(lambda report: report["checks"][0].update(exit_code=1))
-        self.assert_rejected("check board-check exited 1", field=field)
+        self.assert_rejected("check tickets-check exited 1", field=field)
 
     def test_report_for_another_ticket_is_rejected(self):
-        write(self.root, EPIC, epic(
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="Done", dependencies="SELLO-003"),
             ticket("SELLO-005", status="Review", dependencies="SELLO-004"),
@@ -118,7 +118,7 @@ class EvidenceTests(unittest.TestCase):
         self.check(field=evidence.retain(self.root, path))
 
     def release_evidence(self):
-        write(self.root, EPIC, epic(
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="In Progress", dependencies="SELLO-003", gate="G3"),
         ))
@@ -174,20 +174,23 @@ class EvidenceTests(unittest.TestCase):
         self.check(fresh=False)
 
     def test_acceptance_edit_invalidates_even_historical_evidence(self):
-        text = (self.root / EPIC).read_text(encoding="utf-8")
-        head, tail = text.split("## SELLO-004", 1)
-        write(self.root, EPIC, head + "## SELLO-004" + tail.replace("keeps working", "mostly works"))
+        path = self.root / ticket_file("SELLO-004")
+        write(self.root, ticket_file("SELLO-004"), path.read_text(encoding="utf-8").replace("keeps working", "mostly works"))
         self.assert_rejected("acceptance text changed", fresh=False)
 
     def test_another_tickets_acceptance_edit_keeps_historical_evidence(self):
-        text = (self.root / EPIC).read_text(encoding="utf-8")
-        write(self.root, EPIC, text.replace("keeps working", "mostly works", 1))
+        path = self.root / ticket_file("SELLO-003")
+        write(self.root, ticket_file("SELLO-003"), path.read_text(encoding="utf-8").replace("keeps working", "mostly works"))
         self.check(fresh=False)
 
     def test_status_and_evidence_edits_do_not_stale_the_report(self):
-        text = (self.root / EPIC).read_text(encoding="utf-8").replace("In Progress\n- **Depends", "Review\n- **Depends")
-        write(self.root, EPIC, text + f"\n### Delivery evidence\n- **Quality run:** {self.field}\n")
-        write(self.root, "docs/planning/mvp/BOARD.md", "regenerated\n")
+        path = self.root / ticket_file("SELLO-004")
+        text = path.read_text(encoding="utf-8").replace("In Progress\n- **Depends", "Review\n- **Depends")
+        write(self.root, ticket_file("SELLO-004"), text + "\n### Execution progress\n\n- Verified.\n")
+        write(self.root, evidence_file("SELLO-004"), f"# SELLO-004\n\n- **Quality run:** {self.field}\n")
+        write(self.root, "docs/tickets/E01-foundation/SELLO-004/handoff.md", "# SELLO-004\n\nDone.\n")
+        write(self.root, "docs/tickets/E01-foundation/SELLO-004/artifacts/walk.png", "png")
+        write(self.root, "docs/development/HANDOFF.md", "informative\n")
         self.check()
 
     def test_field_naming_a_different_run_is_rejected(self):

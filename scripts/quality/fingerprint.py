@@ -7,9 +7,9 @@ the change set under verification: what differs between the merge base with main
 the tree, as normalized hunks, so the same edit hashes the same whether or not main
 has moved elsewhere since. Completion evidence is bound to the change fingerprint;
 the hosted run on the merge result verifies the combination.
-Neither covers ignored outputs, generated board views, retained quality reports, the
-informative handoff, or ticket bookkeeping (status lines, Execution progress and
-Delivery evidence sections).
+Neither covers ignored outputs, the informative handoff, or ticket bookkeeping: status
+lines and Execution progress sections of ticket files, and a ticket folder's
+evidence.md, handoff.md, quality-report.json and artifacts.
 """
 import difflib
 import hashlib
@@ -17,13 +17,11 @@ import re
 import subprocess
 from pathlib import Path
 
-BOARD_DIR = "docs/planning/mvp/"
-EPIC_DIR = BOARD_DIR + "epics/"
-RETAINED_REPORT_DIR = BOARD_DIR + "quality-reports/"
-GENERATED_VIEWS = frozenset(BOARD_DIR + name for name in (
-    "BOARD.md", "ROADMAP.md", "jira-import.csv", "dependency-links.csv",
-    "roadmap-jira-import.csv", "roadmap-dependency-links.csv",
-))
+TICKETS_DIR = "docs/tickets/"
+TICKET_FILE = re.compile(r"^docs/tickets/E\d{2}-[a-z0-9-]+/(SELLO-\d{3})/ticket\.md$")
+EPIC_README = re.compile(r"^docs/tickets/E\d{2}-[a-z0-9-]+/README\.md$")
+# Bookkeeping about a ticket, read by no check: evidence, handoff, the retained report and artifacts.
+TICKET_BOOKKEEPING = re.compile(r"^docs/tickets/E\d{2}-[a-z0-9-]+/SELLO-\d{3}/(evidence\.md|handoff\.md|quality-report\.json|artifacts/)")
 # Informative only (AGENTS.md): no check reads it, so its edits are not verified inputs.
 EXCLUDED_FILES = frozenset({"docs/development/HANDOFF.md"})
 INTEGRATION_BRANCHES = ("origin/main", "main")
@@ -34,13 +32,18 @@ BOOKKEEPING = re.compile(
 STATUS_LINE = re.compile(r"^- \*\*Status:\*\* .*\n", re.MULTILINE)
 
 
-def acceptance_text(epic_text):
-    """Epic source with status and progress/evidence bookkeeping removed."""
-    return BOOKKEEPING.sub("", STATUS_LINE.sub("", epic_text)).rstrip() + "\n"
+def acceptance_text(ticket_text):
+    """Ticket source with status and progress/evidence bookkeeping removed.
+
+    A ticket file's own heading is level one; the old epic sections used level two.
+    The first heading is normalized so historical acceptance hashes stay valid.
+    """
+    normalized = re.sub(r"\A# (SELLO-)", r"## \1", ticket_text)
+    return BOOKKEEPING.sub("", STATUS_LINE.sub("", normalized)).rstrip() + "\n"
 
 
 def is_excluded(name):
-    return name in GENERATED_VIEWS or name in EXCLUDED_FILES or name.startswith(RETAINED_REPORT_DIR)
+    return name in EXCLUDED_FILES or TICKET_BOOKKEEPING.match(name) is not None
 
 
 def input_files(root):
@@ -55,7 +58,8 @@ def input_files(root):
 
 
 def is_epic(name):
-    return name.startswith(EPIC_DIR) and name.endswith(".md")
+    """A ticket document whose status line and progress section are bookkeeping."""
+    return TICKET_FILE.match(name) is not None or EPIC_README.match(name) is not None
 
 
 def input_fingerprint(root):
@@ -85,10 +89,9 @@ def ticket_section(epic_text, ticket_id):
 
 def ticket_acceptance(root, ticket_id):
     """Hash of one ticket's own text without bookkeeping, or None for an unknown ticket."""
-    for path in sorted((Path(root) / EPIC_DIR).glob("*.md")):
-        section = ticket_section(path.read_text(encoding="utf-8").replace("\r\n", "\n"), ticket_id)
-        if section is not None:
-            return hashlib.sha256(acceptance_text(section).encode("utf-8")).hexdigest()
+    for path in sorted((Path(root) / TICKETS_DIR).glob(f"E*/{ticket_id}/ticket.md")):
+        text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+        return hashlib.sha256(acceptance_text(text).encode("utf-8")).hexdigest()
     return None
 
 

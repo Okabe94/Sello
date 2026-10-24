@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 import fingerprint
-from support import EPIC, epic, git, make_repo, ticket, write
+from support import epic, evidence_file, git, make_repo, ticket, ticket_file, write, write_epic
 
 
 class FingerprintTests(unittest.TestCase):
@@ -35,46 +35,47 @@ class FingerprintTests(unittest.TestCase):
         write(self.root, "build/reports/quality/report.json", "{}")
         self.assertEqual(self.before, self.after())
 
-    def test_generated_board_views_are_excluded(self):
-        write(self.root, "docs/planning/mvp/BOARD.md", "regenerated\n")
-        write(self.root, "docs/planning/mvp/jira-import.csv", "regenerated\n")
-        self.assertEqual(self.before, self.after())
-
-    def test_retained_reports_are_excluded(self):
-        write(self.root, "docs/planning/mvp/quality-reports/SELLO-004.json", "{}")
+    def test_ticket_bookkeeping_files_and_the_handoff_are_excluded(self):
+        write(self.root, "docs/tickets/E01-foundation/SELLO-004/quality-report.json", "{}")
+        write(self.root, evidence_file("SELLO-004"), "# SELLO-004\n\n- **Review:** merged\n")
+        write(self.root, "docs/tickets/E01-foundation/SELLO-004/handoff.md", "# SELLO-004\n\nDone.\n")
+        write(self.root, "docs/tickets/E01-foundation/SELLO-004/artifacts/walk.png", "png")
+        write(self.root, "docs/development/HANDOFF.md", "informative\n")
         self.assertEqual(self.before, self.after())
 
     def test_status_change_is_bookkeeping(self):
-        write(self.root, EPIC, epic(
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="Review", dependencies="SELLO-003"),
         ))
         self.assertEqual(self.before, self.after())
 
-    def test_added_progress_and_evidence_are_bookkeeping(self):
-        text = (self.root / EPIC).read_text(encoding="utf-8")
-        text += "\n### Execution progress\nStarted.\n\n### Delivery evidence\n- **Quality run:** q1\n"
-        write(self.root, EPIC, text)
+    def test_epic_status_change_is_bookkeeping(self):
+        text = (self.root / "docs/tickets/E01-foundation/README.md").read_text(encoding="utf-8")
+        write(self.root, "docs/tickets/E01-foundation/README.md", text.replace("**Status:** In Progress", "**Status:** Done"))
+        self.assertEqual(self.before, self.after())
+
+    def test_added_progress_is_bookkeeping(self):
+        text = (self.root / ticket_file("SELLO-004")).read_text(encoding="utf-8")
+        write(self.root, ticket_file("SELLO-004"), text + "\n### Execution progress\nStarted.\n")
         self.assertEqual(self.before, self.after())
 
     def test_acceptance_edit_changes_fingerprint(self):
-        text = (self.root / EPIC).read_text(encoding="utf-8")
-        write(self.root, EPIC, text.replace("keeps working", "keeps working sometimes"))
+        text = (self.root / ticket_file("SELLO-004")).read_text(encoding="utf-8")
+        write(self.root, ticket_file("SELLO-004"), text.replace("keeps working", "keeps working sometimes"))
         self.assertNotEqual(self.before, self.after())
 
     def test_gate_or_dependency_edit_changes_fingerprint(self):
-        text = (self.root / EPIC).read_text(encoding="utf-8")
-        write(self.root, EPIC, text.replace("- **Gate:** G1", "- **Gate:** G0"))
+        text = (self.root / ticket_file("SELLO-004")).read_text(encoding="utf-8")
+        write(self.root, ticket_file("SELLO-004"), text.replace("- **Gate:** G1", "- **Gate:** G0"))
         self.assertNotEqual(self.before, self.after())
 
-    def test_evidence_section_does_not_swallow_the_next_ticket(self):
-        base = epic(
-            ticket("SELLO-003", status="Done") + "\n### Delivery evidence\n- **Review:** ok\n",
-            ticket("SELLO-004", status="In Progress", dependencies="SELLO-003"),
-        )
-        write(self.root, EPIC, base)
+    def test_progress_section_does_not_swallow_the_next_section(self):
+        text = (self.root / ticket_file("SELLO-004")).read_text(encoding="utf-8")
+        base = text.replace("### Verification recipe", "### Execution progress\nStarted.\n\n### Verification recipe")
+        write(self.root, ticket_file("SELLO-004"), base)
         first = self.after()
-        write(self.root, EPIC, base.replace("Reject incomplete outcomes.", "Accept anything.", 2))
+        write(self.root, ticket_file("SELLO-004"), base.replace("Run focused tests", "Run nothing"))
         self.assertNotEqual(first, self.after())
 
     def test_fresh_clone_matches_a_working_tree_with_converted_line_endings(self):
@@ -93,7 +94,7 @@ class FingerprintTests(unittest.TestCase):
         )
 
     def test_reports_file_count(self):
-        self.assertEqual(3, fingerprint.input_fingerprint(self.root)["files"])
+        self.assertEqual(5, fingerprint.input_fingerprint(self.root)["files"])
 
 
 class ChangeFingerprintTests(unittest.TestCase):
@@ -155,21 +156,21 @@ class ChangeFingerprintTests(unittest.TestCase):
         write(self.root, "app/src/Feature.kt", "b\na\n")
         self.assertNotEqual(before["value"], self.changes()["value"])
 
-    def test_bookkeeping_only_epic_edits_are_not_changes(self):
-        write(self.root, EPIC, epic(
+    def test_bookkeeping_only_ticket_edits_are_not_changes(self):
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status="Review", dependencies="SELLO-003") + "\n### Delivery evidence\n- **Quality run:** q1\n",
         ))
         self.assertEqual(0, self.changes()["paths"])
 
     def test_an_acceptance_edit_is_a_change(self):
-        text = (self.root / EPIC).read_text(encoding="utf-8")
-        write(self.root, EPIC, text.replace("keeps working", "keeps working sometimes"))
+        text = (self.root / ticket_file("SELLO-004")).read_text(encoding="utf-8")
+        write(self.root, ticket_file("SELLO-004"), text.replace("keeps working", "keeps working sometimes"))
         self.assertEqual(1, self.changes()["paths"])
 
-    def test_generated_views_reports_and_the_handoff_are_not_changes(self):
-        write(self.root, "docs/planning/mvp/BOARD.md", "regenerated\n")
-        write(self.root, "docs/planning/mvp/quality-reports/SELLO-004.json", "{}")
+    def test_ticket_bookkeeping_files_and_the_handoff_are_not_changes(self):
+        write(self.root, "docs/tickets/E01-foundation/SELLO-004/quality-report.json", "{}")
+        write(self.root, "docs/tickets/E01-foundation/SELLO-004/artifacts/walk.png", "png")
         write(self.root, "docs/development/HANDOFF.md", "informative only\n")
         self.assertEqual(0, self.changes()["paths"])
 

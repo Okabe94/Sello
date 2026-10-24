@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import evidence
 import runner
-from support import EPIC, epic, git, make_repo, ticket, write
+from support import epic, git, make_repo, ticket, write, write_epic
 from test_runner import DEVICE, Harness
 
 
@@ -29,12 +29,13 @@ class MergeCandidateTests(unittest.TestCase):
         self.devices = [DEVICE]
 
     def set_statuses(self, four, five="Backlog"):
-        write(self.root, EPIC, epic(
+        write_epic(self.root, epic(
             ticket("SELLO-003", status="Done"),
             ticket("SELLO-004", status=four, dependencies="SELLO-003"),
             ticket("SELLO-005", status=five, dependencies="SELLO-004", gate="G2"),
         ))
-        git(self.root, "commit", "-qam", "statuses")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "statuses")
 
     def run_candidate(self, base=None, gate=None):
         self.stream = io.StringIO()

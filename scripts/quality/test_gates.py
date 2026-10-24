@@ -5,7 +5,7 @@ from pathlib import Path
 
 import gates
 
-README = Path(__file__).resolve().parents[2] / "docs/planning/mvp/README.md"
+README = Path(__file__).resolve().parents[2] / "docs/tickets/README.md"
 
 
 class GateDocumentationTests(unittest.TestCase):
@@ -23,7 +23,7 @@ class GateDocumentationTests(unittest.TestCase):
 
     def test_host_gate_runs_every_module_and_both_static_checks(self):
         names = [check.name for check in gates.plan("G1")]
-        self.assertEqual(["board-check", "board-tests", "quality-tests", "performance-tests", "architecture", "gradle-host"], names)
+        self.assertEqual(["tickets-check", "quality-tests", "performance-tests", "architecture", "links", "gradle-host"], names)
         self.assertIn("ktlintCheck", gates.HOST_TASKS)
         self.assertIn("lintDebug", gates.HOST_TASKS)
 

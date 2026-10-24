@@ -1,6 +1,6 @@
 """Completion evidence: retain a passing quality report and validate it later.
 
-Shared by board.py (Review/Done validation) and CI. A retained report is accepted
+Shared by tickets.py (Review/Done validation) and CI. A retained report is accepted
 only if it is well formed, passed, belongs to the ticket, ran a sufficient gate, is
 the exact file the ticket's `Quality run` field names, and still matches the
 ticket's acceptance text. A ticket entering Review or Done must also be bound to the
@@ -16,10 +16,12 @@ from pathlib import Path
 
 import fingerprint
 import selection
+import tickets
 
 GATES = ("G0", "G1", "G2", "G3")
 MINIMUM_GATE = "G1"
-RETAINED_DIR = fingerprint.RETAINED_REPORT_DIR.rstrip("/")
+RETAINED_NAME = "quality-report.json"
+LEGACY_EPIC_DIR = "docs/planning/mvp/epics/"  # layout before the ticket folders; read at old base revisions
 SCHEMA_V1 = json.loads((Path(__file__).with_name("report-schema-v1.json")).read_text(encoding="utf-8"))
 SCHEMA = json.loads((Path(__file__).with_name("report-schema-v2.json")).read_text(encoding="utf-8"))
 TYPES = {"object": dict, "array": list, "string": str, "integer": int, "boolean": bool}
@@ -59,14 +61,18 @@ def schema_problem(value, schema, where="report"):
 
 
 def retained_path(root, ticket_id):
-    return Path(root) / RETAINED_DIR / f"{ticket_id}.json"
+    """The ticket folder's retained report; raise EvidenceError when the ticket has no folder."""
+    folder = tickets.ticket_folder(root, ticket_id)
+    if folder is None:
+        raise EvidenceError(f"no ticket folder for {ticket_id} under {tickets.TICKETS_DIR}")
+    return folder / RETAINED_NAME
 
 
 def load(path):
     try:
         report = json.loads(Path(path).read_text(encoding="utf-8"))
     except OSError:
-        raise EvidenceError("no retained quality report; run scripts/verify-ticket with --retain") from None
+        raise EvidenceError("no retained quality report (quality-report.json) in the ticket folder; run scripts/verify-ticket with --retain") from None
     except ValueError:
         raise EvidenceError("retained report is not valid JSON") from None
     schema = SCHEMA_V1 if isinstance(report, dict) and report.get("schema_version") == 1 else SCHEMA
@@ -102,7 +108,7 @@ def quality_run_line(root, ticket_id):
         f"run {report['run_id']}; {report['ticket']} {report['gate']['executed']} {report['outcome']}; "
         f"HEAD {report['snapshot']['head'][:7]}, inputs sha256 {report['snapshot']['fingerprint']['value'][:12]}"
         + (f", changes sha256 {changes['value'][:12]}" if (changes := report["snapshot"].get("changes")) else "")
-        + f"; report {RETAINED_DIR}/{ticket_id}.json sha256 {digest}{label}"
+        + f"; report {path.relative_to(root).as_posix()} sha256 {digest}{label}"
     )
 
 
@@ -119,12 +125,18 @@ def retain(root, report_path):
     return quality_run_line(root, report["ticket"])
 
 
-def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None):
+MIGRATED = re.compile(r"([0-9a-f]{64})\s*(?:→|->)\s*([0-9a-f]{64})")
+
+
+def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None, migrated=None):
     """Raise EvidenceError unless the retained report completes this ticket.
 
     [fresh] means the ticket advances in this candidate, so its report must be bound to
     a change set the candidate contains: the working tree against main when [base] is
     None, otherwise one of the first-parent steps from HEAD back to [base].
+    [migrated] is the ticket's `Acceptance migrated` evidence field, "<old> → <new>": the
+    recorded move of 2026-10-24 changed only link paths inside ticket texts, so a report
+    bound to the old hash still completes the ticket while the text hashes to the new one.
     """
     path = retained_path(root, ticket_id)
     report = load(path)
@@ -148,8 +160,11 @@ def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None):
         raise EvidenceError(f"Quality run does not name run {report['run_id']} of the retained report")
     if hashlib.sha256(path.read_bytes()).hexdigest() not in quality_run:
         raise EvidenceError("retained report does not match the recorded sha256; it changed after it was recorded")
-    if report["snapshot"]["acceptance"] != fingerprint.ticket_acceptance(root, ticket_id):
-        raise EvidenceError("ticket acceptance text changed after the run; verify again")
+    current = fingerprint.ticket_acceptance(root, ticket_id)
+    if report["snapshot"]["acceptance"] != current:
+        recorded = MIGRATED.search(migrated or "")
+        if not (recorded and recorded.group(1) == report["snapshot"]["acceptance"] and recorded.group(2) == current):
+            raise EvidenceError("ticket acceptance text changed after the run; verify again")
     if fresh:
         changes = report["snapshot"].get("changes")
         if changes is None:
@@ -159,15 +174,25 @@ def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None):
 
 
 def status_at(root, base, ticket_id):
-    """A ticket's status at a Git revision, or None if unknown there."""
+    """A ticket's status at a Git revision, or None if unknown there.
+
+    Reads the ticket folder layout first and falls back to the epic files that held
+    tickets before it, so a candidate based on an older revision still compares.
+    """
     def git(*arguments):
         completed = subprocess.run(["git", "-C", str(root), *arguments], capture_output=True, text=True)
         return completed.stdout if completed.returncode == 0 else None
 
-    names = git("ls-tree", "-r", "--name-only", base, "--", fingerprint.EPIC_DIR)
+    status = re.compile(r"^- \*\*Status:\*\* (.+)$", re.MULTILINE)
+    names = git("ls-tree", "-r", "--name-only", base, "--", fingerprint.TICKETS_DIR)
+    for name in (names or "").splitlines():
+        if fingerprint.TICKET_FILE.match(name) and name.split("/")[-2] == ticket_id:
+            match = status.search(git("show", f"{base}:{name}") or "")
+            return match.group(1) if match else None
+    names = git("ls-tree", "-r", "--name-only", base, "--", LEGACY_EPIC_DIR)
     for name in (names or "").splitlines():
         section = fingerprint.ticket_section(git("show", f"{base}:{name}") or "", ticket_id)
         if section:
-            match = re.search(r"^- \*\*Status:\*\* (.+)$", section, re.MULTILINE)
+            match = status.search(section)
             return match.group(1) if match else None
     return None

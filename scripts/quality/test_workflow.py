@@ -125,7 +125,7 @@ class HostedWorkflowTests(unittest.TestCase):
     def test_completion_evidence_is_validated_after_the_full_gate(self):
         block = self.collector['Validate completion evidence']
         self.assertNotIn('if:', block)
-        self.assertIn('python3 docs/planning/mvp/board.py --check --base "$BASE"', block)
+        self.assertIn('python3 scripts/quality/tickets.py check --base "$BASE"', block)
         names = list(self.collector)
         self.assertLess(names.index('Collect full gate evidence'), names.index('Validate completion evidence'))
 

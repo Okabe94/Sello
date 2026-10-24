@@ -30,9 +30,9 @@ what is extended and what is new. None of that is implemented yet.
     them side by side only from 600dp (`showsDetailBeside`).
   - The expense form's second pane is the keypad, which works at about 160dp. In a
     393×400dp window two panes keep the amount, category, keys and button on screen
-    ([capture](../testing/evidence/SELLO-052/01-two-columns-393x400.png)); one column
+    ([capture](../tickets/retired/SELLO-052/artifacts/01-two-columns-393x400.png)); one column
     hides the amount and cuts off the button
-    ([capture](../testing/evidence/SELLO-052/02-one-column-393x400-rejected.png)).
+    ([capture](../tickets/retired/SELLO-052/artifacts/02-one-column-393x400-rejected.png)).
   Do not give the form Recibo's 600dp rule. If a window too narrow for 48dp keys
   (under about 350dp wide and under 480dp tall) ever matters, it needs its own design,
   not the one-column layout.

@@ -18,13 +18,9 @@ a deliberately smaller, tested MVP and the Sello visual language.
   map, screen composable hierarchy and navigation test coverage.
 - [Architecture and guardrails](ARCHITECTURE.md): ownership, financial/recovery
   contracts, technologies, MVP scope and developer tooling requirements.
-- [MVP Kanban board](docs/planning/mvp/BOARD.md): canonical implementation status
-  and scoped tickets.
-- [Post-MVP roadmap board](docs/planning/mvp/ROADMAP.md): signed carryover (seven
-  dependency-linked tasks) and legacy data import (one), separate from MVP release acceptance.
-- [Delivery workflow and gates](docs/planning/mvp/README.md): dependencies,
-  definition of done, evidence and Jira handoff.
-- [Independent executor guide](docs/planning/mvp/EXECUTION_GUIDE.md): prerequisites,
+- [Tickets](docs/tickets/README.md): one folder per ticket with its evidence,
+  retained report and handoff; statuses, definition of done and gate profiles.
+- [Independent executor guide](docs/development/execution-guide.md): prerequisites,
   file ownership, tools, verification procedures and source library.
 - [Time and composition](docs/development/time-and-composition.md): the three clocks,
   the financial zone, the Koin composition root and who cancels what.
@@ -42,7 +38,7 @@ a deliberately smaller, tested MVP and the Sello visual language.
   form's rules, saving once, and what it hands back.
 - [Anotar](docs/development/expense-entry.md): recording an expense, the preview,
   saving once and the receipt.
-- [Quality flow](docs/planning/mvp/QUALITY_FLOW.md): `./scripts/verify-ticket`, the
+- [Quality gates](docs/development/quality-gates.md): `./scripts/verify-ticket`, the
   evidence every ticket needs and what CI enforces.
 - [Design references](docs/design/README.md): Sello v2, the v1.1 snapshot and provenance.
 
@@ -51,7 +47,7 @@ entry/history, category and limit management, corrections with guarded undo,
 persisted appearance/order settings, adaptive navigation and unreadable-storage
 startup recovery. The component catalog is populated. Backup/restore/reset and the
 live-testing sandbox (debug only) are not customer-facing capabilities; see the current app
-baseline and board for the exact boundary.
+baseline and tickets for the exact boundary.
 
 ## Local host verification (G1)
 
@@ -65,15 +61,16 @@ ANDROID_HOME=/home/okabe94/Android/Sdk JAVA_HOME=/opt/android-studio/jbr \
 ```
 
 Replace `SELLO-0XX` with the ticket being worked on. The command runs that ticket's
-gate (board checks, architecture rules, ktlint, unit tests, lint and assembly for
+gate (ticket and link checks, architecture rules, ktlint, unit tests, lint and assembly for
 G1) and writes a report under `build/reports/quality/`. Default ticket commands run
 full coverage. For a G2 ticket, `./scripts/verify-ticket SELLO-0XX --affected origin/main --retain` selects device modules and their consumers since the PR base, while
 `--gate G2` forces all device suites. Fetch the intended base first; unrelated or
-unknown inputs select full coverage. See the [local commands and selection map](docs/planning/mvp/EXECUTION_GUIDE.md#quality-runner).
+unknown inputs select full coverage. See the [local commands and selection map](docs/development/quality-gates.md#quality-runner).
 
 For documentation-only work advancing no ticket, run
-`./scripts/verify-ticket --merge-candidate origin/main`. It derives G0 (board/tool
-tests and architecture, Python/Git only); it cannot replace a ticket's G1/G2/G3.
+`./scripts/verify-ticket --merge-candidate origin/main`. It derives G0 (ticket
+structure, tool tests, architecture and links, Python/Git only); it cannot replace a
+ticket's G1/G2/G3.
 Hosted code pushes retain G1 to warm trusted main caches; documentation pushes use
 G0 and nightly/manual runs keep full G2.
 

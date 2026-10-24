@@ -64,8 +64,9 @@ balance.
 
 ## Open
 
-- The expected-income lifecycle and how a recorded income is matched to an expected
-  one; post-MVP with recurring income.
+- Nothing for expected income: its lifecycle (expected until catch-up records it on its
+  date, never matched to a manual entry) is settled in the
+  [recurrence examples](../../testing/recurrence-examples.md) (SELLO-096).
 
 Advanced analysis, recurrence, Metas and investments keep their release scope; this
 brief does not authorize dormant data models or unfinished destinations.

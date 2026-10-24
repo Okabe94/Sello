@@ -47,7 +47,9 @@ understandable and reachable.
 
 Review-invitation timing and dismissal, the featured goal after completion or deletion,
 and the recurring-payment lifecycle (recorded automatically on opening, reserved until
-then) were decided in [ADR 0017](../../decisions/0017-goals-recurrence-investments.md). Still open:
+then) were decided in [ADR 0017](../../decisions/0017-goals-recurrence-investments.md); the reservation
+lifecycle is settled in the [recurrence examples](../../testing/recurrence-examples.md)
+(SELLO-096). Still open:
 
 - Independent examples for the ADR 0012 rows not yet separately reviewed
   (BG-E01, BG-E04, BG-E12).

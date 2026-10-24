@@ -321,8 +321,9 @@ deferred beyond MVP. Remaining implementation inputs are listed in the
 
 - **MUST**, for recurrence: retain calendar anchors when clamping month ends;
   distinguish every 15 days from twice-monthly; preserve past occurrences when
-  editing future schedules. Use unique `(scheduleId, effectiveDate)` origins and
-  atomic creation/checkpoints; foreground and WorkManager share a use case.
+  editing future schedules. Use unique `(scheduleId, effectiveDate, slot)` origins
+  (two twice-monthly days can clamp to one date) and atomic creation/checkpoints;
+  every catch-up trigger shares one use case, with no background work (ADR 0017).
   Bound/resume catch-up, expose per-item progress, and retry only transient faults.
 - **MUST**, for FX: decimal decoding, positive bounded rates, source/as-of/fetched-at
   metadata, atomic mode/revision checks; late network responses cannot overwrite

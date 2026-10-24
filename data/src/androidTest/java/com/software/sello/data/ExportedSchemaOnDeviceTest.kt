@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.software.sello.data.local.Migration1To2
 import com.software.sello.data.local.Migration2To3
+import com.software.sello.data.local.Migration3To4
 import com.software.sello.data.local.SelloDatabase
 import com.software.sello.data.local.openSelloDatabase
 import com.software.sello.data.repository.RoomFinancialProfileStore
@@ -166,6 +167,63 @@ class ExportedSchemaOnDeviceTest {
     }
 
     @Test
+    fun upgradingFromVersionThreeKeepsEveryRowAndAddsOnlyTheEmptyGoalTables() {
+        val tables = versionOneTables + "deleted_expense" + "deleted_income"
+        fun SupportSQLiteDatabase.rowsOf() = tables.associateWith { table ->
+            query("SELECT * FROM $table").use { cursor ->
+                buildList {
+                    while (cursor.moveToNext()) {
+                        add(
+                            (0 until cursor.columnCount).joinToString("|") {
+                                cursor.getString(it) ?: "null"
+                            }
+                        )
+                    }
+                }
+            }
+        }
+        val before = helper.createDatabase(name, 3).use { exported ->
+            exported.execSQL(
+                "INSERT INTO profile (id, financial_zone, generation, revision, created_at) " +
+                    "VALUES (1, 'America/Bogota', 4, 17, 0)"
+            )
+            exported.execSQL(
+                "INSERT INTO category VALUES ('${uuid(1)}', 'Mercado', 'mercado', " +
+                    "'shopping_cart', 0, 3, 10, 20)"
+            )
+            exported.execSQL(
+                "INSERT INTO expense VALUES ('${uuid(2)}', '${uuid(1)}', '2026-10-03', 5, " +
+                    "48700, 'COP', 'Pan', 2, 30, 40)"
+            )
+            exported.execSQL(
+                "INSERT INTO income VALUES ('${uuid(3)}', '2026-10-01', 2, 5200000, 'COP', " +
+                    "'other', 'Bono', 'Extra', 1, 30, 40)"
+            )
+            // What a process that ended inside the six seconds left behind.
+            exported.execSQL(
+                "INSERT INTO deleted_income VALUES ('${uuid(9)}', 4, 50, '${uuid(4)}', " +
+                    "'2026-10-02', 3, 10000, 'COP', 'salary', NULL, NULL, 1, 30, 40)"
+            )
+            exported.rowsOf()
+        }
+
+        // Room compares the result with the exported version 4 schema and fails on any difference.
+        helper.runMigrationsAndValidate(name, 4, true, Migration3To4).use { upgraded ->
+            val goalRows = listOf("goal", "goal_event", "deleted_goal_event", "featured_goal")
+                .sumOf { table ->
+                    upgraded.query("SELECT COUNT(*) FROM $table").use { count ->
+                        count.moveToFirst()
+                        count.getInt(0)
+                    }
+                }
+
+            assertEquals(5, before.values.sumOf { rows -> rows.size })
+            assertEquals(before, upgraded.rowsOf())
+            assertEquals(0, goalRows)
+        }
+    }
+
+    @Test
     fun aVersionOneDatabaseOpenedByThisBuildIsUpgradedThroughEveryVersionAndReadsTheSameData() =
         runBlocking {
             versionOneWithHistory()
@@ -184,12 +242,12 @@ class ExportedSchemaOnDeviceTest {
                 profile
             )
             assertEquals(listOf(48_700L), expenses.map { it.amountMinor })
-            assertEquals(3, version)
+            assertEquals(4, version)
         }
 
     @Test
     fun aDatabaseBuiltFromTheExportedCurrentSchemaOpensAndKeepsItsRows() = runBlocking {
-        helper.createDatabase(name, 3).use { exported ->
+        helper.createDatabase(name, 4).use { exported ->
             exported.execSQL(
                 "INSERT INTO profile (id, financial_zone, generation, revision, created_at) " +
                     "VALUES (1, 'America/Bogota', 4, 17, 0)"

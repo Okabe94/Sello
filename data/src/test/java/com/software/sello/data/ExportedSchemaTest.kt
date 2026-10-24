@@ -11,7 +11,8 @@ class ExportedSchemaTest {
     private val schemas = File("schemas/com.software.sello.data.local.SelloDatabase")
     private val versionOne = File(schemas, "1.json").readText()
     private val versionTwo = File(schemas, "2.json").readText()
-    private val current = File(schemas, "3.json").readText()
+    private val versionThree = File(schemas, "3.json").readText()
+    private val current = File(schemas, "4.json").readText()
 
     private fun values(schema: String, key: String) =
         Regex("\"$key\"\\s*:\\s*\"?([\\w]+)\"?").findAll(schema).map { it.groupValues[1] }
@@ -28,10 +29,11 @@ class ExportedSchemaTest {
 
     @Test
     fun everyVersionThatShippedIsStillExported() {
-        assertEquals(listOf("1.json", "2.json", "3.json"), schemas.list()!!.sorted())
+        assertEquals(listOf("1.json", "2.json", "3.json", "4.json"), schemas.list()!!.sorted())
         assertEquals(listOf("1"), values(versionOne, "version").toList())
         assertEquals(listOf("2"), values(versionTwo, "version").toList())
-        assertEquals(listOf("3"), values(current, "version").toList())
+        assertEquals(listOf("3"), values(versionThree, "version").toList())
+        assertEquals(listOf("4"), values(current, "version").toList())
     }
 
     @Test
@@ -48,16 +50,30 @@ class ExportedSchemaTest {
     fun versionThreeAddsOnlyTheTableForDeletedIncome() {
         assertEquals(
             mvpTables + "deleted_expense" + "deleted_income",
+            values(versionThree, "tableName").toSet()
+        )
+    }
+
+    @Test
+    fun versionFourAddsOnlyTheGoalTables() {
+        assertEquals(
+            mvpTables + "deleted_expense" + "deleted_income" + "goal" + "goal_event" +
+                "deleted_goal_event" + "featured_goal",
             values(current, "tableName").toSet()
         )
     }
 
     @Test
     fun noForeignKeyCascadesOrDetaches() {
-        for (schema in listOf(versionOne, versionTwo, current)) {
+        for ((schema, keys) in listOf(
+            versionOne to 3,
+            versionTwo to 3,
+            versionThree to 3,
+            current to 5
+        )) {
             val actions = (values(schema, "onDelete") + values(schema, "onUpdate")).toList()
 
-            assertEquals(6, actions.size)
+            assertEquals(keys * 2, actions.size)
             assertEquals(setOf("RESTRICT"), actions.toSet())
         }
     }

@@ -3131,7 +3131,14 @@ Focused tests, then `./scripts/verify-ticket SELLO-087 --retain`.
   goal, pace). `GoalPolicyTest` follows the approved examples by ID; ten deliberate
   breaks of the policy each failed at least one of them. MT39 was added to the examples
   (a later aporte does not cover an earlier withdrawal once its aporte is deleted).
-  Remaining: schema 4 and its migration, then commands, undo and reads.
+- **Part 2, schema 4:** `goal`, `goal_event` (targets and movements in one recording
+  order, unique per goal), `deleted_goal_event` and `featured_goal`, with no cascade;
+  migration 3→4 adds them empty and keeps every row; schema exported; strict decoding
+  in `GoalMapper`. `GoalStorageTest` reads a stored history back to MT07 and MT17.
+  Breaking the migration or the mapper on purpose failed the tests. No command writes
+  goals yet, and backup, restore and erase-all do not know them (SELLO-088); no screen
+  can create one.
+  Remaining: commands, undo and reads.
 
 Shared definition of done and gates:
 

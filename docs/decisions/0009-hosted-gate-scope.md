@@ -1,7 +1,8 @@
 # 0009 — What the hosted check runs, and when
 
 **Owner:** project owner (user) · **Updated:** 2026-10-22
-**Status:** approved hosted gate policy, amended by [ADR 0014](0014-change-aware-quality-gates.md).
+**Status:** approved hosted gate policy, amended by [ADR 0014](0014-change-aware-quality-gates.md)
+and, on 2026-10-24, by the merge queue decision below.
 
 The required `quality` check always reports; the workflow has no path filter.
 `scripts/verify-ticket` owns selection, execution and evidence:
@@ -10,6 +11,7 @@ The required `quality` check always reports; the workflow has no path filter.
 | --- | --- |
 | Pull request advancing no ticket, documentation only | G0, Python/Git only |
 | Other pull requests | G2, with dependency-aware device scope; uncertain/shared inputs use full G2 |
+| Merge queue entry (`merge_group`) | The same candidate gate as a pull request, from the group's base, on the real merge result |
 | Documentation-only push to main advancing no ticket | G0 |
 | Code/other push to main | G1, including builds that publish trusted main caches |
 | Nightly or manually requested hosted run | Full G2 on main |
@@ -59,9 +61,13 @@ reported as executed. Historical schema-v1 full reports remain valid evidence.
 
 ## Conditions and post-merge duplication
 
-The lighter push check relies on main requiring up-to-date PRs and a passing
-quality check, enforced for administrators too, with squash merges of the checked
-candidate. If those conditions change, restore device checks on main pushes.
+The lighter push check relies on main taking candidates only through the merge
+queue, which runs this check on the real merge result right before merging, enforced
+for administrators too, with squash merges of the checked candidate. Branches no
+longer need to be up to date (decision of 2026-10-24: with several open pull
+requests, every merge invalidated every other branch and forced a rebase, a local
+rerun and a hosted rerun, growing with the square of the number of open pull
+requests). If those conditions change, restore device checks on main pushes.
 Nightly runs cover the full device graph even when PRs use a narrower scope.
 
 Code pushes deliberately keep G1: PR caches are read-only, so trusted main builds

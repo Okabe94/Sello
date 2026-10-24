@@ -43,3 +43,37 @@ closure, moves/deletions, unknown paths, ticket advancement/minima, local/CI par
 missing/wrong parts, malformed scope and old report compatibility. Final tooling
 changes require a full integrated G2 run. No runtime saving is established by
 configuration or mocked tests alone.
+
+## Amendment 2026-10-24 — evidence bound to the change set
+
+**Owner:** project owner (user) · **Status:** user-authorized implementation.
+
+Completion evidence was bound to a fingerprint of the whole tree, so any merge to
+`main` made every open pull request's retained report stale, whether or not a file
+overlapped. The hosted run checks out the merge result, so the report could only
+match after the branch took `main` again and the executor reran the full gate.
+
+From this amendment the report records two fingerprints. The whole-tree input
+fingerprint stays for the record and still guards a run against edits while checks
+execute. Completion evidence is bound to the new change fingerprint: the normalized
+hunks between the merge base with `main` and the tree, without positions, so the same
+edit hashes the same after unrelated changes land, even elsewhere in the same file,
+and any difference in the edit itself, including line order, changes it. The
+validator accepts a Review/Done report when its change fingerprint is one the
+candidate contains: locally the working tree against `main`; with a base, any
+first-parent step from HEAD back to that base, so a batched merge group or a
+multi-commit push binds each pull request on its own. The gate itself still runs on
+the combined tree, for pull requests and for merge queue entries, which are planned
+like pull requests from the group's base. The informative handoff joins the
+exclusions, since no check reads it. Schema-v2 reports gain an optional
+`snapshot.changes`; a ticket entering Review or Done needs it, earlier Done tickets
+keep their historical reports.
+
+Consequences: a branch behind `main` needs no update and no rerun unless GitHub
+reports a conflict, in which case the change set really changed. Executors update
+with `main` once before the final gate. A combination that only fails when two
+tickets meet is caught by the hosted run on the merge result instead of by a local
+rerun; that run already existed and is the one that protects `main`. Tests cover
+the same edit on a moved `main`, the same file edited elsewhere, a different edit,
+reordered lines, bookkeeping-only edits, exclusions, binary and untracked files,
+committed and working trees, the first-parent chain, and a merge group event.

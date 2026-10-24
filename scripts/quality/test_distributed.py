@@ -240,6 +240,17 @@ class DistributedGateTests(unittest.TestCase):
         self.parts = flattened
         self.assertNotEqual(0, self.collect()[0])
 
+    def test_a_merge_group_is_verified_like_a_pull_request(self):
+        write(self.root, 'app/src/Main.kt', 'fun main() = println(1)\n')
+        plan = distributed.context(self.root, self.base, 'merge_group')
+        self.assertEqual(('G2', 'affected', ['app'], ['app']),
+                         (plan['gate'], plan['coverage']['mode'], plan['coverage']['device_modules'], plan['groups']))
+        self.assertEqual(0, self.part('host', event='merge_group')[0])
+        self.assertEqual(0, self.part('app', event='merge_group')[0])
+        code, report = self.collect(event='merge_group', jobs={'plan': 'success', 'host': 'success', 'device': 'success'})
+        self.assertEqual(0, code, self.stream.getvalue())
+        self.assertEqual('merge_group', report['execution']['context']['event'])
+
     def test_push_keeps_the_host_gate_even_for_a_code_change(self):
         write(self.root, 'app/src/Main.kt', 'fun main() = println(1)\n')
         self.assertEqual(0, self.part('host', event='push')[0])

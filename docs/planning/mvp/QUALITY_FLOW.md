@@ -11,7 +11,8 @@ Unticketed work still runs the gates; do not invent a ticket ID to run checks.
 1. Read the canonical ticket, approved inputs and predecessor evidence; verify
    prerequisites before Ready.
 2. Implement within owned boundaries; run meaningful focused red→green tests.
-3. Run `./scripts/verify-ticket SELLO-017`. It MUST derive the minimum G1/G2/G3 profile
+3. Update the branch with `main` once, before the final gate, and resolve any conflict
+   there. Then run `./scripts/verify-ticket SELLO-017`. It MUST derive the minimum G1/G2/G3 profile
    from the canonical ticket, execute required checks and retain a structured report.
    Default ticket commands execute full coverage. `--affected BASE` opts into
    dependency-aware G2 device scope; `--gate G2` always forces full coverage.
@@ -46,9 +47,14 @@ never says Done for work that was not approved.
   hosted run for one status line.
 - **On the branch, Done means "proposed".** Until merged it is a request, not a
   fact. Do not start work that depends on the ticket from an unmerged branch.
-- **Changes requested** are pushed to the same pull request. If they touch
-  fingerprinted inputs, run the ticket gate again and update `Quality run`; the
+- **Changes requested** are pushed to the same pull request. If they change the
+  ticket's own change set, run the ticket gate again and update `Quality run`; the
   board check rejects a stale report.
+- **`main` moving after the run costs nothing.** The retained report is bound to the
+  pull request's own change set, not to the whole tree, and the merge queue runs the
+  gate on the real merge result before merging. Do not update the branch again
+  unless GitHub reports a conflict; then merge `main`, resolve, and rerun with
+  `--affected origin/main --retain`, because the change set itself changed.
 - **Not approved or abandoned:** close the pull request. `main` still shows the
   ticket as it was, so there is nothing to revert.
 - **Why:** one pull request needs one hosted run; writing Done in a second commit
@@ -69,13 +75,22 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
   input fingerprint, environment/toolchain, commands/exit codes/results, timestamps,
   warnings and artifact/device references. Never include personal data or secrets.
   A report is generated from execution, not an executor-authored assertion of success.
-- **MUST** define and test fingerprint coverage: code, tests, build/configuration,
-  guardrails and acceptance inputs (including relevant untracked files). Exclude
-  generated outputs/reports and status/evidence bookkeeping, not whole ticket files.
-  Acceptance edits invalidate evidence; adding the resulting evidence does not.
+- **MUST** define and test two fingerprints. The input fingerprint records the whole
+  tree: code, tests, build/configuration, guardrails and acceptance inputs (including
+  relevant untracked files). The change fingerprint binds completion evidence: the
+  normalized hunks between the merge base with `main` and the tree, so the same edit
+  hashes the same after unrelated changes land, even in the same file, and any
+  difference in the edit itself, including line order, does not. Both exclude
+  generated outputs/reports, the informative handoff and status/evidence bookkeeping,
+  not whole ticket files. Acceptance edits invalidate evidence; adding the resulting
+  evidence does not.
 - **MUST** implement a shared evidence validator used by board completion checks
   and CI. Reject missing, malformed, failed, wrong-ticket, inadequate-profile and
-  stale reports before Review/Done. Reports for earlier Done tickets describe their
+  stale reports before Review/Done. A report is stale when its change fingerprint is
+  not one the candidate contains: the working tree against `main` locally, or, with a
+  base, one of the first-parent steps from HEAD back to that base, so a batched merge
+  group or a multi-commit push binds each pull request on its own while the gate
+  itself verifies the combined tree. Reports for earlier Done tickets describe their
   historical tested snapshot; unrelated later changes must not retroactively make
   the whole board invalid. Validate new transitions/changed acceptance against the
   current snapshot, and verify historical artifact identity/retention separately.
@@ -125,8 +140,10 @@ Standing rules for the runner, validator and CI; a change to the tooling must ke
   documentation advancing no ticket gets G0. Other PRs get G2 with dependency-aware
   device scope; shared/unknown changes get full devices. Code pushes to main keep
   G1 for trusted cache publication; eligible documentation pushes get G0. Nightly
-  and manual runs execute full G2. Main still requires an up-to-date passing PR;
-  there is no path filter and the check always reports.
+  and manual runs execute full G2. Candidates reach `main` through the merge queue,
+  which runs the same check on the real merge result (`merge_group`) right before
+  merging, so branches need not be up to date; there is no path filter and the
+  check always reports.
   Host checks execute once. Only selected app/support device groups start; support
   runs only its selected data/design-system/catalog suites. The final quality job
   validates every required part and completion evidence. See the [local and CI

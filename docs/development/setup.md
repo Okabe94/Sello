@@ -222,7 +222,9 @@ Eligible documentation advancing no ticket uses G0 (Python/Git, board/tool tests
 and architecture), without Java, Gradle or SDK setup. Code PRs use G2 with affected
 modules and consumers; shared/build/tooling/unknown changes select full devices.
 Main code pushes retain G1 to populate trusted caches; eligible documentation
-pushes use G0. Scheduled/manual runs always use full G2.
+pushes use G0. Scheduled/manual runs always use full G2. Merge queue entries
+(`merge_group`) are verified like pull requests from the group's base, on the real
+merge result.
 
 G1/G2 host checks run once and retain every existing task. Only required device
 groups start: app, or support with the selected data/design-system/catalog suites.

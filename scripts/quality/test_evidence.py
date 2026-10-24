@@ -146,6 +146,29 @@ class EvidenceTests(unittest.TestCase):
         write(self.root, "app/src/Later.kt", "class Later\n")
         self.assert_rejected("stale")
 
+    def test_unrelated_change_on_main_keeps_the_report_fresh(self):
+        git(self.root, "checkout", "-q", "-b", "ticket")
+        write(self.root, "app/src/Feature.kt", "class Feature\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "feature")
+        self.field = self.verify_and_retain()
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "evidence")
+        git(self.root, "checkout", "-q", "main")
+        write(self.root, "app/src/Other.kt", "class Other\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "another ticket")
+        git(self.root, "checkout", "-q", "ticket")
+        git(self.root, "merge", "-q", "main")
+        self.check()
+        write(self.root, "app/src/Feature.kt", "class Feature { val x = 1 }\n")
+        self.assert_rejected("stale")
+
+    def test_report_without_change_binding_cannot_complete_a_ticket(self):
+        field = self.rewrite(lambda report: report["snapshot"].pop("changes"))
+        self.assert_rejected("change", field=field)
+        self.check(field=field, fresh=False)
+
     def test_historical_report_survives_later_unrelated_changes(self):
         write(self.root, "app/src/Main.kt", "fun main() = println(3)\n")
         self.check(fresh=False)

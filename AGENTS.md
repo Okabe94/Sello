@@ -47,8 +47,12 @@ even where its text says otherwise. MUST/SHOULD/COULD have the meanings defined 
   In Progress. Ticket branches should use `sello-0NN-<slug>` with useful part suffixes.
 - **MUST** follow the [PR template](.github/pull_request_template.md). Commits and
   PRs carry no tool attribution. The owner reviews and approves. Changes reach
-  `main` through PRs; merge only with explicit owner authorization, passing required
-  checks and a squash merge.
+  `main` through PRs and the merge queue; merge only with explicit owner
+  authorization, passing required checks and a squash merge.
+- **SHOULD** update the branch with `main` once, before the final gate. After that,
+  leave it: evidence is bound to the PR's own change set and the merge queue verifies
+  the real merge result. Only a conflict GitHub reports needs another update, a
+  resolution and a rerun with `--affected origin/main --retain`.
 - **MUST** report and resolve a failed check on `main` before another PR merges.
   Work on the next ticket may proceed while the check runs.
 

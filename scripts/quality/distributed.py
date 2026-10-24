@@ -18,7 +18,7 @@ import evidence
 import selection
 
 PARTS = ("host", *gates.DEVICE_GROUPS)
-EVENTS = ("pull_request", "push", "schedule", "workflow_dispatch")
+EVENTS = ("pull_request", "merge_group", "push", "schedule", "workflow_dispatch")
 PART_DIRECTORY = "build/reports/quality-parts"
 PART_SCHEMA = {
     "type": "object",
@@ -69,7 +69,8 @@ def context(root, base, event):
     candidate = runner.candidate_plan(root, base)
     if event == "push":
         gate = "G0" if candidate["gate"] == "G0" else "G1"
-    elif event == "pull_request":
+    elif event in ("pull_request", "merge_group"):
+        # The merge queue checks out the real merge result; it needs the same candidate gate.
         gate = candidate["gate"]
     else:
         gate = "G2"
@@ -155,7 +156,7 @@ def run_part(root, base, event, part, output=PART_DIRECTORY, execute=runner.defa
 
     directory.mkdir(parents=True)
     started = runner.now()
-    before = runner.snapshot(root)
+    before = runner.snapshot(root, plan["base"])
     records, failures, warnings = [], [], []
     for check in checks:
         print(f"[CI part {part}] {check.name} ...", file=stream, flush=True)
@@ -246,7 +247,7 @@ def collect(root, base, event, inputs, stream=sys.stderr, job_results=None):
     except (runner.Refusal, gates.Unavailable, ValueError, OSError) as error:
         print(f"REFUSED: {error}", file=stream)
         return 2, []
-    before = runner.snapshot(root)
+    before = runner.snapshot(root, plan["base"])
     failures, warnings, records, attached, parts = [], [], [], [], []
     if job_results is None and os.environ.get("GITHUB_ACTIONS") == "true":
         job_results = {name: os.environ.get(f"QUALITY_{name.upper()}_RESULT", "missing") for name in ("plan", "host", "device")}

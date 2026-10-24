@@ -3,8 +3,10 @@
 Shared by board.py (Review/Done validation) and CI. A retained report is accepted
 only if it is well formed, passed, belongs to the ticket, ran a sufficient gate, is
 the exact file the ticket's `Quality run` field names, and still matches the
-ticket's acceptance text. A ticket entering Review or Done must also match the
-current input fingerprint; an already-Done ticket keeps its historical snapshot.
+ticket's acceptance text. A ticket entering Review or Done must also be bound to the
+change set under verification: the report's change fingerprint must be one the
+candidate contains (fingerprint.candidate_changes). An already-Done ticket keeps its
+historical snapshot. The hosted run on the merge result verifies the combination.
 """
 import hashlib
 import json
@@ -98,8 +100,9 @@ def quality_run_line(root, ticket_id):
     label = "" if scope["mode"] == "full" else f"; coverage {scope['mode']} ({','.join(scope['device_modules'])})"
     return (
         f"run {report['run_id']}; {report['ticket']} {report['gate']['executed']} {report['outcome']}; "
-        f"HEAD {report['snapshot']['head'][:7]}, inputs sha256 {report['snapshot']['fingerprint']['value'][:12]}; "
-        f"report {RETAINED_DIR}/{ticket_id}.json sha256 {digest}{label}"
+        f"HEAD {report['snapshot']['head'][:7]}, inputs sha256 {report['snapshot']['fingerprint']['value'][:12]}"
+        + (f", changes sha256 {changes['value'][:12]}" if (changes := report["snapshot"].get("changes")) else "")
+        + f"; report {RETAINED_DIR}/{ticket_id}.json sha256 {digest}{label}"
     )
 
 
@@ -116,8 +119,13 @@ def retain(root, report_path):
     return quality_run_line(root, report["ticket"])
 
 
-def check(root, ticket_id, ticket_gate, quality_run, fresh):
-    """Raise EvidenceError unless the retained report completes this ticket."""
+def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None):
+    """Raise EvidenceError unless the retained report completes this ticket.
+
+    [fresh] means the ticket advances in this candidate, so its report must be bound to
+    a change set the candidate contains: the working tree against main when [base] is
+    None, otherwise one of the first-parent steps from HEAD back to [base].
+    """
     path = retained_path(root, ticket_id)
     report = load(path)
     if report["ticket"] != ticket_id:
@@ -142,8 +150,12 @@ def check(root, ticket_id, ticket_gate, quality_run, fresh):
         raise EvidenceError("retained report does not match the recorded sha256; it changed after it was recorded")
     if report["snapshot"]["acceptance"] != fingerprint.ticket_acceptance(root, ticket_id):
         raise EvidenceError("ticket acceptance text changed after the run; verify again")
-    if fresh and report["snapshot"]["fingerprint"]["value"] != fingerprint.input_fingerprint(root)["value"]:
-        raise EvidenceError("report is stale: inputs changed after the run; verify again")
+    if fresh:
+        changes = report["snapshot"].get("changes")
+        if changes is None:
+            raise EvidenceError("report records no change set (schema before change binding); verify again")
+        if changes["value"] not in fingerprint.candidate_changes(root, base):
+            raise EvidenceError("report is stale: the ticket's own changes differ from the verified ones; verify again")
 
 
 def status_at(root, base, ticket_id):

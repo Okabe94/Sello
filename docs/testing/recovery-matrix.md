@@ -12,11 +12,12 @@ and [ADR 0008](../decisions/0008-unreadable-storage-start-over.md) define the ru
 
 | From | To | Outcome | Proof |
 | --- | --- | --- | --- |
-| Database schema 1 | 3 (current) | Upgraded through 2 on open; every row and identity kept | `ExportedSchemaOnDeviceTest`; `RecoveryRetentionTest` (a full v1 history) |
-| Database schema 2 | 3 | Upgraded on open; rows kept, empty `deleted_income` added | `ExportedSchemaOnDeviceTest` |
-| Database schema 3 | 3 | Opens and keeps its rows | `ExportedSchemaOnDeviceTest` |
-| A newer schema than 3 | — | Not opened: the start-up failure screen; the file is kept whole | `UnreadableFileSetAsideTest.aFileFromANewerVersionIsStillWholeAndReadableWhereItWasKept` |
-| Backup format 1 | schema 3 | Restored, every record at version 1 (versions are not in a backup) | `RecoveryRetentionTest`, `RestoreCommandContractTest` |
+| Database schema 1 | 4 (current) | Upgraded through 2 and 3 on open; every row and identity kept | `ExportedSchemaOnDeviceTest`; `RecoveryRetentionTest` (a full v1 history) |
+| Database schema 2 | 4 | Upgraded on open; rows kept, empty `deleted_income` and goal tables added | `ExportedSchemaOnDeviceTest` |
+| Database schema 3 | 4 | Upgraded on open; rows kept, empty goal tables added | `ExportedSchemaOnDeviceTest` |
+| Database schema 4 | 4 | Opens and keeps its rows | `ExportedSchemaOnDeviceTest` |
+| A newer schema than 4 | — | Not opened: the start-up failure screen; the file is kept whole | `UnreadableFileSetAsideTest.aFileFromANewerVersionIsStillWholeAndReadableWhereItWasKept` |
+| Backup format 1 | schema 4 | Restored, every record at version 1 (versions are not in a backup) | `RecoveryRetentionTest`, `RestoreCommandContractTest` |
 | A newer backup format | — | Refused as "Lo hizo una versión más nueva de Sello"; nothing changes | `RestoreCommandContractTest.aFileThatCannotBeRestoredChangesNothingAndIsNotKept` |
 
 There is no schema before 1 and no migration from it. The earlier FinanceTracker

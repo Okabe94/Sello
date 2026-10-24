@@ -3,7 +3,7 @@
 Rules: [architecture](../../ARCHITECTURE.md) §§4, 5, 7.
 
 One Room database, `sello.db`, in the app's private storage, is the only place
-financial facts live. Its schema is version 3; every version is exported to
+financial facts live. Its schema is version 4; every version is exported to
 `data/schemas/com.software.sello.data.local.SelloDatabase/`.
 
 ## What is stored
@@ -19,8 +19,12 @@ financial facts live. Its schema is version 3; every version is exported to
 | `operation_receipt` | Proof that an operation committed: kind, input digest, generation, revision, subject | `operation_id` |
 | `deleted_expense` | What the last deleted expense was, column for column, with the generation and time of the deletion | `deletion_id`, the deletion's operation identifier |
 | `deleted_income` | The same for the last deleted income | `deletion_id` |
+| `goal` | Name, icon key, optional target month, completion day, the next recording position, version, audit times | `id` |
+| `goal_event` | A goal's history: each target (`target`) and movement (`contribution`, `withdrawal`) with amount, date (movements only), the day it was recorded, note, version, audit times | `id`; unique (`goal_id`, `sequence`), the recording order |
+| `deleted_goal_event` | What a deleted goal movement was, for its undo | `deletion_id` |
+| `featured_goal` | The goal chosen for Recibo, if any | `id` is always 1 |
 
-There are no recurrence, goal, investment, widget or capture tables, and no
+There are no recurrence, investment, widget or capture tables, and no
 preference such as theme or category order: those are not financial and stay out
 of Room, in the DataStore file `sello-preferences` (`DataStoreUserPreferences`). A
 preference that cannot be read falls back to the last good value or the default and
@@ -136,6 +140,11 @@ receipt exists is finished, and one without a receipt is forgotten.
 3. Extend `ExportedSchemaOnDeviceTest` with `runMigrationsAndValidate` from every
    earlier version, using rows that must survive, and update `ExportedSchemaTest`.
 4. Review whether the portable backup format is affected.
+
+Goals (SELLO-087) are stored as their history: stamps and percentages are worked out
+from it by `GoalPolicy` and never stored ([goal rules](../testing/goal-examples.md)).
+Until SELLO-088, backups, restore and erase-all do not include the goal tables; no
+screen can create a goal before then.
 
 ## Not here yet
 

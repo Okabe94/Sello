@@ -166,7 +166,7 @@ month, with its rate and both amounts as bars on one scale. With nothing recorde
 month before there is no comparison: what was spent stands alone, and in the first
 month a line says another month is needed. Then **Ingresos** as receipt lines
 (Ingresos anotados, Ingresos menos gastos, Sin asignar a categorías), the "Movimientos
-anotados hasta 24 de octubre" line and **Ver ingresos y su destino ›**; **Mes a mes**
+anotados hasta el 24 de octubre" line and **Ver ingresos y su destino ›**; **Mes a mes**
 with "Un mes normal" (the average of complete months with something recorded, half up)
 over columns with past months in `pastBar`, the month in progress striped and marked
 `*` (read "mes en curso, hasta hoy", with a note under the chart), values printed on

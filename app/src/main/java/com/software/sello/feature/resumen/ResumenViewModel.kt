@@ -37,7 +37,7 @@ class ResumenViewModel(
     private var weekdayExpiry: Job? = null
     private var historyExpiry: Job? = null
     private val snapshot = combine(session.selectedMonth, attempts) { month, _ -> month }
-        .flatMapLatest(reads::observe).map(render::render)
+        .flatMapLatest(reads::observe).combine(session.currentMonth, render::render)
 
     /** What was dismissed, as last read. A failed read hides nothing: it is only advice. */
     private val dismissed = suggestions.observeDismissedSuggestion().map { read ->

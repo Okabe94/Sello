@@ -149,6 +149,13 @@ class ResumenScreenTest {
         rule.onNodeWithTag("resumen.flow").assertDoesNotExist()
         rule.runOnIdle { state.value = resumenExample(money).copy(stale = true) }
         rule.onNodeWithTag("resumen.stale").assertIsDisplayed()
+        rule.onNodeWithText("hasta el 3 de octubre.", substring = true).assertExists()
+    }
+
+    @Test
+    fun theRecordedUntilLineNamesTheDay() {
+        show()
+        rule.onNodeWithText("Movimientos anotados hasta el 3 de octubre").assertExists()
     }
 
     @Test

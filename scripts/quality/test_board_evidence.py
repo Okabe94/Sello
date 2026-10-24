@@ -97,12 +97,31 @@ class BoardEvidenceTests(unittest.TestCase):
     def test_merge_candidate_is_compared_with_its_base(self):
         base = git(self.root, "rev-parse", "HEAD").strip()
         self.set_status("Done", self.verify())
-        self.commit("complete SELLO-004")
         write(self.root, "app/src/Main.kt", "fun main() = println(4)\n")
-        self.commit("unverified change in the same merge candidate")
+        self.commit("complete SELLO-004 with an unverified change")
         code, errors = self.board("--check", "--base", base)
         self.assertEqual(1, code)
         self.assertIn("SELLO-004: report is stale", errors)
+
+    def test_a_verified_pull_request_merged_onto_a_moved_main_is_accepted(self):
+        git(self.root, "checkout", "-q", "-b", "ticket")
+        write(self.root, "app/src/Feature.kt", "class Feature\n")
+        self.set_status("Done", self.verify())
+        self.commit("complete SELLO-004")
+        git(self.root, "checkout", "-q", "main")
+        write(self.root, "app/src/Other.kt", "class Other\n")
+        self.commit("another ticket merged first")
+        moved = git(self.root, "rev-parse", "HEAD").strip()
+        git(self.root, "merge", "-q", "--no-ff", "-m", "candidate", "ticket")
+        self.assertEqual((0, ""), self.board("--check", "--base", moved))
+
+    def test_each_step_of_a_batched_candidate_binds_its_own_ticket(self):
+        base = git(self.root, "rev-parse", "HEAD").strip()
+        self.set_status("Done", self.verify())
+        self.commit("complete SELLO-004")
+        write(self.root, "app/src/Other.kt", "class Other\n")
+        self.commit("a later unticketed step the gate itself verifies")
+        self.assertEqual((0, ""), self.board("--check", "--base", base))
 
     def test_done_ticket_is_rejected_when_its_acceptance_is_rewritten(self):
         self.set_status("Done", self.verify())

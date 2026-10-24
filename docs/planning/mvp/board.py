@@ -269,7 +269,8 @@ def report_evidence(board_root, base):
         # A ticket already Done at the base revision keeps its historical tested snapshot.
         fresh = ticket.status != "Done" or evidence.status_at(repository, base, ticket.identifier) != "Done"
         try:
-            evidence.check(repository, ticket.identifier, ticket.gate, quality_run, fresh)
+            evidence.check(repository, ticket.identifier, ticket.gate, quality_run, fresh,
+                           base=None if base == "HEAD" else base)
         except evidence.EvidenceError as error:
             raise ValueError(f"{ticket.identifier}: {error}") from None
     return check
@@ -281,7 +282,8 @@ def main():
     parser.add_argument("--skip-evidence", action="store_true",
                         help="Check structure and generated views only. Used inside a quality run; never completion validation.")
     parser.add_argument("--base", default="HEAD",
-                        help="Revision to compare statuses with; tickets not Done there need a report matching current inputs.")
+                        help="Candidate base: tickets not Done there need a report bound to a change set between it and HEAD. "
+                             "Without it, the working tree's changes against main are the change set.")
     arguments = parser.parse_args()
     root = Path(__file__).resolve().parent
     try:

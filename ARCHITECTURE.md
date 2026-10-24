@@ -391,8 +391,9 @@ Integration references: [build variants/source sets][build-variants] and
 
 - **MUST** make SELLO-004's [quality flow](docs/planning/mvp/QUALITY_FLOW.md)
   a prerequisite for subsequent implementation: one ticket-derived gate runner,
-  validated snapshot-bound evidence before Review/Done, and trusted CI enforcement
-  before protected merges. Passing automation never substitutes for acceptance review.
+  validated evidence bound to the verified change set before Review/Done, and
+  trusted CI enforcement on the real merge result before protected merges. Passing
+  automation never substitutes for acceptance review.
 - **MUST** follow the repository-owned [MVP board](docs/planning/mvp/README.md)
   for execution/dependencies and ticket delivery evidence. It operationalizes
   these guardrails; it does not override financial contracts or expand MVP scope.
@@ -409,6 +410,9 @@ Integration references: [build variants/source sets][build-variants] and
   G0 for documentation advancing no ticket and explicit dependency-aware G2 device
   scope. Shared/build/unknown inputs require full device coverage; nightly/manual
   runs remain full. Reports must distinguish targeted execution from full G2.
+  Completion evidence is bound to the pull request's own change set, and the hosted
+  run on the merge result, for pull requests and merge queue entries alike, verifies
+  the combination (ADR 0014, amended 2026-10-24).
   Release additionally requires release-composition checks, dependency review,
   accessibility/adaptive smoke tests, shrinking, and production signing validation.
   Assembly is not device execution; ephemeral CI signing is not customer-distribution signing.

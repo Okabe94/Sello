@@ -196,7 +196,8 @@ Flow for a ticket:
 1. Keep the ticket In Progress while working. Run `verify-ticket` as often as needed;
    each run writes `build/reports/quality/<ticket>/<run id>/report.json` and one log
    per check. That directory is ignored by Git.
-2. When the work is final, run with `--retain`. It copies the passed report to
+2. When the work is final, update the branch with `main` once and resolve any
+   conflict. Then run with `--retain`. It copies the passed report to
    `docs/planning/mvp/quality-reports/<ticket>.json` and prints a
    `- **Quality run:** ...` line. Paste that line into the ticket's Delivery evidence.
 3. For the final PR, propose Done with complete evidence; partial PRs keep the
@@ -207,7 +208,9 @@ Flow for a ticket:
    device scope and groups. It executes the host and selected device parts, then
    validates collection and `board.py --check --base <base>`. Documentation-only
    candidates advancing no ticket use G0 without Java/SDK setup. PR module changes
-   use dependency-aware G2; shared/build/unknown changes use full devices. Main
+   use dependency-aware G2; shared/build/unknown changes use full devices. Merge
+   queue entries (`merge_group`) are verified like pull requests from the group's
+   base, so a branch behind `main` needs no update unless GitHub reports a conflict. Main
    code pushes keep G1 for trusted cache warming; documentation pushes can use G0.
    Nightly/manual runs remain full G2. Reports are retained for 90 days:
    `gh run download <run id> -n quality-reports`.
@@ -223,12 +226,15 @@ ticket commands remain full unless --affected is supplied. Schema-v2 reports and
 identify affected coverage explicitly; nightly/manual and `--gate G2` verify every
 device module. Old schema-v1 reports remain historical full evidence.
 
-What makes a report stale: any change to a tracked or untracked-but-not-ignored
-file, including code, tests, build files, guardrail documents and a ticket's own
-text. What does not: ticket status lines, `Execution progress` and `Delivery evidence`
-sections, generated board views, retained reports and ignored build outputs. A
-ticket already Done in the base revision keeps its original snapshot; rewriting its
-acceptance text still invalidates it.
+What makes a report stale: any change to the ticket's own change set, meaning what
+differs between the branch and its merge base with `main`, including code, tests,
+build files, guardrail documents and a ticket's own text. What does not: `main`
+moving elsewhere after the run, even in a file the ticket also edited, as long as
+the ticket's hunks are unchanged; ticket status lines, `Execution progress` and
+`Delivery evidence` sections; generated board views; retained reports; HANDOFF; and
+ignored build outputs. The report also records a whole-tree input fingerprint for the
+record. A ticket already Done in the base revision keeps its original snapshot;
+rewriting its acceptance text still invalidates it.
 
 Recovering from failures:
 
@@ -244,7 +250,7 @@ Recovering from failures:
 | `FAILED: inputs changed while checks were running` | Stop editing during a run and run again. |
 | `Dependency Locking` / `does not have lock state` in a Gradle log | A dependency changed without its lock. If intended, run `./scripts/update-dependency-locks` and review the lockfile diff as the dependency review. |
 | `board-check` fails on stale views | Run `python3 docs/planning/mvp/board.py`, then verify again. |
-| `report is stale` / `acceptance text changed` | Something changed after the retained run. Verify again with `--retain` and update the field. |
+| `report is stale` / `acceptance text changed` | The ticket's own changes or acceptance text changed after the retained run. Verify again with `--affected origin/main --retain` and update the field. |
 | `does not match the recorded sha256` | The retained file or the field was edited. Regenerate both with `--retain`. |
 
 ## Source library

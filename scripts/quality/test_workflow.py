@@ -41,6 +41,12 @@ class HostedWorkflowTests(unittest.TestCase):
         self.assertNotRegex(self.code, r'\bbranches-ignore:')
         self.assertRegex(self.code, r'(?m)^  pull_request:\s*$')
 
+    def test_the_merge_queue_runs_the_same_gate_from_the_group_base(self):
+        self.assertRegex(self.code, r'(?m)^  merge_group:\s*$')
+        self.assertIn('BASE: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha || '
+                      'github.event.before || github.sha }}', self.code)
+        self.assertNotIn('merge_group', self.jobs['device'].split('Save Android system image')[1])
+
     def test_exactly_one_stable_quality_result_collects_every_job(self):
         self.assertEqual({'plan', 'host', 'device', 'quality'}, set(self.jobs))
         self.assertEqual(1, len(re.findall(r'(?m)^    name: quality$', self.code)))

@@ -119,6 +119,32 @@
         "acceptance": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        },
+        "changes": {
+          "type": "object",
+          "required": [
+            "algorithm",
+            "base",
+            "value",
+            "paths"
+          ],
+          "properties": {
+            "algorithm": {
+              "const": "sha256"
+            },
+            "base": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "paths": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       }
     },

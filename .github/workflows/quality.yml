@@ -1,9 +1,11 @@
 name: Quality
 
 # Every candidate reports one required quality check. Parts are execution evidence,
-# not independently successful gates. Event/gate policy remains ADR 0009.
+# not independently successful gates. Event/gate policy remains ADR 0009; the merge
+# queue (merge_group) verifies the real merge result exactly like a pull request.
 on:
   pull_request:
+  merge_group:
   push:
     branches: [main]
   schedule:
@@ -18,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+  BASE: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha || github.event.before || github.sha }}
   EVENT: ${{ github.event_name }}
 
 jobs:

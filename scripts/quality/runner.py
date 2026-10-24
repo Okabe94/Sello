@@ -148,7 +148,12 @@ def default_devices():
     ]
 
 
-def snapshot(root):
+def snapshot(root, base=None):
+    """What the run verified: HEAD, dirty files, the whole-tree inputs and the change set.
+
+    The change set is compared with [base] when given (CI knows its candidate base),
+    otherwise with the merge base of HEAD and main.
+    """
     def git(*arguments):
         return subprocess.run(
             ["git", "-C", str(root), *arguments], check=True, capture_output=True, text=True
@@ -167,6 +172,7 @@ def snapshot(root):
         "dirty": bool(dirty),
         "dirty_files": sorted(dirty),
         "fingerprint": fingerprint.input_fingerprint(root),
+        "changes": fingerprint.change_fingerprint(root, base or fingerprint.change_base(root)),
     }
 
 

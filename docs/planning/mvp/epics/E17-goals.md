@@ -1,6 +1,6 @@
 # SELLO-E17 — Metas: personal goals
 
-- **Status:** Backlog
+- **Status:** In Progress
 - **Increment:** Post-MVP
 - **Goal:** Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2.
 - **Exit:** Metas is a tab with goals, detail, Aportar/Retirar, creation and celebrations; Recibo shows one goal; backups carry goals; the sandbox and catalog cover them.
@@ -11,11 +11,16 @@ recurrence and Inversiones in one release ([E19](E19-investments.md)). Decisions
 [Metas brief](../../../design/screen-briefs/goals.md). Goals never allocate income or
 change category budgets.
 
+**Owner decision (2026-10-23):** after the SELLO-085 audit ([gap list](../../../design/v2/gaps/metas.md)),
+SELLO-089–094 reuse the goal components the design system and catalog already have and
+add only the listed extensions; SELLO-094's catalog part shrinks to those extensions and
+the missing device tests. No ticket was removed.
+
 ## SELLO-085 — Verify what exists for Metas and what is missing
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004
 - **Gate:** G1
 
@@ -51,6 +56,16 @@ The screens have been worked on outside these tickets (owner, 2026-10-23); [ADR 
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-085 --retain`.
+
+### Execution progress
+
+- **Audit, 2026-10-23:** [gap list](../../../design/v2/gaps/metas.md) at `main` `d493c55`,
+  each element checked in the code and, where drawn, in the catalog on the API-30
+  emulator ([screenshots](../../../testing/evidence/SELLO-085)). The goal components exist
+  in the design system and catalog (SELLO-073, #72); nothing else does, and no branch or
+  open pull request holds unmerged goal work.
+- **Owner decision, 2026-10-23:** SELLO-089–094 revised to reuse those components and
+  add only the listed extensions; no ticket removed.
 
 ## SELLO-086 — Approve goal rules and worked examples
 
@@ -181,6 +196,7 @@ Metas is a main tab with the v2 goal cards, totals band and completed goals, and
 
 ### Deliverables
 The Metas screen, goal detail and the tab, with loading, empty, failed and adaptive states.
+Reuses `GoalsBandTotal`, `GoalCard`, `MilestoneRow`, `CompletedGoalRow`, `GoalPinPill`, `MovementRow`, `ColumnsChart`, `DangerSlip` and `ConfirmSlip` ([gap list](../../../design/v2/gaps/metas.md)); extends the shell's `SelloDock` with a tone and icon for the green **Aportar a una meta** / **Crear una meta**, and `CompletedGoalRow` with the LOGRADA landing.
 
 ### Acceptance criteria
 - Cards ordered by highest completion; completed goals at the bottom with LOGRADA.
@@ -220,6 +236,7 @@ A person can create a goal with the Sello pad, edit it and delete it with confir
 
 ### Deliverables
 The create/edit screen with projected months only while editing, and deletion with a confirm slip.
+Reuses `IconChoiceStrip`, `FormField`, `AmountKeypad`, `MilestoneSpec` captions, `DangerSlip` and `ConfirmSlip` ([gap list](../../../design/v2/gaps/metas.md)); adds the large icon circle beside the name and the pad that slides up over the form.
 
 ### Acceptance criteria
 - Target amount uses the Sello pad; target date optional.
@@ -259,6 +276,7 @@ Aportar and Retirar record movements, with past dates and corrections.
 
 ### Deliverables
 The Aportar/Retirar form with the Sello pad and date pill, the movement history with edit, delete and undo.
+Reuses `EntryLayout`, `SegmentedSwitch`, `EntryAmountSlip` (Gain / Ink), `FactLine` and `FieldPill` ([gap list](../../../design/v2/gaps/metas.md)); extends `SelloChip` with the goal's percentage.
 
 ### Acceptance criteria
 - A withdrawal above saved is refused with a clear message.
@@ -298,6 +316,7 @@ Crossing 25/50/75 % earns a stamp with a modest celebration; reaching 100 % offe
 
 ### Deliverables
 Milestone detection, celebrations with reduced-motion equivalents, completion with a 10-second Deshacer.
+Reuses `MilestonePlace` landing, `StampTicket`, `ReachedRow` and `CelebrationOverlay` ([gap list](../../../design/v2/gaps/metas.md)); adds the kept stamp's relight and the 10-second Deshacer, longer with TalkBack.
 
 ### Acceptance criteria
 - Stamps follow the approved examples, including faded stamps after a withdrawal or target change.
@@ -337,6 +356,7 @@ Recibo shows the chosen goal as the v2 pill with Aportar, and a row when another
 
 ### Deliverables
 The goal pill, the person's choice of goal, the fallback rule and the green 100 % row.
+Reuses `GoalPill` and `ReachedRow` ([gap list](../../../design/v2/gaps/metas.md)).
 
 ### Acceptance criteria
 - The person's choice wins; otherwise the highest completion; nothing with no active goal.
@@ -375,11 +395,11 @@ Focused tests, then `./scripts/verify-ticket SELLO-093 --retain`.
 Sandbox scenarios and catalog examples exercise goals through the real command paths.
 
 ### Deliverables
-Scenarios for stamps, withdrawals, target edits and completion; catalog states for the new components.
+Scenarios for stamps, withdrawals, target edits and completion; catalog states for the extensions the earlier tickets add, and device tests for `GoalPill`, `MovementRow`, `StampTicket`, `GoalPinPill` and `IconChoiceStrip`, which have none ([gap list](../../../design/v2/gaps/metas.md)).
 
 ### Acceptance criteria
 - Scenarios use real commands and storage with synthetic data.
-- Catalog shows every new component in all themes and states.
+- Catalog shows every extended component in all themes and states.
 - None of it ships in the release build.
 
 ### Tests

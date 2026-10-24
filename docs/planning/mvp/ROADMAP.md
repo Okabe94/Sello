@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 7/48 · **Epics Done:** 1/8
 
-Backlog: 41 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 7
+Backlog: 40 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 7
 
 [Workflow, gates and definition of done](README.md)
 
@@ -17,7 +17,7 @@ Backlog: 41 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 7
 | [SELLO-E14](epics/E14-assistive-technology.md) | Confirm that a person using TalkBack, Switch Access or a hardware keyboard can use the whole released app. | Backlog | 0/1 |
 | [SELLO-E15](epics/E15-release-fixes.md) | Fix the defects found while measuring and accepting the MVP, each with a test. | Done | 4/4 |
 | [SELLO-E16](epics/E16-v2-today-gaps.md) | Add the parts of the approved v2 Recibo, Resumen and income screens that the MVP left out, which need no new kind of data. | In Progress | 3/6 |
-| [SELLO-E17](epics/E17-goals.md) | Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2. | Backlog | 0/10 |
+| [SELLO-E17](epics/E17-goals.md) | Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2. | In Progress | 0/10 |
 | [SELLO-E18](epics/E18-recurrence.md) | Let a person schedule recurring payments and incomes that Sello records on their dates, reserving payments still to come. | Backlog | 0/10 |
 | [SELLO-E19](epics/E19-investments.md) | Let a person record investments in COP or USD with contributions, withdrawals, dividends and values, and see the portfolio and each investment's simple return; then release goals, recurrence and investments together. | Backlog | 0/9 |
 
@@ -27,7 +27,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing) | Verify what exists for Metas and what is missing | SELLO-E17 | P1 | G1 | None |
 
 ## Review
 
@@ -53,7 +55,6 @@ No tickets.
 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) | Verify what exists for today's Recibo, Resumen and income screens and what is missing | SELLO-E16 | P1 | G1 | None |
 | [SELLO-083](epics/E16-v2-today-gaps.md#sello-083--suggest-assigning-unassigned-income) | Suggest assigning unassigned income | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
 | [SELLO-084](epics/E16-v2-today-gaps.md#sello-084--invite-a-look-at-the-month-just-closed) | Invite a look at the month just closed | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
-| [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing) | Verify what exists for Metas and what is missing | SELLO-E17 | P1 | G1 | None |
 | [SELLO-086](epics/E17-goals.md#sello-086--approve-goal-rules-and-worked-examples) | Approve goal rules and worked examples | SELLO-E17 | P1 | G1 | [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing) |
 | [SELLO-087](epics/E17-goals.md#sello-087--store-goals-and-their-movements) | Store goals and their movements | SELLO-E17 | P1 | G2 | [SELLO-086](epics/E17-goals.md#sello-086--approve-goal-rules-and-worked-examples) |
 | [SELLO-088](epics/E17-goals.md#sello-088--carry-goals-through-backup-restore-and-erase) | Carry goals through backup, restore and erase | SELLO-E17 | P1 | G2 | [SELLO-087](epics/E17-goals.md#sello-087--store-goals-and-their-movements) |
@@ -97,4 +98,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-037](epics/E09-signed-carryover.md#sello-037--approve-signed-carryover-policy-and-independent-examples), [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path), [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard), [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing), [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing), [SELLO-095](epics/E18-recurrence.md#sello-095--verify-what-exists-for-recurrence-and-reserved-payments-and-what-is-missing), [SELLO-105](epics/E19-investments.md#sello-105--verify-what-exists-for-inversiones-and-what-is-missing)
+[SELLO-037](epics/E09-signed-carryover.md#sello-037--approve-signed-carryover-policy-and-independent-examples), [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path), [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard), [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing), [SELLO-095](epics/E18-recurrence.md#sello-095--verify-what-exists-for-recurrence-and-reserved-payments-and-what-is-missing), [SELLO-105](epics/E19-investments.md#sello-105--verify-what-exists-for-inversiones-and-what-is-missing)

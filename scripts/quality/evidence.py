@@ -1,6 +1,6 @@
 """Completion evidence: retain a passing quality report and validate it later.
 
-Shared by board.py (Review/Done validation) and CI. A retained report is accepted
+Shared by tickets.py (Review/Done validation) and CI. A retained report is accepted
 only if it is well formed, passed, belongs to the ticket, ran a sufficient gate, is
 the exact file the ticket's `Quality run` field names, and still matches the
 ticket's acceptance text. A ticket entering Review or Done must also be bound to the
@@ -125,12 +125,18 @@ def retain(root, report_path):
     return quality_run_line(root, report["ticket"])
 
 
-def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None):
+MIGRATED = re.compile(r"([0-9a-f]{64})\s*(?:→|->)\s*([0-9a-f]{64})")
+
+
+def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None, migrated=None):
     """Raise EvidenceError unless the retained report completes this ticket.
 
     [fresh] means the ticket advances in this candidate, so its report must be bound to
     a change set the candidate contains: the working tree against main when [base] is
     None, otherwise one of the first-parent steps from HEAD back to [base].
+    [migrated] is the ticket's `Acceptance migrated` evidence field, "<old> → <new>": the
+    recorded move of 2026-10-24 changed only link paths inside ticket texts, so a report
+    bound to the old hash still completes the ticket while the text hashes to the new one.
     """
     path = retained_path(root, ticket_id)
     report = load(path)
@@ -154,8 +160,11 @@ def check(root, ticket_id, ticket_gate, quality_run, fresh, base=None):
         raise EvidenceError(f"Quality run does not name run {report['run_id']} of the retained report")
     if hashlib.sha256(path.read_bytes()).hexdigest() not in quality_run:
         raise EvidenceError("retained report does not match the recorded sha256; it changed after it was recorded")
-    if report["snapshot"]["acceptance"] != fingerprint.ticket_acceptance(root, ticket_id):
-        raise EvidenceError("ticket acceptance text changed after the run; verify again")
+    current = fingerprint.ticket_acceptance(root, ticket_id)
+    if report["snapshot"]["acceptance"] != current:
+        recorded = MIGRATED.search(migrated or "")
+        if not (recorded and recorded.group(1) == report["snapshot"]["acceptance"] and recorded.group(2) == current):
+            raise EvidenceError("ticket acceptance text changed after the run; verify again")
     if fresh:
         changes = report["snapshot"].get("changes")
         if changes is None:

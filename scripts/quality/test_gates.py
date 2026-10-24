@@ -5,7 +5,7 @@ from pathlib import Path
 
 import gates
 
-README = Path(__file__).resolve().parents[2] / "docs/planning/mvp/README.md"
+README = Path(__file__).resolve().parents[2] / "docs/tickets/README.md"
 
 
 class GateDocumentationTests(unittest.TestCase):

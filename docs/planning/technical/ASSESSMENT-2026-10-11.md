@@ -6,7 +6,7 @@
 - **Completed slice:** SELLO-018 is recorded Done in its canonical epic. Implementation is in `3119832`; delivery evidence is in `7f5c7ca`.
 - **Goal:** Preserve the financial foundation while addressing concrete boundary, availability and presentation-scaling risks.
 - **Exit:** Adopted findings have meaningful regression coverage and executed verification; deferred concerns remain explicit rather than becoming speculative architecture.
-- **Authority:** [Architecture](../../../ARCHITECTURE.md), [execution guide](../mvp/EXECUTION_GUIDE.md), [quality flow](../mvp/QUALITY_FLOW.md), and [SELLO-018](../mvp/epics/E04-first-slice.md#sello-018--deliver-recibo-category-detail-and-expense-history).
+- **Authority:** [Architecture](../../../ARCHITECTURE.md), [execution guide](../../development/execution-guide.md), [quality flow](../../development/quality-gates.md), and [SELLO-018](../../tickets/E04-first-slice/SELLO-018/ticket.md).
 
 ## Assessment outcome
 
@@ -514,7 +514,7 @@ No toolchain/dependency setting was changed.
 
 ### Historical evidence, not rerun acceptance
 
-[SELLO-018's retained report](../mvp/quality-reports/SELLO-018.json) records run
+[SELLO-018's retained report](../../tickets/E04-first-slice/SELLO-018/quality-report.json) records run
 `20261011T164039Z-ac9f825d`, G2 passed on `3119832`, API-30 emulator, with 29 lint
 warnings. Its canonical delivery records 309 host and 260 device tests. The fresh
 271 host tests above are a focused subset, not a new integrated G2 run. No hosted

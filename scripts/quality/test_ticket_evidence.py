@@ -128,6 +128,26 @@ class BoardEvidenceTests(unittest.TestCase):
         self.board("--skip-evidence")
         self.assertIn("SELLO-004: ticket acceptance text changed", self.board("--check")[1])
 
+    def test_a_recorded_link_only_migration_keeps_historical_evidence(self):
+        import fingerprint
+        self.set_status("Done", self.verify())
+        self.commit("complete SELLO-004")
+        before = fingerprint.ticket_acceptance(self.root, "SELLO-004")
+        path = self.root / "docs/tickets/E01-foundation/SELLO-004/ticket.md"
+        original = path.read_text(encoding="utf-8")
+        moved = original.replace("### Outcome\n", "### Outcome\nSee [the guide](../../../development/new.md).\n")
+        path.write_text(moved, encoding="utf-8")
+        after = fingerprint.ticket_acceptance(self.root, "SELLO-004")
+        self.assertIn("SELLO-004: ticket acceptance text changed", self.board("--check")[1])
+        evidence_path = self.root / "docs/tickets/E01-foundation/SELLO-004/evidence.md"
+        recorded = evidence_path.read_text(encoding="utf-8")
+        evidence_path.write_text(recorded + f"- **Acceptance migrated:** {before} → {'0' * 64} link paths only\n", encoding="utf-8")
+        self.assertIn("SELLO-004: ticket acceptance text changed", self.board("--check")[1])
+        evidence_path.write_text(recorded + f"- **Acceptance migrated:** {before} → {after} link paths only\n", encoding="utf-8")
+        self.assertEqual((0, ""), self.board("--check"))
+        path.write_text(moved.replace("keeps working", "mostly works"), encoding="utf-8")
+        self.assertIn("SELLO-004: ticket acceptance text changed", self.board("--check")[1])
+
     def test_structure_only_check_ignores_report_contents(self):
         self.set_status("Review", "run 20260101T000000Z-00000000, G1, passed")
         self.assertEqual(1, self.board("--check")[0])

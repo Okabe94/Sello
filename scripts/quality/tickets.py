@@ -204,7 +204,7 @@ def validate(epics, verify_report=None):
             if PLACEHOLDER.search(fields["Quality run"]):
                 raise ValueError(f"{ticket.identifier}: placeholder Delivery evidence in Quality run")
             if verify_report:
-                verify_report(ticket, fields["Quality run"])
+                verify_report(ticket, fields)
         if ticket.status == "Done":
             fields = evidence_fields(ticket)
             if not fields:
@@ -277,13 +277,14 @@ def split_epic_text(text):
 
 def report_evidence(root, base):
     """Validate retained quality reports for Review/Done tickets from SELLO-004 onward."""
-    def check(ticket, quality_run):
+    def check(ticket, fields):
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import evidence
         # A ticket already Done at the base revision keeps its historical tested snapshot.
         fresh = ticket.status != "Done" or evidence.status_at(root, base, ticket.identifier) != "Done"
         try:
-            evidence.check(root, ticket.identifier, ticket.gate, quality_run, fresh, base=None if base == "HEAD" else base)
+            evidence.check(root, ticket.identifier, ticket.gate, fields["Quality run"], fresh,
+                           base=None if base == "HEAD" else base, migrated=fields.get("Acceptance migrated"))
         except evidence.EvidenceError as error:
             raise ValueError(f"{ticket.identifier}: {error}") from None
     return check

@@ -21,7 +21,7 @@ execute Android/Gradle checks and cannot be ticket completion evidence. G1 retai
 formatting, all host tests, lint and debug/release assembly. G2 retains all of G1
 and runs the selected API-30 module suites. G3 is still unavailable until its
 release checks exist; no lower profile can replace it. Completion evidence is
-validated with `board.py --check --base` on every hosted run.
+validated with `tickets.py check --base` on every hosted run.
 
 ## Documentation and module selection
 

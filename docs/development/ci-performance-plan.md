@@ -2,7 +2,7 @@
 
 Reduce feedback time while preserving the checks required by
 [ADR 0009](../decisions/0009-hosted-gate-scope.md) and the
-[quality flow](../planning/mvp/QUALITY_FLOW.md). This is unticketed work;
+[quality flow](quality-gates.md). This is unticketed work;
 it does not create tickets or change their status.
 
 ## Baseline

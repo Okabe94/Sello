@@ -191,7 +191,7 @@ class TicketFolderTests(unittest.TestCase):
         self.epic(SELLO_004=ticket_text("SELLO-004", status="Review"))
         self.write("docs/tickets/E01-foundation/SELLO-004/evidence.md", "# SELLO-004\n\n- **Quality run:** run q004\n")
         seen = []
-        tickets.validate(self.load(), lambda ticket, field: seen.append((ticket.identifier, field)))
+        tickets.validate(self.load(), lambda ticket, fields: seen.append((ticket.identifier, fields["Quality run"])))
         self.assertEqual([("SELLO-004", "run q004")], seen)
 
     def test_status_table_is_printed_on_demand_not_committed(self):

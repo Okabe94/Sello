@@ -9,9 +9,9 @@ even where its text says otherwise. MUST/SHOULD/COULD have the meanings defined 
 ## Before starting
 
 - **MUST** read architecture before planning, implementation or review. For ticket
-  work, also read the [board README](docs/planning/mvp/README.md), assigned ticket,
-  applicable nested AGENTS files and predecessor decisions/evidence.
-- **MUST** use the [execution guide](docs/planning/mvp/EXECUTION_GUIDE.md) and ticket
+  work, also read the [tickets README](docs/tickets/README.md), the assigned ticket's
+  folder, applicable nested AGENTS files and predecessor decisions/evidence.
+- **MUST** use the [execution guide](docs/development/execution-guide.md) and ticket
   brief for prerequisites, owned scope and verification. Tickets own deliverables;
   the approved visual reference owns presentation. Proposed APIs may not exist yet.
 - **MUST** inspect Git status, actual code, adjacent tests and available modules;
@@ -86,15 +86,15 @@ even where its text says otherwise. MUST/SHOULD/COULD have the meanings defined 
   clocks, virtual time and real Room where required; no arbitrary sleeps, live
   network, global DI or test-order dependencies.
 - **MUST** run focused tests first, then the required integrated gate on final
-  changes. Follow [QUALITY_FLOW](docs/planning/mvp/QUALITY_FLOW.md) for profiles,
+  changes. Follow the [quality gates guide](docs/development/quality-gates.md) for profiles,
   evidence and bootstrap exceptions. For ticket completion, run
   `./scripts/verify-ticket <ticket> --retain` and record fresh Quality run evidence
   before Review/Done. Default ticket commands run the full assigned gate. For
   dependency-aware device selection, use `--affected <PR base>` and retain the
   explicit affected scope; `--gate G2` always forces full device coverage. Pure
   documentation advancing no ticket uses `--merge-candidate <base>` (G0), never
-  a fabricated ticket or a ticket downgrade. Follow ADR 0014 and QUALITY_FLOW for
-  the selection rules. Never weaken tests, disable checks, apply a blanket warning
+  a fabricated ticket or a ticket downgrade. Follow ADR 0014 and the quality gates
+  guide for the selection rules. Never weaken tests, disable checks, apply a blanket warning
   baseline or describe unselected suites as executed/passed.
 - **MUST** distinguish configured, compiled, executed and passed. Assembly is not a
   device test; rotation is not process-death restoration; CI signing is not upload
@@ -124,25 +124,25 @@ even where its text says otherwise. MUST/SHOULD/COULD have the meanings defined 
 
 ## Ticket and documentation maintenance
 
-- **MUST** keep epic files canonical. Never edit generated boards/CSV independently,
-  invent completed work or change acceptance to fit output. Require full evidence
-  and designated review; distinguish self-review from independent approval.
+- **MUST** keep each ticket's `ticket.md` canonical and edit only the ticket's own
+  folder for ticket work. Never invent completed work or change acceptance to fit
+  output. Require full evidence and designated review; distinguish self-review from
+  independent approval.
 - Only the final PR proposes the ticket Done after full acceptance and verification;
   merging is review approval. If it completes the epic, propose the epic Done too.
   Review is for waiting outside the merge. Never invent approvals, dates or hosted runs.
-- **MUST** regenerate and check board views after ticket/shared-workflow changes:
-  `python3 docs/planning/mvp/board.py`, then the same command with `--check`.
-  If generator/test code changes, also run
-  `python3 -m unittest discover -s docs/planning/mvp -p test_board.py`.
+- **MUST** run `python3 scripts/quality/tickets.py check` after ticket edits and
+  `python3 scripts/quality/links.py` after moving, renaming or deleting documents.
+  Nothing generated is committed; `tickets.py status` prints the board on demand.
 - **MUST** record significant architectural deviations in a short ADR and update
   affected guardrails. Unticketed work authorizes no new tickets or ticket-status changes.
 
 ## Handoff
 
-- **MUST** update HANDOFF after each completed ticket: ID and one or two short
-  sentences explaining what changed and important remaining work. Keep its current
-  summary accurate and link to the ticket for full evidence. No copied test logs,
-  detailed delivery records or permission rules.
+- **MUST** write the ticket's `handoff.md` with its final PR: what changed, where,
+  and what is still open, in three to six lines. Refresh `docs/development/HANDOFF.md`
+  only in the PR that closes an epic, keeping its app summary and remaining work
+  accurate. No copied test logs, delivery records or permission rules.
 - **MUST** report changes, relevant paths, exact verification/results, warnings,
   failures, skipped gates and remaining decisions. Name the tested revision and
   relevant uncommitted changes; never present a dirty tree as a tested commit.

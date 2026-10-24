@@ -3,8 +3,8 @@
 This directory preserves the evidence and analysis behind the owner's
 [`ui_issues.md`](../../../ui_issues.md) inventory. The redesign epic first proposed
 from it was not adopted: Sello v2 ([ADR 0013](../../decisions/0013-sello-v2-design.md))
-and its epics [E12](../mvp/epics/E12-v2-recibo.md) and
-[E13](../mvp/epics/E13-v2-current-app.md) replaced it. It is an observation package,
+and its epics [E12](../../tickets/E12-v2-recibo/README.md) and
+[E13](../../tickets/E13-v2-current-app/README.md) replaced it. It is an observation package,
 not proof that any issue has been fixed or that an earlier product decision has been
 reversed.
 

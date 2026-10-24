@@ -156,6 +156,47 @@ def main():
         if path.exists():
             git("rm", "-q", str(path.relative_to(ROOT)))
     print(f"{len(folder_of)} tickets, {len(moves)} moved files")
+    if not DRY:
+        record_acceptance_migrations()
+
+
+def record_acceptance_migrations():
+    """Where moving a Done ticket changed only link paths in its text, record old → new hashes.
+
+    The retained report stays bound to the old hash; evidence.check accepts the recorded
+    pair while the current text hashes to the new value. Any other difference aborts.
+    """
+    import hashlib
+    import json
+    import fingerprint
+    strip_links = lambda text: LINK.sub("](X)", text)  # noqa: E731
+    recorded = 0
+    for folder in sorted(TICKETS.glob("E*-*/")):
+        old_epic = subprocess.run(["git", "-C", str(ROOT), "show", f"HEAD:docs/planning/mvp/epics/{folder.name}.md"],
+                                  capture_output=True, text=True).stdout
+        for ticket_dir in sorted(folder.glob("SELLO-*/")):
+            new_text = (ticket_dir / "ticket.md").read_text(encoding="utf-8")
+            if not re.search(r"^- \*\*Status:\*\* Done$", new_text, re.MULTILINE):
+                continue
+            old_section = fingerprint.ticket_section(old_epic, ticket_dir.name)
+            before, after = fingerprint.acceptance_text(old_section), fingerprint.acceptance_text(new_text)
+            if before == after:
+                continue
+            if strip_links(before) != strip_links(after):
+                raise SystemExit(f"{ticket_dir.name}: the move changed more than link paths; refusing to record a migration")
+            old_hash, new_hash = (hashlib.sha256(text.encode("utf-8")).hexdigest() for text in (before, after))
+            report = ticket_dir / "quality-report.json"
+            if report.is_file() and json.loads(report.read_text(encoding="utf-8"))["snapshot"]["acceptance"] != old_hash:
+                raise SystemExit(f"{ticket_dir.name}: the retained report is not bound to the pre-move text")
+            evidence_path = ticket_dir / "evidence.md"
+            if evidence_path.is_file():
+                text = re.sub(r"^- \*\*Acceptance migrated:\*\* .*\n", "", evidence_path.read_text(encoding="utf-8"), flags=re.MULTILINE)
+                evidence_path.write_text(
+                    text.rstrip("\n")
+                    + f"\n- **Acceptance migrated:** {old_hash} → {new_hash} on 2026-10-24; only link paths changed when the ticket moved into its folder.\n",
+                    encoding="utf-8")
+                recorded += 1
+    print(f"{recorded} link-only acceptance migrations recorded")
 
 
 def parse_handoff_rows():

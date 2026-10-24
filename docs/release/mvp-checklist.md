@@ -51,7 +51,7 @@ carryover (E09), legacy import (E10) and the manual assistive-technology pass (E
 ## Evidence
 
 - All 48 other MVP tickets are Done with validated quality reports
-  (`python3 docs/planning/mvp/board.py --check`): epics E01–E07, E12, E13, and in E08
+  (`python3 scripts/quality/tickets.py check`): epics E01–E07, E12, E13, and in E08
   SELLO-033, SELLO-034 and SELLO-035.
 - Windows, text and themes: [UI acceptance matrix](../testing/ui-acceptance-matrix.md).
 - Recovery and retention: [recovery matrix](../testing/recovery-matrix.md).
@@ -65,7 +65,7 @@ carryover (E09), legacy import (E10) and the manual assistive-technology pass (E
 
 On the Samsung SM-S731B (Android 16), fresh install of the candidate, synthetic data,
 each figure checked against the value worked out beforehand. Screenshots:
-[evidence](../testing/evidence/SELLO-036).
+[evidence](../tickets/E08-release/SELLO-036/artifacts).
 
 | Step | Expected and seen |
 | --- | --- |
@@ -85,7 +85,7 @@ each figure checked against the value worked out beforehand. Screenshots:
 
 **Blocker found and fixed during this walkthrough.** On the first candidate every backup
 failed on the phone with "Tus datos superan lo que cabe en un respaldo"
-([screenshot](../testing/evidence/SELLO-036/00-respaldo-fallido-antes.png)). Android 16's
+([screenshot](../tickets/E08-release/SELLO-036/artifacts/00-respaldo-fallido-antes.png)). Android 16's
 clock gives microseconds and the backup's own timestamp kept them, which the format
 refuses; the API-30 emulators' clock gives milliseconds, so no earlier test met it. The
 export now rounds its timestamp to the millisecond (red first in
@@ -106,10 +106,10 @@ Approved by the owner on 2026-10-23; none affects money or recovery.
 
 | Issue | Ticket |
 | --- | --- |
-| Counts of 1,000 or more have no thousands separator | [SELLO-075](../planning/mvp/epics/E15-release-fixes.md) |
-| Resumen shows "Movimientos anotados hasta 2026-10-23" | [SELLO-076](../planning/mvp/epics/E15-release-fixes.md) |
-| Two sandbox scenario tests fail intermittently on CI | [SELLO-077](../planning/mvp/epics/E15-release-fixes.md) |
-| A backup that fails its own check is reported as too large | [SELLO-078](../planning/mvp/epics/E15-release-fixes.md) |
+| Counts of 1,000 or more have no thousands separator | [SELLO-075](../tickets/E15-release-fixes/README.md) |
+| Resumen shows "Movimientos anotados hasta 2026-10-23" | [SELLO-076](../tickets/E15-release-fixes/README.md) |
+| Two sandbox scenario tests fail intermittently on CI | [SELLO-077](../tickets/E15-release-fixes/README.md) |
+| A backup that fails its own check is reported as too large | [SELLO-078](../tickets/E15-release-fixes/README.md) |
 | The app shows no third-party licence notice | Owner decision, not ticketed ([release](README.md)) |
 
 ## Installing and recovering
@@ -127,5 +127,5 @@ Approved by the owner on 2026-10-23; none affects money or recovery.
 
 ## Next increment
 
-Post-MVP epics in the [roadmap](../planning/mvp/ROADMAP.md): E09 signed budget
+Post-MVP epics in the [roadmap](../tickets/README.md): E09 signed budget
 carryover, E10 legacy import, E14 the assistive-technology pass and E15 the fixes above.

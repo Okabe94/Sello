@@ -15,6 +15,7 @@ Examples for each schedule kind (month ends, twice a month vs every 15 days), ca
 ### Acceptance criteria
 - Every ADR 0017 recurrence decision has worked examples with exact dates and amounts.
 - Catch-up bounds and the notice's content are defined.
+- The rules the [gap list](../../../design/v2/gaps/recurrence.md) left open are settled with examples: a deleted occurrence is never recorded again; a manual entry is never matched to a schedule; which two days twice a month means; whether catch-up also runs when the financial day changes while Sello is open; what a schedule does when its category is archived; which occurrences count as reserved `Q` and expected `F` (after today, within the selected current month).
 - The owner approves; open points are listed.
 
 ### Tests
@@ -33,6 +34,8 @@ Approved examples exist and later tickets cite them.
 
 ### Concrete cases and pitfalls
 - Retain the calendar anchor when clamping month ends.
+- v1.1 caught up from a daily worker for up to 60 days; ADR 0017 records on opening with no background work, so the bound is decided here, not copied.
+- BG1: while payments are reserved, Revisar comes before Excedido.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-096 --retain`.

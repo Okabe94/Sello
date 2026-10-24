@@ -10,7 +10,7 @@
 Sandbox scenarios exercise schedules, catch-up after time travel, pause and edits.
 
 ### Deliverables
-Scenarios with financial-clock jumps and checks of recorded occurrences and reservations.
+Scenarios with financial-clock jumps and checks of recorded occurrences and reservations. `Scenario.kt`, the [sandbox guide](../../../development/sandbox.md) and the [scenario corpus](../../../testing/sandbox-scenarios.md) no longer say recurrence does not exist.
 
 ### Acceptance criteria
 - Scenarios use the real catch-up path.
@@ -32,6 +32,7 @@ ARCHITECTURE §9.
 
 ### Concrete cases and pitfalls
 - Keep clocks distinct.
+- The corpus's "Recurrence is not covered" list asks for WorkManager worker tests; ADR 0017 has no background work, so the scenarios drive the catch-up that runs on opening instead.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-104 --retain`.

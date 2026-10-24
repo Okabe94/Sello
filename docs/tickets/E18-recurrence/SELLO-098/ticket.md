@@ -10,10 +10,11 @@
 Schedules live in Room, and opening Sello records every due occurrence once, atomically.
 
 ### Deliverables
-Schema migration, schedule commands, the catch-up use case with unique (schedule, date) origins, bounded and resumable, and receipts.
+Schema migration (schema 5), schedule commands, the catch-up use case with unique (schedule, date) origins, bounded and resumable, and receipts. The origin is a new field on `expense` and `income` and their `deleted_*` tables, which have none today ([gap list](../../../design/v2/gaps/recurrence.md)).
 
 ### Acceptance criteria
 - An occurrence is recorded exactly once, even after a crash or a second opening.
+- A recorded occurrence that was deleted is not recorded again.
 - Catch-up is bounded and resumes where it stopped.
 - Edits apply to future occurrences only; recorded ones stay.
 
@@ -33,6 +34,7 @@ ARCHITECTURE §8 recurrence rules.
 
 ### Concrete cases and pitfalls
 - Never write without a unique origin; a retried catch-up must not duplicate.
+- Deleting or undoing an occurrence keeps its origin, so catch-up still sees it as handled.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-098 --retain`.

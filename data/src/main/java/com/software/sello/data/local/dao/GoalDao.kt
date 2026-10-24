@@ -2,7 +2,9 @@ package com.software.sello.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.software.sello.data.local.entity.FeaturedGoalEntity
 import com.software.sello.data.local.entity.GoalEntity
 import com.software.sello.data.local.entity.GoalEventEntity
 
@@ -24,4 +26,71 @@ interface GoalDao {
     /** A goal's history in recording order. */
     @Query("SELECT * FROM goal_event WHERE goal_id = :goalId ORDER BY sequence")
     suspend fun events(goalId: String): List<GoalEventEntity>
+
+    /** Every goal's history, grouped by goal and in recording order. */
+    @Query("SELECT * FROM goal_event ORDER BY goal_id, sequence")
+    suspend fun allEvents(): List<GoalEventEntity>
+
+    @Query("SELECT * FROM goal_event WHERE id = :id")
+    suspend fun event(id: String): GoalEventEntity?
+
+    @Query("SELECT COUNT(*) FROM goal_event WHERE goal_id = :goalId AND sequence = :sequence")
+    suspend fun countAt(goalId: String, sequence: Long): Int
+
+    /**
+     * Changes the goal only while it is still at [expectedVersion]. Returns the rows
+     * changed: one, or none when it is gone or changed meanwhile.
+     */
+    @Query(
+        "UPDATE goal SET name = :name, icon_key = :iconKey, target_month = :targetMonth, " +
+            "completed_on = :completedOn, next_sequence = :nextSequence, " +
+            "version = :newVersion, updated_at = :updatedAt " +
+            "WHERE id = :id AND version = :expectedVersion"
+    )
+    suspend fun update(
+        id: String,
+        expectedVersion: Long,
+        name: String,
+        iconKey: String,
+        targetMonth: String?,
+        completedOn: String?,
+        nextSequence: Long,
+        newVersion: Long,
+        updatedAt: Long
+    ): Int
+
+    /** Changes a movement in place while it is still at [expectedVersion]. */
+    @Query(
+        "UPDATE goal_event SET amount_minor = :amountMinor, currency = :currency, " +
+            "effective_date = :effectiveDate, note = :note, version = :newVersion, " +
+            "updated_at = :updatedAt WHERE id = :id AND version = :expectedVersion"
+    )
+    suspend fun updateEvent(
+        id: String,
+        expectedVersion: Long,
+        amountMinor: Long,
+        currency: String,
+        effectiveDate: String,
+        note: String?,
+        newVersion: Long,
+        updatedAt: Long
+    ): Int
+
+    @Query("DELETE FROM goal_event WHERE id = :id AND version = :expectedVersion")
+    suspend fun deleteEvent(id: String, expectedVersion: Long): Int
+
+    @Query("DELETE FROM goal_event WHERE goal_id = :goalId")
+    suspend fun deleteEvents(goalId: String): Int
+
+    @Query("DELETE FROM goal WHERE id = :id AND version = :expectedVersion")
+    suspend fun delete(id: String, expectedVersion: Long): Int
+
+    @Query("SELECT * FROM featured_goal WHERE id = 1")
+    suspend fun featured(): FeaturedGoalEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun feature(featured: FeaturedGoalEntity)
+
+    @Query("DELETE FROM featured_goal WHERE goal_id = :goalId")
+    suspend fun unfeature(goalId: String): Int
 }

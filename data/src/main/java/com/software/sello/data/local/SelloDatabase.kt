@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.software.sello.data.local.dao.CategoryDao
 import com.software.sello.data.local.dao.DeletedExpenseDao
+import com.software.sello.data.local.dao.DeletedGoalEventDao
 import com.software.sello.data.local.dao.DeletedIncomeDao
 import com.software.sello.data.local.dao.ExpenseDao
 import com.software.sello.data.local.dao.GoalDao
@@ -71,6 +72,8 @@ abstract class SelloDatabase : RoomDatabase() {
     abstract fun deletedIncomeDao(): DeletedIncomeDao
 
     abstract fun goalDao(): GoalDao
+
+    abstract fun deletedGoalEventDao(): DeletedGoalEventDao
 
     companion object {
         const val FILE_NAME = "sello.db"

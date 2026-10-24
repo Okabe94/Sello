@@ -3,8 +3,8 @@
 **Owner:** SELLO-012 · Rules: [architecture](../../ARCHITECTURE.md) §5.
 
 How a change to financial data is made so that its result is always knowable.
-Expenses (`ExpenseCommands` in `:domain`, `RoomExpenseCommands` in `:data`), income
-and [categories and limits](categories-and-limits.md) all follow these steps.
+Expenses (`ExpenseCommands` in `:domain`, `RoomExpenseCommands` in `:data`), income,
+[categories and limits](categories-and-limits.md) and goals all follow these steps.
 
 The shared steps are functions in `data/repository/CommandProtocol.kt`; each workflow
 keeps its own typed command, checks and outcome. There is no generic repository.
@@ -129,6 +129,33 @@ category.
 and gives a month's exact total and count at one revision (`month`, and `observeMonth`
 after every committed change). A month without income is a total of zero; an income
 that cannot be read fails the month, it is never left out.
+
+## Goals
+
+`GoalCommands` and `RoomGoalCommands` (SELLO-087) follow the same steps with the `goal.*`
+kinds: create, edit, change the target, record, edit and delete a movement, put a
+deleted movement back, complete, undo a completion, delete, and choose Recibo's goal.
+The receipt's subject is always the goal. The rules are the approved
+[goal examples](../testing/goal-examples.md).
+
+- **Every change to a goal's history is checked before it is written.** The history
+  with the change applied is worked out by `GoalPolicy`; a withdrawal above what was
+  saved at its point, or a correction that would leave less than zero, is refused as
+  `AboveSaved` naming the withdrawal (MT08, MT15, MT39). So a stored history always
+  works out.
+- **Every write raises the goal's version,** so a command prepared on an older read of
+  the goal is a `VersionConflict`. A completed goal refuses everything but deletion.
+- **A deleted movement shares the one offer to undo** with expenses and income, with
+  its copy in `deleted_goal_event`.
+- **Deshacer after a completion** is offered in memory for the time the command asks
+  (about ten seconds, longer with a screen reader), only while nothing has changed the
+  goal since, and never in a new process: then the completion is final.
+- **A committed aporte, retiro or target change says which stamps it earned or lit
+  again** (`CommittedGoal.change`) for the celebration. A replay, a correction or a
+  deletion says nothing, so nothing is celebrated twice.
+
+`GoalReads` reads every goal with its progress, and Recibo's goal after the fallback
+rule, at one revision; one goal that cannot be read fails the read.
 
 ## Guarantees and how they are kept
 

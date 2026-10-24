@@ -3,6 +3,7 @@ package com.software.sello.data.mapper
 import com.software.sello.data.local.entity.OperationReceiptEntity
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.ExpenseId
+import com.software.sello.domain.model.GoalId
 import com.software.sello.domain.model.IncomeId
 import com.software.sello.domain.model.OperationId
 import com.software.sello.domain.model.OperationKind
@@ -13,15 +14,17 @@ import java.time.Instant
 
 /**
  * A stored receipt, decoded. The subject is the record the operation changed: an
- * expense for the four expense kinds, an income for the four income kinds, none for a
- * restore of the whole history, a category for every other kind.
+ * expense for the four expense kinds, an income for the four income kinds, a goal for
+ * the goal kinds, none for a restore or reset of the whole history, a category for
+ * every other kind.
  */
 internal class StoredReceipt(
     val receipt: OperationReceipt,
     val inputDigest: String,
     val expenseId: ExpenseId? = null,
     val categoryId: CategoryId? = null,
-    val incomeId: IncomeId? = null
+    val incomeId: IncomeId? = null,
+    val goalId: GoalId? = null
 )
 
 private val sha256Hex = Regex("[0-9a-f]{64}")
@@ -41,6 +44,9 @@ private val IncomeKinds = setOf(
     OperationKind.DeleteIncome,
     OperationKind.RestoreIncome
 )
+
+/** The kinds whose subject is a goal. */
+private val GoalKinds = OperationKind.entries.filter { it.key.startsWith("goal.") }.toSet()
 
 internal fun OperationReceiptEntity.toStored(): Outcome<StoredReceipt, StorageFailure.Integrity> =
     decodeRow(OperationReceiptEntity.TABLE, operationId) {
@@ -69,6 +75,13 @@ internal fun OperationReceiptEntity.toStored(): Outcome<StoredReceipt, StorageFa
                 check("subject_id", subjectId == null)
                 StoredReceipt(receipt, inputDigest)
             }
+
+            in GoalKinds ->
+                StoredReceipt(
+                    receipt,
+                    inputDigest,
+                    goalId = valid("subject_id", GoalId.of(subject))
+                )
 
             in IncomeKinds ->
                 StoredReceipt(

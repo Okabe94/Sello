@@ -2,9 +2,9 @@
 
 Generated from `epics/*.md`; do not edit independently.
 
-**Tickets Done:** 6/48 · **Epics Done:** 0/8
+**Tickets Done:** 7/48 · **Epics Done:** 1/8
 
-Backlog: 41 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 6
+Backlog: 41 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 7
 
 [Workflow, gates and definition of done](README.md)
 
@@ -15,7 +15,7 @@ Backlog: 41 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 6
 | [SELLO-E09](epics/E09-signed-carryover.md) | Preserve surplus and overspending across enabled budget periods without confusing plans with account balances. | Backlog | 0/7 |
 | [SELLO-E10](epics/E10-legacy-import.md) | Let someone bring their history from the previous app into Sello without weakening Sello's rules. | Backlog | 0/1 |
 | [SELLO-E14](epics/E14-assistive-technology.md) | Confirm that a person using TalkBack, Switch Access or a hardware keyboard can use the whole released app. | Backlog | 0/1 |
-| [SELLO-E15](epics/E15-release-fixes.md) | Fix the defects found while measuring and accepting the MVP, each with a test. | In Progress | 3/4 |
+| [SELLO-E15](epics/E15-release-fixes.md) | Fix the defects found while measuring and accepting the MVP, each with a test. | Done | 4/4 |
 | [SELLO-E16](epics/E16-v2-today-gaps.md) | Add the parts of the approved v2 Recibo, Resumen and income screens that the MVP left out, which need no new kind of data. | In Progress | 3/6 |
 | [SELLO-E17](epics/E17-goals.md) | Let a person create goals, record contributions and withdrawals, earn milestone stamps and complete goals, as designed in Sello v2. | Backlog | 0/10 |
 | [SELLO-E18](epics/E18-recurrence.md) | Let a person schedule recurring payments and incomes that Sello records on their dates, reserving payments still to come. | Backlog | 0/10 |
@@ -27,9 +27,7 @@ No tickets.
 
 ## In Progress
 
-| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
-| --- | --- | --- | --- | --- | --- |
-| [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows) | Group thousands in every count the app shows | SELLO-E15 | P2 | G2 | None |
+No tickets.
 
 ## Review
 
@@ -89,6 +87,7 @@ No tickets.
 
 | Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
 | --- | --- | --- | --- | --- | --- |
+| [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows) | Group thousands in every count the app shows | SELLO-E15 | P2 | G2 | None |
 | [SELLO-076](epics/E15-release-fixes.md#sello-076--show-resumens-recorded-until-date-in-words) | Show Resumen's "recorded until" date in words | SELLO-E15 | P2 | G2 | None |
 | [SELLO-077](epics/E15-release-fixes.md#sello-077--make-the-sandbox-scenario-replay-tests-reliable) | Make the sandbox scenario replay tests reliable | SELLO-E15 | P1 | G2 | None |
 | [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check) | Say what failed when a backup does not pass its own check | SELLO-E15 | P2 | G2 | None |

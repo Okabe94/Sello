@@ -44,4 +44,17 @@ class DateLabelsTest {
         )
         assertEquals("dom 15 mar", labels.day(LocalDate.of(2026, 3, 15), today))
     }
+
+    @Test
+    fun aShortDayIsDayAndMonthWithTheYearOnlyWhenItIsAnotherYears() {
+        assertEquals("30 sep", labels.shortDay(LocalDate.of(2026, 9, 30), today))
+        assertEquals("9 oct", labels.shortDay(today, today))
+        assertEquals("31 dic 2025", labels.shortDay(LocalDate.of(2025, 12, 31), today))
+    }
+
+    @Test
+    fun aMonthOfAYearIsItsShortNameAndTheYear() {
+        assertEquals("dic 2026", labels.monthYear(java.time.YearMonth.of(2026, 12)))
+        assertEquals("ene 2027", labels.monthYear(java.time.YearMonth.of(2027, 1)))
+    }
 }

@@ -123,3 +123,12 @@ data class GoalChange(
  * [months] months, and the month each place not yet earned would be reached.
  */
 data class GoalPace(val months: Int, val monthly: Money, val projected: Map<GoalPlace, YearMonth>)
+
+/**
+ * Metas' band: what the active goals hold now ([saved]) and the aportes dated in one
+ * month ([contributed]), withdrawals not subtracted. Completed goals count in neither.
+ */
+data class GoalOverview(val saved: Money, val contributed: Money)
+
+/** The aportes dated in [month], for Aportes por mes. */
+data class MonthContribution(val month: YearMonth, val amount: Money)

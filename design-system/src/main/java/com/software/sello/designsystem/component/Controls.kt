@@ -241,19 +241,20 @@ fun TitleBar(
 /**
  * The total that sits on the band under Metas' title: what is saved across active goals
  * and, under it, what came in this month after a small gain plus. Display only; the
- * caller formats [change] and supplies the exact [amount].
+ * caller formats [change] and supplies the exact [amount]. Without a [change], as in a
+ * month with no aportes, the second line is left out. It is meant for the scaffold's
+ * ribbon, which already sets the side margins and the gap under it.
  */
 @Composable
 fun GoalsBandTotal(
     label: String,
     amount: MoneyTextValue,
-    change: String,
+    change: String?,
     modifier: Modifier = Modifier
 ) {
     val colors = SelloTheme.colors
     Column(
-        modifier.fillMaxWidth().background(colors.band)
-            .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+        modifier.fillMaxWidth().background(colors.band).padding(bottom = 6.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Text(
@@ -262,27 +263,29 @@ fun GoalsBandTotal(
             style = MaterialTheme.typography.bodyMedium
         )
         FittedMoneyText(amount, color = colors.onBand, startSize = 42)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Box(
-                Modifier.size(18.dp).background(colors.semantic.gain, CircleShape),
-                contentAlignment = Alignment.Center
+        if (change != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    SelloIcon.Add.painter(),
-                    null,
-                    Modifier.size(14.dp),
-                    tint = colors.semantic.onGain
+                Box(
+                    Modifier.size(18.dp).background(colors.semantic.gain, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        SelloIcon.Add.painter(),
+                        null,
+                        Modifier.size(14.dp),
+                        tint = colors.semantic.onGain
+                    )
+                }
+                Text(
+                    change,
+                    color = colors.onBand,
+                    fontWeight = FontWeight.W700,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
-            Text(
-                change,
-                color = colors.onBand,
-                fontWeight = FontWeight.W700,
-                style = MaterialTheme.typography.bodySmall
-            )
         }
     }
 }

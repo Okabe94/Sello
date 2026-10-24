@@ -15,6 +15,8 @@ import com.software.sello.feature.backup.RestoreViewModel
 import com.software.sello.feature.category.CategoryEditorViewModel
 import com.software.sello.feature.category.CategoryManagementViewModel
 import com.software.sello.feature.expense.ExpenseEntryViewModel
+import com.software.sello.feature.goals.GoalDetailViewModel
+import com.software.sello.feature.goals.MetasViewModel
 import com.software.sello.feature.income.IncomeFormViewModel
 import com.software.sello.feature.income.IncomeHistoryViewModel
 import com.software.sello.feature.recibo.CategoryDetailViewModel
@@ -106,6 +108,17 @@ fun viewModels(koin: Koin): ViewModelProvider.Factory = viewModelFactory {
         )
     }
     initializer { ReciboViewModel(koin.get(), koin.get(), koin.get(), koin.get()) }
+    initializer { MetasViewModel(koin.get(), koin.get(), koin.get()) }
+    initializer {
+        GoalDetailViewModel(
+            createSavedStateHandle(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get(),
+            koin.get()
+        )
+    }
     initializer {
         CategoryDetailViewModel(
             koin.get(),

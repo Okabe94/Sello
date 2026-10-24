@@ -47,12 +47,7 @@ fun SelloButton(
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding
 ) {
     val colors = SelloTheme.colors
-    val (toneInk, onTone) = when (tone) {
-        ButtonTone.Brand -> colors.brand to colors.onBrand
-        ButtonTone.Gain -> colors.semantic.gain to colors.semantic.onGain
-        ButtonTone.Ink -> colors.ink to colors.paper
-        ButtonTone.Loss -> colors.semantic.loss to colors.semantic.onLoss
-    }
+    val (toneInk, onTone) = tone.inks()
     val (container, content) = when (kind) {
         ButtonKind.Filled -> toneInk to onTone
         ButtonKind.Destructive -> colors.semantic.loss to colors.semantic.onLoss
@@ -99,6 +94,18 @@ fun SelloButton(
             },
             textAlign = TextAlign.Center
         )
+    }
+}
+
+/** A tone's own colour and the colour drawn on it. */
+@Composable
+internal fun ButtonTone.inks(): Pair<Color, Color> {
+    val colors = SelloTheme.colors
+    return when (this) {
+        ButtonTone.Brand -> colors.brand to colors.onBrand
+        ButtonTone.Gain -> colors.semantic.gain to colors.semantic.onGain
+        ButtonTone.Ink -> colors.ink to colors.paper
+        ButtonTone.Loss -> colors.semantic.loss to colors.semantic.onLoss
     }
 }
 

@@ -11,6 +11,7 @@ import com.software.sello.domain.model.GoalMovement
 import com.software.sello.domain.model.GoalMovementId
 import com.software.sello.domain.model.GoalMovementKind
 import com.software.sello.domain.model.GoalName
+import com.software.sello.domain.model.GoalOverview
 import com.software.sello.domain.model.GoalPlace.Half
 import com.software.sello.domain.model.GoalPlace.Meta
 import com.software.sello.domain.model.GoalPlace.Quarter
@@ -19,6 +20,7 @@ import com.software.sello.domain.model.GoalProgress
 import com.software.sello.domain.model.GoalTargetChange
 import com.software.sello.domain.model.IconKey
 import com.software.sello.domain.model.Money
+import com.software.sello.domain.model.MonthContribution
 import com.software.sello.domain.model.NextPlace
 import com.software.sello.domain.model.PlaceState
 import com.software.sello.domain.model.TextError
@@ -559,6 +561,228 @@ class GoalPolicyTest {
         goal.events.removeAt(0)
 
         assertEquals(GoalHistoryError.NoTarget, goal.refusal())
+    }
+
+    // --- Metas and the goal detail (SELLO-089) ---
+
+    private fun Recorder.history(goal: Goal = goal()) = GoalHistory(goal, events.toList())
+
+    private fun day(month: Int, day: Int) = LocalDate.of(2026, month, day)
+
+    @Test
+    fun mt04TheAporteThatCrossedTwoPlacesEarnedBoth() {
+        val goal = viaje()
+        goal.aporte(700_000)
+        val crossing = goal.aporte(900_000)
+
+        assertEquals(
+            mapOf(Quarter to crossing.sequence, Half to crossing.sequence),
+            GoalPolicy.earnedBy(goal.history()).valueOrFail()
+        )
+    }
+
+    @Test
+    fun mt07AStampKeptAfterAWithdrawalStillBelongsToTheAporteThatEarnedIt() {
+        val goal = viaje()
+        val quarter = goal.aporte(750_000)
+        val half = goal.aporte(960_000)
+        goal.retiro(400_000)
+
+        assertEquals(
+            mapOf(Quarter to quarter.sequence, Half to half.sequence),
+            GoalPolicy.earnedBy(goal.history()).valueOrFail()
+        )
+    }
+
+    @Test
+    fun mt13ACorrectedAporteEarnsOnlyWhatItsCorrectFigureReaches() {
+        val goal = viaje()
+        goal.aporte(700_000)
+        val typo = goal.aporte(9_000_000)
+        goal.correct(typo, 900_000)
+
+        assertEquals(
+            mapOf(Quarter to typo.sequence, Half to typo.sequence),
+            GoalPolicy.earnedBy(goal.history()).valueOrFail()
+        )
+    }
+
+    @Test
+    fun mt18APlaceEarnedByATargetChangeBelongsToNoMovement() {
+        val goal = viaje()
+        val first = goal.aporte(1_710_000)
+        goal.target(2_000_000)
+
+        assertEquals(
+            mapOf(Quarter to first.sequence, Half to first.sequence, ThreeQuarters to 2L),
+            GoalPolicy.earnedBy(goal.history()).valueOrFail()
+        )
+    }
+
+    @Test
+    fun mt26StampsGivenAtCompletionBelongToNoEvent() {
+        val goal = viaje()
+        val quarter = goal.aporte(750_000)
+        val half = goal.aporte(960_000)
+
+        assertEquals(
+            mapOf(Quarter to quarter.sequence, Half to half.sequence),
+            GoalPolicy.earnedBy(goal.history(goal(completedOn = today))).valueOrFail()
+        )
+    }
+
+    @Test
+    fun activeGoalsGoHighestCompletionFirstAndCompletedGoalsLastNewestFirst() {
+        val over = standing(1, 3_060_000, 3_000_000)
+        val higher = standing(2, 579, 1_000, created = 50)
+        val lower = standing(3, 574, 1_000, created = 10)
+        val olderHalf = standing(4, 500_000, 1_000_000, created = 20)
+        val newerHalf = standing(5, 1_000_000, 2_000_000, created = 30)
+        val third = standing(6, 370_000, 1_000_000, created = 0)
+        val septemberDone = goal(7, day(9, 30)) to Recorder(400_000, today).progress()
+        val octoberDone = goal(8, day(10, 20)) to Recorder(400_000, today).progress()
+        val shuffled =
+            listOf(third, octoberDone, newerHalf, lower, septemberDone, over, olderHalf, higher)
+
+        assertEquals(
+            listOf(over, higher, lower, olderHalf, newerHalf, third, octoberDone, septemberDone),
+            GoalPolicy.ordered(shuffled, { it.first }, { it.second })
+        )
+    }
+
+    @Test
+    fun theBandAddsActiveGoalsOnlyAndThisMonthsAportesWithoutWithdrawals() {
+        val viajeGoal = goal(1)
+        val viaje = viaje().apply {
+            aporte(750_000, date = day(9, 15))
+            aporte(960_000, date = day(10, 2))
+        }.history(viajeGoal)
+        val celular = Recorder(1_200_000, today).apply {
+            aporte(450_000, date = day(10, 5))
+            retiro(100_000, date = day(10, 6))
+        }.history(goal(2))
+        val done = Recorder(400_000, today).apply { aporte(400_000, date = day(10, 1)) }
+            .history(goal(3, completedOn = today))
+        val goals = listOf(viaje, celular, done).map {
+            it to GoalPolicy.progress(it).valueOrFail()
+        }
+
+        // 1.710.000 + 350.000 saved; 960.000 + 450.000 contributed in October.
+        assertEquals(
+            GoalOverview(saved = Money.cop(2_060_000), contributed = Money.cop(1_410_000)),
+            GoalPolicy.overview(goals, YearMonth.of(2026, 10)).valueOrFail()
+        )
+        assertEquals(
+            GoalOverview(saved = Money.cop(2_060_000), contributed = Money.cop(750_000)),
+            GoalPolicy.overview(goals, YearMonth.of(2026, 9)).valueOrFail()
+        )
+    }
+
+    @Test
+    fun withNoActiveGoalTheBandHoldsNothing() {
+        assertEquals(
+            GoalOverview(Money.cop(0), Money.cop(0)),
+            GoalPolicy.overview(emptyList(), YearMonth.of(2026, 10)).valueOrFail()
+        )
+    }
+
+    @Test
+    fun aBandTotalThatDoesNotFitIsReportedNotClipped() {
+        val full = viaje().apply { aporte(1) }
+        val progress = full.progress()
+        val huge = progress.copy(saved = Money.cop(Long.MAX_VALUE))
+        val goals = listOf(full.history(goal(1)) to huge, full.history(goal(2)) to progress)
+
+        assertEquals(
+            GoalHistoryError.Unrepresentable,
+            GoalPolicy.overview(goals, YearMonth.of(2026, 10)).errorOrFail()
+        )
+    }
+
+    @Test
+    fun whatIsStillMissingStopsAtZeroOnceTheTargetIsPassed() {
+        val mt07 = viaje().apply {
+            aporte(1_710_000)
+            retiro(400_000)
+        }.progress()
+        val mt05 = viaje().apply {
+            aporte(2_950_000)
+            aporte(110_000)
+        }.progress()
+
+        assertEquals(Money.cop(1_690_000), GoalPolicy.missing(mt07))
+        assertEquals(Money.cop(0), GoalPolicy.missing(mt05))
+    }
+
+    private fun months(vararg pairs: Pair<YearMonth, Long>) =
+        pairs.map { (month, pesos) -> MonthContribution(month, Money.cop(pesos)) }
+
+    @Test
+    fun aportesPorMesShowsTheLastSixMonthsEndingThisMonth() {
+        val goal = Recorder(3_000_000, LocalDate.of(2026, 1, 10))
+        listOf(4 to 90_000L, 5 to 200_000L, 6 to 250_000L, 7 to 260_000L, 8 to 300_000L)
+            .forEach { (month, pesos) -> goal.aporte(pesos, day(month, 2), day(month, 2)) }
+        goal.aporte(350_000, day(9, 2), day(9, 2))
+        goal.aporte(350_000, day(10, 2), day(10, 2))
+        goal.retiro(400_000, day(10, 20), day(10, 20))
+
+        assertEquals(
+            months(
+                YearMonth.of(2026, 5) to 200_000,
+                YearMonth.of(2026, 6) to 250_000,
+                YearMonth.of(2026, 7) to 260_000,
+                YearMonth.of(2026, 8) to 300_000,
+                YearMonth.of(2026, 9) to 350_000,
+                YearMonth.of(2026, 10) to 350_000
+            ),
+            GoalPolicy.monthlyContributions(goal.history(), today).valueOrFail()
+        )
+    }
+
+    @Test
+    fun aYoungGoalStartsAtItsFirstMonthAndAMonthWithoutAportesIsZero() {
+        val goal = Recorder(1_000_000, day(8, 10))
+        goal.aporte(100_000, day(8, 10), day(8, 10))
+        goal.aporte(100_000, day(9, 1), day(9, 1))
+        goal.aporte(100_000, day(9, 20), day(9, 20))
+
+        assertEquals(
+            months(
+                YearMonth.of(2026, 8) to 100_000,
+                YearMonth.of(2026, 9) to 200_000,
+                YearMonth.of(2026, 10) to 0
+            ),
+            GoalPolicy.monthlyContributions(goal.history(), today).valueOrFail()
+        )
+    }
+
+    @Test
+    fun mt20AnAporteDatedBeforeTheGoalWasCreatedStartsTheChartInItsMonth() {
+        val goal = Recorder(3_000_000, day(10, 1))
+        goal.aporte(750_000, date = day(9, 15))
+
+        assertEquals(
+            months(YearMonth.of(2026, 9) to 750_000, YearMonth.of(2026, 10) to 0),
+            GoalPolicy.monthlyContributions(goal.history(), today).valueOrFail()
+        )
+    }
+
+    @Test
+    fun aCompletedGoalsChartEndsInTheMonthItWasCompleted() {
+        val goal = Recorder(400_000, day(7, 15))
+        goal.aporte(100_000, day(7, 15), day(7, 15))
+        goal.aporte(100_000, day(8, 15), day(8, 15))
+        goal.aporte(200_000, day(9, 15), day(9, 15))
+
+        assertEquals(
+            months(
+                YearMonth.of(2026, 7) to 100_000,
+                YearMonth.of(2026, 8) to 100_000,
+                YearMonth.of(2026, 9) to 200_000
+            ),
+            GoalPolicy.monthlyContributions(goal.history(goal(completedOn = day(9, 30))), today)
+                .valueOrFail()
+        )
     }
 
     private companion object {

@@ -3,6 +3,9 @@ package com.software.sello
 import com.software.sello.domain.model.BudgetLimit
 import com.software.sello.domain.model.CategoryId
 import com.software.sello.domain.model.CategoryName
+import com.software.sello.domain.model.GoalId
+import com.software.sello.domain.model.GoalMovementKind
+import com.software.sello.domain.model.GoalName
 import com.software.sello.domain.model.IconKey
 import com.software.sello.domain.model.IncomeSource
 import com.software.sello.domain.model.Money
@@ -12,19 +15,25 @@ import com.software.sello.domain.model.Outcome
 import com.software.sello.domain.model.TransactionAmount
 import com.software.sello.domain.port.CategoryCommandOutcome
 import com.software.sello.domain.port.CategoryCommands
+import com.software.sello.domain.port.CompleteGoal
 import com.software.sello.domain.port.CreateCategory
 import com.software.sello.domain.port.CreateExpense
+import com.software.sello.domain.port.CreateGoal
 import com.software.sello.domain.port.CreateIncome
 import com.software.sello.domain.port.ExpenseCommandOutcome
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.FinancialClock
+import com.software.sello.domain.port.GoalCommandOutcome
+import com.software.sello.domain.port.GoalCommands
 import com.software.sello.domain.port.IncomeCommandOutcome
 import com.software.sello.domain.port.IncomeCommands
+import com.software.sello.domain.port.RecordGoalMovement
 import com.software.sello.domain.port.SetMonthLimit
 import com.software.sello.navigation.MonthSession
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.koin.core.context.GlobalContext
@@ -100,6 +109,68 @@ object TestCommands {
             )
             assertTrue("$outcome", outcome is ExpenseCommandOutcome.Committed)
         }
+
+    private fun goalVersion(id: String): Long =
+        TestData.long("SELECT version FROM goal WHERE id = '$id'")
+
+    /** A goal called [name], with its target; returns its identifier. */
+    fun createGoal(
+        name: String,
+        target: Long,
+        icon: String = "flight",
+        targetMonth: YearMonth? = null
+    ): String = runBlocking {
+        val outcome = koin.get<GoalCommands>().submit(
+            CreateGoal(
+                operation(),
+                generation(),
+                GoalName.of(name).value(),
+                IconKey.of(icon).value(),
+                TransactionAmount.of(Money.cop(target)).value(),
+                targetMonth
+            )
+        )
+        assertTrue("$outcome", outcome is GoalCommandOutcome.Committed)
+        (outcome as GoalCommandOutcome.Committed).goal.goalId.value
+    }
+
+    /** An aporte, or with [withdrawal] a retiro, of [pesos] dated [date]. */
+    fun recordGoalMovement(
+        goal: String,
+        pesos: Long,
+        date: LocalDate = today,
+        withdrawal: Boolean = false
+    ) = runBlocking {
+        val outcome = koin.get<GoalCommands>().submit(
+            RecordGoalMovement(
+                operation(),
+                generation(),
+                GoalId.of(goal).value(),
+                goalVersion(goal),
+                if (withdrawal) GoalMovementKind.Withdrawal else GoalMovementKind.Contribution,
+                TransactionAmount.of(Money.cop(pesos)).value(),
+                date,
+                null
+            )
+        )
+        assertTrue("$outcome", outcome is GoalCommandOutcome.Committed)
+    }
+
+    /** Marcar como lograda, through the real command. */
+    fun completeGoal(goal: String) = runBlocking {
+        val outcome = koin.get<GoalCommands>().submit(
+            CompleteGoal(
+                operation(),
+                generation(),
+                GoalId.of(goal).value(),
+                goalVersion(goal),
+                1.seconds
+            )
+        )
+        assertTrue("$outcome", outcome is GoalCommandOutcome.Committed)
+    }
+
+    private fun generation(): Long = TestData.long("SELECT generation FROM profile")
 
     /** A salary income of [pesos] on [date]. */
     fun createIncome(date: LocalDate, pesos: Long) = runBlocking {

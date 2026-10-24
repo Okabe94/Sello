@@ -24,6 +24,8 @@ import com.software.sello.domain.port.DocumentSource
 import com.software.sello.domain.port.ExpenseCommands
 import com.software.sello.domain.port.ExpenseReads
 import com.software.sello.domain.port.FinancialProfileStore
+import com.software.sello.domain.port.GoalCommands
+import com.software.sello.domain.port.GoalReads
 import com.software.sello.domain.port.IncomeCommands
 import com.software.sello.domain.port.IncomeReads
 import com.software.sello.domain.port.MonthlySnapshots
@@ -99,6 +101,8 @@ fun storageModule(storage: FinancialStorage): Module = module {
     single<ExpenseReads> { storage.expenseReads }
     single<IncomeCommands> { storage.incomeCommands(get(), get(), get(), get()) }
     single<IncomeReads> { storage.incomeReads }
+    single<GoalCommands> { storage.goalCommands(get(), get(), get(), get()) }
+    single<GoalReads> { storage.goalReads }
     single<BackupExports> { storage.backupExports(get(), get(), get(), get()) }
     single<Restores> { storage.restores(get(), get(), get(), get(), get()) }
     // A new history after an erase takes the device's zone, read when the erase commits.

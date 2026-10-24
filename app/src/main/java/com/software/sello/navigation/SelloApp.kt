@@ -55,6 +55,7 @@ import com.software.sello.designsystem.component.SelloNavigation
 import com.software.sello.designsystem.component.SelloNotice
 import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
+import com.software.sello.designsystem.component.TitleBar
 import com.software.sello.designsystem.component.selloWindowLayout
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
@@ -117,22 +118,34 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
     val navigation = rememberNavController()
     val entry by navigation.currentBackStackEntryAsState()
     val onDetail = entry != null && navigation.previousBackStackEntry != null
-    val selectedTab = if (entry?.destination?.hasRoute<ResumenRoute>() ==
-        true
-    ) {
-        ShellTab.Resumen
-    } else {
-        ShellTab.Recibo
+    val selectedTab = when {
+        entry?.destination?.hasRoute<ResumenRoute>() == true -> ShellTab.Resumen
+        entry?.destination?.hasRoute<MetasRoute>() == true -> ShellTab.Metas
+        else -> ShellTab.Recibo
     }
     val tabs = SelloNavigation(
         listOf(
-            SelloDestination("recibo", stringResource(R.string.tab_recibo), SelloIcon.ReceiptLong),
-            SelloDestination("resumen", stringResource(R.string.tab_resumen), SelloIcon.Insights)
+            SelloDestination(
+                ShellTab.Recibo.id,
+                stringResource(R.string.tab_recibo),
+                SelloIcon.ReceiptLong
+            ),
+            SelloDestination(
+                ShellTab.Resumen.id,
+                stringResource(R.string.tab_resumen),
+                SelloIcon.Insights
+            ),
+            SelloDestination(ShellTab.Metas.id, stringResource(R.string.tab_metas), SelloIcon.Flag)
         ),
         selectedTab.id
     ) { id ->
         if (id != selectedTab.id) {
-            navigation.navigate(if (id == "resumen") ResumenRoute else ReciboRoute) {
+            val route: Any = when (id) {
+                ShellTab.Resumen.id -> ResumenRoute
+                ShellTab.Metas.id -> MetasRoute
+                else -> ReciboRoute
+            }
+            navigation.navigate(route) {
                 popUpTo(navigation.graph.startDestinationId) { saveState = true }
                 launchSingleTop = true
                 restoreState = true
@@ -186,6 +199,28 @@ fun SelloAppRoot(viewModels: ViewModelProvider.Factory) {
                 }
             }
             BackHandler(enabled = !state.monthPickerOpen) { tabs.onSelect("recibo") }
+        }
+        composable<MetasRoute> {
+            MetasDestination(
+                state = state,
+                viewModels = viewModels,
+                onShell = shell::onAction,
+                tabs = tabs,
+                onOpenSettings = { navigation.navigate(SettingsRoute) { launchSingleTop = true } },
+                onOpenGoal = { id -> navigation.navigate(GoalRoute(id)) { launchSingleTop = true } }
+            )
+        }
+        composable<GoalRoute> {
+            GoalDestination(
+                state = state,
+                viewModels = viewModels,
+                onShell = shell::onAction,
+                onBack = {
+                    val onGoal =
+                        navigation.currentBackStackEntry?.destination?.hasRoute<GoalRoute>()
+                    if (onGoal == true) navigation.popBackStack()
+                }
+            )
         }
         composable<ResumenCategoryRoute> { entry ->
             val id = entry.toRoute<ResumenCategoryRoute>().categoryId
@@ -640,6 +675,10 @@ internal fun PastMonthNotice(
  * and with a way back. The picker is
  * a bottom sheet, or a side panel beside the content in a window wide enough for one.
  * There is no tab bar while there is one tab. The dock asks to record an expense, unless [entryDock] is false.
+ *
+ * A screen not tied to a month, as Metas and a goal are, passes [titleOnly]: its whole
+ * title, with no month bar, month switcher or past-month ribbon. Its [band], if any,
+ * sits on the band under that title.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -659,16 +698,21 @@ fun ShellScreen(
     titleLabel: String? = null,
     dock: SelloDock? = null,
     entryDock: Boolean = true,
+    titleOnly: String? = null,
+    band: (@Composable () -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val title = names.title(state.selectedMonth)
     // Over a past month, every screen that shows it says so and offers the way back.
-    val ribbon: (@Composable () -> Unit)? =
-        if (pastMonthRibbon && state.selectedMonth != state.currentMonth) {
+    val ribbon: (@Composable () -> Unit)? = when {
+        titleOnly != null -> band
+
+        pastMonthRibbon && state.selectedMonth != state.currentMonth -> {
             { PastMonthNotice(state, names, onAction) }
-        } else {
-            null
         }
+
+        else -> null
+    }
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val layout = selloWindowLayout(maxWidth, maxHeight)
         val sidePanel = layout.sidePanelWidth != null
@@ -706,9 +750,11 @@ fun ShellScreen(
             val tab = screenTitle == null && onBack == null
             val bar = monthBarLabel(state, names)
             SelloScaffold(
-                title = screenTitle ?: title,
-                subtitle = if (showMonthAsSubtitle) title else null,
-                topBar = if (tab) {
+                title = titleOnly ?: screenTitle ?: title,
+                subtitle = if (showMonthAsSubtitle && titleOnly == null) title else null,
+                topBar = if (tab && titleOnly != null) {
+                    { TitleBar(titleOnly, actions = actions) }
+                } else if (tab) {
                     {
                         MonthBar(
                             month = bar.month,
@@ -735,7 +781,7 @@ fun ShellScreen(
                     }
                 },
                 actions = actions,
-                titleContent = if (showMonthAsSubtitle) {
+                titleContent = if (showMonthAsSubtitle || titleOnly != null) {
                     null
                 } else {
                     {

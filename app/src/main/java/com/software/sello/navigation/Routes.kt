@@ -15,6 +15,14 @@ data object ReciboRoute
 @Serializable
 data object ResumenRoute
 
+/** Goals: not tied to a month, so the month bar does not appear there. */
+@Serializable
+data object MetasRoute
+
+/** One goal's detail. The screen reads the goal itself. */
+@Serializable
+data class GoalRoute(val goalId: String)
+
 /** Nonfinancial controls reachable from Recibo's settings action. */
 @Serializable
 data object SettingsRoute
@@ -81,5 +89,6 @@ const val CREATED_CATEGORY_RESULT = "result.createdCategoryId"
  */
 enum class ShellTab(val id: String) {
     Recibo("recibo"),
-    Resumen("resumen")
+    Resumen("resumen"),
+    Metas("metas")
 }

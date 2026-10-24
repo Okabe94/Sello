@@ -2,7 +2,7 @@
 
 - **Type:** Task
 - **Priority:** P1
-- **Status:** Backlog
+- **Status:** Done
 - **Depends on:** SELLO-087, SELLO-004
 - **Gate:** G2
 
@@ -37,3 +37,25 @@ v2 Metas and goal pages.
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-089 --retain`.
+
+### Execution progress
+
+- **Owner decisions, 2026-10-24:** the **+**, **Crear una meta**, **Aportar a una / esta
+  meta**, the edit pencil and **Retirar dinero** are built into the screens but left out
+  of the running app until SELLO-090 and SELLO-091 add the screens they open; until
+  then the dock's label on Metas is proven by screen tests. The star and deleting a
+  completed goal are included. "+ … en octubre" adds this month's aportes of active
+  goals, withdrawals not subtracted, and is left out when there are none; completed
+  goals are listed newest completion first; "Desde" is the day the goal was created;
+  Aportes por mes shows up to six months ending this month (or the completion month),
+  never before the goal's first month; on wide windows the detail opens as its own
+  screen with the rail.
+- `GoalPolicy` adds which event earned each stamp, Metas' order, the band's totals
+  (exact, an overflow fails the read), what is still missing and aportes per month.
+  `GoalReads.observeBoard` reads the board again after every committed change, with a
+  failure keeping the last good board.
+- `SelloDock` takes a tone and an icon (green flag on Metas, on the dock and the rail);
+  `CompletedGoalRow` can land its LOGRADA without a haptic; `GoalsBandTotal` leaves out
+  its second line without aportes and relies on the ribbon's margins.
+- Metas tab (`MetasRoute`) and goal detail (`GoalRoute`) with loading, failed, stale,
+  empty and missing states; no month bar, month switcher, past-month ribbon or Anotar.

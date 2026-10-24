@@ -7,6 +7,7 @@ import androidx.compose.ui.res.stringResource
 import com.software.sello.R
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -31,6 +32,15 @@ class DateLabels(
         }
         return if (date == today) todayFormat.format(plain) else plain
     }
+
+    /** "30 sep", and "31 dic 2025" when it is not this year's. */
+    fun shortDay(date: LocalDate, today: LocalDate): String {
+        val plain = "${date.dayOfMonth} ${months[date.monthValue - 1]}"
+        return if (date.year == today.year) plain else "$plain ${date.year}"
+    }
+
+    /** "dic 2026", as a goal's target month. */
+    fun monthYear(month: YearMonth): String = "${months[month.monthValue - 1]} ${month.year}"
 
     /** A real moment in [zone], always with its year: "22 oct 2026, 2:30 p. m.". */
     fun moment(at: Instant, zone: ZoneId, format: String): String {

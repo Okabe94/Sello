@@ -246,6 +246,8 @@ fun SelloScaffold(
                     EntryDock(
                         label = dock.actionLabel,
                         onClick = dock.onClick,
+                        tone = dock.tone,
+                        icon = dock.icon,
                         modifier = Modifier
                             .padding(horizontal = ContentMargin, vertical = 8.dp)
                             .then(

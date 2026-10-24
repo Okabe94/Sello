@@ -3,16 +3,17 @@
 - **Type:** Task
 - **Priority:** P1
 - **Status:** Backlog
-- **Depends on:** SELLO-098, SELLO-004
+- **Depends on:** SELLO-098, SELLO-114, SELLO-004
 - **Gate:** G2
 
 ### Outcome
 A person can create, change, pause, resume, end and delete recurring payments and incomes.
 
 ### Deliverables
-Screens to list and edit schedules, reached from Configuración and from an entry's detail.
+Screens to list and edit schedules, built to the design approved in SELLO-114, including where they are reached from and how a schedule is created.
 
 ### Acceptance criteria
+- The screens match SELLO-114's approved pages.
 - Each schedule kind can be set with the Sello pad for amounts.
 - Changes say they apply from now on.
 - Deleting keeps recorded occurrences.
@@ -24,7 +25,7 @@ ViewModel, screen and journey tests; G2.
 Schedules can be managed on a phone.
 
 ### Context and starting points
-v1.1 snapshot for screens v2 does not show.
+SELLO-114's approved pages; the [gap list](../../../design/v2/gaps/recurrence.md) names the reusable parts (`SegmentedSwitch`, `LeaderLine`, `ActionLine`, `AmountKeypad`, `ConfirmSlip`, `DangerSlip`, `Stamp`).
 
 ### Implementation plan
 1. List.

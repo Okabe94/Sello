@@ -3,18 +3,19 @@
 - **Type:** Task
 - **Priority:** P1
 - **Status:** Backlog
-- **Depends on:** SELLO-098, SELLO-004
+- **Depends on:** SELLO-098, SELLO-114, SELLO-004
 - **Gate:** G2
 
 ### Outcome
 After catching up, Sello lists what it recorded so each can be checked, edited or deleted.
 
 ### Deliverables
-A notice and a list of the occurrences recorded in that catch-up, each opening its edit.
+A notice and a list of the occurrences recorded in that catch-up, each opening its edit, built to the design approved in SELLO-114.
 
 ### Acceptance criteria
+- The notice and list match SELLO-114's approved pages.
 - Shown once per catch-up that recorded something; never empty.
-- Each item opens the recorded expense or income.
+- Each item opens the recorded expense or income (`ExpenseEditRoute`, `IncomeEditRoute`).
 
 ### Tests
 ViewModel and journey tests; G2.

@@ -48,6 +48,23 @@ data class IncomeId private constructor(val value: String) {
     }
 }
 
+/** A goal's identity. It survives edits, completion and target changes. */
+@ConsistentCopyVisibility
+data class GoalId private constructor(val value: String) {
+    companion object {
+        fun of(raw: String): Outcome<GoalId, RecordIdError> = canonical(raw, ::GoalId)
+    }
+}
+
+/** One contribution or withdrawal of a goal. */
+@ConsistentCopyVisibility
+data class GoalMovementId private constructor(val value: String) {
+    companion object {
+        fun of(raw: String): Outcome<GoalMovementId, RecordIdError> =
+            canonical(raw, ::GoalMovementId)
+    }
+}
+
 /**
  * The identity of one attempt to change something. The caller chooses it before
  * submitting and keeps it, so the same attempt can be recognized, replayed or looked

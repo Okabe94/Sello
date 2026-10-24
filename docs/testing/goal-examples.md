@@ -99,6 +99,7 @@ Goal *Viaje a la costa*, target 3.000.000, no earlier movements, unless stated. 
 | MT14 | After MT04, delete the 900.000 aporte | Saved 700.000, 23 %; 25 % and 50 % not earned; Deshacer brings back 1.600.000 with both |
 | MT15 | Aporte 500.000, then retiro 300.000 dated 20 oct; delete the aporte | **Refused** (**Owner**): "No se puede: el retiro de 300.000 del 20 oct usa este aporte. Borra o corrige ese retiro primero." |
 | MT16 | Same; edit the aporte to 300.000, then to 299.999 | First accepted, saved 0; second refused, as MT15 |
+| MT39 | Aporte 500.000, retiro 300.000, then aporte 1.000.000; delete the first aporte | Refused, as MT15: in recording order the retiro would take what was not saved yet, although the total would be 700.000 (added in SELLO-087, rule 1 read with MT22) |
 
 ### Target changes
 

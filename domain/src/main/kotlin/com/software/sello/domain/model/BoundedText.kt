@@ -91,3 +91,17 @@ data class SourceName private constructor(val value: String) {
             }
     }
 }
+
+/** A goal's displayed name: trimmed, 1–40 code points. Two goals may share a name. */
+@ConsistentCopyVisibility
+data class GoalName private constructor(val value: String) {
+    companion object {
+        const val MAX_CODE_POINTS = 40
+
+        fun of(raw: String): Outcome<GoalName, TextError> =
+            when (val text = boundedText(raw, MAX_CODE_POINTS)) {
+                is Outcome.Success -> Outcome.Success(GoalName(text.value))
+                is Outcome.Failure -> text
+            }
+    }
+}

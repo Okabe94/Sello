@@ -194,7 +194,7 @@ class BackupViewModelTest {
 
     @Test
     fun tooMuchDataIsItsOwnFailure() = runTest {
-        exports.next = Outcome.Failure(BackupPreparationFailure.Unrestorable)
+        exports.next = Outcome.Failure(BackupPreparationFailure.TooLarge)
         val model = model()
         openPicker(model)
 
@@ -203,6 +203,20 @@ class BackupViewModelTest {
 
         assertEquals(BackupFailure.TooLarge, model.state.value.failure)
         assertTrue(writer.written.isEmpty())
+    }
+
+    @Test
+    fun aFileThatFailsItsOwnCheckForAnotherReasonIsNotCalledTooLarge() = runTest {
+        exports.next = Outcome.Failure(BackupPreparationFailure.Unrestorable)
+        val model = model()
+        openPicker(model)
+
+        model.onAction(BackupAction.DestinationChosen(document))
+        runCurrent()
+
+        assertEquals(BackupFailure.SelfCheck, model.state.value.failure)
+        assertTrue(writer.written.isEmpty())
+        assertFalse(records.stored.value.unfinished)
     }
 
     @Test

@@ -24,6 +24,9 @@ enum class BackupFailure {
     /** The data is more than a backup may hold. */
     TooLarge,
 
+    /** The file made failed the app's own check for another reason: a fault in Sello. */
+    SelfCheck,
+
     /** The chosen document could not be written or closed. */
     Write
 }
@@ -92,7 +95,8 @@ class BackupSession(
                 return BackupProgress.Failed(
                     when (made.error) {
                         BackupPreparationFailure.StorageUnavailable -> BackupFailure.Storage
-                        BackupPreparationFailure.Unrestorable -> BackupFailure.TooLarge
+                        BackupPreparationFailure.TooLarge -> BackupFailure.TooLarge
+                        BackupPreparationFailure.Unrestorable -> BackupFailure.SelfCheck
                     }
                 )
             }

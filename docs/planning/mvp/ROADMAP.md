@@ -4,7 +4,7 @@ Generated from `epics/*.md`; do not edit independently.
 
 **Tickets Done:** 5/48 · **Epics Done:** 0/8
 
-Backlog: 43 · Ready: 0 · In Progress: 0 · Review: 0 · Blocked: 0 · Done: 5
+Backlog: 42 · Ready: 0 · In Progress: 1 · Review: 0 · Blocked: 0 · Done: 5
 
 [Workflow, gates and definition of done](README.md)
 
@@ -27,7 +27,9 @@ No tickets.
 
 ## In Progress
 
-No tickets.
+| Ticket | Deliverable | Epic | Priority | Gate | Unmet dependencies |
+| --- | --- | --- | --- | --- | --- |
+| [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check) | Say what failed when a backup does not pass its own check | SELLO-E15 | P2 | G2 | None |
 
 ## Review
 
@@ -51,7 +53,6 @@ No tickets.
 | [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path) | Import legacy data through the validated restore path | SELLO-E10 | P2 | G2 | None |
 | [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard) | Review the app with TalkBack, Switch Access and a keyboard | SELLO-E14 | P1 | G2 | None |
 | [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows) | Group thousands in every count the app shows | SELLO-E15 | P2 | G2 | None |
-| [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check) | Say what failed when a backup does not pass its own check | SELLO-E15 | P2 | G2 | None |
 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) | Verify what exists for today's Recibo, Resumen and income screens and what is missing | SELLO-E16 | P1 | G1 | None |
 | [SELLO-083](epics/E16-v2-today-gaps.md#sello-083--suggest-assigning-unassigned-income) | Suggest assigning unassigned income | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
 | [SELLO-084](epics/E16-v2-today-gaps.md#sello-084--invite-a-look-at-the-month-just-closed) | Invite a look at the month just closed | SELLO-E16 | P2 | G2 | [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing) |
@@ -97,4 +98,4 @@ No tickets.
 
 ## Ready promotion candidates
 
-[SELLO-037](epics/E09-signed-carryover.md#sello-037--approve-signed-carryover-policy-and-independent-examples), [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path), [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard), [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows), [SELLO-078](epics/E15-release-fixes.md#sello-078--say-what-failed-when-a-backup-does-not-pass-its-own-check), [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing), [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing), [SELLO-095](epics/E18-recurrence.md#sello-095--verify-what-exists-for-recurrence-and-reserved-payments-and-what-is-missing), [SELLO-105](epics/E19-investments.md#sello-105--verify-what-exists-for-inversiones-and-what-is-missing)
+[SELLO-037](epics/E09-signed-carryover.md#sello-037--approve-signed-carryover-policy-and-independent-examples), [SELLO-044](epics/E10-legacy-import.md#sello-044--import-legacy-data-through-the-validated-restore-path), [SELLO-074](epics/E14-assistive-technology.md#sello-074--review-the-app-with-talkback-switch-access-and-a-keyboard), [SELLO-075](epics/E15-release-fixes.md#sello-075--group-thousands-in-every-count-the-app-shows), [SELLO-079](epics/E16-v2-today-gaps.md#sello-079--verify-what-exists-for-todays-recibo-resumen-and-income-screens-and-what-is-missing), [SELLO-085](epics/E17-goals.md#sello-085--verify-what-exists-for-metas-and-what-is-missing), [SELLO-095](epics/E18-recurrence.md#sello-095--verify-what-exists-for-recurrence-and-reserved-payments-and-what-is-missing), [SELLO-105](epics/E19-investments.md#sello-105--verify-what-exists-for-inversiones-and-what-is-missing)

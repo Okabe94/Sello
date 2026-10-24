@@ -1776,7 +1776,7 @@ Shared tools: docs/planning/mvp/EXECUTION_GUIDE.md
 
 - **Type:** Task
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004
 - **Gate:** G2
 
@@ -1814,6 +1814,15 @@ was reported as too large, which hid the cause. `BackupSession` maps
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-078 --retain`.
+
+### Execution progress
+
+- **Owner decision, 2026-10-23:** a short message, at most two lines: ""Falla de Sello al
+  armar el respaldo; tus datos no cambiaron. No uses el archivo vacío que pudo quedar.""
+- `BackupPreparationFailure` gains `TooLarge` (too many bytes, records or default-limit
+  entries); `Unrestorable` is now every other refusal of the app's own file, shown as
+  `BackupFailure.SelfCheck` with the message above. A real size refusal keeps its
+  message.
 
 Shared definition of done and gates:
 
@@ -1887,7 +1896,7 @@ Use the environment from [setup](../../development/setup.md).
 Focused tests run first; the gate is the final integrated checkpoint. Documentation
 names expected new test behavior, not pretend pre-existing test classes.
 
-",1015,Medium,Backlog,sello-078
+",1015,Medium,In Progress,sello-078
 1016,Epic,SELLO-E16 — Finish Sello v2 on today's screens,"Local ID: SELLO-E16
 Increment: Post-MVP
 Goal: Add the parts of the approved v2 Recibo, Resumen and income screens that the MVP left out, which need no new kind of data.

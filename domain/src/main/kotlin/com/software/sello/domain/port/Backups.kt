@@ -14,7 +14,10 @@ sealed interface BackupPreparationFailure {
     /** The financial data could not be read. */
     data object StorageUnavailable : BackupPreparationFailure
 
-    /** The data would make a file the app itself would refuse to restore, such as one too large. */
+    /** The history is beyond what the backup format holds: too many bytes, records or limits. */
+    data object TooLarge : BackupPreparationFailure
+
+    /** The file made would fail the app's own reading check for another reason: a fault in Sello. */
     data object Unrestorable : BackupPreparationFailure
 }
 

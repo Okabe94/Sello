@@ -229,7 +229,7 @@ Repeated focused runs, then `./scripts/verify-ticket SELLO-077 --retain`.
 
 - **Type:** Task
 - **Priority:** P2
-- **Status:** Backlog
+- **Status:** In Progress
 - **Depends on:** SELLO-004
 - **Gate:** G2
 
@@ -267,3 +267,12 @@ was reported as too large, which hid the cause. `BackupSession` maps
 
 ### Verification recipe
 Focused tests, then `./scripts/verify-ticket SELLO-078 --retain`.
+
+### Execution progress
+
+- **Owner decision, 2026-10-23:** a short message, at most two lines: "Falla de Sello al
+  armar el respaldo; tus datos no cambiaron. No uses el archivo vacío que pudo quedar."
+- `BackupPreparationFailure` gains `TooLarge` (too many bytes, records or default-limit
+  entries); `Unrestorable` is now every other refusal of the app's own file, shown as
+  `BackupFailure.SelfCheck` with the message above. A real size refusal keeps its
+  message.

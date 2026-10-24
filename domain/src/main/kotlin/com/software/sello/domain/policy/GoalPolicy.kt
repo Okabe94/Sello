@@ -130,6 +130,27 @@ object GoalPolicy {
         )
     }
 
+    /**
+     * The goal as it would stand with [target] recorded [today], while editing: a stamp
+     * earned under the old target and no longer reached shows kept (rule 7). The same
+     * target changes nothing. Nothing is written.
+     */
+    fun withTarget(
+        history: GoalHistory,
+        target: TransactionAmount,
+        today: LocalDate
+    ): Outcome<GoalProgress, GoalHistoryError> {
+        val current = (
+            history.events.filterIsInstance<GoalTargetChange>()
+                .maxByOrNull(GoalTargetChange::sequence)
+            )?.target
+        if (current == target) return progress(history)
+        val next = (history.events.maxOfOrNull(GoalEvent::sequence) ?: -1) + 1
+        return progress(
+            history.copy(events = history.events + GoalTargetChange(target, next, today))
+        )
+    }
+
     /** What [after] changed against [before]: a goal with no [before] earned nothing yet. */
     fun change(before: GoalProgress?, after: GoalProgress): GoalChange {
         fun earnedIn(progress: GoalProgress?, place: GoalPlace) =

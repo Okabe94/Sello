@@ -311,8 +311,15 @@ class HandGoalReads : GoalReads {
     val board = MutableStateFlow<GoalBoardState>(GoalBoardState.Loading)
     var started = 0
 
-    override suspend fun board(): Outcome<GoalBoard, StorageFailure> =
+    /** What a one-off read returns; [reads] counts them. */
+    var read: Outcome<GoalBoard, StorageFailure> =
         Outcome.Failure(StorageFailure.Unavailable("not used"))
+    var reads = 0
+
+    override suspend fun board(): Outcome<GoalBoard, StorageFailure> {
+        reads++
+        return read
+    }
 
     override fun observeBoard(): Flow<GoalBoardState> = board.onStart { started++ }
 
@@ -328,6 +335,9 @@ class HandGoalCommands : GoalCommands {
     val sent = mutableListOf<GoalCommand>()
     val asked = mutableListOf<OperationId>()
     var next: GoalCommandOutcome? = null
+
+    /** Answers in order, before [next]. */
+    val queue = ArrayDeque<GoalCommandOutcome>()
     var found: Outcome<CommittedGoal?, StorageFailure> = Outcome.Success(null)
     var pause = false
     private var waiting: CompletableDeferred<GoalCommandOutcome>? = null
@@ -343,6 +353,7 @@ class HandGoalCommands : GoalCommands {
             waiting = deferred
             return deferred.await()
         }
+        queue.removeFirstOrNull()?.let { return it }
         return next?.also { next = null } ?: GoalCommandOutcome.Committed(
             CommittedGoal(
                 OperationReceipt(

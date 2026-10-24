@@ -43,6 +43,7 @@ import com.software.sello.designsystem.component.Stamp
 import com.software.sello.designsystem.component.StampInk
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.port.ResetPreview
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.restore.RestoreBody
 import com.software.sello.presentation.restore.RestoreHeading
 
@@ -163,14 +164,18 @@ private fun Counts(
                 pluralStringResource(
                     R.plurals.restore_categories,
                     current.categories,
-                    current.categories
+                    countText(current.categories)
                 ),
                 pluralStringResource(
                     R.plurals.restore_expenses,
                     current.expenses,
-                    current.expenses
+                    countText(current.expenses)
                 ),
-                pluralStringResource(R.plurals.restore_incomes, current.incomes, current.incomes)
+                pluralStringResource(
+                    R.plurals.restore_incomes,
+                    current.incomes,
+                    countText(current.incomes)
+                )
             )
         )
         RestoreBody(stringResource(R.string.reset_backups_stay))

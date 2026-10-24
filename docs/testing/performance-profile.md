@@ -167,7 +167,7 @@ planted in the test made it fail, naming the call.
 Findings outside performance, reported and not fixed here:
 
 - The restore preview and result write counts without a thousands separator:
-  "10000 gastos".
+  "10000 gastos". Fixed in SELLO-075.
 - Resumen shows "Movimientos anotados hasta 2026-10-23", a date in storage form.
 
 ## Not covered

@@ -33,6 +33,7 @@ import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.component.SlipSkeleton
 import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.theme.SelloTheme
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.date.DateLabels
 import com.software.sello.presentation.month.MonthNames
 import java.time.format.DateTimeFormatter
@@ -95,7 +96,7 @@ private fun CategoryNumbers(
                         pluralStringResource(
                             R.plurals.category_detail_count_days,
                             figures.elapsedDays,
-                            state.category.expenseCount,
+                            countText(state.category.expenseCount),
                             figures.elapsedDays
                         ),
                         style = MaterialTheme.typography.labelLarge

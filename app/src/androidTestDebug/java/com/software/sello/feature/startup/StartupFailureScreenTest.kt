@@ -239,6 +239,19 @@ class StartupFailureScreenTest {
     }
 
     @Test
+    fun aLargeRestoredBackupGroupsItsThousands() {
+        val done = RestoreOutcome.Restored(
+            BackupSummary(20, 10_000, 2_000),
+            PendingPreferences(null, null)
+        )
+        show(StartupFailureState(restore = StartupRestoreStep.Restored(done)))
+
+        rule.onNodeWithText(
+            "Se restauró el respaldo: 20 categorías, 10.000 gastos y 2.000 ingresos."
+        ).assertExists()
+    }
+
+    @Test
     fun preferencesNotAppliedAreNamedAndOnlyTheyAreRetried() {
         val pending = RestoreOutcome.Restored(
             BackupSummary(2, 3, 1),

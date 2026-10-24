@@ -72,6 +72,16 @@ class ResetScreenTest {
     }
 
     @Test
+    fun largeCountsGroupTheirThousands() {
+        show(ResetState(ResetStep.Ready(preview.copy(current = BackupSummary(20, 10_000, 2_000)))))
+
+        rule.onNodeWithText(
+            "Se borran 20 categorías, 10.000 gastos y 2.000 ingresos, con sus límites y notas.",
+            substring = true
+        ).assertIsDisplayed()
+    }
+
+    @Test
     fun newCountsSayTheDataChanged() {
         show(ResetState(ResetStep.Ready(preview, refreshed = true)))
 

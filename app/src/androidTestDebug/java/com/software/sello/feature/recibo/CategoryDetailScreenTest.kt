@@ -432,6 +432,16 @@ class CategoryDetailScreenTest {
     }
 
     @Test
+    fun aThousandExpensesReadWithTheirSeparator() {
+        val five = (1..5).map { index ->
+            ExpenseRow("$index", LocalDate.of(2026, 10, 21), "Compra $index", plain("1.000"), false)
+        }
+        show(ready(ExpenseListState.Rows(five, more = true), food.copy(expenseCount = 1_000)))
+
+        rule.onNodeWithText("Ver los 1.000").assertExists()
+    }
+
+    @Test
     fun viewAllEndsFlushWithTheAmountsBelowIt() {
         // v1.1: "ver los 13" sits at the slip's content edge, the same edge as each amount.
         val counted = rows.filterNot { it.notCountedYet }

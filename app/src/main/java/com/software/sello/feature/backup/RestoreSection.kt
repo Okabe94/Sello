@@ -43,6 +43,7 @@ import com.software.sello.domain.port.PendingPreferences
 import com.software.sello.domain.port.RestoreOutcome
 import com.software.sello.domain.port.RestoreRejection
 import com.software.sello.domain.port.StagedRestore
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.restore.RestoreBody
 import com.software.sello.presentation.restore.RestoreHeading
@@ -198,8 +199,8 @@ private fun Counts(current: BackupSummary, replacement: BackupSummary) {
                 .semantics(mergeDescendants = true) {}
         ) {
             Text(name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Cell(before.toString(), spoken = "$now $before")
-            Cell(after.toString(), spoken = "$backup $after")
+            Cell(countText(before), spoken = "$now ${countText(before)}")
+            Cell(countText(after), spoken = "$backup ${countText(after)}")
         }
     }
 }

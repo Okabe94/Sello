@@ -53,6 +53,7 @@ import com.software.sello.designsystem.icon.SelloIcon
 import com.software.sello.designsystem.icon.painter
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.presentation.category.CategoryIcons
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.date.DateLabels
 import com.software.sello.presentation.month.MonthNames
 import java.time.YearMonth
@@ -422,7 +423,11 @@ private fun ExpenseList(
                 text = if (list.rows.any { it.notCountedYet }) {
                     stringResource(R.string.category_detail_view_every_expense)
                 } else {
-                    pluralStringResource(R.plurals.category_detail_view_all, count, count)
+                    pluralStringResource(
+                        R.plurals.category_detail_view_all,
+                        count,
+                        countText(count)
+                    )
                 },
                 onClick = onShowAllExpenses,
                 kind = ButtonKind.Text,

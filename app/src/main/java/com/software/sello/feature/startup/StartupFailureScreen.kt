@@ -48,6 +48,7 @@ import com.software.sello.designsystem.component.SelloScaffold
 import com.software.sello.designsystem.component.Slip
 import com.software.sello.designsystem.theme.SelloTheme
 import com.software.sello.domain.port.CheckedBackup
+import com.software.sello.presentation.count.countText
 import com.software.sello.presentation.date.dateLabels
 import com.software.sello.presentation.restore.RestoreBody
 import com.software.sello.presentation.restore.RestoreHeading
@@ -250,14 +251,18 @@ private fun Preview(
                 pluralStringResource(
                     R.plurals.restore_categories,
                     contents.categories,
-                    contents.categories
+                    countText(contents.categories)
                 ),
                 pluralStringResource(
                     R.plurals.restore_expenses,
                     contents.expenses,
-                    contents.expenses
+                    countText(contents.expenses)
                 ),
-                pluralStringResource(R.plurals.restore_incomes, contents.incomes, contents.incomes)
+                pluralStringResource(
+                    R.plurals.restore_incomes,
+                    contents.incomes,
+                    countText(contents.incomes)
+                )
             )
         )
         RestoreBody(stringResource(R.string.startup_restore_warning))

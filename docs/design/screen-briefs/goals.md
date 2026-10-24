@@ -64,9 +64,8 @@ example corpus.
 
 Corrections, target edits, the Home goal after completion or deletion, pausing (not in
 the first version), past-dated movements and the number of goals were decided in
-[ADR 0017](../../decisions/0017-goals-recurrence-investments.md). Still open, for the rules ticket (SELLO-086) to settle with examples:
-
-- Exact milestone replay safeguards.
+[ADR 0017](../../decisions/0017-goals-recurrence-investments.md). The rules ticket (SELLO-086) settled the rest, including milestone replay, with
+[worked examples](../../testing/goal-examples.md).
 
 Metas belongs to the Next increment ([architecture](../../../ARCHITECTURE.md) §1), outside the MVP.
 This brief adds no routes, schema, recurring-contribution engine or production
